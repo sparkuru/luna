@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 1
-- **Last Active**: 2026-08-30
+- **Total Sessions**: 2
+- **Last Active**: 2026-09-10
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~38 | Active |
+| `journal-1.md` | ~59 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 2 | 2026-09-10 | 完成 Web 远端部署与验收 | `cf80205` | `main` |
 | 1 | 2026-08-30 | Finalize product decision baseline | `ca43756`, `0014e8d` | `main` |
 <!-- @@@/auto:session-history -->
 
