@@ -1,0 +1,7 @@
+{"file":".trellis/spec/backend/deployment-and-recovery.md","reason":"Check isolation, initialization, health/readiness, persistence, rollback, and data-boundary claims against the actual Compose run."}
+{"file":".trellis/spec/backend/http-api-guidelines.md","reason":"Check CORS/origin behavior, security headers, auth/session boundaries, status codes, and absence of secret-bearing responses."}
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Check that browser sync states, retries, conflicts, encrypted transport, and local-first semantics remain observable and correct."}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Check OPFS/SQLite-WASM, offline shell, profile recovery, stable catalog reads, tunnel origin, and required Web validation scope."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check responsive layout, focus/keyboard behavior, accessible errors, loading states, and regression coverage."}
+{"file":".trellis/tasks/09-08-fullstack-release-validation/research/final-validation.md","reason":"Compare the current local quality evidence with the remote release-validation result without treating a local build as proof of remote deployment."}
+{"file":".trellis/tasks/09-10-sqlite-self-hosted-sync/research/ui-design-system.md","reason":"Review visible sync/offline states, responsive targets, and calm finance UI consistency."}

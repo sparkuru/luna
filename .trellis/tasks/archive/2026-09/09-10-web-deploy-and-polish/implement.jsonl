@@ -1,0 +1,8 @@
+{"file":".trellis/spec/backend/deployment-and-recovery.md","reason":"Defines the Compose startup ordering, data boundary, health/readiness, backup/recovery, and non-destructive operational constraints for the remote deployment."}
+{"file":".trellis/spec/backend/http-api-guidelines.md","reason":"Defines origin, security-header, authentication, error, and API exposure contracts used by the remote HTTP smoke."}
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Defines encrypted object transport, local-first behavior, retry/conflict state, and the sync presentation contract to verify in the browser."}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Defines Web SQLite-WASM/OPFS boundaries, profile catalog reads, offline validation, tunnel/browser constraints, and the startup picker recovery rule."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Defines frontend accessibility, responsive, state, and regression expectations for the usability pass."}
+{"file":".trellis/spec/guides/cross-platform-thinking-guide.md","reason":"Keeps this Web-first delivery aligned with the shared Web/Electron/Android boundaries while explicitly deferring Android implementation."}
+{"file":".trellis/tasks/09-08-fullstack-release-validation/research/deployment-validation.md","reason":"Provides existing local Compose/image validation evidence and known deployment seams to reproduce against the actual target host."}
+{"file":".trellis/tasks/09-10-sqlite-self-hosted-sync/research/ui-design-system.md","reason":"Provides the approved calm, accessible, mobile-first ledger/sync visual and interaction baseline for the UI review."}
