@@ -1,0 +1,7 @@
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Applicable existing contract; parent proposed design governs approved migration changes."}
+{"file":".trellis/spec/backend/config-sync-guidelines.md","reason":"Applicable existing contract; parent proposed design governs approved migration changes."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Applicable existing contract; parent proposed design governs approved migration changes."}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Applicable existing contract; parent proposed design governs approved migration changes."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Applicable existing contract; parent proposed design governs approved migration changes."}
+{"file":".trellis/tasks/09-08-frontend-shadcn-migration/research/architecture-evidence.md","reason":"Repository evidence, official sources and A0 technical gates."}
+{"file": ".trellis/spec/backend/http-api-guidelines.md", "reason": "HTTP integration acceptance contracts"}
