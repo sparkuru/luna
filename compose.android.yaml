@@ -1,0 +1,73 @@
+services:
+  android-apk:
+    image: luna-android-apk:local
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+      target: export
+      args:
+        LUNA_ANDROID_APPLICATION_SUFFIX: "${LUNA_ANDROID_APPLICATION_SUFFIX:-}"
+    user: "${LUNA_BUILD_UID:-1000}:${LUNA_BUILD_GID:-1000}"
+    network_mode: none
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - ./artifacts/android:/output
+
+  android-emulator:
+    profiles: [smoke]
+    init: true
+    image: luna-android-emulator:local
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+      target: emulator
+    devices:
+      - /dev/kvm:/dev/kvm
+    environment:
+      LUNA_EMULATOR_ACCEL: "${LUNA_EMULATOR_ACCEL:-on}"
+    ports:
+      - "127.0.0.1:${LUNA_ADB_PORT:-5038}:5037"
+    shm_size: 1gb
+    # QEMU scans descriptors during startup; an inherited billion-FD limit
+    # can trigger its watchdog before the Android guest becomes ready.
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      luna.scope: android-smoke
+    healthcheck:
+      test: [CMD-SHELL, 'test "$$(adb -s emulator-5554 shell getprop sys.boot_completed)" = 1']
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 60
+
+  android-smoke:
+    profiles: [smoke]
+    image: node:22.22.0-bookworm-slim
+    user: "${LUNA_BUILD_UID:-1000}:${LUNA_BUILD_GID:-1000}"
+    working_dir: /app
+    command: [node_modules/.bin/tsx, scripts/smoke-android.ts]
+    environment:
+      LUNA_ADB_HOST: android-emulator
+      LUNA_ADB_PORT: "5037"
+      LUNA_ANDROID_ARTIFACT_DIR: /app/artifacts/android
+    depends_on:
+      android-emulator:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - .:/app:ro
+      - ./artifacts/android:/app/artifacts/android

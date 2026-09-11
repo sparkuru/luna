@@ -1,38 +1,37 @@
 # Backend Development Guidelines
 
-> Best practices for backend development in this project.
-
----
-
-## Overview
-
-This directory contains guidelines for backend development. Fill in each file with your project's specific conventions.
-
----
+These rules describe the Electron main process, local SQLite ledger, versioned
+settings, safe local secret handling, and encrypted portable-settings sync.
+Ledger/transaction sync implements the 2026-09-05 delivery goal with shared
+causal revisions, explicit financial conflicts, tombstones, client encryption
+and conditional remote writes. Browser, MinIO, packaged Electron and Android
+emulator checks passed; physical-device coverage remains separate.
+Independent production security review remains a
+separate assurance boundary; never claim an audit from automated tests.
 
 ## Guidelines Index
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Module organization and file layout | To fill |
-| [Database Guidelines](./database-guidelines.md) | ORM patterns, queries, migrations | To fill |
-| [Error Handling](./error-handling.md) | Error types, handling strategies | To fill |
-| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
-| [Logging Guidelines](./logging-guidelines.md) | Structured logging, log levels | To fill |
+| [HTTP API and Generated Client](./http-api-guidelines.md) | Fastify/SQLite account and encrypted-object contracts, CAS, SDK generation | Current |
+| [Deployment and Recovery](./deployment-and-recovery.md) | Single Compose, data-folder initialization, MinIO, backup and recovery | Current |
+| [Directory Structure](./directory-structure.md) | Main, shared, preload, and persistence boundaries | Current |
+| [Database Guidelines](./database-guidelines.md) | Schema, integer money, migrations, and atomic writes | Current |
+| [Error Handling](./error-handling.md) | Domain, IPC, and safe renderer errors | Current |
+| [Portable Settings and Config Sync](./config-sync-guidelines.md) | Versioned settings, secret isolation, encrypted S3 conditions, merge, and tests | Current |
+| [Ledger Sync](./ledger-sync-guidelines.md) | Causal graph, conflicts, tombstones, encrypted session transport | Current |
+| [Quality Guidelines](./quality-guidelines.md) | Required checks and forbidden patterns | Current |
+| [Logging Guidelines](./logging-guidelines.md) | Sanitized diagnostics and smoke markers | Current |
 
----
+## Boundary Summary
 
-## How to Fill These Guidelines
-
-For each guideline file:
-
-1. Document your project's **actual conventions** (not ideals)
-2. Include **code examples** from your codebase
-3. List **forbidden patterns** and why
-4. Add **common mistakes** your team has made
-
-The goal is to help AI assistants and new team members understand how YOUR project works.
-
----
-
-**Language**: All documentation should be written in **English**.
+`src/shared/` owns validation, portable WebCrypto and serializable contracts.
+`src/sync/` owns portable ledger transport/orchestration. `src/main/` owns
+SQLite, settings files, safeStorage, crypto, and the S3-compatible adapter.
+`src/main/ipc.ts` exposes only the operations in `src/shared/api.ts`, and
+`src/preload.ts` exposes those operations through `contextBridge`. No renderer
+code may access SQL, filesystem primitives, AWS SDK objects, credential
+projections, device IDs, ETags, or local paths. User-entered secrets are passed
+through narrow configuration/backup APIs, never reflected into attributes or
+persisted by the renderer. Ledger history DTOs are permitted for backup and
+conflict flows; these contain financial revisions but no secret configuration.

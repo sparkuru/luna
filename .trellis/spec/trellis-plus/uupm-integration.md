@@ -15,12 +15,13 @@
 
 ## Product and stack evidence
 
-The confirmed product baseline in `prd.md` calls for an offline-first personal
-finance application whose first delivery is an Electron desktop client. The
-repository has no implementation files or selected frontend stack yet. Do not
-assume the React Native stack mentioned by the generated UUPM reference is the
-project stack, and do not select Electron tooling until implementation evidence
-or an explicit product decision establishes it.
+The product is an offline-first personal finance application shared by Electron,
+Web and Android. The current approved migration uses React, TanStack Query and
+Router, Tailwind and project-owned shadcn components. Web persists through
+SQLite-WASM/OPFS with a production offline shell; Electron retains native
+SQLite. This is not React
+Native or an OPFS implementation. The existing blue/light ledger-first visual
+hierarchy remains the product baseline.
 
 ## Plan
 
@@ -47,8 +48,10 @@ For a future task that changes user-visible UI:
    changing UI. Adapt touch and safe-area checks when a mobile target is later
    approved.
 
-No task exists in the current direct-configuration pass, so no design system
-output is persisted and no task context is injected.
+The first usable checkpoint records its raw design-system output in
+`.trellis/tasks/08-30-income-expense-mvp/research/ui-ux-pro-max.md` and its
+approved adaptations in that task's `design.md`. Future UI tasks should keep
+the same task-local evidence pattern.
 
 ## Implement and check
 

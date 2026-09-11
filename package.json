@@ -1,0 +1,97 @@
+{
+  "name": "luna",
+  "productName": "Luna",
+  "version": "0.1.0",
+  "description": "An offline-first income and expense recorder for small households.",
+  "license": "SEE LICENSE IN license",
+  "author": "Luna contributors",
+  "main": ".vite/build/main.js",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "start": "electron-forge start",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/shared/*.test.ts src/main/*.test.ts src/renderer/*.test.ts src/web/*.test.ts src/sync/*.test.ts",
+    "build": "npm run typecheck && electron-forge package",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "smoke:electron": "tsx scripts/smoke-electron.ts",
+    "android:sync": "LUNA_ANDROID_DEBUG=true npm run web:build && cap sync android",
+    "smoke:android": "tsx scripts/smoke-android.ts",
+    "smoke:config-sync:provider": "tsx scripts/smoke-config-sync-provider.ts",
+    "smoke:config-sync:minio": "tsx scripts/smoke-config-sync-minio.ts",
+    "web": "vite --config vite.web.config.ts",
+    "web:build": "vite build --config vite.web.config.ts",
+    "web:preview": "vite preview --config vite.web.config.ts --host 127.0.0.1 --port 4173",
+    "test:web": "playwright test",
+    "server:typecheck": "tsc -p tsconfig.server.json --noEmit",
+    "server:build": "tsc -p tsconfig.server.json",
+    "server:start": "node dist/server/server/main.js",
+    "server:test": "tsx --test tests/server/*.test.ts",
+    "db:migrate": "tsx src/server/cli/admin.ts migrate",
+    "server:admin": "tsx src/server/cli/admin.ts",
+    "api:generate": "tsx src/server/cli/generate.ts",
+    "api:check": "tsx src/server/cli/generate.ts --check",
+    "test:contracts": "tsx --test tests/contracts/*.test.ts",
+    "test:server-sync": "tsx --test tests/server-sync/*.test.ts",
+    "smoke:server-restore": "node scripts/smoke-server-restore.mjs"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.0",
+    "@electron-forge/cli": "7.11.2",
+    "@electron-forge/maker-zip": "7.11.2",
+    "@electron-forge/plugin-vite": "7.11.2",
+    "@hey-api/openapi-ts": "0.99.0",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "4.7.0",
+    "electron": "44.0.0",
+    "fake-indexeddb": "6.2.5",
+    "tailwindcss": "4.3.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "vite": "6.4.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1121.0",
+    "@capacitor/android": "8.5.0",
+    "@capacitor/core": "8.5.0",
+    "@fastify/swagger": "9.8.1",
+    "@noble/hashes": "2.4.0",
+    "@radix-ui/react-alert-dialog": "1.1.23",
+    "@radix-ui/react-dialog": "1.1.23",
+    "@radix-ui/react-slot": "1.3.3",
+    "@sqlite.org/sqlite-wasm": "3.53.0-build1",
+    "@tanstack/react-query": "5.102.8",
+    "@tanstack/react-router": "1.170.33",
+    "better-sqlite3": "13.0.3",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "fastify": "5.12.3",
+    "lucide-react": "1.42.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "3.5.0"
+  },
+  "overrides": {
+    "tar": "7.5.22",
+    "external-editor": {
+      "tmp": "0.2.7"
+    },
+    "xcode": {
+      "uuid": "11.1.1"
+    },
+    "@electron/packager": {
+      "extract-zip": "npm:@electron-internal/extract-zip@1.0.1"
+    },
+    "js-yaml": "4.3.1"
+  },
+  "config": {
+    "forge": "forge.config.ts"
+  }
+}

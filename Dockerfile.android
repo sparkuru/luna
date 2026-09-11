@@ -1,0 +1,81 @@
+FROM node:22.22.0-bookworm-slim AS web
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts --no-audit --no-fund
+COPY tsconfig.json vite.web.config.ts capacitor.config.ts ./
+COPY scripts/web-offline-plugin.ts ./scripts/web-offline-plugin.ts
+COPY src/shared ./src/shared
+COPY src/sync ./src/sync
+COPY src/api-client ./src/api-client
+COPY src/renderer ./src/renderer
+COPY src/web ./src/web
+COPY android ./android
+# The APK target is a debug build. Its bundled secure origin may call an
+# explicitly entered private-LAN API over HTTP; the API/client still reject
+# public or hostname-based insecure endpoints.
+RUN LUNA_ANDROID_DEBUG=true npm run web:build && npx cap sync android
+
+FROM eclipse-temurin:21.0.10_7-jdk-noble AS sdk
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH="/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:${PATH}"
+RUN apt-get update && apt-get install -y --no-install-recommends curl unzip \
+    && rm -rf /var/lib/apt/lists/*
+ARG ANDROID_COMMAND_TOOLS=15859902
+ARG ANDROID_COMMAND_TOOLS_SHA256=4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583
+RUN curl --fail --location --retry 3 \
+      "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_COMMAND_TOOLS}_latest.zip" \
+      --output /tmp/android-tools.zip \
+    && echo "${ANDROID_COMMAND_TOOLS_SHA256}  /tmp/android-tools.zip" | sha256sum --check \
+    && mkdir -p /opt/android-sdk/cmdline-tools \
+    && unzip -q /tmp/android-tools.zip -d /opt/android-sdk/cmdline-tools \
+    && mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest \
+    && rm /tmp/android-tools.zip \
+    && yes | sdkmanager --licenses >/dev/null \
+    && sdkmanager 'platform-tools' 'platforms;android-36' 'build-tools;35.0.0'
+
+FROM sdk AS apk
+WORKDIR /app
+COPY --from=web /app/node_modules/@capacitor/android ./node_modules/@capacitor/android
+COPY --from=web /app/android ./android
+WORKDIR /app/android
+ARG LUNA_ANDROID_APPLICATION_SUFFIX=
+RUN --mount=type=cache,id=luna-android-gradle,target=/root/.gradle \
+    --mount=type=cache,id=luna-android-debug-key,target=/root/.android \
+    if [ -n "$LUNA_ANDROID_APPLICATION_SUFFIX" ]; then \
+      sh ./gradlew --no-daemon --max-workers=2 assembleDebug "-PlunaApplicationSuffix=$LUNA_ANDROID_APPLICATION_SUFFIX"; \
+    else \
+      sh ./gradlew --no-daemon --max-workers=2 assembleDebug; \
+    fi \
+    && /opt/android-sdk/build-tools/35.0.0/apksigner verify app/build/outputs/apk/debug/app-debug.apk \
+    && mkdir -p /artifacts \
+    && artifact_name=luna-debug.apk \
+    && if [ -n "$LUNA_ANDROID_APPLICATION_SUFFIX" ]; then artifact_name=luna-lan-debug.apk; fi \
+    && cp app/build/outputs/apk/debug/app-debug.apk "/artifacts/$artifact_name" \
+    && cd /artifacts && sha256sum "$artifact_name" > "$artifact_name.sha256"
+
+FROM sdk AS emulator
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libnss3 libx11-6 libxcb1 libxcomposite1 libxcursor1 libxi6 libxtst6 \
+      libasound2t64 libpulse0 libgl1 libdbus-1-3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && sdkmanager 'emulator' 'system-images;android-36;google_apis;x86_64' \
+    && echo no | avdmanager create avd --name luna-smoke \
+      --package 'system-images;android-36;google_apis;x86_64' --device pixel_7
+ARG ANDROID_EMULATOR_BUILD=15507667
+ARG ANDROID_EMULATOR_SHA256=1eade4cf2df6ea8eeead4902c635897ba12aaa32aac4389eaae0fdb498a5b830
+RUN curl --fail --location --retry 3 \
+      "https://redirector.gvt1.com/edgedl/android/repository/emulator-linux_x64-${ANDROID_EMULATOR_BUILD}.zip" \
+      --output /tmp/emulator.zip \
+    && echo "${ANDROID_EMULATOR_SHA256}  /tmp/emulator.zip" | sha256sum --check \
+    && rm -rf /opt/android-sdk/emulator \
+    && unzip -q /tmp/emulator.zip -d /opt/android-sdk \
+    && rm /tmp/emulator.zip
+COPY android/scripts/run-emulator.sh /usr/local/bin/luna-emulator
+ENTRYPOINT ["sh", "/usr/local/bin/luna-emulator"]
+
+FROM alpine:3.23.3 AS export
+COPY --from=apk /artifacts /artifacts
+ARG LUNA_ANDROID_APPLICATION_SUFFIX=
+ENV LUNA_ANDROID_APPLICATION_SUFFIX=$LUNA_ANDROID_APPLICATION_SUFFIX
+USER 1000:1000
+CMD ["sh", "-c", "if [ -n \"$LUNA_ANDROID_APPLICATION_SUFFIX\" ]; then cp /artifacts/luna-lan-debug.apk /artifacts/luna-lan-debug.apk.sha256 /output/; else cp /artifacts/luna-debug.apk /artifacts/luna-debug.apk.sha256 /output/; fi"]

@@ -40,6 +40,7 @@ $RECYCLE.BIN/
 !.env.example
 !.env.sample
 !.env.template
+/data/
 *.local
 *.secret
 *.secrets
@@ -73,6 +74,7 @@ logs/
 # Common build and generated output
 build/
 dist/
+dist-web/
 out/
 target/
 release/
@@ -98,6 +100,7 @@ _site/
 
 # JavaScript and TypeScript
 node_modules/
+.devhome/
 bower_components/
 jspm_packages/
 web_modules/

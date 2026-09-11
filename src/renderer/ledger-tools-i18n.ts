@@ -1,0 +1,106 @@
+import type { AppLocale } from '../shared/settings';
+
+const en = {
+  title: 'Ledger sync & backup',
+  help: 'Keep recording offline. Connect your own object storage to share encrypted ledger history across devices.',
+  connection: 'Connect encrypted ledger sync', endpoint: 'S3-compatible endpoint', region: 'Region', bucket: 'Bucket', prefix: 'Object prefix',
+  pathStyle: 'Use path-style requests', accessKey: 'Access key ID', secretKey: 'Secret access key', token: 'Session token (optional)',
+  syncPassword: 'Ledger sync password', passwordHelp: 'Use at least 12 characters and no more than 1,024 UTF-8 bytes. Use the same password on every device; it cannot be recovered.',
+  connectionHelp: 'Credentials stay in this session only. Re-enter them after restarting. Use HTTPS; plain HTTP is allowed only for a local loopback test endpoint. Browser endpoints also need CORS.',
+  configure: 'Connect and sync', syncNow: 'Sync now', disconnect: 'Disconnect this session',
+  disabled: 'Sync is disconnected.', ready: 'Connected for this session.', syncing: 'Synchronizing encrypted ledger…',
+  synced: 'Ledger synchronized.', pending: 'Local changes are waiting to sync.', failed: 'Sync failed. Local data is retained; retry when ready.',
+  lastSync: 'Last successful sync', disconnected: 'Disconnected. Your local ledger and remote data are retained.',
+  backup: 'Encrypted backup and restore', exportPassword: 'Backup encryption password', exportBackup: 'Download encrypted backup', saveBackup: 'Save encrypted backup',
+  backupHelp: 'Store this encrypted file and its password safely. Restoring into an empty app creates the saved workspace. Importing into an existing workspace merges its history.',
+  importFile: 'Encrypted backup file (.json, up to 12 MiB)', importPassword: 'Backup decryption password',
+  confirmImport: 'I want to merge this backup. Existing history is preserved; a different workspace will be rejected.',
+  importBackup: 'Merge encrypted backup', exported: 'Encrypted backup download started.', saved: 'Encrypted backup saved.', imported: 'Backup merged. Review any conflicts below.',
+  backupCancelled: 'Saving was cancelled. No backup was saved; choose a destination to retry.',
+  backupFailed: 'The backup could not be saved. Check the destination and retry; your local ledger is retained.',
+  staleBudget: 'This budget changed in another window or during sync. Your draft was not saved. Keep a copy, reload, and review the current budget before editing again.',
+  conflictTitle: 'Resolve ledger conflicts', conflictWarning: 'Conflicting transactions are excluded from totals. A conflicting budget has no effective limit until you choose a version.',
+  transactionConflict: 'Transaction conflict', budgetConflict: 'Budget conflict', candidate: 'Version', choose: 'Use this version',
+  resolved: 'Resolution saved locally. Sync to share your choice with other devices.',
+  date: 'Date', amount: 'Amount', type: 'Type', income: 'Income', expense: 'Expense', splits: 'Category splits', merchant: 'Merchant',
+  payment: 'Payment method', notes: 'Notes', deletion: 'Deletion status', deleted: 'Deleted', active: 'Active', noLimit: 'No spending limit', emptyValue: 'Not provided',
+  working: 'Working…',
+  passwordError: 'Enter a password with at least 12 Unicode characters and at most 1,024 UTF-8 bytes.',
+  authenticationError: 'The password is incorrect or the encrypted data was changed. Check the password; your local ledger is retained.',
+  envelopeError: 'This encrypted file is invalid or too large. Select an intact Luna backup of at most 12 MiB.',
+  versionError: 'This encrypted format is not supported. Use a compatible Luna version; the original data is retained.',
+  workspaceError: 'This belongs to a different workspace. Use an empty app or a matching workspace; your current data was not replaced.',
+  graphError: 'The ledger history is invalid or incomplete. Keep the original backup and retry with an intact copy.',
+  conflictError: 'Changes arrived while syncing. Review conflicts and sync again.',
+  staleError: 'These versions changed while you were deciding. Review the refreshed candidates and choose again.',
+  networkError: 'Cannot reach object storage. Check your connection, endpoint, HTTPS certificate and browser CORS rules, then retry.',
+  insecureError: 'Use an HTTPS endpoint. Plain HTTP is supported only for localhost loopback testing.',
+  cryptoError: 'Secure encryption is unavailable here. Open Luna over HTTPS or localhost, or use the Android app.',
+  credentialsError: 'Check the endpoint, bucket, region and credentials, then reconnect.',
+  permissionError: 'Object storage denied access. Check this credential’s read and conditional-write permissions.',
+  sessionError: 'Reconnect this session before synchronizing.', fileError: 'Select an encrypted Luna JSON backup of at most 12 MiB and confirm the merge.',
+} as const;
+
+export type LedgerToolsMessageKey = keyof typeof en;
+
+const zh: Record<LedgerToolsMessageKey, string> = {
+  title: '账本同步与备份', help: '离线时照常记账。连接自己的对象存储，在设备之间同步加密账本历史。',
+  connection: '连接加密账本同步', endpoint: 'S3 兼容端点', region: '区域', bucket: '存储桶', prefix: '对象前缀',
+  pathStyle: '使用路径式请求', accessKey: '访问密钥 ID', secretKey: '访问密钥', token: '会话令牌（可选）',
+  syncPassword: '账本同步密码', passwordHelp: '至少 12 个字符，UTF-8 编码不超过 1,024 字节。每台设备使用相同密码；遗失后无法找回。',
+  connectionHelp: '凭据仅在本次会话中保留，重启后需要重新输入。请使用 HTTPS；只有本机回环测试端点允许 HTTP。浏览器连接还需要端点支持 CORS。',
+  configure: '连接并同步', syncNow: '立即同步', disconnect: '断开本次连接', disabled: '同步未连接。', ready: '已连接，仅本次会话有效。',
+  syncing: '正在同步加密账本…', synced: '账本已同步。', pending: '本地修改等待同步。', failed: '同步失败，本地数据已保留，请稍后重试。',
+  lastSync: '最近成功同步', disconnected: '已断开连接，本地账本和远端数据均已保留。',
+  backup: '加密备份与恢复', exportPassword: '备份加密密码', exportBackup: '下载加密备份', saveBackup: '保存加密备份',
+  backupHelp: '请妥善保存加密文件和密码。在空应用中导入可恢复工作区；在已有工作区中导入会合并历史。',
+  importFile: '加密备份文件（JSON，最大 12 MiB）', importPassword: '备份解密密码',
+  confirmImport: '我确认合并此备份。已有历史会保留；不同工作区的备份将被拒绝。', importBackup: '合并加密备份',
+  exported: '已开始下载加密备份。', saved: '加密备份已保存。', imported: '备份已合并，请检查下方是否有冲突。',
+  backupCancelled: '已取消保存，未生成备份。请选择保存位置后重试。',
+  backupFailed: '备份未能保存。请检查目标位置后重试；本地账本已保留。',
+  staleBudget: '预算已被其他窗口或同步修改，当前草稿未保存。请先保留草稿副本，重新加载并核对最新预算后再编辑。',
+  conflictTitle: '处理账本冲突', conflictWarning: '有冲突的交易暂不计入汇总；有冲突的预算暂不生效，请明确选择要保留的版本。',
+  transactionConflict: '交易冲突', budgetConflict: '预算冲突', candidate: '版本', choose: '采用此版本', resolved: '选择已保存在本地。请同步，让其他设备收到这一结果。',
+  date: '日期', amount: '金额', type: '类型', income: '收入', expense: '支出', splits: '分类拆分', merchant: '商户', payment: '支付方式', notes: '备注',
+  deletion: '删除状态', deleted: '已删除', active: '未删除', noLimit: '不设支出上限', emptyValue: '未填写', working: '正在处理…',
+  passwordError: '请输入至少 12 个 Unicode 字符、UTF-8 编码不超过 1,024 字节的密码。',
+  authenticationError: '密码不正确，或加密数据已被改动。请核对密码；本地账本已保留。',
+  envelopeError: '加密文件无效或过大。请选择完整的 Luna 备份，文件不得超过 12 MiB。',
+  versionError: '暂不支持此加密格式。请使用兼容的 Luna 版本；原始数据已保留。',
+  workspaceError: '此数据属于另一个工作区。请在空应用或对应工作区中导入；当前数据没有被替换。',
+  graphError: '账本历史无效或不完整。请保留原备份，使用完整副本重试。', conflictError: '同步时又收到了修改。请检查冲突后再次同步。',
+  staleError: '你选择期间候选版本发生了变化。请检查刷新后的版本并重新选择。',
+  networkError: '无法连接对象存储。请检查网络、端点、HTTPS 证书和浏览器 CORS 设置，然后重试。',
+  insecureError: '请使用 HTTPS 端点。仅 localhost 本机回环测试允许 HTTP。',
+  cryptoError: '此环境无法使用安全加密。请通过 HTTPS 或 localhost 打开 Luna，或使用 Android 应用。',
+  credentialsError: '请核对端点、存储桶、区域和凭据，然后重新连接。', permissionError: '对象存储拒绝访问。请检查凭据的读取和条件写入权限。',
+  sessionError: '请先重新连接本次会话，再进行同步。', fileError: '请选择不超过 12 MiB 的 Luna 加密 JSON 备份，并确认合并。',
+};
+
+export const ledgerToolsMessages: Record<AppLocale, Readonly<Record<LedgerToolsMessageKey, string>>> = { en, 'zh-CN': zh };
+
+export function ledgerToolsMessage(locale: AppLocale, key: LedgerToolsMessageKey): string {
+  return ledgerToolsMessages[locale][key];
+}
+
+export function ledgerToolsErrorMessage(locale: AppLocale, error: unknown): string | undefined {
+  const code = error instanceof Error ? /LUNA_ERROR:([a-z-]+)/.exec(error.message)?.[1] ?? error.message : '';
+  const keys: Record<string, LedgerToolsMessageKey> = {
+    'ledger-password-invalid': 'passwordError', 'ledger-wrong-password-or-tampered': 'authenticationError',
+    'ledger-invalid-envelope': 'envelopeError', 'ledger-unsupported-envelope': 'versionError', 'ledger-too-large': 'envelopeError',
+    'ledger-workspace-mismatch': 'workspaceError', 'ledger-invalid-document': 'graphError', 'ledger-invalid-parent': 'graphError',
+    'ledger-cycle': 'graphError', 'ledger-revision-collision': 'graphError', 'ledger-conflict': 'conflictError', 'ledger-stale-heads': 'staleError',
+    'ledger-crypto-unavailable': 'cryptoError', 'ledger-insecure-connection': 'insecureError',
+    'ledger-network': 'networkError', network: 'networkError', transient: 'networkError',
+    'ledger-remote-network': 'networkError', 'ledger-remote-permission': 'permissionError',
+    'ledger-remote-authentication': 'credentialsError', 'ledger-remote-conflict': 'conflictError',
+    'ledger-remote-not-found': 'sessionError', 'ledger-remote-invalid-response': 'networkError',
+    'ledger-sync-busy': 'working', 'ledger-sync-cancelled': 'sessionError', 'ledger-empty': 'sessionError',
+    authentication: 'credentialsError', permission: 'permissionError', 'invalid-settings': 'credentialsError',
+    'ledger-session-disabled': 'sessionError', 'ledger-session-unconfigured': 'sessionError', 'ledger-file-invalid': 'fileError',
+    'ledger-backup-cancelled': 'backupCancelled', 'ledger-backup-failed': 'backupFailed', 'ledger-stale-budget': 'staleBudget',
+  };
+  const key = Object.hasOwn(keys, code) ? keys[code] : undefined;
+  return key === undefined ? undefined : ledgerToolsMessage(locale, key);
+}

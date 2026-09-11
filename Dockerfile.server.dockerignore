@@ -1,0 +1,14 @@
+**
+!Dockerfile.server
+!package.json
+!package-lock.json
+!tsconfig.json
+!tsconfig.server.json
+!deploy/
+!deploy/server-runtime-package.mjs
+!src/
+!src/server/
+!src/server/**
+!src/shared/
+!src/shared/**
+**/*.test.ts

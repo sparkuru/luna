@@ -41,6 +41,7 @@ services:
       LUNA_DATA_DIR: /data
       LUNA_RUNTIME_CONFIG_FILE: /data/.luna/runtime.json
       LUNA_ALLOWED_ORIGINS: "${LUNA_ALLOWED_ORIGINS:-http://127.0.0.1:8080,http://localhost:8080,https://localhost}"
+      LUNA_ALLOW_INSECURE_LAN: "${LUNA_ALLOW_INSECURE_LAN:-false}"
       LUNA_HOST: 0.0.0.0
       LUNA_PORT: 3000
     volumes:

@@ -18,6 +18,12 @@ Common cross-layer bugs:
 
 ## Before Implementing Cross-Layer Features
 
+For asynchronous synchronization, trace cancellation all the way to the
+transaction commit, not just the network request or a check after `await`.
+Also identify the version actually observed by the user's form: using the
+latest version at submit time can turn stale financial input into a silent
+overwrite. See [ledger sync](../backend/ledger-sync-guidelines.md).
+
 ### Step 1: Map the Data Flow
 
 Draw out how data moves:
@@ -325,3 +331,48 @@ state correctly, but several commands still re-parsed event payload fields with
 local casts. The fix was to make the core event layer own `ThreadChannelEvent`
 and `isThreadEvent`, make `reduceChannelMetadata` the only channel metadata
 projection, and make `reduceThreads` the only thread replay reducer.
+## Remote change propagation: trace the whole chain
+
+When one device writes locally and another device appears stale, do not stop
+at the renderer. Verify the chain in this order:
+
+```text
+device B local commit
+  -> device B explicit/automatic sync
+  -> authenticated server object + safe marker changes
+  -> device A marker probe (timer or foreground)
+  -> device A encrypted pull/decrypt/merge/SQLite commit
+  -> host change notification
+  -> renderer snapshot/settings/status refetch
+```
+
+The server cannot pull an unsynchronized device's local database. A successful
+local write on device B is not evidence that the shared object changed. The
+minimum diagnostic evidence is therefore: an object version/marker change at
+the server, a bounded marker request from device A, a successful sync result on
+device A, and a fresh current-profile snapshot read. Keep the encrypted body
+and credentials out of logs and diagnostics.
+
+The baseline transport is a safe marker over HTTPS, probed while the app is
+active and immediately when it returns to the foreground. WebSocket push may
+reduce latency, but must not replace the marker check or become a correctness
+dependency. A cross-device test must use two isolated local stores and assert
+that the renderer-facing change notification happens after the receiving local
+store contains the new revision, not merely after the marker changed.
+
+For browser session continuity, do not assume that a SharedWorker survives a
+reload when the last page disconnects. A reload-safe session handoff may use
+tab-scoped `sessionStorage` alongside the in-memory worker; it must never use
+`localStorage`, OPFS, the ledger database, or a server-side plaintext secret as
+a convenience fallback. Explicit logout must clear every session transport.
+
+Before accepting a fix, review each boundary explicitly:
+
+- [ ] source-device local mutation and upload are separately observable;
+- [ ] server marker ownership and authorization are tested;
+- [ ] receiver timer/foreground probe is exercised;
+- [ ] decrypt/merge commits to the receiver's active local scope;
+- [ ] host notifications trigger current-profile query refetch;
+- [ ] refresh/reload restores only the intended tab-scoped session;
+- [ ] two-device and reload scenarios run against the packaged Web/Android
+      entrypoint, not only a unit fake.
