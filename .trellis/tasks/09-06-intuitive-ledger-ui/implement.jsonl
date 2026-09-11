@@ -1,0 +1,9 @@
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Web-first host boundary, responsive validation, IndexedDB behavior, privacy, keyboard, and production Playwright requirements."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Semantic DOM composition, accessible controls, safe text rendering, and visual hierarchy for the new quick-entry flow."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Preserve snapshot, form drafts, budget observed heads, async status, and refresh behavior during the UI reorganization."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Reuse typed LunaLedgerApi and shared TransactionDraft contracts without renderer-side casts or host leakage."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Renderer error, accessibility, privacy, reduced-motion, and cross-layer validation rules."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Trace quick-entry data from renderer through typed API, domain validation, and SQLite/IndexedDB without changing the persistence contract."}
+{"file":".trellis/spec/trellis-plus/uupm-integration.md","reason":"Use task-specific UI evidence and require semantic Playwright plus human visual/device review."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/ui-ux-pro-max.md","reason":"Reuse the existing Luna UI baseline and approved design decisions instead of copying the video reference."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/validation-cross-platform.md","reason":"Carry forward tested Web, Electron, Android, sync, and known human-review boundaries."}

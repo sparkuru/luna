@@ -1,0 +1,17 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Review round-trip contracts between shared domain, IPC, SQLite, browser Worker, and object storage."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check for duplicated validation, constants, payload decoding, and state transitions."}
+{"file":".trellis/spec/backend/index.md","reason":"Backend review scope for main-process persistence and synchronization."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Review migrations, transactions, integer preservation, and internal SQLite boundaries."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Review classification and propagation of persistence, IPC, crypto, and remote failures."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Review that diagnostics exclude passwords, keys, credentials, and plaintext financial payloads."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Backend quality and testing review context."}
+{"file":".trellis/spec/frontend/index.md","reason":"Frontend review scope for renderer and browser Spike boundaries."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Renderer/browser quality and test review context."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Review strict typing and runtime validation at renderer/worker boundaries."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Verify project policy, Docker boundary, UI validation, staging, and human-review requirements."}
+{"file":".trellis/spec/trellis-plus/uupm-integration.md","reason":"Verify any user-visible Electron validation surface follows the UI integration policy."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/phase0-toolchain-and-validation.md","reason":"Review implementation claims against the research evidence and deferred-risk caveats."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/ui-ux-pro-max.md","reason":"Review the renderer against the task-specific UI baseline and accessibility checklist."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/validation-first-usable.md","reason":"Verify reported command results, made artifact contents, packaged bridge smoke, and explicit deferred capabilities."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/config-i18n-sync.md","reason":"Review settings/i18n/CNY/privacy/config-sync implementation against secret separation, encryption, conditional-write, merge, accessibility, and conformance contracts."}
+{"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Review Web host boundary, localStorage privacy, and Playwright validation contract."}

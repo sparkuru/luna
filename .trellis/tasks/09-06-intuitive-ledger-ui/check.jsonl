@@ -1,0 +1,8 @@
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Check Web-first implementation, production offline shell, semantic browser coverage, narrow viewport, and no host boundary leakage."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Check hierarchy, semantic controls, focus, accessible names, and safe DOM rendering."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Check that refresh, settings, sync, conflicts, and budget drafts do not replace active forms."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Check API and TransactionDraft boundaries and strict TypeScript typing."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check error states, privacy masking, reduced motion, keyboard and human residual risks."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Review renderer-to-domain-to-storage data flow and error propagation."}
+{"file":".trellis/spec/trellis-plus/uupm-integration.md","reason":"Check task-specific UI decisions, Playwright evidence, and human review requirements."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/validation-cross-platform.md","reason":"Verify the new UI does not regress the already validated offline, sync, backup, Electron, and Android boundaries."}

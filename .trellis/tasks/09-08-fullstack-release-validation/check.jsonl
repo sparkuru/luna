@@ -1,0 +1,7 @@
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Applicable existing contract; parent proposed design governs approved migration changes."}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Applicable existing contract; parent proposed design governs approved migration changes."}
+{"file":".trellis/spec/guides/cross-platform-thinking-guide.md","reason":"Applicable existing contract; parent proposed design governs approved migration changes."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Applicable existing contract; parent proposed design governs approved migration changes."}
+{"file":".trellis/tasks/09-08-frontend-shadcn-migration/research/architecture-evidence.md","reason":"Repository evidence, official sources and A0 technical gates."}
+{"file":".trellis/spec/backend/deployment-and-recovery.md","reason":"Actual Compose, secret files, TCP readiness, Docker DNS and isolated recovery contracts."}
+{"file":".trellis/tasks/09-08-fullstack-release-validation/research/deployment-validation.md","reason":"Executed foundation checkpoints and explicit unrun final native boundaries."}

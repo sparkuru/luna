@@ -1,0 +1,17 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Keep domain, IPC, SQLite, browser-worker, and object-store data formats explicit and validate each boundary once."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Centralize shared invariants, DTO decoders, constants, and state transitions instead of duplicating them across adapters."}
+{"file":".trellis/spec/backend/index.md","reason":"Backend layer index for main-process persistence and synchronization."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Database guidance for SQLite migrations, transactions, and internal schema boundaries."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Error-boundary guidance for IPC, SQLite, crypto, and object-store failures."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Logging boundary for diagnostics without secrets or plaintext financial data."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Backend testing and forbidden-pattern context for native adapters."}
+{"file":".trellis/spec/frontend/index.md","reason":"Frontend layer index for renderer and browser Spike entry points."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Renderer and browser quality/test context."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Strict TypeScript and runtime validation context for IPC and browser payloads."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Project-shared Trellis Plus policy for Docker, UI validation, staging, and review."}
+{"file":".trellis/spec/trellis-plus/uupm-integration.md","reason":"UI planning and validation policy if the Electron smoke surface becomes user-visible."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/phase0-toolchain-and-validation.md","reason":"Evidence-backed toolchain, Electron ABI, native SQLite, OPFS, packaging, and testing decisions."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/ui-ux-pro-max.md","reason":"Task-specific UI design baseline and accessibility checklist adapted for the local Electron ledger checkpoint."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/validation-first-usable.md","reason":"Record reproducible typecheck, tests, packaging, made-artifact, IPC, SQLite close/reopen, and deferred-scope evidence for the first usable checkpoint."}
+{"file":".trellis/tasks/08-30-income-expense-mvp/research/config-i18n-sync.md","reason":"Implementation-ready settings, i18n, CNY, privacy, local-secret, encrypted S3 config-sync, merge, and validation contracts for the current extension."}
+{"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Web host boundary, localStorage privacy, and Playwright validation contract."}

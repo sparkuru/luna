@@ -1,0 +1,28 @@
+{
+  "id": "income-expense-mvp",
+  "name": "income-expense-mvp",
+  "title": "规划离线优先收支记录 MVP",
+  "description": "",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "dev",
+  "assignee": "dev",
+  "createdAt": "2026-08-30",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-06-intuitive-ledger-ui"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "2026-09-05 usable delivery verified: 143 unit/integration tests, 42 production Playwright tests, Electron packaged smoke, real MinIO config+ledger, Android offline/crypto/SAF/settings runtime all pass. Web localhost:8080 remains healthy; APK SHA256 4be348c7bad5844351dad10f9e6c09b8d0568b74f3c7d531c096f56f71ccc7e5. Code/source/spec work is uncommitted, preserving the initial mixed worktree. Next workflow step: targeted human device/private-HTTPS/visual review, then explicit Phase 3.4 commit plan confirmation; only then finish-work archive/journal. Do not repeat implementation already evidenced in research/validation-cross-platform.md.",
+  "meta": {}
+}

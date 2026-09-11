@@ -1,0 +1,11 @@
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Defines the existing encrypted graph, local-first, ETag/CAS, conflict, tombstone, cancellation and cross-runtime sync contracts."}
+{"file":".trellis/spec/backend/config-sync-guidelines.md","reason":"Defines the separate encrypted portable-settings object, credential persistence and S3 provider contracts."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Defines local database ownership, migration, transaction and rollback requirements while replacing the server database."}
+{"file":".trellis/spec/backend/deployment-and-recovery.md","reason":"Defines Compose initialization, secret handling, readiness, upgrade, backup and isolated recovery requirements."}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Defines the Web local-storage boundary, cross-device browser constraints, offline behavior and required Web validation order."}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Defines Android WebView/network/secure-origin and packaged-runtime constraints for shared S3 sync."}
+{"file":".trellis/spec/guides/cross-platform-thinking-guide.md","reason":"Requires shared contract-first behavior across Web, Electron and Android before platform-specific integration."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Requires tracing deployment, transport, local persistence, renderer state and validation across layers."}
+{"file":".trellis/tasks/09-10-sqlite-self-hosted-sync/research/indexeddb-and-file-picker.md","reason":"Records the evidence-backed IndexedDB durability and cross-platform file-picker boundary used by the approved local-ledger design."}
+{"file":".trellis/tasks/09-10-sqlite-self-hosted-sync/research/sync-architecture-comparison.md","reason":"Records the evidence-backed browser/Android background-sync limits and the direct-S3 versus server-control-plane decision boundary."}
+{"file":".trellis/tasks/09-10-sqlite-self-hosted-sync/research/ui-design-system.md","reason":"Records the task-level visual, accessibility, responsive and sync-status UI baseline generated before user-visible implementation."}

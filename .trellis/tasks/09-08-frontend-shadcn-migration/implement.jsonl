@@ -1,0 +1,10 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Current compatibility and validation boundary; proposed replacements require approval."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Current compatibility and validation boundary; proposed replacements require approval."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Current compatibility and validation boundary; proposed replacements require approval."}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Current compatibility and validation boundary; proposed replacements require approval."}
+{"file":".trellis/spec/backend/index.md","reason":"Current compatibility and validation boundary; proposed replacements require approval."}
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Current compatibility and validation boundary; proposed replacements require approval."}
+{"file":".trellis/spec/backend/config-sync-guidelines.md","reason":"Current compatibility and validation boundary; proposed replacements require approval."}
+{"file":".trellis/spec/guides/cross-platform-thinking-guide.md","reason":"Current compatibility and validation boundary; proposed replacements require approval."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Current compatibility and validation boundary; proposed replacements require approval."}
+{"file":".trellis/tasks/09-08-frontend-shadcn-migration/research/architecture-evidence.md","reason":"Architecture evidence, official documentation and pre-implementation checks."}

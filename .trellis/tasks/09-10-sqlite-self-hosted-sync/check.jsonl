@@ -1,0 +1,11 @@
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Check graph validation, encrypted transport, conditionals, conflict UI, cancellation and local-first behavior against the approved design."}
+{"file":".trellis/spec/backend/config-sync-guidelines.md","reason":"Check that shared S3 provisioning does not merge the ledger/config envelopes or leak secrets and preserves provider conformance."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Check unified SQLite transactions, schema migrations, local backup boundaries and rollback behavior."}
+{"file":".trellis/spec/backend/deployment-and-recovery.md","reason":"Check single-Compose lifecycle, secret/runtime isolation, data snapshot and new-instance restore evidence."}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Check Web-first delivery, SQLite-WASM/OPFS offline behavior, HTTPS/auth boundary and renderer-only API use."}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Check Android endpoint reachability, certificate trust and packaged WebView behavior."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check test/lint/type/build evidence and user-visible failure states for the cross-layer change."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Check end-to-end data flow from Compose storage through S3 transport, local DB, API projection and UI."}
+{"file":".trellis/tasks/09-10-sqlite-self-hosted-sync/research/indexeddb-and-file-picker.md","reason":"Check that claims about IndexedDB persistence and file selection match the documented platform boundary and do not overpromise durability."}
+{"file":".trellis/tasks/09-10-sqlite-self-hosted-sync/research/sync-architecture-comparison.md","reason":"Check that automatic-sync claims respect Web/Android background scheduling limits and that the selected identity/S3 boundary is reflected in validation."}
+{"file":".trellis/tasks/09-10-sqlite-self-hosted-sync/research/ui-design-system.md","reason":"Check sync status visibility, accessible interaction states, responsive targets and consistency with the approved task-level UI baseline."}
