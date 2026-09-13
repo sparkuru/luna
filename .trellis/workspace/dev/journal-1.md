@@ -57,3 +57,24 @@ Resolved the remaining product decisions, rewrote the root PRD for an offline-fi
 ### Status
 
 [OK] **Completed**
+
+
+## Session 3: 提交 Luna 前端体验阶段进度
+
+**Date**: 2026-09-13
+**Task**: 提交 Luna 前端体验阶段进度
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+提交当前 175 文件本地进度快照；完成前端导航、记账录入、统计搜索、预算、详情、附件体验与本地验证。hako API/typecheck/unit/server/contract/sync 门禁通过，生产桌面与窄屏 Web Playwright 74/74 通过（排除已知 Node20 server-account 段错误）。部署、跨端联动、真实同步和平台人工验收后置，后续聚焦前端与体验。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `00f7955` | (see git log) |
+
+### Status
+
+[OK] **Completed**
