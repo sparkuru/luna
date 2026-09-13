@@ -27,7 +27,7 @@ test("committed transaction is never replayed when its refresh fails", async ({
       return snapshot(month);
     };
   });
-  await page.locator("#record-expense").click();
+  await page.locator("#primary-record").click();
   await page.locator("#transaction-amount").fill("12.34");
   await page.locator("#transaction-category").fill("Saved once");
   await page.locator("#save-transaction").click();
@@ -55,7 +55,7 @@ test("Radix dialogs retain keyboard focus without inline stylesheet CSP exceptio
     });
   });
   await ready(page);
-  await page.locator("#record-expense").click();
+  await page.locator("#primary-record").click();
   await expect(page.locator("#transaction-amount")).toBeFocused();
   await page.locator("#choose-category").click();
   await expect(page.locator("#category-custom")).toBeFocused();
@@ -66,7 +66,7 @@ test("Radix dialogs retain keyboard focus without inline stylesheet CSP exceptio
   await page.locator("#use-category").click();
   await expect(page.locator("#choose-category")).toBeFocused();
   await page.keyboard.press("Escape");
-  await expect(page.locator("#record-expense")).toBeFocused();
+  await expect(page.locator("#primary-record")).toBeFocused();
   expect(
     await page.evaluate(
       () => (window as unknown as { lunaViolations: string[] }).lunaViolations,
@@ -95,6 +95,50 @@ test("validated month and type deep links leave free text filters out of history
   await expect(page).toHaveURL(/\/ledger$/);
 });
 
+test("month navigation scopes the ledger to the selected month", async ({
+  page,
+}) => {
+  await ready(page);
+  const currentMonth = await page.locator("#month-picker").inputValue();
+  const year = Number(currentMonth.slice(0, 4));
+  const monthNumber = Number(currentMonth.slice(5, 7));
+  const previousDate = new Date(year, monthNumber - 2, 15);
+  const previousMonth = `${previousDate.getFullYear()}-${String(
+    previousDate.getMonth() + 1,
+  ).padStart(2, "0")}`;
+  await page.evaluate(async ({ currentMonth, previousMonth }) => {
+    await window.lunaLedger.createTransaction({
+      type: "expense",
+      amountMinor: "1200",
+      date: `${currentMonth}-05`,
+      splits: [{ category: "Current month record", amountMinor: "1200" }],
+    });
+    await window.lunaLedger.createTransaction({
+      type: "expense",
+      amountMinor: "3400",
+      date: `${previousMonth}-15`,
+      splits: [{ category: "Previous month record", amountMinor: "3400" }],
+    });
+  }, { currentMonth, previousMonth });
+  await page.reload();
+  await expect(page.locator("#transaction-list-region")).toContainText(
+    "Current month record",
+  );
+  await expect(page.locator("#transaction-list-region")).not.toContainText(
+    "Previous month record",
+  );
+
+  await page.locator("#previous-month").click();
+  await expect(page.locator("#month-picker")).toHaveValue(previousMonth);
+  await expect(page.locator("#transactions-title")).toBeVisible();
+  await expect(page.locator("#transaction-list-region")).toContainText(
+    "Previous month record",
+  );
+  await expect(page.locator("#transaction-list-region")).not.toContainText(
+    "Current month record",
+  );
+});
+
 test("empty regex mode keeps the unfiltered ledger visible", async ({ page }) => {
   await ready(page);
   await page.evaluate(async () => {
@@ -121,7 +165,7 @@ test("route blocker preserves a budget draft until the user discards it", async 
   page,
 }) => {
   await ready(page);
-  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("button", { name: "Monthly spending limit", exact: true }).click();
+  await page.goto("/budget");
   await page.locator("#budget-input").fill("321.09");
   page.once("dialog", (dialog) => void dialog.dismiss());
   await page
@@ -149,7 +193,7 @@ test("native back closes nested dialogs and follows menu parents before leaving 
         new CustomEvent("luna:navigate-back", { cancelable: true }),
       ),
     );
-  await page.locator("#record-expense").click();
+  await page.locator("#primary-record").click();
   await page.locator("#transaction-amount").fill("45.67");
   await page.locator("#choose-category").click();
   await expect(page.locator("#category-custom")).toBeFocused();
@@ -158,7 +202,7 @@ test("native back closes nested dialogs and follows menu parents before leaving 
   await expect(page.locator("#transaction-dialog")).toBeVisible();
   expect(await back()).toBe(false);
   await expect(page.locator("#transaction-dialog")).not.toBeVisible();
-  await page.locator("#record-expense").click();
+  await page.locator("#primary-record").click();
   await expect(page.locator("#transaction-amount")).toHaveValue("45.67");
   expect(await back()).toBe(false);
   await page.locator("#open-secondary-menu").click();

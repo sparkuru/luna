@@ -1,0 +1,8 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Review semantic HTML, responsive composition, focus, dialog and styling consistency"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Review accessibility, privacy, offline states and regression boundaries"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Review Web CSP/offline host, viewport and browser validation evidence"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Review that layout/navigation changes preserve Query, draft and committed-write semantics"}
+{"file":".trellis/tasks/09-13-web-visual-redesign/prd.md","reason":"Check implementation against Web-only scope and observable acceptance criteria"}
+{"file":".trellis/tasks/09-13-web-visual-redesign/design.md","reason":"Check surface isolation, navigation architecture and page composition decisions"}
+{"file":".trellis/tasks/09-13-web-visual-redesign/research/ui-ux-review.md","reason":"Compare final screenshots and interaction behavior with recorded evidence and UI/UX rules"}
+{"file":".trellis/tasks/09-12-luna-ui-redesign/acceptance.md","reason":"Ensure parent task capabilities and management entry points were not removed by the child UI work"}

@@ -59,7 +59,7 @@ test('actual browser v1 settings sync interoperates with Node and preserves fina
   try {
     const native = applySettingsUpdate(createDefaultSettings('native-private-device', 'en'), { locale: 'zh-CN', hideSensitiveAmountsByDefault: false }, '2026-01-01T00:00:00.000Z');
     remote.replace(new TextDecoder().decode(await encryptRemoteConfig(remotePayloadFromSettings(native), PASSWORD)));
-    await page.locator('#record-expense').click();
+    await page.locator('#primary-record').click();
     await page.locator('#transaction-amount').fill('25.60');
     await page.locator('#transaction-category').fill('Unsubmitted category');
     await page.locator('#transaction-advanced-details > summary').click();
@@ -117,7 +117,7 @@ test('actual browser v1 settings sync interoperates with Node and preserves fina
     page.once('dialog', (dialog) => void dialog.accept());
     await page.locator('#clear-sync-connection').click();
     await expect.poll(async () => (await page.evaluate(() => window.lunaLedger.getSettings())).hasConfigSyncSecrets).toBe(false);
-    await page.getByRole('navigation', { name: /Primary navigation|主导航/ }).getByRole('button', { name: /Monthly spending limit|每月支出上限/, exact: true }).click();
+    await page.locator('.settings-navigation').getByRole('button', { name: /Monthly spending limit|每月支出上限/, exact: true }).click();
     await page.locator('#budget-input').fill('321.45');
     await expect(page.locator('#transaction-notes')).toHaveValue('Keep this draft');
     await expect(page.locator('#budget-input')).toHaveValue('321.45');
@@ -134,7 +134,7 @@ test('settings wrong-password and permission errors preserve local settings, cip
   try {
     remote.replace(new TextDecoder().decode(await encryptRemoteConfig(remotePayloadFromSettings(createDefaultSettings('native-private-device', 'zh-CN')), PASSWORD)));
     const original = remote.state.body;
-    await page.locator('#record-expense').click();
+    await page.locator('#primary-record').click();
     await page.locator('#transaction-advanced-details > summary').click();
     await page.locator('#transaction-notes').fill('Draft survives sync errors');
     await configureUI(page, remote.endpoint, 'wrong browser settings password');

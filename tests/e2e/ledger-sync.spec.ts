@@ -260,10 +260,7 @@ test('budget forms reject another tab update without losing the stale draft', as
   await ready(page);
   await page.evaluate(() => window.lunaLedger.createWorkspace({ name: 'Budget tabs', currency: 'CNY', precision: 2, monthlyBudgetMinor: '100000' }));
   await page.reload();
-  await page
-    .getByRole('navigation', { name: 'Primary navigation' })
-    .getByRole('button', { name: 'Monthly spending limit', exact: true })
-    .click();
+  await page.goto('/budget');
   await expect(page.locator('#budget-input')).toHaveValue('1000.00');
   const second = await context.newPage();
   await second.goto(page.url());
@@ -290,10 +287,7 @@ test('encrypted sync and presentation refresh never upgrade a budget draft preco
     .getByRole('button', { name: 'Recent ledger', exact: true })
     .click();
   const month = await page.locator('#month-picker').inputValue();
-  await page
-    .getByRole('navigation', { name: 'Primary navigation' })
-    .getByRole('button', { name: 'Monthly spending limit', exact: true })
-    .click();
+  await page.goto('/budget');
   await expect(page.locator('#budget-input')).toHaveValue('1000.00');
   const original = await readLedgerDocument(page, PASSWORD);
   if (original === null) throw new Error('Missing budget fixture');

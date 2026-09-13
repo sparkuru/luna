@@ -60,7 +60,7 @@ test("real server login, encrypted copy, second-device restore and offline profi
     await page.locator("#workspace-name").fill("Original offline family");
     await page.locator("#workspace-form button").click();
     await expect(page.locator("#transactions-title")).toBeVisible();
-    await page.locator("#record-expense").click();
+    await page.locator("#primary-record").click();
     await page.locator("#transaction-amount").fill("12.50");
     await page.locator("#transaction-category").fill("Private meal");
     await page.locator("#save-transaction").click();
@@ -108,7 +108,7 @@ test("real server login, encrypted copy, second-device restore and offline profi
       height: 1,
     });
     const original = await readLedgerDocument(page, ledgerPassword);
-    await page.locator("#record-expense").click();
+    await page.locator("#primary-record").click();
     await page.locator("#transaction-amount").fill("25.60");
     await page.locator("#transaction-category").fill("Retained login draft");
     await page.locator("#close-transaction").click();

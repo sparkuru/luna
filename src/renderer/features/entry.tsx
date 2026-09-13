@@ -38,6 +38,7 @@ import {
 } from "../../web/android-image-input";
 import { secureRandomId } from "../../shared/secure-random";
 import type { AppLocale } from "../../shared/settings";
+import { getClientSurface } from "../client-surface";
 
 export interface Entry {
   type: "income" | "expense";
@@ -161,6 +162,7 @@ export function TransactionDialog({
   const app = useApp();
   const { message: m, snapshot, month } = app;
   const workspace = snapshot.workspace!;
+  const isWebSurface = getClientSurface() === "web";
   const original = entry.transaction;
   const initial = {
     type: original?.type ?? entry.type,
@@ -181,6 +183,7 @@ export function TransactionDialog({
   const [draft, setDraft] = useState(initial);
   const [expression, setExpression] = useState(initial.amount);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [custom, setCustom] = useState("");
   const [categoryError, setCategoryError] = useState(false);
   const [error, setError] = useState("");
@@ -265,6 +268,23 @@ export function TransactionDialog({
     }
     changeAmount(`${expression}${token}`);
   };
+  const calculatorControls = () => (
+    <div className="calculator-grid">
+      {["7", "8", "9", "backspace", "4", "5", "6", "+", "1", "2", "3", "-", ".", "0", "clear", "="]
+        .map((token) => (
+          <Button
+            key={token}
+            type="button"
+            variant={token === "=" ? "default" : "outline"}
+            className={token === "=" ? "equals" : ["+", "-", "backspace"].includes(token) ? "operator" : undefined}
+            aria-label={token === "=" ? m("calculatorEquals") : token === "backspace" ? m("calculatorBackspace") : token}
+            onClick={() => pressCalculator(token)}
+          >
+            {token === "backspace" ? "⌫" : token === "clear" ? "C" : token === "=" ? "=" : token}
+          </Button>
+        ))}
+    </div>
+  );
   const requestClose = () => {
     if (!mutation.isPending) close();
   };
@@ -582,28 +602,16 @@ export function TransactionDialog({
                     precision: workspace.precision,
                     })}
                   </span>
-                <div className="calculator" aria-label={m("calculator")}>
-                  <div className="calculator-title">
-                    <Calculator size={17} aria-hidden="true" />
-                    <span>{m("calculator")}</span>
+                {!isWebSurface && (
+                  <div className="calculator" aria-label={m("calculator")}>
+                    <div className="calculator-title">
+                      <Calculator size={17} aria-hidden="true" />
+                      <span>{m("calculator")}</span>
+                    </div>
+                    <p className="helper">{m("calculatorHelp")}</p>
+                    {calculatorControls()}
                   </div>
-                  <p className="helper">{m("calculatorHelp")}</p>
-                  <div className="calculator-grid">
-                    {["7", "8", "9", "backspace", "4", "5", "6", "+", "1", "2", "3", "-", ".", "0", "clear", "="]
-                      .map((token) => (
-                        <Button
-                          key={token}
-                          type="button"
-                          variant={token === "=" ? "default" : "outline"}
-                          className={token === "=" ? "equals" : ["+", "-", "backspace"].includes(token) ? "operator" : undefined}
-                          aria-label={token === "=" ? m("calculatorEquals") : token === "backspace" ? m("calculatorBackspace") : token}
-                          onClick={() => pressCalculator(token)}
-                        >
-                          {token === "backspace" ? "⌫" : token === "clear" ? "C" : token === "=" ? "=" : token}
-                        </Button>
-                      ))}
-                  </div>
-                </div>
+                )}
               </div>
               <div className="field">
                 <label htmlFor="transaction-category">{m("category")} *</label>
@@ -639,6 +647,36 @@ export function TransactionDialog({
                 value={draft.date}
                 onChange={(e) => change("date", e.target.value)}
               />
+            </div>
+            {isWebSurface && (
+              <details
+                className="calculator"
+                aria-label={m("calculator")}
+                open={calculatorOpen}
+                onToggle={(event) => setCalculatorOpen(event.currentTarget.open)}
+              >
+                <summary className="calculator-title">
+                  <Calculator size={17} aria-hidden="true" />
+                  <span>{m("calculator")}</span>
+                </summary>
+                <p className="helper">{m("calculatorHelp")}</p>
+                {calculatorControls()}
+              </details>
+            )}
+            <div className="form-actions">
+              <Button
+                id="save-transaction"
+                type="submit"
+                disabled={imageBusy || mutation.isPending || locked}
+              >
+                {m(
+                  mutation.isPending
+                    ? "saving"
+                    : original
+                      ? "saveChanges"
+                      : "saveTransaction",
+                )}
+              </Button>
             </div>
             <details
               id="transaction-advanced-details"
@@ -739,21 +777,6 @@ export function TransactionDialog({
                   ))}
                 </ul>
               )}
-            </div>
-            <div className="form-actions">
-            <Button
-              id="save-transaction"
-              type="submit"
-              disabled={imageBusy || mutation.isPending || locked}
-            >
-                {m(
-                  mutation.isPending
-                    ? "saving"
-                    : original
-                      ? "saveChanges"
-                      : "saveTransaction",
-                )}
-              </Button>
             </div>
           </fieldset>
           {original && (

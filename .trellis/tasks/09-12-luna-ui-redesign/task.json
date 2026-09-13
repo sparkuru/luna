@@ -18,7 +18,9 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [],
+  "children": [
+    "09-13-web-visual-redesign"
+  ],
   "parent": null,
   "relatedFiles": [],
   "notes": "2026-09-12 用户先批准规划，后明确“根据新的主线；开始实现”。已读取 handoff、prd、design、attachment-contract、implement、acceptance，validate通过并执行task.py start。保护既有SDK/部署dirty基线；本任务只在本地按P1→P6实现验证，未经明确指令不提交、部署或归档。2026-09-13 用户已明确授权提交当前本地进度；后续主动范围聚焦前端与体验，部署、跨端联动、真实同步及相关验收暂缓。",

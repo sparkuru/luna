@@ -174,11 +174,26 @@ npm run smoke:electron
   where the host allows. Hidden aggregate values must not appear in text,
   ARIA, title, dataset, or live-region content.
 - The shared renderer keeps transaction entry out of the persistent home
-  layout. `#record-expense` and `#record-income` open `#transaction-dialog`,
-  while `#open-secondary-menu` opens `#secondary-menu-dialog`. Budget,
-  category breakdown, display settings, and ledger/config sync tools render
-  inside the secondary dialog so the same primary path is used on desktop,
-  Web, and Android.
+  layout. Web exposes one `#primary-record` action that opens
+  `#transaction-dialog`; the dialog's type switch chooses income or expense.
+  Native hosts may retain `#record-expense` and `#record-income` shortcuts,
+  while `#open-secondary-menu` keeps its native secondary-menu behavior. On
+  Web, that stable control is the Settings navigation item. Budget, category
+  breakdown, display settings, and ledger/config sync tools remain reachable
+  through the existing settings surfaces.
+- The Web route month is a presentation query boundary, not only a heading.
+  `LedgerHome` must query transactions with `dateFrom: <month>-01` and
+  `dateTo: monthEnd(<month>)`, intersecting any user date filters with that
+  range. `#transaction-count`, the empty state, and filter totals must use the
+  same month-scoped count. `App` must treat a placeholder/old snapshot as not
+  ready for the selected month and render loading/error content until
+  `snapshot.summary.month === month`; old transactions must not flash or be
+  shown after a month switch.
+- Web statistics may use a compact HTML plot for the daily/monthly buckets,
+  but every bucket remains keyboard-selectable and has an expandable text
+  detail equivalent. Initial category and largest-expense rankings may be
+  limited to five items only when a visible “view all” control exposes the
+  remaining items.
 - The visible eye control beside each summary label changes only that summary
   amount and stores no session reveal state; the hide-by-default setting remains
   persisted. A reload initializes all three visibility flags from that default.
@@ -206,6 +221,8 @@ npm run smoke:electron
 | Concurrent tabs | Both creates retained through Worker SQLite transactions; stale edits/deletes rejected |
 | Production offline restart | Cached HTML plus every lazy JS/CSS asset load, saved ledger restores, writes work |
 | Narrow viewport | No horizontal overflow; landmarks, controls, and labels remain present |
+| Month switch | Shell stays mounted; selected-month loading state hides old records; loaded ledger, totals, count, and empty state all use the selected month |
+| Dense Web statistics | Compact plot is keyboard reachable; expandable bucket text and selected bucket detail remain available; long rankings expose all rows through an explicit control |
 | Local month boundary | Workspace creation and its initial budget use the same shared local month shown by the UI |
 | Web stylesheet | Computed page background/layout styles are present; no CSP-blocked inline stylesheet is required |
 | New user-visible workflow | Reachable through `npm run web` and covered by browser acceptance before packaging work begins |

@@ -15,8 +15,9 @@ async function setupWorkspace(page: Page, name = 'Intuitive household'): Promise
 }
 
 async function openEntry(page: Page, type: 'expense' | 'income'): Promise<void> {
-  await page.locator(type === 'expense' ? '#record-expense' : '#record-income').click();
+  await page.locator('#primary-record').click();
   await expect(page.locator('#transaction-dialog')).toBeVisible();
+  if (type === 'income') await page.locator('#quick-income').click();
   await expect(page.locator('#transaction-amount')).toBeFocused();
 }
 
@@ -30,8 +31,8 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
   await setupWorkspace(page);
 
   await expect(page.locator('#transaction-list-region')).toContainText('Your ledger starts here');
-  await expect(page.locator('#record-expense')).toBeVisible();
-  await expect(page.locator('#record-income')).toBeVisible();
+  await expect(page.locator('#primary-record')).toBeVisible();
+  await expect(page.locator('#record-expense, #record-income')).toHaveCount(0);
   await expect(page.locator('.quick-entry-panel')).toHaveCount(0);
   await expect(page.locator('#summary-grid .summary-card')).toHaveCount(3);
   await expect(page.locator('#budget-total')).toHaveCount(0);
@@ -82,9 +83,11 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
 test('income entry and advanced fields are keyboard reachable', async ({ page }) => {
   await setupWorkspace(page, 'Keyboard household');
 
-  await page.locator('#record-income').focus();
+  await page.locator('#primary-record').focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#transaction-dialog')).toBeVisible();
+  await page.locator('#quick-income').focus();
+  await page.keyboard.press('Enter');
   await expect(page.locator('#transaction-type')).toHaveValue('income');
   await expect(page.locator('#quick-income')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#transaction-amount').fill('0.1+0.2');
@@ -167,12 +170,13 @@ test('secondary menu and subdued filters stay discoverable without taking over t
   await expect(page.locator('#filter-form')).toBeVisible();
   await page.locator('#filter-details summary').click();
 
-  await expect(page.locator('#open-secondary-menu .menu-icon > span')).toHaveCount(3);
+  await expect(page.locator('#open-secondary-menu .settings-navigation-icon')).toHaveCount(1);
+  await expect(page.locator('#open-secondary-menu .menu-icon')).toHaveCount(0);
   await expect(page.locator('#open-secondary-menu')).not.toContainText('三');
   await page.locator('#open-secondary-menu').click();
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.locator('#settings-title')).toBeVisible();
-  await expect(page.getByRole('link', { name: /Monthly budget|月度预算/i })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /Monthly spending limit|每月支出上限/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /Encrypted backup|加密备份/i })).toBeVisible();
   await page.goto('/ledger');
   await expect(page.locator('#open-secondary-menu')).toBeVisible();
@@ -304,10 +308,10 @@ test('minimum mobile width keeps critical actions above the fixed navigation', a
     clientWidth: document.documentElement.clientWidth,
   }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
-  const income = page.locator('#record-income');
+  const record = page.locator('#primary-record');
   const navigation = page.locator('.primary-navigation');
   const [incomeBox, navigationBox] = await Promise.all([
-    income.boundingBox(),
+    record.boundingBox(),
     navigation.boundingBox(),
   ]);
   expect(incomeBox).not.toBeNull();

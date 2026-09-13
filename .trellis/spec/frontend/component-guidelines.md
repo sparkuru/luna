@@ -67,7 +67,9 @@ The shared ledger home uses one recording mental model across Web, Electron,
 and Android: recent transactions remain the primary content and a clear record
 entry is always discoverable. The home surface contains the brand/workspace
 context, page heading, three summary values (income, spending, and net flow),
-the recent ledger, and the primary record actions. It must not render a
+the recent ledger, and the host's record action. On Web, that action is exactly
+one page-level `#primary-record`; native hosts may retain their direct income
+and expense shortcuts. It must not render a
 persistent desktop-side transaction form, budget summary, settings panel, or
 sync/backup panel.
 
@@ -76,24 +78,90 @@ needed for the common path (transaction type, amount, category, and date);
 date remains visible in the core form because it controls the financial period.
 Merchant, payment method, notes, and future split controls belong behind a
 native semantic `<details>` disclosure. Category suggestions use a separate
-short modal flow and must preserve custom input. The secondary menu is a
-modal dialog opened by the `#open-secondary-menu` control; budget, category
-breakdown, display settings, and sync/backup tools render there. All platforms
-must submit the same `TransactionDraft` through `window.lunaLedger`.
-The `#open-secondary-menu` control renders a decorative `.menu-icon` with
-three horizontal child lines and keeps its localized accessible name in
-`aria-label`; do not use the literal Chinese character `三` as its visible
-label.
+short modal flow and must preserve custom input. On native hosts, the
+`#open-secondary-menu` control opens the secondary modal; on Web, its stable
+counterpart is the Settings navigation item. Budget, category breakdown,
+display settings, and sync/backup tools remain reachable through those
+settings surfaces. All platforms must submit the same `TransactionDraft`
+through `window.lunaLedger`.
+The native `#open-secondary-menu` control may retain its decorative
+`.menu-icon`; the Web settings navigation item uses the design-consistent
+`.settings-navigation-icon` while keeping the stable ID and localized
+accessible name. Do not use the literal Chinese character `三` as a visible
+label or as a substitute for an icon.
 Each summary card also exposes a 44px `.summary-visibility-toggle` beside its
 label. Each control changes only its own summary amount. The renderer keeps
 these three visibility flags in session memory, while the hide-by-default
 setting initializes all three after reload. Transaction and budget details
 remain unchanged.
 
+### Web Shell Separation
+
+The Web presentation shell separates navigation chrome from ledger actions and
+workspace administration. `.web-sidebar` contains the brand and exactly one
+`PrimaryNavigation`; it must not contain `#primary-record`, a ledger picker,
+an account description, or a persistent sync-status card. The Web ledger page
+owns one solid `#primary-record` button for `addTransaction`; it does not
+render `#record-expense` or `#record-income` shortcuts. The transaction dialog
+retains the income/expense type switch for choosing the record type. The
+single Settings navigation item keeps the stable `#open-secondary-menu` ID and
+uses `.settings-navigation-icon` on Web.
+
+Workspace/ledger switching, account state, and sync/backup descriptions belong
+to `/settings` and its subroutes. If a Web sync capability needs to remain
+discoverable, expose a real settings navigation action such as
+`#open-sync-status`; do not reintroduce its details into the ledger shell.
+This keeps the primary ledger task visually focused while preserving access to
+the same shared settings/API logic.
+
+The Web `TransactionDialog` uses a full-width desktop flow: type switcher,
+category suggestions, and quick core fields span the form; amount, category,
+and date are one balanced row; the optional calculator also spans the form;
+the save action follows the core fields before the optional details and image
+attachment sections. Radix portals render outside `.app-shell`, so portal
+geometry must use `html[data-client-surface="web"]` selectors in addition to
+the scoped shell selectors.
+
+```tsx
+<WebSidebar />
+<LedgerHome web />
+<TransactionDialog /> // type → category → amount/date → save → more details
+```
+
+Good: the 1440px Web ledger shows one sidebar Settings item and one page-level
+record CTA, while the settings overview owns ledger/account/sync cards. Bad:
+putting a second Settings button or a record button in the sidebar, or styling
+only `.client-surface-web .transaction-dialog-panel` and leaving its portal
+with the old two-column blank area.
+
 After a successful mutation, reload the host snapshot before announcing the
 result. A failed mutation keeps the draft and its recovery path visible. This
 keeps the simple entry surface from becoming a second financial source of
 truth and preserves revision, conflict, and multi-category protections.
+
+### Web Month and Statistics Presentation
+
+The Web ledger has two distinct month states: the route-selected month and the
+snapshot currently returned by the host. During a month transition, keep the
+shell and workspace context mounted, but render a month loading/error state;
+never reuse the previous month's transactions or summary under the new month
+label. Once the snapshot is ready, pass the selected month as both the base
+query range (`YYYY-MM-01` through that month's final day) and the summary
+context. User-entered date filters may narrow that range, but must not broaden
+it into another month. The transaction count and empty-state decision use the
+same selected-month range.
+
+The Web statistics view may compress a dense daily/monthly bucket collection
+into an interactive plot, but it must keep a keyboard-selectable control for
+each bucket, a text-equivalent expandable detail list, and the existing
+selected-bucket transaction detail. Category and largest-expense lists show a
+bounded initial ranking with an explicit “view all” control when more rows
+exist; this limits visual density without discarding data.
+
+Good: while `/ledger?month=2026-08` is loading, show the August loader and no
+July records; after loading, show only August records. Bad: leave the old
+transaction list mounted while changing only `#month-picker`, or render thirty
+daily rows as the dominant first view without a compact visual summary.
 
 ## Accessibility
 

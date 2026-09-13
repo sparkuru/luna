@@ -35,9 +35,11 @@ export type SettingsSection = "legacy" | "overview" | "preferences" | "advanced"
 export function Settings({
   section = "legacy",
   navigate,
+  web = false,
 }: {
   section?: SettingsSection;
   navigate?: (path: string) => void;
+  web?: boolean;
 } = {}) {
   const app = useApp();
   const { settings, message: m } = app;
@@ -163,7 +165,7 @@ export function Settings({
   const showPreferences = section === "legacy" || section === "preferences";
   const showAdvanced = section === "legacy" || section === "advanced";
   if (section === "overview")
-    return navigate ? <SettingsOverview navigate={navigate} /> : <SettingsOverview />;
+    return <SettingsOverview navigate={navigate} web={web} />;
   return (
     <section className="panel settings-panel" aria-labelledby="settings-title">
       <div className="section-heading">
@@ -417,11 +419,14 @@ export function Settings({
 
 export function SettingsOverview({
   navigate,
+  web = false,
 }: {
-  navigate?: (path: string) => void;
+  navigate: ((path: string) => void) | undefined;
+  web: boolean;
 }) {
   const app = useApp();
   const m = app.message;
+  const serverStatus = app.serverStatus;
   const sections = [
     { path: "/settings/ledgers", title: m("ledgersTitle"), help: m("ledgersHelp") },
     { path: "/settings/preferences", title: m("preferencesTitle"), help: m("preferencesHelp") },
@@ -431,6 +436,46 @@ export function SettingsOverview({
     { path: "/settings/backup", title: m("backupNav"), help: m("ledgerToolsSummary") },
     { path: "/settings/conflicts", title: m("conflictsNav"), help: m("ledgerConflictNotice", { count: app.snapshot.conflictCount ?? 0 }) },
   ];
+  const budgetSection = {
+    path: "/budget",
+    title: m("monthlyLimit"),
+    help: m("budgetSettingsHelp"),
+  };
+  const groups = web
+    ? [
+        {
+          key: "workspace",
+          label: m("settingsGroupWorkspace"),
+          sections: [...sections.slice(0, 2), budgetSection],
+        },
+        {
+          key: "access",
+          label: m("settingsGroupAccess"),
+          sections: sections.slice(2, 5),
+        },
+        {
+          key: "data",
+          label: m("settingsGroupData"),
+          sections: sections.slice(5),
+        },
+      ]
+    : [];
+  const renderCard = (item: (typeof sections)[number]) => (
+    <a
+      className="settings-overview-card"
+      href={item.path}
+      key={item.path}
+      onClick={(event) => {
+        if (!navigate) return;
+        event.preventDefault();
+        navigate(item.path);
+      }}
+    >
+      <strong>{item.title}</strong>
+      <span>{item.help}</span>
+      <span className="settings-overview-action">{m("openSettingsSection")}</span>
+    </a>
+  );
   return (
     <section className="panel settings-panel settings-overview" aria-labelledby="settings-title">
       <div className="section-heading">
@@ -439,25 +484,56 @@ export function SettingsOverview({
           <h1 id="settings-title">{m("settingsTitle")}</h1>
           <p>{m("settingsOverviewHelp")}</p>
         </div>
+        {web && (
+          <div className="settings-overview-statuses">
+            <div
+              id="settings-storage-status"
+              className="settings-storage-status"
+              role="status"
+            >
+              <span className="sync-status-dot" aria-hidden="true" />
+              <span>
+                <strong>{m("localOnly")}</strong>
+                <span>{m("storageStatusHelp")}</span>
+              </span>
+            </div>
+            {serverStatus && navigate && (
+              <Button
+                id="open-sync-status"
+                className="sync-status-button settings-sync-status-button"
+                variant="outline"
+                onClick={() => navigate("/settings/sync")}
+                aria-label={serverMessage(app.locale, "openSync")}
+              >
+                <span>{serverMessage(app.locale, "syncStatusLabel")}</span>
+                <span className="sync-status-detail">
+                  {serverStatus.account
+                    ? serverStatus.profile.binding
+                      ? serverStatus.connected
+                        ? serverStatus.profile.displayName
+                        : serverMessage(app.locale, "needsUnlock")
+                      : serverMessage(app.locale, "signedIn")
+                    : serverMessage(app.locale, "needsLogin")}
+                </span>
+              </Button>
+            )}
+          </div>
+        )}
       </div>
-      <div className="settings-overview-grid">
-        {sections.map((item) => (
-          <a
-            className="settings-overview-card"
-            href={item.path}
-            key={item.path}
-            onClick={(event) => {
-              if (!navigate) return;
-              event.preventDefault();
-              navigate(item.path);
-            }}
-          >
-            <strong>{item.title}</strong>
-            <span>{item.help}</span>
-            <span className="settings-overview-action">{m("openSettingsSection")}</span>
-          </a>
-        ))}
-      </div>
+      {web ? (
+        <div className="settings-overview-groups">
+          {groups.map((group) => (
+            <section className="settings-overview-group" key={group.key} aria-labelledby={`settings-group-${group.key}`}>
+              <h2 id={`settings-group-${group.key}`}>{group.label}</h2>
+              <div className="settings-overview-grid">
+                {group.sections.map(renderCard)}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div className="settings-overview-grid">{sections.map(renderCard)}</div>
+      )}
     </section>
   );
 }

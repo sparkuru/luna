@@ -1,0 +1,8 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Renderer boundary, Web-first order, shared Web/Android/Electron constraints"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Semantic composition, CSS variables, focus and dialog rules"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Query/source-of-truth, draft, revision and refresh behavior that visual changes must preserve"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Accessibility, privacy, offline/error states and renderer validation requirements"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Browser CSP, Web host boundary, responsive and Playwright acceptance contract"}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Typed API and DTO boundary for presentation components"}
+{"file":".trellis/tasks/09-13-web-visual-redesign/research/ui-ux-review.md","reason":"Actual viewport evidence and selected UI/UX rules for the Web redesign"}
+{"file":".trellis/tasks/09-12-luna-ui-redesign/prd.md","reason":"Upstream product requirements and business/attachment constraints retained by this Web-only child task"}

@@ -18,7 +18,7 @@ import { ledgerToolsMessage } from "../ledger-tools-i18n";
 import { defaultStatisticsAnchor, validateLedgerSearch } from "./search";
 import { currentLocalMonth } from "../../shared/domain";
 import type { RendererSettings } from "../../shared/settings";
-import { t, type MessageKey } from "../i18n";
+import { formatMonth, t, type MessageKey } from "../i18n";
 import {
   AppContext,
   errorMessage,
@@ -29,13 +29,15 @@ import {
   scopedRead,
 } from "../data/local";
 import { Button } from "../components/ui/button";
-import { LedgerHome } from "../features/ledger";
+import { LedgerHome, LedgerMonthLoading } from "../features/ledger";
 import { Setup } from "../features/setup";
 import { TransactionDialog, type Entry } from "../features/entry";
 import { BudgetEditor, Statistics } from "../features/budget";
 import { Settings, LanguageSelect } from "../features/settings";
 import { LedgerTools } from "../features/tools";
+import { getClientSurface } from "../client-surface";
 export function App() {
+  const isWebSurface = getClientSurface() === "web";
   const navigate = useNavigate();
   const path = useRouterState({ select: (state) => state.location.pathname });
   const search = validateLedgerSearch(
@@ -97,17 +99,38 @@ export function App() {
   const snapshotQuery = useQuery({
     ...snapshotOptions(month, scope),
     enabled: ready,
-    ...(previous.current.month === month && previous.current.snapshot
+    // Keep the application chrome mounted while a new month is read. The
+    // page content checks `isPlaceholderData` below so an old snapshot can
+    // never be presented as the newly selected month.
+    ...(previous.current.snapshot
       ? { placeholderData: previous.current.snapshot }
       : {}),
   });
   if (settingsQuery.data) previous.current.settings = settingsQuery.data;
-  if (snapshotQuery.data) {
+  if (snapshotQuery.data && !snapshotQuery.isPlaceholderData) {
     previous.current.snapshot = snapshotQuery.data;
     previous.current.month = month;
   }
   const settings = settingsQuery.data;
-  const snapshot = snapshotQuery.data;
+  const queriedSnapshot = snapshotQuery.data;
+  const snapshot =
+    queriedSnapshot !== undefined &&
+    (queriedSnapshot.workspace === null ||
+      queriedSnapshot.summary?.month === month)
+      ? queriedSnapshot
+      : undefined;
+  const cachedSnapshot = previous.current.snapshot;
+  const snapshotForContext =
+    snapshot ??
+    (cachedSnapshot === undefined
+      ? undefined
+      : {
+          ...cachedSnapshot,
+          // A month transition must never display records or totals from the
+          // previous query while the selected month's snapshot is loading.
+          transactions: [],
+          summary: null,
+        });
   const legacyTarget = path === "/" && snapshot !== undefined && snapshot.workspace !== null
     ? "/ledger"
     : path === "/"
@@ -168,6 +191,11 @@ export function App() {
     document.documentElement.lang = locale;
     document.title = m("appTitle");
   }, [locale]);
+  useEffect(() => {
+    if (!announcement) return;
+    const timeout = window.setTimeout(() => setAnnouncement(""), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [announcement]);
   useEffect(() => {
     if (settings)
       setVisibility(Array(3).fill(!settings.hideSensitiveAmountsByDefault));
@@ -421,7 +449,7 @@ export function App() {
         </div>
       </div>
     );
-  if (!settings || !snapshot) {
+  if (!settings || !snapshotForContext) {
     return (
       <div className="app-shell">
         <header className="topbar">
@@ -462,7 +490,8 @@ export function App() {
       />
     );
   }
-  const workspace = snapshot.workspace;
+  const workspace = snapshotForContext.workspace;
+  const snapshotReady = snapshot !== undefined;
   return (
     <AppContext.Provider
       key={scope.profileId}
@@ -472,7 +501,7 @@ export function App() {
         serverBusy,
         serverError,
         runServer,
-        snapshot,
+        snapshot: snapshotForContext,
         settings,
         month,
         locale,
@@ -506,126 +535,194 @@ export function App() {
       >
         {m("skipLink")}
       </a>
-      <div className="app-shell">
-        <header className="topbar">
-          <a
-            className="brand"
-            href="/ledger"
-            aria-label={m("homeLabel")}
-            onClick={(e) => {
-              e.preventDefault();
-              goto("/ledger");
-            }}
-          >
-            <span className="brand-mark" aria-hidden="true">
-              L
-            </span>
-            <span>{m("appTitle")}</span>
-          </a>
-          <div className="status-row">
-            <div className="sync-summary" aria-live="polite">
-              <span
-                className={`status-pill sync-status-pill${serverStatus?.sync.remoteChangeAvailable ? " is-available" : ""}`}
+      <div className={`app-shell${isWebSurface ? " client-surface-web" : ""}`}>
+        {workspace && isWebSurface ? (
+          <>
+            <WebSidebar
+              active={
+                isWebSurface && primarySection === "budget"
+                  ? "settings"
+                  : primarySection
+              }
+              locale={locale}
+              message={m}
+              navigate={goto}
+              announcement={announcement}
+              web
+            />
+            <WebPageTopbar
+              active={primarySection}
+              settingsSubpage={settingsSubpage}
+              month={month}
+              locale={locale}
+              message={m}
+            />
+          </>
+        ) : (
+          <>
+            <header className={`topbar${isWebSurface ? " web-setup-topbar" : ""}`}>
+              <a
+                className="brand"
+                href="/ledger"
+                aria-label={m("homeLabel")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  goto("/ledger");
+                }}
               >
-                <span className="sync-status-dot" aria-hidden="true" />
-                <span>{server ? syncSummary : m("localOnly")}</span>
-              </span>
-              {server && (
+                <span className="brand-mark" aria-hidden="true">
+                  L
+                </span>
+                <span>{m("appTitle")}</span>
+              </a>
+              <div className="status-row">
+                <div className="sync-summary" aria-live="polite">
+                  <span
+                    className={`status-pill sync-status-pill${serverStatus?.sync.remoteChangeAvailable ? " is-available" : ""}`}
+                  >
+                    <span className="sync-status-dot" aria-hidden="true" />
+                    <span>{server ? syncSummary : m("localOnly")}</span>
+                  </span>
+                  {server && (
+                    <Button
+                      id="open-sync-status"
+                      className="sync-status-button"
+                      variant="outline"
+                      onClick={() => goto("/settings/sync")}
+                      aria-label={serverMessage(locale, "openSync")}
+                    >
+                      <span>{serverMessage(locale, "syncStatusLabel")}</span>
+                      <span className="sync-status-detail">
+                        {serverStatus?.account
+                          ? serverStatus.profile.binding
+                            ? serverStatus.connected
+                              ? serverStatus.profile.displayName
+                              : serverMessage(locale, "needsUnlock")
+                            : serverMessage(locale, "signedIn")
+                          : serverMessage(locale, "needsLogin")}
+                      </span>
+                    </Button>
+                  )}
+                </div>
+                {server && profilesQuery.data && profilesQuery.data.length > 0 && (
+                  <label className="compact-field ledger-picker" htmlFor="local-ledger-picker">
+                    <span>{m("localLedger")}</span>
+                    <select
+                      id="local-ledger-picker"
+                      value={scope.profileId}
+                      disabled={serverBusy || switching || profilesQuery.isFetching}
+                      onChange={(event) => {
+                        const id = event.currentTarget.value;
+                        void runServer(() => server.selectProfile(id), true);
+                      }}
+                    >
+                      {profilesQuery.data.map((profile) => (
+                        <option key={profile.id} value={profile.id}>
+                          {profile.displayName}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {serverStatus?.profile.binding && (
+                  <span className="helper">{serverStatus.profile.displayName}</span>
+                )}
                 <Button
-                  id="open-sync-status"
-                  className="sync-status-button"
+                  id="open-secondary-menu"
+                  className="menu-button"
                   variant="outline"
-                  onClick={() => goto("/settings/sync")}
-                  aria-label={serverMessage(locale, "openSync")}
+                  aria-label={m("openSettingsSection")}
+                  onClick={() => goto("/settings")}
                 >
-                  <span>{serverMessage(locale, "syncStatusLabel")}</span>
-                  <span className="sync-status-detail">
-                    {serverStatus?.account
-                      ? serverStatus.profile.binding
-                        ? serverStatus.connected
-                          ? serverStatus.profile.displayName
-                          : serverMessage(locale, "needsUnlock")
-                        : serverMessage(locale, "signedIn")
-                      : serverMessage(locale, "needsLogin")}
+                  <span className="menu-icon" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
                   </span>
                 </Button>
-              )}
-            </div>
-            {server && profilesQuery.data && profilesQuery.data.length > 0 && (
-              <label className="compact-field ledger-picker" htmlFor="local-ledger-picker">
-                <span>{m("localLedger")}</span>
-                <select
-                  id="local-ledger-picker"
-                  value={scope.profileId}
-                  disabled={serverBusy || switching || profilesQuery.isFetching}
-                  onChange={(event) => {
-                    const id = event.currentTarget.value;
-                    void runServer(() => server.selectProfile(id), true);
-                  }}
+                {!workspace && <LanguageSelect id="setup-language" />}
+                <span
+                  className="visually-hidden"
+                  id="live-status"
+                  aria-live="polite"
                 >
-                  {profilesQuery.data.map((profile) => (
-                    <option key={profile.id} value={profile.id}>
-                      {profile.displayName}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  {announcement}
+                </span>
+              </div>
+            </header>
+            {workspace && (
+              <PrimaryNavigation
+                active={primarySection}
+                locale={locale}
+                navigate={goto}
+                record={() =>
+                  openEntry({ type: "expense", returnFocus: "primary-record" })
+                }
+                message={m}
+              />
             )}
-            {serverStatus?.profile.binding && (
-              <span className="helper">{serverStatus.profile.displayName}</span>
-            )}
-            <Button
-              id="open-secondary-menu"
-              className="menu-button"
-              variant="outline"
-              aria-label={m("openSettingsSection")}
-              onClick={() => goto("/settings")}
-            >
-              <span className="menu-icon" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
-            </Button>
-            {!workspace && <LanguageSelect id="setup-language" />}
-            <span
-              className="visually-hidden"
-              id="live-status"
-              aria-live="polite"
-            >
-              {announcement}
-            </span>
-          </div>
-        </header>
-        {workspace && (
-          <PrimaryNavigation
-            active={primarySection}
-            locale={locale}
-            navigate={goto}
-            record={() =>
-              openEntry({ type: "expense", returnFocus: "primary-record" })
-            }
-            message={m}
-          />
+          </>
         )}
         <main id="main-content" tabIndex={-1}>
-          {workspace && primarySection === "settings" && (
+          {isWebSurface && workspace && path === "/ledger" && announcement && (
+            <div className="web-action-toast" aria-hidden="true">
+              {announcement}
+            </div>
+          )}
+          {workspace &&
+            (primarySection === "settings" ||
+              (isWebSurface && primarySection === "budget")) && (
             <SettingsNavigation
               active={
                 path === "/settings/sync/advanced"
                   ? "advanced"
+                  : path === "/budget"
+                    ? "budget"
                   : settingsSubpage || "settings"
               }
               navigate={goto}
               message={m}
+              web={isWebSurface}
             />
           )}
-          {workspace && snapshot.summary ? (
+          {workspace && !snapshotReady ? (
+            primarySection === "ledger" ? (
+              <LedgerMonthLoading
+                month={month}
+                locale={locale}
+                message={m}
+                changeMonth={setMonth}
+                onRetry={() => void snapshotQuery.refetch()}
+                error={
+                  snapshotQuery.error
+                    ? errorMessage(locale, snapshotQuery.error)
+                    : ""
+                }
+              />
+            ) : (
+              <section className="panel month-loading-state" role="status">
+                <p className="kicker">{formatMonth(locale, month)}</p>
+                <p>{m("loadingMonth")}</p>
+                {snapshotQuery.error && (
+                  <p className="form-alert" role="alert">
+                    {errorMessage(locale, snapshotQuery.error)}{" "}
+                    <Button
+                      variant="outline"
+                      onClick={() => void snapshotQuery.refetch()}
+                    >
+                      {m("tryAgain")}
+                    </Button>
+                  </p>
+                )}
+              </section>
+            )
+          ) : workspace && snapshotForContext.summary ? (
             primarySection === "statistics" ? (
               <Statistics
                 period={search.period ?? "month"}
                 anchor={search.anchor ?? defaultStatisticsAnchor(month)}
                 type={statisticsType}
+                web={isWebSurface}
                 onPeriodChange={(period) =>
                   void navigate({ to: path, search: { ...search, period } })
                 }
@@ -642,6 +739,8 @@ export function App() {
             ) : primarySection === "settings" ? (
               settingsSubpage === "ledgers" ? (
                 <LedgerDirectoryPanel />
+              ) : settingsSubpage === "budget" ? (
+                <BudgetEditor key={`${workspace.id}:${month}`} />
               ) : settingsSubpage === "account" ? (
                 <AccountPanel />
               ) : settingsSubpage === "sync" ? (
@@ -659,7 +758,7 @@ export function App() {
               ) : settingsSubpage === "preferences" ? (
                 <Settings section="preferences" />
               ) : (
-                <Settings section="overview" navigate={goto} />
+                <Settings section="overview" navigate={goto} web={isWebSurface} />
               )
             ) : (
               <LedgerHome
@@ -670,6 +769,7 @@ export function App() {
                   void navigate({ to: path, search: { ...search, type } });
                 }}
                 visibility={visibility}
+                web={isWebSurface}
                 toggle={(index) =>
                   setVisibility((values) =>
                     values.map((value, i) => (i === index ? !value : value)),
@@ -685,7 +785,7 @@ export function App() {
               )}
             </>
           )}
-          {snapshotQuery.error && (
+          {snapshotQuery.error && snapshotReady && (
             <p className="global-alert" role="alert">
               {errorMessage(locale, snapshotQuery.error)}{" "}
               <Button
@@ -729,17 +829,120 @@ function legacyRouteTarget(pathname: string): string | null {
   return target[pathname] ?? null;
 }
 
+function WebSidebar({
+  active,
+  locale,
+  message,
+  navigate,
+  announcement,
+  web,
+}: {
+  active: string;
+  locale: import("../../shared/settings").AppLocale;
+  message: (
+    key: MessageKey,
+    params?: Readonly<Record<string, string | number>>,
+  ) => string;
+  navigate: (to: string) => void;
+  announcement: string;
+  web: boolean;
+}) {
+  return (
+    <aside className="web-sidebar" aria-label={message("primaryNavigation")}>
+      <div className="web-sidebar-header">
+        <a
+          className="brand"
+          href="/ledger"
+          aria-label={message("homeLabel")}
+          onClick={(event) => {
+            event.preventDefault();
+            navigate("/ledger");
+          }}
+        >
+          <span className="brand-mark" aria-hidden="true">
+            L
+          </span>
+          <span>{message("appTitle")}</span>
+        </a>
+      </div>
+      <PrimaryNavigation
+        active={active}
+        locale={locale}
+        navigate={navigate}
+        settingsControlId="open-secondary-menu"
+        web={web}
+        message={message}
+      />
+      <span className="visually-hidden" id="live-status" aria-live="polite">
+        {announcement}
+      </span>
+    </aside>
+  );
+}
+
+function WebPageTopbar({
+  active,
+  settingsSubpage,
+  month,
+  locale,
+  message,
+}: {
+  active: string;
+  settingsSubpage: string;
+  month: string;
+  locale: import("../../shared/settings").AppLocale;
+  message: (
+    key: MessageKey,
+    params?: Readonly<Record<string, string | number>>,
+  ) => string;
+}) {
+  const label =
+    active === "statistics"
+      ? message("categoryBreakdown")
+      : active === "budget"
+        ? message("monthlyLimit")
+        : active === "settings"
+          ? settingsSubpage === "ledgers"
+            ? message("ledgersTitle")
+            : settingsSubpage === "preferences"
+              ? message("preferencesTitle")
+              : settingsSubpage === "account"
+                ? message("accountTitle")
+                : settingsSubpage === "sync"
+                  ? message("ledgerToolsLink")
+                  : settingsSubpage === "backup"
+                    ? message("backupNav")
+                    : settingsSubpage === "conflicts"
+                      ? message("conflictsNav")
+                      : message("settingsTitle")
+          : message("recentLedger");
+  return (
+    <header className="topbar web-page-topbar">
+      <div className="web-page-context">
+        <span className="web-page-context-kicker">{label}</span>
+        <span className="web-page-context-workspace">
+          <span>{formatMonth(locale, month)}</span>
+        </span>
+      </div>
+    </header>
+  );
+}
+
 function PrimaryNavigation({
   active,
   locale,
   navigate,
   record,
+  settingsControlId,
+  web = false,
   message,
 }: {
   active: string;
   locale: import("../../shared/settings").AppLocale;
   navigate: (to: string) => void;
-  record(): void;
+  record?: () => void;
+  settingsControlId?: string;
+  web?: boolean;
   message: (
     key: MessageKey,
     params?: Readonly<Record<string, string | number>>,
@@ -758,12 +961,16 @@ function PrimaryNavigation({
       label: message("categoryBreakdown"),
       icon: BarChart3,
     },
-    {
-      key: "budget",
-      path: "/budget",
-      label: message("monthlyLimit"),
-      icon: Wallet,
-    },
+    ...(!web
+      ? [
+          {
+            key: "budget",
+            path: "/budget",
+            label: message("monthlyLimit"),
+            icon: Wallet,
+          },
+        ]
+      : []),
     {
       key: "settings",
       path: "/settings",
@@ -780,27 +987,44 @@ function PrimaryNavigation({
         {items.map(({ key, path, label, icon: Icon }) => (
           <button
             key={key}
+            id={key === "settings" ? settingsControlId : undefined}
             type="button"
             className={`primary-navigation-link${active === key ? " is-active" : ""}`}
             aria-current={active === key ? "page" : undefined}
+            aria-label={
+              key === "settings" && settingsControlId
+                ? message("settingsTitle")
+                : undefined
+            }
             onClick={() => navigate(path)}
           >
-            <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
+            <Icon
+              className={
+                key === "settings" && settingsControlId
+                  ? "settings-navigation-icon"
+                  : undefined
+              }
+              size={19}
+              strokeWidth={1.8}
+              aria-hidden="true"
+            />
             <span>{label}</span>
           </button>
         ))}
       </div>
-      <button
-        id="primary-record"
-        type="button"
-        className="primary-record-button"
-        onClick={record}
-      >
-        <span className="primary-record-icon">
-          <Plus size={24} strokeWidth={2.3} aria-hidden="true" />
-        </span>
-        <span>{message("addTransaction")}</span>
-      </button>
+      {record && (
+        <button
+          id="primary-record"
+          type="button"
+          className="primary-record-button"
+          onClick={record}
+        >
+          <span className="primary-record-icon">
+            <Plus size={24} strokeWidth={2.3} aria-hidden="true" />
+          </span>
+          <span>{message("addTransaction")}</span>
+        </button>
+      )}
     </nav>
   );
 }
@@ -809,6 +1033,7 @@ function SettingsNavigation({
   active,
   navigate,
   message,
+  web,
 }: {
   active: string;
   navigate: (to: string) => void;
@@ -816,6 +1041,7 @@ function SettingsNavigation({
     key: MessageKey,
     params?: Readonly<Record<string, string | number>>,
   ) => string;
+  web: boolean;
 }) {
   const items: { key: string; path: string; label: string }[] = [
     { key: "settings", path: "/settings", label: message("settingsTitle") },
@@ -827,18 +1053,69 @@ function SettingsNavigation({
     { key: "backup", path: "/settings/backup", label: message("backupNav") },
     { key: "conflicts", path: "/settings/conflicts", label: message("conflictsNav") },
   ];
+  if (!web)
+    return (
+      <nav className="settings-navigation" aria-label={message("settingsTitle")}>
+        {items.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            className={active === item.key ? "is-active" : undefined}
+            aria-current={active === item.key ? "page" : undefined}
+            onClick={() => navigate(item.path)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+    );
+  const groups: {
+    key: string;
+    label: MessageKey;
+    items: typeof items;
+  }[] = [
+    {
+      key: "workspace",
+      label: "settingsGroupWorkspace",
+      items: web
+        ? [
+            ...items.slice(1, 3),
+            { key: "budget", path: "/budget", label: message("monthlyLimit") },
+          ]
+        : items.slice(1, 3),
+    },
+    {
+      key: "access",
+      label: "settingsGroupAccess",
+      items: items.slice(3, 6),
+    },
+    {
+      key: "data",
+      label: "settingsGroupData",
+      items: items.slice(6),
+    },
+  ];
   return (
     <nav className="settings-navigation" aria-label={message("settingsTitle")}>
-      {items.map((item) => (
-        <button
-          key={item.key}
-          type="button"
-          className={active === item.key ? "is-active" : undefined}
-          aria-current={active === item.key ? "page" : undefined}
-          onClick={() => navigate(item.path)}
-        >
-          {item.label}
-        </button>
+      {groups.map((group) => (
+        <div className="settings-navigation-group" key={group.key}>
+          <span className="settings-navigation-group-label">
+            {message(group.label)}
+          </span>
+          <div className="settings-navigation-group-links">
+            {group.items.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={active === item.key ? "is-active" : undefined}
+                aria-current={active === item.key ? "page" : undefined}
+                onClick={() => navigate(item.path)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
       ))}
     </nav>
   );

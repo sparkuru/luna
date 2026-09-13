@@ -6,7 +6,9 @@ import {
   Images,
   MoreHorizontal,
   Pencil,
+  Plus,
   RefreshCw,
+  SlidersHorizontal,
   Trash2,
 } from "lucide-react";
 import {
@@ -66,12 +68,91 @@ type SearchWorkerResponse = {
   error?: { code: string };
 };
 
+export function LedgerMonthLoading({
+  month,
+  locale,
+  message: m,
+  changeMonth,
+  onRetry,
+  error,
+}: {
+  month: string;
+  locale: import("../../shared/settings").AppLocale;
+  message: (
+    key: MessageKey,
+    params?: Readonly<Record<string, string | number>>,
+  ) => string;
+  changeMonth(month: string): void;
+  onRetry(): void;
+  error: string;
+}) {
+  return (
+    <section className="panel month-loading-state" aria-labelledby="month-loading-title">
+      <div className="month-loading-header">
+        <div>
+          <span className="kicker">{m("ledgerKicker")}</span>
+          <h1 id="month-loading-title">{formatMonth(locale, month)}</h1>
+          <p>{error || m("loadingMonth")}</p>
+        </div>
+        <div className="month-controls month-navigator" aria-label={m("monthNavigation")}>
+          <Button
+            id="previous-month"
+            variant="outline"
+            aria-label={m("previousMonth")}
+            onClick={() => changeMonth(previousMonth(month))}
+          >
+            <ChevronLeft className="month-control-icon" aria-hidden="true" />
+            <span className="month-control-label">{m("previousMonth")}</span>
+          </Button>
+          <label className="visually-hidden" htmlFor="month-picker">
+            {m("selectedMonth")}
+          </label>
+          <Input
+            id="month-picker"
+            type="month"
+            aria-label={m("selectedMonth")}
+            value={month}
+            onChange={(event) => {
+              if (event.currentTarget.value) changeMonth(event.currentTarget.value);
+            }}
+          />
+          <Button
+            id="next-month"
+            variant="outline"
+            aria-label={m("nextMonth")}
+            onClick={() => changeMonth(nextMonth(month))}
+          >
+            <span className="month-control-label">{m("nextMonth")}</span>
+            <ChevronRight className="month-control-icon" aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
+      {error ? (
+        <div className="month-loading-error" role="alert">
+          <p>{error}</p>
+          <Button type="button" variant="outline" onClick={onRetry}>
+            <RefreshCw size={17} aria-hidden="true" />
+            {m("tryAgain")}
+          </Button>
+        </div>
+      ) : (
+        <div className="month-loading-skeleton" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function LedgerHome({
   openEntry,
   changeMonth,
   type,
   changeType,
   visibility,
+  web = false,
   toggle,
 }: {
   openEntry(entry: Entry): void;
@@ -79,6 +160,7 @@ export function LedgerHome({
   type: "all" | "income" | "expense";
   changeType(type: "all" | "income" | "expense"): void;
   visibility: boolean[];
+  web?: boolean;
   toggle(index: number): void;
 }) {
   const app = useApp();
@@ -140,12 +222,18 @@ export function LedgerHome({
         .sort((left, right) => left.localeCompare(right, locale)),
     [locale, snapshot.transactions],
   );
+  const selectedMonthStart = `${month}-01`;
+  const selectedMonthEnd = monthEnd(month);
+  const effectiveDateFrom =
+    dateFrom && dateFrom > selectedMonthStart ? dateFrom : selectedMonthStart;
+  const effectiveDateTo =
+    dateTo && dateTo < selectedMonthEnd ? dateTo : selectedMonthEnd;
   const queryInputState = useMemo((): { input: LedgerQueryInput | null; error: string } => {
     try {
       return {
         input: {
-          dateFrom,
-          dateTo,
+          dateFrom: effectiveDateFrom,
+          dateTo: effectiveDateTo,
           type,
           categories: [...selectedCategories, ...category.split(",")],
           minimumMinor: minimum.trim()
@@ -162,7 +250,7 @@ export function LedgerHome({
     } catch (cause) {
       return { input: null, error: errorMessage(cause) };
     }
-  }, [category, dateFrom, dateTo, errorMessage, maximum, minimum, query, queryMode, selectedCategories, type, workspace.precision]);
+  }, [category, effectiveDateFrom, effectiveDateTo, errorMessage, maximum, minimum, query, queryMode, selectedCategories, type, workspace.precision]);
   const queryKey = useMemo(
     () =>
       queryInputState.input === null
@@ -300,7 +388,11 @@ export function LedgerHome({
   const transactionGroups = useMemo(() => {
     const groups: { date: string; transactions: Transaction[] }[] = [];
     const byDate = new Map<string, { date: string; transactions: Transaction[] }>();
-    for (const transaction of filtered) {
+    const ordered = [...filtered].sort(
+      (left, right) =>
+        right.date.localeCompare(left.date) || left.id.localeCompare(right.id),
+    );
+    for (const transaction of ordered) {
       let group = byDate.get(transaction.date);
       if (group === undefined) {
         group = { date: transaction.date, transactions: [] };
@@ -317,15 +409,23 @@ export function LedgerHome({
       : snapshot.transactions.find(
           (transaction) => transaction.id === transactionDetail.transaction.id,
         ) ?? transactionDetail.transaction;
+  const monthTransactionCount = queryLedger(snapshot.transactions, {
+    dateFrom: selectedMonthStart,
+    dateTo: selectedMonthEnd,
+    type: "all",
+    categories: [],
+    query: "",
+    mode: "text",
+  }).count;
   const expenseCount = queryLedger(snapshot.transactions, {
-    dateFrom: `${month}-01`,
-    dateTo: monthEnd(month),
+    dateFrom: selectedMonthStart,
+    dateTo: selectedMonthEnd,
     type: "expense",
     categories: [],
     query: "",
     mode: "text",
   }).count;
-  const any = snapshot.transactions.length > 0;
+  const any = monthTransactionCount > 0;
   const filterChips: { id: string; label: string; remove(): void }[] = [
     ...(type === "all"
       ? []
@@ -471,7 +571,7 @@ export function LedgerHome({
       value: summary.totalExpenseMinor,
       show: "showSpendingAmount",
       hide: "hideSpendingAmount",
-        foot: m("expenseCount", {
+      foot: m("expenseCount", {
         count: expenseCount,
       }),
       className: "expense",
@@ -512,29 +612,46 @@ export function LedgerHome({
           <span className="kicker">{m("ledgerKicker")}</span>
           <h1 id="page-title">{m("dashboardTitle")}</h1>
           <p>
-            <span id="workspace-name-label">{workspace.name}</span> ·{" "}
+            {!web && <><span id="workspace-name-label">{workspace.name}</span> · </>}
             <span id="month-label">{formatMonth(locale, month)}</span>
           </p>
           <p className="hero-description">{m("ledgerIntro")}</p>
+          {web && (
+            <button
+              id="primary-record"
+              type="button"
+              className="primary-record-button"
+              onClick={() =>
+                openEntry({ type: "expense", returnFocus: "primary-record" })
+              }
+            >
+              <span className="primary-record-icon">
+                <Plus size={21} strokeWidth={2.3} aria-hidden="true" />
+              </span>
+              <span>{m("addTransaction")}</span>
+            </button>
+          )}
         </div>
         <div className="page-heading-actions">
-          <div
-            className="entry-actions"
-            role="group"
-            aria-label={m("quickEntryType")}
-          >
-            {(["expense", "income"] as const).map((type) => (
-              <Button
-                key={type}
-                id={`record-${type}`}
-                className={`entry-button ${type}`}
-                onClick={() => start(type, `record-${type}`)}
-              >
-                {m(type === "expense" ? "recordExpense" : "recordIncome")}
-              </Button>
-            ))}
-          </div>
-          <div className="month-controls" aria-label={m("monthNavigation")}>
+          {!web && (
+            <div
+              className="entry-actions"
+              role="group"
+              aria-label={m("quickEntryType")}
+            >
+              {(["expense", "income"] as const).map((type) => (
+                <Button
+                  key={type}
+                  id={`record-${type}`}
+                  className={`entry-button ${type}`}
+                  onClick={() => start(type, `record-${type}`)}
+                >
+                  {m(type === "expense" ? "recordExpense" : "recordIncome")}
+                </Button>
+              ))}
+            </div>
+          )}
+          <div className="month-controls month-navigator" aria-label={m("monthNavigation")}>
             <Button
               id="previous-month"
               variant="outline"
@@ -627,20 +744,29 @@ export function LedgerHome({
       >
         <div className="section-heading">
           <div>
-          <h2 id="transactions-title" tabIndex={-1}>{m("recentLedger")}</h2>
+            <h2 id="transactions-title" tabIndex={-1}>
+              {m("recentLedger")}
+            </h2>
             <p>{m("recentLedgerHelp")}</p>
           </div>
           <p id="transaction-count">
             {m("shownCount", {
               shown: filtered.length,
-              total: snapshot.transactions.length,
+              total: monthTransactionCount,
             })}
           </p>
         </div>
-        <details id="filter-details" className="filter-disclosure">
-          <summary>
-            <span>{m("filterTransactions")}</span>
-            <span className="helper">{m("filterHint")}</span>
+        <details
+          id="filter-details"
+          className="filter-disclosure"
+          data-filter-state={hasActiveQuery ? "active" : "idle"}
+        >
+          <summary className="filter-disclosure-trigger">
+            <span className="filter-disclosure-icon" aria-hidden="true">
+              <SlidersHorizontal size={17} strokeWidth={2} />
+            </span>
+            <span className="filter-disclosure-label">{m("filterTransactions")}</span>
+            <span className="filter-disclosure-meta">{m("filterHint")}</span>
           </summary>
           <form
             id="filter-form"
@@ -784,7 +910,7 @@ export function LedgerHome({
           <p id="filter-result-summary" className="filter-result-summary">
             {m("shownCount", {
               shown: queryState.result.count,
-              total: snapshot.transactions.length,
+              total: monthTransactionCount,
             })} {" · "}
             {m("categoryTotals", {
               spending: money(queryState.result.totalExpenseMinor),
@@ -797,7 +923,7 @@ export function LedgerHome({
             <div className="empty-state">
               <h3>{m(any ? "noFilterMatches" : "emptyLedgerTitle")}</h3>
               <p>{m(any ? "noFilterMatchesHelp" : "emptyLedgerHelp")}</p>
-              {!any && (
+              {!any && !web && (
                 <div className="entry-actions empty-entry-actions">
                   {(["expense", "income"] as const).map((type) => (
                     <Button

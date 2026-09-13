@@ -165,6 +165,7 @@ export function Statistics({
   period,
   anchor,
   type,
+  web = false,
   onPeriodChange,
   onAnchorChange,
   onTypeChange,
@@ -172,21 +173,26 @@ export function Statistics({
   period: StatisticsPeriod;
   anchor: string;
   type: "income" | "expense";
+  web?: boolean;
   onPeriodChange(period: StatisticsPeriod): void;
   onAnchorChange(anchor: string): void;
   onTypeChange(type: "income" | "expense"): void;
 }) {
   const { snapshot, locale, message: m } = useApp();
   const workspace = snapshot.workspace!;
-  const [categoryView, setCategoryView] = useState<"bars" | "ring">("bars");
+  const [categoryView, setCategoryView] = useState<"bars" | "ring">(
+    () => (web ? "ring" : "bars"),
+  );
   const [selectedBucketKey, setSelectedBucketKey] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categorySort, setCategorySort] = useState<"amount" | "date">("amount");
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const [showAllLargestExpenses, setShowAllLargestExpenses] = useState(false);
   useEffect(() => {
     setSelectedBucketKey(null);
     setSelectedCategory(null);
     setShowAllLargestExpenses(false);
+    setShowAllCategories(false);
   }, [anchor, period, type]);
   const statistics = calculateLedgerStatistics({
     transactions: snapshot.transactions,
@@ -310,6 +316,9 @@ export function Statistics({
   const visibleLargestExpenses = showAllLargestExpenses
     ? statistics.largestExpenses
     : statistics.largestExpenses.slice(0, 5);
+  const visibleCategories = showAllCategories
+    ? statistics.categories
+    : statistics.categories.slice(0, 5);
   return (
     <section className="panel category-panel statistics-page" aria-labelledby="category-title">
       <div className="section-heading">
@@ -382,8 +391,79 @@ export function Statistics({
           </p>
           {statistics.buckets.every((bucket) => bucket.amountMinor === null) ? (
             <p className="empty-state">{m("statNoTransactions")}</p>
+          ) : web ? (
+            <>
+              <p className="statistics-chart-help">{m("statChartHelp")}</p>
+              <div
+                className={`statistics-chart statistics-chart-${period}`}
+                role="group"
+                aria-label={`${m("statTrend")}: ${statistics.buckets
+                  .map(
+                    (bucket) =>
+                      `${period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} ${bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}`,
+                  )
+                  .join(", ")}`}
+              >
+                {statistics.buckets.map((bucket) => (
+                  <button
+                    key={bucket.key}
+                    type="button"
+                    className={`statistics-chart-button${selectedBucketKey === bucket.key ? " is-selected" : ""}`}
+                    aria-label={`${period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} · ${bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}`}
+                    aria-pressed={selectedBucketKey === bucket.key}
+                    onClick={() => setSelectedBucketKey(bucket.key)}
+                  >
+                    <progress
+                      className="statistics-chart-bar"
+                      max={100}
+                      value={barWidth(bucket.amountMinor)}
+                      aria-hidden="true"
+                    />
+                  </button>
+                ))}
+              </div>
+              <div className="statistics-chart-axis" aria-hidden="true">
+                <span>{period === "year" ? formatMonth(locale, statistics.buckets[0]?.key ?? statistics.start.slice(0, 7)) : formatDate(locale, statistics.start)}</span>
+                <span>{period === "year" ? formatMonth(locale, statistics.buckets.at(-1)?.key ?? statistics.end.slice(0, 7)) : formatDate(locale, statistics.end)}</span>
+              </div>
+              <details id="statistics-trend-details" className="statistics-detail-disclosure">
+                <summary>{m("statViewDetails")}</summary>
+                <ul
+                  className={`statistics-bars statistics-bars-${period}`}
+                  aria-label={m("statTrend")}
+                >
+                  {statistics.buckets.map((bucket) => (
+                    <li key={bucket.key}>
+                      <button
+                        type="button"
+                        className="statistics-bar-row"
+                        aria-pressed={selectedBucketKey === bucket.key}
+                        aria-label={`${period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} · ${bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}`}
+                        onClick={() => setSelectedBucketKey(bucket.key)}
+                      >
+                        <span className="statistics-bar-label">
+                          {period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)}
+                        </span>
+                        <progress
+                          className="statistics-bar-track"
+                          max={100}
+                          value={barWidth(bucket.amountMinor)}
+                          aria-hidden="true"
+                        />
+                        <span className="statistics-bar-value">
+                          {bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </>
           ) : (
-            <ul className="statistics-bars" aria-label={m("statTrend")}>
+            <ul
+              className={`statistics-bars statistics-bars-${period}`}
+              aria-label={m("statTrend")}
+            >
               {statistics.buckets.map((bucket) => (
                 <li key={bucket.key}>
                   <button
@@ -485,7 +565,7 @@ export function Statistics({
                 </div>
               )}
               <ul className="statistics-categories">
-                {statistics.categories.map((category) => (
+                {visibleCategories.map((category) => (
                   <li className="statistics-category-row" key={category.category}>
                     <button
                       type="button"
@@ -499,6 +579,17 @@ export function Statistics({
                   </li>
                 ))}
               </ul>
+              {statistics.categories.length > 5 && (
+                <Button
+                  id="statistics-categories-toggle"
+                  type="button"
+                  variant="outline"
+                  aria-expanded={showAllCategories}
+                  onClick={() => setShowAllCategories((current) => !current)}
+                >
+                  {m(showAllCategories ? "statViewTop" : "statViewAll")}
+                </Button>
+              )}
               {selectedCategory !== null && (
                 <section
                   id="statistics-drilldown"

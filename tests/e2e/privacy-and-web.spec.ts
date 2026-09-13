@@ -12,8 +12,8 @@ async function createWorkspaceWithRecords(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Create local workspace' }).click();
   await expect(page.locator('#summary-grid')).toBeVisible();
 
-  await page.locator('#record-income').click();
-  await page.locator('#transaction-type').selectOption('income');
+  await page.locator('#primary-record').click();
+  await page.locator('#quick-income').click();
   await page.locator('#transaction-amount').fill('100.00');
   await page.locator('#transaction-category').fill('Salary');
   await page.locator('#transaction-advanced-details summary').click();
@@ -22,8 +22,8 @@ async function createWorkspaceWithRecords(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Save transaction' }).click();
   await expect(page.locator('#transaction-list-region')).toContainText('100.00');
 
-  await page.locator('#record-expense').click();
-  await page.locator('#transaction-type').selectOption('expense');
+  await page.locator('#primary-record').click();
+  await page.locator('#quick-expense').click();
   await page.locator('#transaction-amount').fill('12.50');
   await page.locator('#transaction-category').fill('Groceries');
   await page.locator('#transaction-advanced-details summary').click();
@@ -118,7 +118,8 @@ test('keeps detail amounts visible while independently masking summary values', 
   await page.locator('#statistics-category-view-ring').click();
   await expect(page.locator('.statistics-donut')).toBeVisible();
   await page.locator('#statistics-category-view-bars').click();
-  await page.locator('.statistics-bar-row').filter({ hasText: '12.50' }).press('Enter');
+  await page.locator('#statistics-trend-details summary').click();
+  await page.locator('#statistics-trend-details .statistics-bar-row').filter({ hasText: '12.50' }).press('Enter');
   await expect(page.locator('#statistics-bucket-detail')).toBeVisible();
   await expect(page.locator('#statistics-bucket-detail')).toContainText('Market');
   await expect(page.locator('#statistics-bucket-detail')).toContainText('12.50');
@@ -152,7 +153,7 @@ test('session reveal resets after reload and leaves accessible controls in place
   await expect(page.locator('#transaction-list-region')).toContainText('12.50');
   await expect(page.getByRole('heading', { name: 'Recent ledger' })).toBeVisible();
   await expect(page.locator('#transaction-dialog')).not.toBeVisible();
-  await page.locator('#record-expense').click();
+  await page.locator('#primary-record').click();
   await expect(page.locator('#transaction-amount')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Save transaction' })).toBeEnabled();
 });

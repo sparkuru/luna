@@ -4,6 +4,7 @@ import { createWebProfileHost } from "./profile-host";
 import { t, type MessageKey } from "../renderer/i18n";
 import { Capacitor } from "@capacitor/core";
 import { saveAndroidLedgerBackup } from "./android-backup";
+import { setClientSurface } from "../renderer/client-surface";
 
 declare global {
   interface Window {
@@ -19,6 +20,7 @@ const nativeIndexedDbFallback =
   typeof navigator.storage?.getDirectory !== "function"
     ? safeIndexedDB()
     : undefined;
+setClientSurface(Capacitor.isNativePlatform() ? "mobile" : "web");
 const profileHost = createWebProfileHost(nativeIndexedDbFallback);
 window.lunaLedger = profileHost.api;
 const refreshRemote = (): void => {

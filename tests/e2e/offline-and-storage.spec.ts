@@ -8,7 +8,7 @@ async function setup(page: Page): Promise<void> {
 }
 
 async function record(page: Page, merchant: string): Promise<void> {
-  await page.locator('#record-expense').click();
+  await page.locator('#primary-record').click();
   await expect(page.locator('#transaction-dialog')).toBeVisible();
   await page.locator('#transaction-amount').fill('12.34');
   await page.locator('#transaction-category').fill('Food');
