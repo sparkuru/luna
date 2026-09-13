@@ -1,3 +1,9 @@
+import {
+  decodeAttachmentMetadata,
+  type AttachmentMetadata,
+  type AttachmentRef,
+} from './attachment-contract';
+
 /**
  * Platform-neutral domain types and invariants.
  *
@@ -41,6 +47,8 @@ export interface TransactionDraft {
   merchant?: string;
   paymentMethod?: string;
   notes?: string;
+  /** Host-resolved image references; tokens never become part of a transaction. */
+  attachments?: readonly AttachmentRef[];
 }
 
 export interface Split {
@@ -63,6 +71,8 @@ export interface Transaction {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  /** Safe renderer metadata only; host graph descriptors are a different type. */
+  attachments?: readonly AttachmentMetadata[];
 }
 
 export interface TransactionFilters {
@@ -260,6 +270,26 @@ export function decodeTransactionDraft(value: unknown): TransactionDraft {
     };
   });
 
+  let attachments: readonly AttachmentRef[] | undefined;
+  if (value.attachments !== undefined) {
+    if (!Array.isArray(value.attachments) || value.attachments.length > 9)
+      throw new DomainError('invalid-transaction', 'Transaction attachments are invalid.');
+    attachments = value.attachments.map((raw) => {
+      if (!isRecord(raw))
+        throw new DomainError('invalid-transaction', 'Transaction attachment reference is invalid.');
+      const keys = Object.keys(raw);
+      if (keys.some((key) => key !== 'attachmentId' && key !== 'draftToken') || keys.length !== 1)
+        throw new DomainError('invalid-transaction', 'Transaction attachment reference is invalid.');
+      const [key] = keys;
+      const candidate = raw[key!];
+      if (typeof candidate !== 'string' || candidate.trim().length === 0 || candidate.length > 256)
+        throw new DomainError('invalid-transaction', 'Transaction attachment reference is invalid.');
+      return key === 'attachmentId'
+        ? { attachmentId: candidate }
+        : { draftToken: candidate };
+    });
+  }
+
   return {
     type: value.type,
     amountMinor: readRequiredString(value, 'amountMinor'),
@@ -268,6 +298,7 @@ export function decodeTransactionDraft(value: unknown): TransactionDraft {
     merchant: readOptionalString(value, 'merchant'),
     paymentMethod: readOptionalString(value, 'paymentMethod'),
     notes: readOptionalString(value, 'notes'),
+    ...(attachments === undefined ? {} : { attachments }),
   };
 }
 
@@ -276,9 +307,7 @@ export function decodeTransaction(value: unknown, precision: number): Transactio
   if (!isRecord(value)) {
     throw new DomainError('invalid-input', 'Stored transaction must be an object.');
   }
-  assertExactKeys(
-    value,
-    [
+  const storedTransactionKeys = [
       'id',
       'revision',
       'type',
@@ -291,9 +320,13 @@ export function decodeTransaction(value: unknown, precision: number): Transactio
       'createdAt',
       'updatedAt',
       'deletedAt',
-    ],
-    'stored transaction',
-  );
+    ];
+  if (
+    Object.keys(value).some((key) => key !== 'attachments' && !storedTransactionKeys.includes(key)) ||
+    storedTransactionKeys.some((key) => !Object.hasOwn(value, key))
+  ) {
+    throw new DomainError('invalid-input', 'stored transaction has unsupported or missing fields.');
+  }
   if (!isTransactionType(value.type)) {
     throw new DomainError('invalid-transaction', 'Stored transaction type is invalid.');
   }
@@ -347,6 +380,20 @@ export function decodeTransaction(value: unknown, precision: number): Transactio
   if (deletedAt !== null && typeof deletedAt !== 'string') {
     throw new DomainError('invalid-transaction', 'Stored transaction deletion time is invalid.');
   }
+  let attachments: readonly AttachmentMetadata[] | undefined;
+  if (value.attachments !== undefined) {
+    if (!Array.isArray(value.attachments) || value.attachments.length > 9) {
+      throw new DomainError('invalid-transaction', 'Stored transaction attachments are invalid.');
+    }
+    try {
+      attachments = value.attachments.map(decodeAttachmentMetadata);
+    } catch {
+      throw new DomainError('invalid-transaction', 'Stored transaction attachments are invalid.');
+    }
+    if (new Set(attachments.map((attachment) => attachment.id)).size !== attachments.length) {
+      throw new DomainError('invalid-transaction', 'Stored transaction attachments are duplicated.');
+    }
+  }
   return {
     ...normalized,
     id: decodeId(value.id, 'transaction id'),
@@ -354,6 +401,7 @@ export function decodeTransaction(value: unknown, precision: number): Transactio
     createdAt: decodeStoredTimestamp(value.createdAt, 'transaction createdAt'),
     updatedAt: decodeStoredTimestamp(value.updatedAt, 'transaction updatedAt'),
     deletedAt: deletedAt === null ? null : decodeStoredTimestamp(deletedAt, 'transaction deletedAt'),
+    ...(attachments === undefined ? {} : { attachments }),
   };
 }
 

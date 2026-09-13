@@ -1,43 +1,64 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 import { encryptLedgerDocument, decryptLedgerDocument } from '../../src/shared/ledger-crypto';
-import { appendLedgerRevision, mergeLedgerDocuments, type LedgerDocument } from '../../src/shared/ledger-sync';
+import { appendLedgerRevision, mergeLedgerDocuments, type LedgerDocument, upgradeLedgerDocument } from '../../src/shared/ledger-sync';
+import { decodeFullBackup, FULL_BACKUP_MAGIC } from '../../src/shared/full-backup';
 import { reviseTransaction } from '../../src/shared/domain';
+import { isStoredTransaction, storedTransactionToTransaction } from '../../src/shared/ledger-record';
+import { readLedgerDocument } from './helpers/public-ledger';
 
 const password = 'synthetic household backup phrase';
 
 async function seed(page: Page): Promise<LedgerDocument> {
   await page.goto('/');
   await expect(page.locator('#workspace-form')).toBeVisible();
-  const document = await page.evaluate(async () => {
+  await page.evaluate(async () => {
     await window.lunaLedger.createWorkspace({ name: 'Backup family', currency: 'CNY', precision: 2, monthlyBudgetMinor: '100000' });
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     await window.lunaLedger.createTransaction({ type: 'expense', amountMinor: '1250', date,
       splits: [{ category: 'Food', amountMinor: '1250' }], merchant: 'Original market', notes: 'Original notes' });
-    return window.lunaLedger.getLedgerDocument();
   });
+  const document = await readLedgerDocument(page, password);
   expect(document).not.toBeNull();
   await page.reload();
   await expect(page.locator('#transaction-list-region')).toContainText('Original market');
   return document!;
 }
 
-async function importBackup(page: Page, raw: string, phrase = password): Promise<void> {
-  if (!(await page.locator('#secondary-menu-dialog').isVisible())) await page.getByRole('button', { name: 'Open more menu' }).click();
+async function importBackup(page: Page, raw: string | Uint8Array, phrase = password): Promise<void> {
+  if (new URL(page.url()).pathname !== '/settings/backup') {
+    await page.locator('#open-secondary-menu').click();
+    await page.getByRole('link', { name: /Encrypted backup|加密备份/ }).click();
+  }
   const details = page.locator('#ledger-backup-details');
   if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) await details.locator('summary').click();
-  await page.locator('#ledger-import-file').setInputFiles({ name: 'family.encrypted.json', mimeType: 'application/json', buffer: Buffer.from(raw) });
+  const buffer = Buffer.from(raw);
+  const complete = buffer.subarray(0, FULL_BACKUP_MAGIC.length).toString('ascii') === FULL_BACKUP_MAGIC;
+  await page.locator('#ledger-import-file').setInputFiles({
+    name: complete ? 'family.luna-backup' : 'family.encrypted.json',
+    mimeType: complete ? 'application/octet-stream' : 'application/json',
+    buffer,
+  });
   await page.locator('#ledger-import-password').fill(phrase);
   await page.locator('#ledger-import-confirm').check();
   await page.locator('#ledger-import-submit').click();
   await expect(page.locator('#ledger-import-submit')).toBeEnabled();
 }
 
+async function openTransactionActions(page: Page, merchant: string): Promise<void> {
+  const row = page.locator('.transaction-item').filter({ hasText: merchant });
+  await expect(row).toBeVisible();
+  const trigger = row.locator('.transaction-actions-trigger');
+  if (await trigger.isVisible()) await trigger.click();
+}
+
 function branch(document: LedgerDocument, id: string, notes: string): LedgerDocument {
   const revision = document.revisions.find((item) => item.kind === 'transaction');
   if (revision?.kind !== 'transaction') throw new Error('Test transaction missing');
-  const current = revision.value;
+  const current = isStoredTransaction(revision.value)
+    ? storedTransactionToTransaction(revision.value)
+    : revision.value;
   return appendLedgerRevision(document, { id, kind: 'transaction', entityId: current.id,
     value: reviseTransaction(current, { type: current.type, amountMinor: '1250', date: current.date,
       splits: [{ category: 'Food', amountMinor: '1250' }], merchant: current.merchant, notes },
@@ -46,18 +67,20 @@ function branch(document: LedgerDocument, id: string, notes: string): LedgerDocu
 
 test('encrypted backup downloads and restores through setup UI without storing its password', async ({ page, browser }) => {
   const document = await seed(page);
-  await page.getByRole('button', { name: 'Open more menu' }).click();
-  await page.locator('#ledger-backup-details summary').click();
+  await page.locator('#open-secondary-menu').click();
+  await page.getByRole('link', { name: /Encrypted backup|加密备份/ }).click();
   await page.locator('#ledger-export-password').fill(password);
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#ledger-export-submit').click();
   const download = await downloadPromise;
   const file = await download.path();
   expect(file).not.toBeNull();
-  const raw = await readFile(file!, 'utf8');
-  expect(raw).not.toContain('Original market');
-  expect(raw).not.toContain(password);
-  expect(await decryptLedgerDocument(raw, password)).toEqual(document);
+  const raw = await readFile(file!);
+  expect(raw.toString('utf8')).not.toContain('Original market');
+  expect(raw.toString('utf8')).not.toContain(password);
+  expect(raw.subarray(0, FULL_BACKUP_MAGIC.length).toString('ascii')).toBe(FULL_BACKUP_MAGIC);
+  const fullGraph = (await decodeFullBackup(new Uint8Array(raw), password)).graph;
+  expect(fullGraph).toEqual(upgradeLedgerDocument(document));
   await expect(page.locator('#ledger-export-password')).toHaveValue('');
   const context = await browser.newContext({ locale: 'en', viewport: page.viewportSize() });
   try {
@@ -67,12 +90,13 @@ test('encrypted backup downloads and restores through setup UI without storing i
     await importBackup(restored, raw, 'this is a wrong password');
     await expect(restored.locator('#ledger-tools-alert')).toContainText(/password|damaged/i);
     await expect(restored.locator('#workspace-form')).toBeVisible();
-    expect(await restored.evaluate(() => window.lunaLedger.getLedgerDocument())).toBeNull();
+    expect(await readLedgerDocument(restored, password)).toBeNull();
     await importBackup(restored, raw);
+    await expect(restored.locator('#ledger-import-password')).toHaveValue('');
+    await restored.locator('.brand').click();
     await expect(restored.locator('#transaction-list-region')).toContainText('Original market');
     await expect(restored.locator('#income-total')).toHaveText('••••');
-    await expect(restored.locator('#ledger-import-password')).toHaveValue('');
-    expect(await restored.evaluate(() => window.lunaLedger.getLedgerDocument())).toEqual(document);
+    expect(await readLedgerDocument(restored, password)).toEqual(fullGraph);
     await restored.reload();
     await expect(restored.locator('#transaction-list-region')).toContainText('Original market');
   } finally { await context.close(); }
@@ -80,27 +104,27 @@ test('encrypted backup downloads and restores through setup UI without storing i
 
 test('backup merge and presentation changes retain financial drafts and the original edit revision', async ({ page }) => {
   const document = await seed(page);
+  await openTransactionActions(page, 'Original market');
   await page.getByRole('button', { name: 'Edit Original market', exact: true }).click();
   await page.locator('#transaction-notes').fill('Unsaved local draft');
   await page.locator('#close-transaction').click();
-  await page.getByRole('button', { name: 'Open more menu' }).click();
-  await page.locator('#budget-input').fill('321.09');
-  await page.locator('#close-secondary-menu').click();
-  await page.locator('#toggle-income-amounts').click();
-  await page.getByRole('button', { name: 'Open more menu' }).click();
+  await page.locator('#open-secondary-menu').click();
+  await page.getByRole('link', { name: /Preferences|偏好设置/ }).click();
+  await page.locator('#hide-default').click();
+  await page.locator('#open-secondary-menu').click();
+  await page.getByRole('link', { name: /Encrypted backup|加密备份/ }).click();
   await expect(page.locator('#transaction-notes')).toHaveValue('Unsaved local draft');
-  await expect(page.locator('#budget-input')).toHaveValue('321.09');
   const remote = branch(document, 'remote-edit', 'Remote committed notes');
   await importBackup(page, await encryptLedgerDocument(remote, password));
+  await page.locator('.brand').click();
   await expect(page.locator('#transaction-list-region')).toContainText('Remote committed notes');
   await expect(page.locator('#transaction-notes')).toHaveValue('Unsaved local draft');
-  await expect(page.locator('#budget-input')).toHaveValue('321.09');
-  await page.locator('#close-secondary-menu').click();
+  await openTransactionActions(page, 'Original market');
   await page.getByRole('button', { name: 'Edit Original market', exact: true }).click();
   await page.locator('#save-transaction').click();
   await expect(page.locator('#transaction-alert')).toContainText('changed');
   await expect(page.locator('#transaction-notes')).toHaveValue('Unsaved local draft');
-  expect(await page.evaluate(() => window.lunaLedger.getLedgerDocument())).toEqual(remote);
+  expect(await readLedgerDocument(page, password)).toEqual(remote);
 });
 
 test('conflict UI shows both safe candidates, excludes totals and resolves only an explicit choice', async ({ page }) => {
@@ -109,15 +133,23 @@ test('conflict UI shows both safe candidates, excludes totals and resolves only 
   const right = branch(document, 'right-edit', '<img src=x onerror=alert(1)>Other version');
   const conflicted = mergeLedgerDocuments(left, right);
   await importBackup(page, await encryptLedgerDocument(conflicted, password));
+  await page.locator('.brand').click();
   await expect(page.locator('#ledger-conflict-notice')).toBeVisible();
+  await page.locator('#open-secondary-menu').click();
+  await page.getByRole('link', { name: /Conflicts|冲突处理/ }).click();
   await expect(page.locator('#ledger-conflict-inbox')).toBeVisible();
   await expect(page.locator('.ledger-conflict-candidate')).toHaveCount(2);
   await expect(page.locator('#ledger-conflict-inbox img')).toHaveCount(0);
+  await page.locator('.brand').click();
   await expect(page.locator('#transaction-list-region')).not.toContainText('Original market');
   await expect(page.locator('#expense-total')).toHaveText('••••');
+  await page.locator('#open-secondary-menu').click();
+  await page.getByRole('link', { name: /Conflicts|冲突处理/ }).click();
+  await expect(page.locator('#ledger-conflict-inbox')).toBeVisible();
   await page.locator('.ledger-conflict-candidate').filter({ hasText: 'Choose this version' }).getByRole('button').click();
   await expect(page.locator('#ledger-conflict-notice')).toBeHidden();
   await expect(page.locator('#ledger-conflict-inbox')).toBeHidden();
+  await page.locator('.brand').click();
   await expect(page.locator('#transaction-list-region')).toContainText('Choose this version');
   const dimensions = await page.evaluate(() => ({ width: globalThis.document.documentElement.clientWidth, scroll: globalThis.document.documentElement.scrollWidth }));
   expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width);

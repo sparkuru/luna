@@ -2,8 +2,17 @@ import {
   canonicalMinorUnits, decodeId, decodeMonth, decodeTransaction, decodeWorkspace,
   type Transaction, type Workspace,
 } from './domain';
+import {
+  decodeStoredTransaction,
+  isStoredTransaction,
+  storedTransactionFromTransaction,
+  storedTransactionToTransaction,
+  type StoredTransaction,
+} from './ledger-record';
+import type { StoredAttachmentDescriptor } from './attachment-contract';
 
 export const LEDGER_DOCUMENT_SCHEMA_VERSION = 1 as const;
+export const LEDGER_DOCUMENT_V2_SCHEMA_VERSION = 2 as const;
 export const MAX_LEDGER_DOCUMENT_BYTES = 8 * 1024 * 1024;
 export const MAX_LEDGER_REVISIONS = 10_000;
 export const MAX_LEDGER_PARENT_LINKS = 100_000;
@@ -21,17 +30,23 @@ export class LedgerSyncError extends Error {
 }
 
 export type LedgerRevisionValue =
-  | { kind: 'transaction'; entityId: string; value: Transaction }
+  | { kind: 'transaction'; entityId: string; value: Transaction | StoredTransaction }
   | { kind: 'budget'; entityId: string; value: string | null };
 
 export type LedgerRevision = LedgerRevisionValue & { id: string; parents: string[] };
 export type LedgerRevisionInput = LedgerRevisionValue & { id: string };
 
-export interface LedgerDocument {
+export interface LedgerDocumentV1 {
   schemaVersion: typeof LEDGER_DOCUMENT_SCHEMA_VERSION;
   workspace: Workspace;
   revisions: LedgerRevision[];
 }
+export interface LedgerDocumentV2 {
+  schemaVersion: typeof LEDGER_DOCUMENT_V2_SCHEMA_VERSION;
+  workspace: Workspace;
+  revisions: LedgerRevision[];
+}
+export type LedgerDocument = LedgerDocumentV1 | LedgerDocumentV2;
 
 export type LedgerConflict =
   | { kind: 'transaction'; entityId: string; heads: Extract<LedgerRevision, { kind: 'transaction' }>[] }
@@ -51,16 +66,21 @@ export function decodeLedgerDocument(value: unknown): LedgerDocument {
   try {
     if (!isRecord(value)) fail('ledger-invalid-document');
     exactKeys(value, ['schemaVersion', 'workspace', 'revisions']);
-    if (value.schemaVersion !== LEDGER_DOCUMENT_SCHEMA_VERSION || !Array.isArray(value.revisions)) {
+    if (
+      (value.schemaVersion !== LEDGER_DOCUMENT_SCHEMA_VERSION &&
+        value.schemaVersion !== LEDGER_DOCUMENT_V2_SCHEMA_VERSION) ||
+      !Array.isArray(value.revisions)
+    ) {
       fail('ledger-invalid-document');
     }
+    const isV2 = value.schemaVersion === LEDGER_DOCUMENT_V2_SCHEMA_VERSION;
     if (value.revisions.length > MAX_LEDGER_REVISIONS) fail('ledger-too-large');
     checkEncodedSize(value);
     const workspace = decodeWorkspace(value.workspace);
     const byId = new Map<string, LedgerRevision>();
     let links = 0;
     for (const raw of value.revisions) {
-      const revision = decodeRevision(raw, workspace.precision);
+      const revision = decodeRevision(raw, workspace.precision, isV2);
       links += revision.parents.length;
       if (links > MAX_LEDGER_PARENT_LINKS) fail('ledger-too-large');
       const existing = byId.get(revision.id);
@@ -71,7 +91,9 @@ export function decodeLedgerDocument(value: unknown): LedgerDocument {
     }
     validateGraph(byId);
     return {
-      schemaVersion: LEDGER_DOCUMENT_SCHEMA_VERSION,
+      schemaVersion: isV2
+        ? LEDGER_DOCUMENT_V2_SCHEMA_VERSION
+        : LEDGER_DOCUMENT_SCHEMA_VERSION,
       workspace,
       revisions: [...byId.values()].sort((left, right) => compare(left.id, right.id)),
     };
@@ -82,8 +104,21 @@ export function decodeLedgerDocument(value: unknown): LedgerDocument {
 }
 
 export function mergeLedgerDocuments(left: LedgerDocument, right: LedgerDocument): LedgerDocument {
-  const first = decodeLedgerDocument(left);
-  const second = decodeLedgerDocument(right);
+  const decodedLeft = decodeLedgerDocument(left);
+  const decodedRight = decodeLedgerDocument(right);
+  const targetVersion =
+    decodedLeft.schemaVersion === LEDGER_DOCUMENT_V2_SCHEMA_VERSION ||
+    decodedRight.schemaVersion === LEDGER_DOCUMENT_V2_SCHEMA_VERSION
+      ? LEDGER_DOCUMENT_V2_SCHEMA_VERSION
+      : LEDGER_DOCUMENT_SCHEMA_VERSION;
+  const first =
+    targetVersion === LEDGER_DOCUMENT_V2_SCHEMA_VERSION
+      ? upgradeLedgerDocument(decodedLeft)
+      : decodedLeft;
+  const second =
+    targetVersion === LEDGER_DOCUMENT_V2_SCHEMA_VERSION
+      ? upgradeLedgerDocument(decodedRight)
+      : decodedRight;
   if (JSON.stringify(first.workspace) !== JSON.stringify(second.workspace)) fail('ledger-workspace-mismatch');
   const revisions = new Map(first.revisions.map((revision) => [revision.id, revision]));
   for (const revision of second.revisions) {
@@ -93,7 +128,11 @@ export function mergeLedgerDocuments(left: LedgerDocument, right: LedgerDocument
     }
     revisions.set(revision.id, revision);
   }
-  return decodeLedgerDocument({ ...first, revisions: [...revisions.values()] });
+  return decodeLedgerDocument({
+    ...first,
+    schemaVersion: targetVersion,
+    revisions: [...revisions.values()],
+  });
 }
 
 export function seedLedgerDocument(
@@ -115,6 +154,34 @@ export function seedLedgerDocument(
   });
 }
 
+/** Create a v2 graph with host-only descriptors, including an explicit empty list. */
+export function seedLedgerDocumentV2(
+  workspace: Workspace,
+  transactions: readonly StoredTransaction[],
+  budgets: Readonly<Record<string, string | null>>,
+): LedgerDocumentV2 {
+  return decodeLedgerDocument({
+    schemaVersion: LEDGER_DOCUMENT_V2_SCHEMA_VERSION,
+    workspace,
+    revisions: [
+      ...transactions.map((value) => ({
+        id: `seed:transaction:${value.id}`,
+        kind: 'transaction' as const,
+        entityId: value.id,
+        parents: [],
+        value,
+      })),
+      ...Object.entries(budgets).map(([entityId, value]) => ({
+        id: `seed:budget:${entityId}`,
+        kind: 'budget' as const,
+        entityId,
+        parents: [],
+        value,
+      })),
+    ],
+  }) as LedgerDocumentV2;
+}
+
 export function projectLedgerDocument(document: LedgerDocument): LedgerProjection {
   const decoded = decodeLedgerDocument(document);
   const projection: LedgerProjection = { workspace: decoded.workspace, transactions: [], budgets: {}, conflicts: [] };
@@ -122,7 +189,13 @@ export function projectLedgerDocument(document: LedgerDocument): LedgerProjectio
     const first = heads[0];
     if (first === undefined) continue;
     if (heads.length === 1) {
-      if (first.kind === 'transaction') projection.transactions.push(first.value);
+      if (first.kind === 'transaction') {
+        projection.transactions.push(
+          isStoredTransaction(first.value)
+            ? storedTransactionToTransaction(first.value)
+            : { ...first.value, splits: first.value.splits.map((split) => ({ ...split })) },
+        );
+      }
       else projection.budgets[first.entityId] = first.value;
     } else if (first.kind === 'transaction') {
       projection.conflicts.push({
@@ -138,6 +211,27 @@ export function projectLedgerDocument(document: LedgerDocument): LedgerProjectio
     }
   }
   return projection;
+}
+
+/** Validate and return the complete historical v2 attachment inventory. */
+export function attachmentInventory(
+  document: LedgerDocument,
+): Map<string, StoredAttachmentDescriptor> {
+  const decoded = decodeLedgerDocument(document);
+  const inventory = new Map<string, StoredAttachmentDescriptor>();
+  if (decoded.schemaVersion !== LEDGER_DOCUMENT_V2_SCHEMA_VERSION) return inventory;
+  for (const revision of decoded.revisions) {
+    if (revision.kind !== 'transaction' || !isStoredTransaction(revision.value)) continue;
+    for (const descriptor of revision.value.attachments) {
+      if (descriptor.workspaceId !== decoded.workspace.id)
+        fail('ledger-workspace-mismatch');
+      const existing = inventory.get(descriptor.id);
+      if (existing !== undefined && JSON.stringify(existing) !== JSON.stringify(descriptor))
+        fail('ledger-revision-collision');
+      inventory.set(descriptor.id, { ...descriptor });
+    }
+  }
+  return inventory;
 }
 
 /** Edit a sole head; transaction values must advance its numeric revision by one. */
@@ -166,7 +260,30 @@ function addRevision(
 ): LedgerDocument {
   const decoded = decodeLedgerDocument(document);
   // Decode the supplied value before using its kind or entity identity.
-  const revision = decodeRevision({ ...input, parents: [] }, decoded.workspace.precision);
+  if (
+    decoded.schemaVersion === LEDGER_DOCUMENT_SCHEMA_VERSION &&
+    input.kind === 'transaction' &&
+    isStoredTransaction(input.value)
+  ) {
+    // A local write carrying an encrypted attachment must promote the graph to
+    // v2 before the revision is validated. Existing revision IDs and heads are
+    // preserved by the upgrade, so optimistic concurrency remains intact.
+    return addRevision(upgradeLedgerDocument(decoded), input, expectedHeadIds, resolving);
+  }
+  const normalizedInput =
+    decoded.schemaVersion === LEDGER_DOCUMENT_V2_SCHEMA_VERSION &&
+    input.kind === 'transaction' &&
+    !isStoredTransaction(input.value)
+      ? {
+          ...input,
+          value: storedTransactionFromTransaction(input.value),
+        }
+      : input;
+  const revision = decodeRevision(
+    { ...normalizedInput, parents: [] },
+    decoded.workspace.precision,
+    decoded.schemaVersion === LEDGER_DOCUMENT_V2_SCHEMA_VERSION,
+  );
   const heads = entityHeads(decoded).get(entityKey(revision)) ?? [];
   const parentIds = heads.map((head) => head.id).sort(compare);
   if (expectedHeadIds !== undefined) {
@@ -183,7 +300,11 @@ function addRevision(
   return decodeLedgerDocument({ ...decoded, revisions: [...decoded.revisions, revision] });
 }
 
-function decodeRevision(value: unknown, precision: number): LedgerRevision {
+function decodeRevision(
+  value: unknown,
+  precision: number,
+  isV2: boolean,
+): LedgerRevision {
   try {
     if (!isRecord(value)) fail('ledger-invalid-document');
     exactKeys(value, ['id', 'kind', 'entityId', 'parents', 'value']);
@@ -191,7 +312,9 @@ function decodeRevision(value: unknown, precision: number): LedgerRevision {
     const parents = decodeLedgerHeadIds(value.parents);
     if (value.kind === 'transaction') {
       const entityId = decodeId(value.entityId);
-      const transaction = decodeTransaction(value.value, precision);
+      const transaction = isV2
+        ? decodeStoredTransaction(value.value, precision)
+        : decodeTransaction(value.value, precision);
       if (transaction.id !== entityId || !Number.isSafeInteger(transaction.revision)) fail('ledger-invalid-document');
       return { id, kind: 'transaction', entityId, parents, value: transaction };
     }
@@ -316,4 +439,23 @@ function compare(left: string, right: string): number {
 
 function fail(code: LedgerSyncErrorCode): never {
   throw new LedgerSyncError(code);
+}
+
+export function upgradeLedgerDocument(document: LedgerDocument): LedgerDocumentV2 {
+  if (document.schemaVersion === LEDGER_DOCUMENT_V2_SCHEMA_VERSION)
+    return document;
+  return decodeLedgerDocument({
+    schemaVersion: LEDGER_DOCUMENT_V2_SCHEMA_VERSION,
+    workspace: document.workspace,
+    revisions: document.revisions.map((revision) =>
+      revision.kind === 'transaction'
+        ? {
+            ...revision,
+            value: isStoredTransaction(revision.value)
+              ? revision.value
+              : storedTransactionFromTransaction(revision.value),
+          }
+        : revision,
+    ),
+  }) as LedgerDocumentV2;
 }

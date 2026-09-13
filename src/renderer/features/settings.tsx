@@ -30,7 +30,15 @@ export function LanguageSelect({ id }: { id: string }) {
     </label>
   );
 }
-export function Settings() {
+export type SettingsSection = "legacy" | "overview" | "preferences" | "advanced";
+
+export function Settings({
+  section = "legacy",
+  navigate,
+}: {
+  section?: SettingsSection;
+  navigate?: (path: string) => void;
+} = {}) {
   const app = useApp();
   const { settings, message: m } = app;
   const [error, setError] = useState("");
@@ -152,13 +160,25 @@ export function Settings() {
       required: true,
     },
   ];
+  const showPreferences = section === "legacy" || section === "preferences";
+  const showAdvanced = section === "legacy" || section === "advanced";
+  if (section === "overview")
+    return navigate ? <SettingsOverview navigate={navigate} /> : <SettingsOverview />;
   return (
     <section className="panel settings-panel" aria-labelledby="settings-title">
       <div className="section-heading">
         <div>
           <h2 id="settings-title">{m("settingsTitle")}</h2>
           <p>
-            {m(unavailable ? "settingsDescriptionWeb" : "settingsDescription")}
+            {m(
+              section === "preferences"
+                ? "preferencesHelp"
+                : section === "advanced"
+                  ? "advancedSettingsHelp"
+                  : unavailable
+                    ? "settingsDescriptionWeb"
+                    : "settingsDescription",
+            )}
           </p>
         </div>
       </div>
@@ -166,6 +186,7 @@ export function Settings() {
         {error}
       </div>
       <div className="settings-grid">
+        {showPreferences && <>
         <fieldset>
           <legend>{m("language")}</legend>
           <LanguageSelect id="settings-language" />
@@ -199,7 +220,8 @@ export function Settings() {
           <p className="helper">{m("hideByDefaultHelp")}</p>
           <p className="helper">{m("revealAmountsHelp")}</p>
         </fieldset>
-        <fieldset className="sync-policy">
+        </>}
+        {showAdvanced && <fieldset className="sync-policy">
           <legend>{m("configSyncTitle")}</legend>
           <label className="check-field" htmlFor="sync-all">
             <Input
@@ -239,9 +261,9 @@ export function Settings() {
               {m(syncStatusMessageKey(settings.lastSync.code))}
             </span>
           </p>
-        </fieldset>
+        </fieldset>}
       </div>
-      <details id="config-sync-details" className="ledger-tools-details">
+      {showAdvanced && <details id="config-sync-details" className="ledger-tools-details">
         <summary>{m("connectionTitle")}</summary>
         <form
           ref={formRef}
@@ -388,7 +410,54 @@ export function Settings() {
             </p>
           </fieldset>
         </form>
-      </details>
+      </details>}
+    </section>
+  );
+}
+
+export function SettingsOverview({
+  navigate,
+}: {
+  navigate?: (path: string) => void;
+}) {
+  const app = useApp();
+  const m = app.message;
+  const sections = [
+    { path: "/settings/ledgers", title: m("ledgersTitle"), help: m("ledgersHelp") },
+    { path: "/settings/preferences", title: m("preferencesTitle"), help: m("preferencesHelp") },
+    { path: "/settings/account", title: m("accountTitle"), help: m("accountUnavailable") },
+    { path: "/settings/sync", title: m("ledgerToolsLink"), help: m("ledgerToolsSummary") },
+    { path: "/settings/sync/advanced", title: m("advancedSettingsTitle"), help: m("advancedSettingsHelp") },
+    { path: "/settings/backup", title: m("backupNav"), help: m("ledgerToolsSummary") },
+    { path: "/settings/conflicts", title: m("conflictsNav"), help: m("ledgerConflictNotice", { count: app.snapshot.conflictCount ?? 0 }) },
+  ];
+  return (
+    <section className="panel settings-panel settings-overview" aria-labelledby="settings-title">
+      <div className="section-heading">
+        <div>
+          <span className="kicker">{m("settingsTitle")}</span>
+          <h1 id="settings-title">{m("settingsTitle")}</h1>
+          <p>{m("settingsOverviewHelp")}</p>
+        </div>
+      </div>
+      <div className="settings-overview-grid">
+        {sections.map((item) => (
+          <a
+            className="settings-overview-card"
+            href={item.path}
+            key={item.path}
+            onClick={(event) => {
+              if (!navigate) return;
+              event.preventDefault();
+              navigate(item.path);
+            }}
+          >
+            <strong>{item.title}</strong>
+            <span>{item.help}</span>
+            <span className="settings-overview-action">{m("openSettingsSection")}</span>
+          </a>
+        ))}
+      </div>
     </section>
   );
 }

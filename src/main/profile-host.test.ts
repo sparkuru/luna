@@ -8,7 +8,7 @@ import { SQLiteLocalStore } from "./store";
 import { seedLedgerDocument } from "../shared/ledger-sync";
 import type { ServerBinding } from "../shared/server-api";
 
-test("SQLite binding failure rolls back graph and profile metadata while legacy schema stays unchanged", async () => {
+test("SQLite binding failure rolls back graph and profile metadata while schema stays current", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "luna-profile-atomic-"));
   const source = new SQLiteLocalStore(path.join(directory, "source.sqlite"));
   const destination = new SQLiteLocalStore(
@@ -49,7 +49,7 @@ test("SQLite binding failure rolls back graph and profile metadata while legacy 
     assert.deepEqual(destination.getProfileBinding(), binding);
     const original = new Database(path.join(directory, "source.sqlite"));
     try {
-      assert.equal(original.pragma("user_version", { simple: true }), 2);
+      assert.equal(original.pragma("user_version", { simple: true }), 5);
     } finally {
       original.close();
     }

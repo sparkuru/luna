@@ -33,11 +33,6 @@ async function createWorkspaceWithRecords(page: Page): Promise<void> {
   await expect(page.locator('#transaction-list-region')).toContainText('12.50');
 }
 
-async function openMoreMenu(page: Page): Promise<void> {
-  if (!(await page.locator('#secondary-menu-dialog').isVisible())) await page.getByRole('button', { name: 'Open more menu' }).click();
-  await expect(page.locator('#secondary-menu-dialog')).toBeVisible();
-}
-
 test('works when crypto.randomUUID is unavailable', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(globalThis.crypto, 'randomUUID', {
@@ -48,12 +43,18 @@ test('works when crypto.randomUUID is unavailable', async ({ page }) => {
 
   await createWorkspaceWithRecords(page);
   expect(await page.evaluate(() => typeof globalThis.crypto.randomUUID)).toBe('undefined');
+  await page.locator('#open-secondary-menu').click();
+  await page.getByRole('link', { name: /Encrypted backup|加密备份/ }).click();
+  await page.locator('#ledger-export-password').fill('secure fallback backup phrase');
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#ledger-export-submit').click();
+  expect(await downloadPromise).toBeTruthy();
 });
 
 test('keeps detail amounts visible while independently masking summary values', async ({ page }) => {
   await createWorkspaceWithRecords(page);
 
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(244, 247, 251)');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(247, 248, 252)');
   await expect(page.locator('#summary-grid')).toHaveCSS('display', 'grid');
   await expect(page.locator('#summary-grid')).toHaveClass(/is-collapsed/);
   for (const id of ['#income-total', '#expense-total', '#net-total']) {
@@ -98,31 +99,49 @@ test('keeps detail amounts visible while independently masking summary values', 
   await expect(page.locator('.summary-card.expense')).not.toHaveClass(/is-collapsed/);
   await expect(page.locator('.summary-card.net')).not.toHaveClass(/is-collapsed/);
   await summaryVisibilityToggles.first().click();
-  await openMoreMenu(page);
+  await page.goto('/budget');
+  await expect(page.locator('#budget-form')).toBeVisible();
   await expect(page.locator('#budget-status')).toContainText('12.50');
   await expect(page.locator('#budget-status')).toContainText('1,000.00');
   await expect(page.locator('#budget-input')).toHaveValue('1000.00');
   await expect(page.locator('#budget-input')).toBeEnabled();
   await expect(page.locator('#save-budget')).toBeEnabled();
-  await expect(page.locator('#transaction-list-region')).toContainText('12.50');
+  await page.goto('/statistics');
   await expect(page.locator('#category-breakdown')).toContainText('12.50');
-  await expect(page.getByRole('button', { name: /Edit Market/, includeHidden: true })).toBeEnabled();
-
+  await page.locator('.statistics-category-button').filter({ hasText: 'Groceries' }).click();
+  await expect(page.locator('#statistics-drilldown')).toBeVisible();
+  await expect(page.locator('#statistics-drilldown')).toContainText('Market');
+  await expect(page.locator('.statistics-drilldown-row').first()).toContainText('12.50');
+  await expect(page.locator('#statistics-sort-amount')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#statistics-sort-date').click();
+  await expect(page.locator('#statistics-sort-date')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#statistics-category-view-ring').click();
+  await expect(page.locator('.statistics-donut')).toBeVisible();
+  await page.locator('#statistics-category-view-bars').click();
+  await page.locator('.statistics-bar-row').filter({ hasText: '12.50' }).press('Enter');
+  await expect(page.locator('#statistics-bucket-detail')).toBeVisible();
+  await expect(page.locator('#statistics-bucket-detail')).toContainText('Market');
+  await expect(page.locator('#statistics-bucket-detail')).toContainText('12.50');
+  await page.goto('/settings/sync/advanced');
   await expect(page.locator('#config-sync-form')).toHaveAttribute('aria-disabled', 'false');
   await expect(page.locator('#sync-endpoint')).toBeEnabled();
   await expect(page.locator('#sync-now')).toBeDisabled();
   await expect(page.locator('#remember-secrets')).toBeDisabled();
+  await page.goto('/ledger');
+  await expect(page.locator('#transaction-list-region')).toContainText('12.50');
+  await expect(page.getByRole('button', { name: /Edit Market/, includeHidden: true })).toBeEnabled();
 
-  await expect(page.locator('#summary-grid')).not.toHaveClass(/is-collapsed/);
-  await expect(page.locator('#income-total')).toContainText('100.00');
-  await expect(page.locator('#expense-total')).toContainText('12.50');
-  await expect(page.locator('#net-total')).toContainText('87.50');
+  await expect(page.locator('#summary-grid')).toHaveClass(/is-collapsed/);
+  await expect(page.locator('#income-total')).toHaveText('••••');
+  await expect(page.locator('#expense-total')).toHaveText('••••');
+  await expect(page.locator('#net-total')).toHaveText('••••');
 });
 
 test('session reveal resets after reload and leaves accessible controls in place', async ({ page }) => {
   await createWorkspaceWithRecords(page);
-  await page.locator('#toggle-income-amounts').click();
-  await expect(page.locator('#toggle-income-amounts')).toHaveAttribute('aria-label', 'Hide income amount');
+  const incomeVisibility = page.locator('[data-summary-visibility-toggle]').first();
+  await incomeVisibility.click();
+  await expect(incomeVisibility).toHaveAttribute('aria-label', 'Hide income amount');
   await expect(page.locator('#income-total')).toContainText('100.00');
   await expect(page.locator('#expense-total')).toHaveText('••••');
   await page.reload();
@@ -147,6 +166,6 @@ test('fits a narrow viewport without horizontal overflow', async ({ page }) => {
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   await expect(page.locator('#main-content')).toBeVisible();
   await expect(page.locator('[data-summary-visibility-toggle]')).toHaveCount(3);
-  await openMoreMenu(page);
+  await page.goto('/settings/preferences');
   await expect(page.locator('#settings-language')).toBeVisible();
 });

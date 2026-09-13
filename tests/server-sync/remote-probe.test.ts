@@ -49,12 +49,10 @@ test(
     const objectStore = new MemoryServerObjectStore();
     const app = await createApp({ database, objectStore });
     const baseUrl = await app.listen({ host: "127.0.0.1", port: 0 });
-    const first = new ServerHost(
-      new BrowserProfiles(new IDBFactory(), new MemoryStorage()),
-    );
-    const second = new ServerHost(
-      new BrowserProfiles(new IDBFactory(), new MemoryStorage()),
-    );
+    const firstProfiles = new BrowserProfiles(new IDBFactory(), new MemoryStorage());
+    const secondProfiles = new BrowserProfiles(new IDBFactory(), new MemoryStorage());
+    const first = new ServerHost(firstProfiles);
+    const second = new ServerHost(secondProfiles);
     const login = {
       baseUrl,
       username,
@@ -97,7 +95,7 @@ test(
         resolveChange = resolve;
       });
       const off = first.api.onChange!(() => {
-        void first.api.getLedgerDocument().then((document) => {
+        void first.status().then((status) => firstProfiles.open(status.profile.id)).then((profile) => profile.ledger.getLedgerDocument()).then((document) => {
           if (
             document?.revisions.some(
               (revision) => revision.kind === "transaction" &&

@@ -1,0 +1,8 @@
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"UI behavior, privacy and testing contracts"}
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Financial history, encryption and sync invariants"}
+{"file":".trellis/spec/backend/http-api-guidelines.md","reason":"Authentication, bounded bytes, CAS and generated client"}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Native evidence boundary and file transfer rules"}
+{"file":".trellis/tasks/09-12-luna-ui-redesign/design.md","reason":"Revision2 proposed UI/query/period/draft contract"}
+{"file":".trellis/tasks/09-12-luna-ui-redesign/attachment-contract.md","reason":"Proposed version/crypto/blob/backup/atomicity contract"}
+{"file":".trellis/tasks/09-12-luna-ui-redesign/acceptance.md","reason":"Full requirement-linked failure and acceptance matrix"}
+{"file":".trellis/tasks/09-12-luna-ui-redesign/implement.md","reason":"Dependency gates and actual validation evidence required"}

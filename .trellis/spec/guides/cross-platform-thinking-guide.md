@@ -14,6 +14,12 @@
   operation? Test cancellation and the final durable boundary.
 - Does a native callback retain large input in saved Activity state? Keep large
   payloads out of IPC state Bundles and make process-death retry explicit.
+- When a native picker opens several provider streams before returning a
+  result, is ownership explicit during validation? Keep uncommitted handles in
+  a local collection, publish only after the full result is built, and close
+  both local and published resources on every failure; clear temporary byte
+  buffers in `finally` blocks. A successful single-file smoke does not prove
+  the later-item failure path.
 - Do not claim physical macOS/Windows/Android coverage from Linux Compose or
   desktop Chrome. Record the actual OS, image/WebView and artifact hash.
 - Does an injected native Web API acquire the wrong receiver when stored on a

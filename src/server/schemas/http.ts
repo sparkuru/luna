@@ -1,6 +1,10 @@
 export const LIMITS = {
   ledgerBytes: 12 * 1024 * 1024,
   preferenceBytes: 1024 * 1024,
+  attachmentBytes: 2 * 1024 * 1024 + 16,
+  ledgerAttachmentBytes: 512 * 1024 * 1024,
+  accountAttachmentBytes: 2 * 1024 * 1024 * 1024,
+  attachmentCount: 10_000,
 };
 export const uuid = { type: "string", format: "uuid" } as const;
 export const string = { type: "string" } as const;
@@ -17,6 +21,13 @@ export const ledgerObjectStatusSchema = object({
   etag: string,
   version: { type: "integer", minimum: 1 },
   updatedAt: { type: "string", format: "date-time" },
+});
+export const attachmentUsageSchema = object({
+  usedBytes: { type: "integer", minimum: 0 },
+  reservedBytes: { type: "integer", minimum: 0 },
+  maxBytes: { type: "integer", minimum: 1 },
+  count: { type: "integer", minimum: 0 },
+  maxCount: { type: "integer", minimum: 1 },
 });
 export const errorSchema = object({
   code: string,
@@ -37,8 +48,8 @@ const base64 = {
 };
 export const ledgerEnvelope = object({
   format: { const: "luna-ledger-envelope" },
-  version: { const: 1 },
-  payloadSchemaVersion: { const: 1 },
+  version: { type: "integer", enum: [1, 2] },
+  payloadSchemaVersion: { type: "integer", enum: [1, 2] },
   kdf: object({
     name: { const: "PBKDF2" },
     hash: { const: "SHA-256" },

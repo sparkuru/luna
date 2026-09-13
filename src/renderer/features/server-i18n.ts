@@ -97,6 +97,8 @@ export const serverEn = {
     "The source changed during copying. Your originals are intact; retry the copy.",
   verification:
     "The copied ledger could not be verified. Your original is intact; retry.",
+  upgradeRequired:
+    "This server only supports the legacy ledger format. Upgrade the server before syncing v2 ledgers or images; local data remains available.",
   invalid: "Check the server address and required fields.",
   s3Notice:
     "S3 is an alternative sync target. Connecting S3 disconnects server ledger sync; Luna never writes both targets at once.",
@@ -191,6 +193,8 @@ export const serverZh: Record<keyof typeof serverEn, string> = {
   pending: "无法确认原同步目标，请重试或明确选择仅复制本地历史。",
   sourceChanged: "复制期间来源发生变化，原件仍完整，请重试。",
   verification: "无法验证复制结果，原件仍完整，请重试。",
+  upgradeRequired:
+    "此服务器仅支持旧版账本格式。同步 v2 账本或图片前请先升级服务器；本地数据仍可使用。",
   invalid: "请检查服务器地址和必填字段。",
   s3Notice:
     "S3 是另一种同步目标。连接 S3 会断开服务器账本同步，不会同时写入两个目标。",
@@ -226,6 +230,7 @@ export function serverErrorMessage(
     pending: "pending",
     "source-changed": "sourceChanged",
     "verification-failed": "verification",
+    "unsupported-version": "upgradeRequired",
     "invalid-input": "invalid",
     "invalid-response": "unavailable",
     "active-profile": "activeCopyWarning",

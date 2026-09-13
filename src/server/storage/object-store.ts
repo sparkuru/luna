@@ -1,13 +1,15 @@
 import {
   CreateBucketCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
   type S3ClientConfig,
 } from "@aws-sdk/client-s3";
 import { randomUUID } from "node:crypto";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { LIMITS } from "../schemas/http";
 
@@ -27,6 +29,16 @@ export interface ServerObjectStore {
     condition: ObjectCondition,
     signal?: AbortSignal,
   ): Promise<{ etag: string }>;
+  head(key: string, signal?: AbortSignal): Promise<{
+    etag: string;
+    byteLength: number;
+  } | null>;
+  putImmutable(
+    key: string,
+    body: Buffer,
+    signal?: AbortSignal,
+  ): Promise<{ etag: string }>;
+  remove(key: string, signal?: AbortSignal): Promise<void>;
   close(): void;
 }
 
@@ -88,6 +100,32 @@ export class S3ServerObjectStore implements ServerObjectStore {
     return { etag: normalizeEtag(output.ETag) };
   }
 
+  async head(key: string, signal?: AbortSignal) {
+    try {
+      const output = await this.client.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: this.objectKey(key) }),
+        signal === undefined ? {} : { abortSignal: signal },
+      );
+      if (!output.ETag || output.ContentLength === undefined)
+        throw new Error("object-store-invalid-response");
+      return { etag: normalizeEtag(output.ETag), byteLength: output.ContentLength };
+    } catch (error) {
+      if (statusOf(error) === 404 || nameOf(error) === "NotFound") return null;
+      throw error;
+    }
+  }
+
+  putImmutable(key: string, body: Buffer, signal?: AbortSignal) {
+    return this.put(key, body, { ifNoneMatch: true }, signal);
+  }
+
+  async remove(key: string, signal?: AbortSignal): Promise<void> {
+    await this.client.send(
+      new DeleteObjectCommand({ Bucket: this.bucket, Key: this.objectKey(key) }),
+      signal === undefined ? {} : { abortSignal: signal },
+    );
+  }
+
   close(): void {
     this.client.destroy();
   }
@@ -120,6 +158,21 @@ export class MemoryServerObjectStore implements ServerObjectStore {
     const etag = `"${randomUUID()}"`;
     this.objects.set(key, { body: Buffer.from(body), etag });
     return { etag };
+  }
+
+  async head(key: string) {
+    const current = this.objects.get(key);
+    return current === undefined
+      ? null
+      : { etag: current.etag, byteLength: current.body.byteLength };
+  }
+
+  putImmutable(key: string, body: Buffer) {
+    return this.put(key, body, { ifNoneMatch: true });
+  }
+
+  async remove(key: string): Promise<void> {
+    this.objects.delete(key);
   }
 
   close(): void {}
@@ -193,6 +246,26 @@ export class FileServerObjectStore implements ServerObjectStore {
     await mkdir(path.dirname(this.file(key)), { recursive: true, mode: 0o700 });
     await writeFile(this.file(key), body, { mode: 0o600 });
     return { etag: `"${body.toString("base64url").slice(0, 32)}"` };
+  }
+
+  async head(key: string) {
+    const current = await this.get(key);
+    return current === null
+      ? null
+      : { etag: current.etag, byteLength: current.body.byteLength };
+  }
+
+  putImmutable(key: string, body: Buffer) {
+    return this.put(key, body, { ifNoneMatch: true });
+  }
+
+  async remove(key: string): Promise<void> {
+    const file = this.file(key);
+    try {
+      await unlink(file);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
   }
 
   close(): void {}

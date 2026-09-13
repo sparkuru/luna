@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   decimalToMinorUnits,
   formatMinorMagnitude,
   parseMinorUnits,
+  currentLocalDate,
 } from "../../shared/domain";
-import { formatMonth, formatMoney } from "../i18n";
+import {
+  calculateLedgerStatistics,
+  type StatisticsPeriod,
+} from "../../shared/ledger-statistics";
+import { formatDate, formatMonth, formatMoney } from "../i18n";
 import {
   useApp,
   useLocalWrite,
@@ -147,39 +152,450 @@ export function BudgetEditor() {
     </section>
   );
 }
-export function Statistics() {
+
+type CategoryDrilldownRecord = {
+  id: string;
+  date: string;
+  title: string;
+  categories: readonly string[];
+  amountMinor: string;
+};
+
+export function Statistics({
+  period,
+  anchor,
+  type,
+  onPeriodChange,
+  onAnchorChange,
+  onTypeChange,
+}: {
+  period: StatisticsPeriod;
+  anchor: string;
+  type: "income" | "expense";
+  onPeriodChange(period: StatisticsPeriod): void;
+  onAnchorChange(anchor: string): void;
+  onTypeChange(type: "income" | "expense"): void;
+}) {
   const { snapshot, locale, message: m } = useApp();
-  const w = snapshot.workspace!;
-  const totals = snapshot.summary!.categoryTotals;
+  const workspace = snapshot.workspace!;
+  const [categoryView, setCategoryView] = useState<"bars" | "ring">("bars");
+  const [selectedBucketKey, setSelectedBucketKey] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [categorySort, setCategorySort] = useState<"amount" | "date">("amount");
+  const [showAllLargestExpenses, setShowAllLargestExpenses] = useState(false);
+  useEffect(() => {
+    setSelectedBucketKey(null);
+    setSelectedCategory(null);
+    setShowAllLargestExpenses(false);
+  }, [anchor, period, type]);
+  const statistics = calculateLedgerStatistics({
+    transactions: snapshot.transactions,
+    period,
+    anchor,
+    today: currentLocalDate(),
+    type,
+  });
   const money = (value: string) =>
-    formatMoney(locale, value, w.currency, w.precision);
+    formatMoney(locale, value, workspace.currency, workspace.precision);
+  const maxBucket = statistics.buckets.reduce(
+    (maximum, bucket) =>
+      bucket.amountMinor === null
+        ? maximum
+        : (() => {
+            const amount = parseMinorUnits(bucket.amountMinor);
+            return amount > maximum ? amount : maximum;
+          })(),
+    0n,
+  );
+  const barWidth = (value: string | null): number => {
+    if (value === null || maxBucket === 0n) return 0;
+    const amount = parseMinorUnits(value);
+    return Number((amount * 100n) / maxBucket);
+  };
+  const categoryTotal = statistics.categories.reduce(
+    (total, category) => total + parseMinorUnits(category.amountMinor),
+    0n,
+  );
+  const donutCategories = (() => {
+    if (statistics.categories.length <= 5) return statistics.categories;
+    const visible = statistics.categories.slice(0, 5);
+    const visibleTotal = visible.reduce(
+      (total, category) => total + parseMinorUnits(category.amountMinor),
+      0n,
+    );
+    return [
+      ...visible,
+      {
+        category: m("statOther"),
+        amountMinor: (categoryTotal - visibleTotal).toString(),
+      },
+    ];
+  })();
+  const donutCircumference = 2 * Math.PI * 40;
+  const donutSegments = (() => {
+    if (categoryTotal === 0n) return [];
+    let consumed = 0;
+    return donutCategories.map((category, index) => {
+      const share = Number(
+        (parseMinorUnits(category.amountMinor) * 1_000_000n) / categoryTotal,
+      ) / 1_000_000;
+      const length = donutCircumference * share;
+      const segment = { index, length, offset: consumed };
+      consumed += length;
+      return segment;
+    });
+  })();
+  const selectedBucket =
+    statistics.buckets.find((bucket) => bucket.key === selectedBucketKey) ?? null;
+  const bucketTransactions = selectedBucket === null
+    ? []
+    : snapshot.transactions
+        .filter((transaction) => selectedBucket.transactionIds.includes(transaction.id))
+        .sort((left, right) =>
+          absoluteMinor(right.amountMinor) - absoluteMinor(left.amountMinor) > 0n
+            ? 1
+            : absoluteMinor(right.amountMinor) - absoluteMinor(left.amountMinor) < 0n
+              ? -1
+              : right.date.localeCompare(left.date) || left.id.localeCompare(right.id),
+        )
+        .slice(0, 3);
+  const categoryRecords = useMemo((): CategoryDrilldownRecord[] => {
+    if (selectedCategory === null) return [];
+    return snapshot.transactions
+      .flatMap((transaction) => {
+        if (
+          transaction.deletedAt !== null ||
+          transaction.type !== type ||
+          transaction.date < statistics.start ||
+          transaction.date > statistics.end
+        )
+          return [];
+        const amount = transaction.splits
+          .filter((split) => split.category === selectedCategory)
+          .reduce((total, split) => total + absoluteMinor(split.amountMinor), 0n);
+        if (amount === 0n) return [];
+        return [
+          {
+            id: transaction.id,
+            date: transaction.date,
+            title:
+              transaction.merchant ||
+              transaction.notes ||
+              transaction.splits.map((split) => split.category).join(" · "),
+            categories: transaction.splits.map((split) => split.category),
+            amountMinor: amount.toString(),
+          },
+        ];
+      })
+      .sort((left, right) => {
+        if (categorySort === "date") {
+          return (
+            right.date.localeCompare(left.date) ||
+            compareMinorDescending(left.amountMinor, right.amountMinor) ||
+            left.id.localeCompare(right.id)
+          );
+        }
+        return (
+          compareMinorDescending(left.amountMinor, right.amountMinor) ||
+          right.date.localeCompare(left.date) ||
+          left.id.localeCompare(right.id)
+        );
+      });
+  }, [categorySort, selectedCategory, snapshot.transactions, statistics.end, statistics.start, type]);
+  const selectedBucketLabel = selectedBucket === null
+    ? ""
+    : period === "year"
+      ? formatMonth(locale, selectedBucket.start.slice(0, 7))
+      : formatDate(locale, selectedBucket.start);
+  const visibleLargestExpenses = showAllLargestExpenses
+    ? statistics.largestExpenses
+    : statistics.largestExpenses.slice(0, 5);
   return (
-    <section className="panel category-panel" aria-labelledby="category-title">
+    <section className="panel category-panel statistics-page" aria-labelledby="category-title">
       <div className="section-heading">
         <div>
-          <h2 id="category-title">{m("categoryBreakdown")}</h2>
+          <span className="kicker">{m("categoryBreakdown")}</span>
+          <h1 id="category-title">{m("categoryBreakdown")}</h1>
           <p>{m("splitCountHelp")}</p>
         </div>
+        <label className="compact-field" htmlFor="statistics-anchor">
+          <span>{m("selectedMonth")}</span>
+          <input
+            id="statistics-anchor"
+            type="date"
+            value={anchor}
+            onChange={(event) => {
+              if (event.currentTarget.value) onAnchorChange(event.currentTarget.value);
+            }}
+          />
+        </label>
       </div>
-      <div id="category-breakdown">
-        {totals.length === 0 ? (
-          <p className="empty-state">{m("noCategories")}</p>
-        ) : (
-          <ul className="transaction-list">
-            {totals.map((category) => (
-              <li key={category.category} className="transaction-item">
-                <strong>{category.category}</strong>
-                <div className="transaction-bottomline">
-                  {m("categoryTotals", {
-                    spending: money(category.expenseMinor),
-                    income: money(category.incomeMinor),
-                  })}
+      <div className="statistics-toolbar">
+        <div className="segmented-control" role="group" aria-label={m("statTrend")}>
+          {(["week", "month", "year"] as const).map((value) => (
+            <button
+              key={value}
+              id={`statistics-period-${value}`}
+              type="button"
+              aria-pressed={period === value}
+              onClick={() => onPeriodChange(value)}
+            >
+              {m(value === "week" ? "periodWeek" : value === "month" ? "periodMonth" : "periodYear")}
+            </button>
+          ))}
+        </div>
+        <div className="segmented-control" role="group" aria-label={m("type")}>
+          {(["expense", "income"] as const).map((value) => (
+            <button
+              key={value}
+              id={`statistics-type-${value}`}
+              type="button"
+              aria-pressed={type === value}
+              onClick={() => onTypeChange(value)}
+            >
+              {m(value === "expense" ? "statExpense" : "statIncome")}
+            </button>
+          ))}
+        </div>
+        <div className="segmented-control" role="group" aria-label={m("statCategories")}>
+          {(["bars", "ring"] as const).map((value) => (
+            <button
+              key={value}
+              id={`statistics-category-view-${value}`}
+              type="button"
+              aria-pressed={categoryView === value}
+              onClick={() => setCategoryView(value)}
+            >
+              {m(value === "bars" ? "statViewBars" : "statViewRing")}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="statistics-grid" id="category-breakdown">
+        <article className="statistics-card" aria-labelledby="statistics-trend-title">
+          <h2 id="statistics-trend-title">{m("statTrend")}</h2>
+          <p className="statistics-total">{money(statistics.totalMinor)}</p>
+          <p className="statistics-average">
+            {statistics.averageMinor === null
+              ? m("statNoTransactions")
+              : `${m(period === "year" ? "statAverageMonth" : "statAverage")}: ${money(statistics.averageMinor)}`}
+          </p>
+          {statistics.buckets.every((bucket) => bucket.amountMinor === null) ? (
+            <p className="empty-state">{m("statNoTransactions")}</p>
+          ) : (
+            <ul className="statistics-bars" aria-label={m("statTrend")}>
+              {statistics.buckets.map((bucket) => (
+                <li key={bucket.key}>
+                  <button
+                    type="button"
+                    className="statistics-bar-row"
+                    aria-pressed={selectedBucketKey === bucket.key}
+                    aria-label={`${period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} · ${bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}`}
+                    onClick={() => setSelectedBucketKey(bucket.key)}
+                  >
+                    <span className="statistics-bar-label">
+                      {period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)}
+                    </span>
+                    <progress
+                      className="statistics-bar-track"
+                      max={100}
+                      value={barWidth(bucket.amountMinor)}
+                      aria-hidden="true"
+                    />
+                    <span className="statistics-bar-value">
+                      {bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {selectedBucket !== null && (
+            <section
+              id="statistics-bucket-detail"
+              className="statistics-bucket-detail"
+              aria-labelledby="statistics-bucket-detail-title"
+            >
+              <h3 id="statistics-bucket-detail-title">{m("statBucketDetails")}</h3>
+              <p>
+                {m("statBucketHelp", {
+                  date: selectedBucketLabel,
+                  amount:
+                    selectedBucket.amountMinor === null
+                      ? m("statFuture")
+                      : money(selectedBucket.amountMinor),
+                })}
+              </p>
+              {bucketTransactions.length === 0 ? (
+                <p className="helper">{m("statNoTransactions")}</p>
+              ) : (
+                <ul className="statistics-bucket-transactions">
+                  {bucketTransactions.map((transaction) => (
+                    <li key={transaction.id}>
+                      <span>
+                        <strong>
+                          {transaction.merchant ||
+                            transaction.notes ||
+                            transaction.splits.map((split) => split.category).join(" · ")}
+                        </strong>
+                        <span>{formatDate(locale, transaction.date)}</span>
+                      </span>
+                      <strong>{money(absoluteMinor(transaction.amountMinor).toString())}</strong>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+          <p className="statistics-legend">
+            {formatDate(locale, statistics.start)} – {formatDate(locale, statistics.end)}
+          </p>
+        </article>
+        <article className="statistics-card" aria-labelledby="statistics-categories-title">
+          <h2 id="statistics-categories-title">{m("statCategories")}</h2>
+          {statistics.categories.length === 0 ? (
+            <p className="empty-state">{m("noCategories")}</p>
+          ) : (
+            <>
+              {categoryView === "ring" && (
+                <div
+                  className="statistics-donut"
+                  role="img"
+                  aria-label={`${m("statCategories")}: ${donutCategories.map((category) => `${category.category} ${money(category.amountMinor)}`).join(", ")}`}
+                >
+                  <svg
+                    viewBox="0 0 100 100"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle className="statistics-donut-track" cx="50" cy="50" r="40" />
+                    {donutSegments.map((segment) => (
+                      <circle
+                        key={segment.index}
+                        className={`statistics-donut-segment statistics-donut-segment-${segment.index}`}
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        strokeDasharray={`${segment.length} ${donutCircumference - segment.length}`}
+                        strokeDashoffset={-segment.offset}
+                      />
+                    ))}
+                  </svg>
+                  <span>{money(statistics.totalMinor)}</span>
                 </div>
+              )}
+              <ul className="statistics-categories">
+                {statistics.categories.map((category) => (
+                  <li className="statistics-category-row" key={category.category}>
+                    <button
+                      type="button"
+                      className="statistics-category-button"
+                      aria-pressed={selectedCategory === category.category}
+                      onClick={() => setSelectedCategory(category.category)}
+                    >
+                      <strong>{category.category}</strong>
+                      <span>{money(category.amountMinor)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {selectedCategory !== null && (
+                <section
+                  id="statistics-drilldown"
+                  className="statistics-drilldown"
+                  aria-labelledby="statistics-drilldown-title"
+                >
+                  <div className="statistics-drilldown-heading">
+                    <div>
+                      <h3 id="statistics-drilldown-title">{m("statDrilldown")}</h3>
+                      <p>{m("statDrilldownHelp", { category: selectedCategory })}</p>
+                    </div>
+                    <div className="segmented-control" role="group" aria-label={m("statDrilldown")}>
+                      <button
+                        id="statistics-sort-amount"
+                        type="button"
+                        aria-pressed={categorySort === "amount"}
+                        onClick={() => setCategorySort("amount")}
+                      >
+                        {m("statSortAmount")}
+                      </button>
+                      <button
+                        id="statistics-sort-date"
+                        type="button"
+                        aria-pressed={categorySort === "date"}
+                        onClick={() => setCategorySort("date")}
+                      >
+                        {m("statSortDate")}
+                      </button>
+                    </div>
+                  </div>
+                  {categoryRecords.length === 0 ? (
+                    <p className="helper">{m("statNoCategoryTransactions")}</p>
+                  ) : (
+                    <ul className="statistics-drilldown-list">
+                      {categoryRecords.map((record) => (
+                        <li className="statistics-drilldown-row" key={record.id}>
+                          <span>
+                            <strong>{record.title}</strong>
+                            <span>{formatDate(locale, record.date)} · {record.categories.join(" · ")}</span>
+                          </span>
+                          <span className="statistics-drilldown-amount">
+                            <strong>{money(record.amountMinor)}</strong>
+                            <span>{m("statCategoryAmount")}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              )}
+            </>
+          )}
+        </article>
+      </div>
+      <article className="statistics-card statistics-largest-card" aria-labelledby="statistics-largest-title">
+        <div className="statistics-card-heading">
+          <h2 id="statistics-largest-title">{m("statLargestExpenses")}</h2>
+          {statistics.largestExpenses.length > 5 && (
+            <Button
+              id="statistics-largest-toggle"
+              type="button"
+              variant="outline"
+              aria-controls="largest-expense-list"
+              aria-expanded={showAllLargestExpenses}
+              onClick={() => setShowAllLargestExpenses((current) => !current)}
+            >
+              {m(showAllLargestExpenses ? "statViewTop" : "statViewAll")}
+            </Button>
+          )}
+        </div>
+        {statistics.largestExpenses.length === 0 ? (
+          <p className="empty-state">{m("statNoTransactions")}</p>
+        ) : (
+          <ol id="largest-expense-list" className="largest-expense-list">
+            {visibleLargestExpenses.map((expense, index) => (
+              <li className="largest-expense-row" key={expense.id}>
+                <span className="largest-expense-rank">{index + 1}</span>
+                <span className="largest-expense-copy">
+                  <strong>{expense.merchant || expense.notes || expense.categories.join(" · ")}</strong>
+                  <span>{formatDate(locale, expense.date)} · {expense.categories.join(" · ")}</span>
+                </span>
+                <strong>{money(expense.amountMinor)}</strong>
               </li>
             ))}
-          </ul>
+          </ol>
         )}
-      </div>
+      </article>
     </section>
   );
+}
+
+function absoluteMinor(value: string): bigint {
+  const amount = parseMinorUnits(value);
+  return amount < 0n ? -amount : amount;
+}
+
+function compareMinorDescending(left: string, right: string): number {
+  const difference = parseMinorUnits(right) - parseMinorUnits(left);
+  return difference === 0n ? 0 : difference > 0n ? 1 : -1;
 }

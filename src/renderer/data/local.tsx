@@ -126,6 +126,9 @@ export function errorMessage(locale: AppLocale, error: unknown): string {
     "sqlite-opfs-unavailable": "offlineUnavailable",
     "sqlite-worker-unavailable": "offlineUnavailable",
     "stale-revision": "staleRevision",
+    "ledger-query-regex-invalid": "regexInvalid",
+    "ledger-query-timeout": "regexTimeout",
+    "ledger-query-worker-unavailable": "regexUnavailable",
   };
   return t(locale, keys[code] ?? "genericError");
 }

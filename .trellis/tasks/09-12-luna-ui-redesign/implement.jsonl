@@ -1,0 +1,9 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Read relevant frontend guidelines; task revision2 supersedes legacy menu/layout restrictions only"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Scope, original revision and committed-write refresh boundary"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"OPFS, CSP, offline and Web-first validation"}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Android storage compatibility, SAF and isolated device verification"}
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Causal merge, encrypted envelopes and backup invariants"}
+{"file":".trellis/spec/backend/http-api-guidelines.md","reason":"Account authorization, CAS, idempotency, generated SDK"}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Atomic schema migration and finance storage rules"}
+{"file":".trellis/tasks/09-12-luna-ui-redesign/attachment-contract.md","reason":"Normative attachment protocol and file/host interfaces; implementation status and current schema versions are recorded in validation.md"}
+{"file":".trellis/tasks/09-12-luna-ui-redesign/research/attachment-feasibility.md","reason":"Source-backed constraints and change locations"}

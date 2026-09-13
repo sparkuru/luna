@@ -18,8 +18,11 @@ future Trellis Plus runs and before any user-visible UI planning or validation.
   Browser OPFS, CI, ledger sync, broad provider compatibility, and production
   security review remain deferred. A separate named-provider smoke has narrow
   fixed-version MinIO evidence recorded in the active task.
-- There is no committed project mainline record. Do not infer a task, priority,
-  or child ordering from the PRD alone; task state lives under `.trellis/tasks`.
+- The user-authorized project initiative is recorded in
+  [mainline.md](../../mainline.md). This initiative has been explicitly
+  resumed; implementation may proceed only through an active task whose state
+  is `in_progress`. Do not infer other task priorities or child ordering from
+  the PRD alone; task state lives under `.trellis/tasks`.
 - Trellis upstream paths remain read-only: do not modify `.trellis/workflow.md`,
   `.trellis/scripts/**`, `.trellis/agents/**`, `.trellis/config.yaml`, update
   metadata, or managed platform files.

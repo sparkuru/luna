@@ -47,6 +47,16 @@ test("bounded fetch rejects dishonest and missing lengths before SDK parsing", a
   );
   assert.equal(cancelled, true);
 });
+test("bounded fetch preserves a truthful decoded content length", async () => {
+  const response = await boundedFetch(
+    async () =>
+      new Response(new Uint8Array([1, 2, 3]), {
+        headers: { "content-length": "3", "content-encoding": "gzip" },
+      }),
+  )("http://localhost");
+  assert.equal(response.headers.get("content-length"), "3");
+  assert.equal(response.headers.get("content-encoding"), null);
+});
 test("generated SDK preserves conditions, idempotency, ETag, status and AbortSignal", async () => {
   const controller = new AbortController();
   let seen: Request | undefined;

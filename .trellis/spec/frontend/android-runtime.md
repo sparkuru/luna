@@ -59,6 +59,16 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
   the chosen `content:` URI on the bridge worker. Validate bounded encrypted
   envelope (12MiB max); no arbitrary path/URI argument, plaintext or password
   crosses this plugin. Resolve only after write/flush/close succeed.
+- Native image input launches `ACTION_OPEN_DOCUMENT` with the supported image
+  MIME allowlist and multiple selection. Keep each `content:` URI inside the
+  plugin; JavaScript receives only short-lived opaque handles and bounded
+  receipts/chunks (20MiB source and 1MiB bridge-chunk limits), and a cancelled
+  or failed selection releases every handle. Build the complete uncommitted
+  handle set before publishing it to the shared map; if a later URI or metadata
+  check fails, close every stream in that local set as well as every published
+  handle. Zero temporary chunk buffers from a `finally` block on both success
+  and provider failure. No storage permission or raw path may be added to make
+  this picker work.
 - Remove large ciphertext from `PluginCall` data before opening the picker:
   Capacitor saves pending call data into an Activity Bundle. Keep pending bytes
   in memory, single-flight; clear them after cancel/success/failure. Process
@@ -88,6 +98,7 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
 | SAF cancel | `ledger-backup-cancelled`; no success message |
 | Invalid envelope/no bytes/provider failure | `ledger-backup-failed`; local ledger retained |
 | Native save success | actual destination file closes, Node decrypts same ledger |
+| Native image selection | disposable Android DocumentsUI selects a supported image; renderer validates, stages and saves it, and a relaunch reads the same normalized bytes |
 | Hardware back with open IME | Android dismisses IME first; keep app dialog |
 | Hardware back with nested editor | Close category first, then hide entry while retaining its draft |
 | Hardware back at home | Native fallback; reopen retains committed data |
@@ -110,8 +121,15 @@ compatibility is covered by `src/shared/abort.test.ts`. SDK/WebCrypto
 interoperability uses a DevTools-contained HTTPS fixture; label it as protocol
 coverage, not real TLS/provider connectivity. MinIO is a separate real-provider
 gate. Native save tests must cancel then retry, observe completion, read only
-the exact synthetic saved file and decrypt it in Node. Capture viewport images:
-the tested WebView compositor repeated tiles for full-page CDP screenshots.
+the exact synthetic saved file and decrypt it in Node. The native image-picker
+smoke must place only a synthetic fixture in the disposable AVD, use the real
+DocumentsUI flow, assert normalized bytes after offline save/relaunch, and
+  clean the fixture and its media-provider row. The provider failure path must
+  also be covered with a test double or integration fixture that rejects a later
+  multi-selection item and proves earlier opened streams are closed. Capture
+  viewport images with
+`AndroidDevice.screenshot`: the WebView compositor can detach a CDP screenshot
+while the IME settles.
 Back assertions must send actual `input keyevent KEYCODE_BACK` on the verified
 emulator and inspect real IME state. A DOM Escape event or desktop hash-router
 test is not evidence of native dispatch. Verify menu parents, retained drafts

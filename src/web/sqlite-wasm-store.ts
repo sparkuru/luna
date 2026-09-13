@@ -1,14 +1,24 @@
 import { LedgerSessionError } from "../shared/ledger-session";
+import {
+  decodeMigrationLease,
+  validateMigrationLease,
+  validateMigrationLeaseId,
+  type MigrationLease,
+} from "../shared/ports";
 import type { StateChange, StateStore } from "./browser-state-store";
 
 interface WorkerState {
   raw: string | null;
   metadata: string | null;
+  migration: string | null;
 }
 
 type WorkerRequest =
   | { id: number; op: "init"; name: string }
   | { id: number; op: "read" }
+  | { id: number; op: "readBinary"; key: string }
+  | { id: number; op: "writeBinary"; key: string; bytes: Uint8Array }
+  | { id: number; op: "deleteBinary"; key: string }
   | {
       id: number;
       op: "commit";
@@ -17,12 +27,18 @@ type WorkerRequest =
       raw?: string;
       metadata?: string;
     }
+  | { id: number; op: "migrationAcquire"; lease: MigrationLease }
+  | { id: number; op: "migrationRenew"; leaseId: string; expiresAt: string }
+  | { id: number; op: "migrationRelease"; leaseId: string }
   | { id: number; op: "delete" }
   | { id: number; op: "close" };
 
 type WorkerOperation =
   | { op: "init"; name: string }
   | { op: "read" }
+  | { op: "readBinary"; key: string }
+  | { op: "writeBinary"; key: string; bytes: Uint8Array }
+  | { op: "deleteBinary"; key: string }
   | {
       op: "commit";
       expectedRaw: string | null;
@@ -30,11 +46,21 @@ type WorkerOperation =
       raw?: string;
       metadata?: string;
     }
+  | { op: "migrationAcquire"; lease: MigrationLease }
+  | { op: "migrationRenew"; leaseId: string; expiresAt: string }
+  | { op: "migrationRelease"; leaseId: string }
   | { op: "delete" }
   | { op: "close" };
 
 type WorkerReply =
-  | { id: number; ok: true; raw: string | null; metadata: string | null }
+  | {
+      id: number;
+      ok: true;
+      raw: string | null;
+      metadata: string | null;
+      migration: string | null;
+    }
+  | { id: number; ok: true; bytes: Uint8Array | null }
   | { id: number; ok: true }
   | { id: number; ok: false; error: string };
 
@@ -69,7 +95,12 @@ export class SqliteWasmStateStore implements StateStore {
       pending.signal?.removeEventListener("abort", pending.cancel);
       if (!reply.ok) pending.reject(new Error(normalizeError(reply.error)));
       else if ("raw" in reply)
-        pending.resolve({ raw: reply.raw, metadata: reply.metadata });
+        pending.resolve({
+          raw: reply.raw,
+          metadata: reply.metadata,
+          migration: reply.migration,
+        });
+      else if ("bytes" in reply) pending.resolve(reply.bytes);
       else pending.resolve(undefined);
     };
     this.worker.onerror = () => {
@@ -89,6 +120,43 @@ export class SqliteWasmStateStore implements StateStore {
 
   async metadata(): Promise<string | null> {
     return (await this.rpc({ op: "read" })).metadata;
+  }
+
+  async getMigrationLease(): Promise<MigrationLease | null> {
+    return decodeMigrationLease((await this.rpc({ op: "read" })).migration);
+  }
+
+  async acquireMigrationLease(lease: MigrationLease): Promise<void> {
+    validateMigrationLease(lease);
+    await this.rpc({ op: "migrationAcquire", lease });
+  }
+
+  async renewMigrationLease(
+    leaseId: string,
+    expiresAt: string,
+  ): Promise<void> {
+    validateMigrationLeaseId(leaseId);
+    if (!Number.isFinite(Date.parse(expiresAt)))
+      throw new Error("LUNA_ERROR:invalid-input");
+    await this.rpc({ op: "migrationRenew", leaseId, expiresAt });
+  }
+
+  async releaseMigrationLease(leaseId: string): Promise<void> {
+    validateMigrationLeaseId(leaseId);
+    await this.rpc({ op: "migrationRelease", leaseId });
+  }
+
+  async readBinary(key: string): Promise<Uint8Array | null> {
+    const bytes = await this.rpc({ op: "readBinary", key });
+    return bytes === null ? null : new Uint8Array(bytes);
+  }
+
+  async writeBinary(key: string, bytes: Uint8Array): Promise<void> {
+    await this.rpc({ op: "writeBinary", key, bytes: new Uint8Array(bytes) });
+  }
+
+  async deleteBinary(key: string): Promise<void> {
+    await this.rpc({ op: "deleteBinary", key });
   }
 
   async update<T>(
@@ -159,6 +227,7 @@ export class SqliteWasmStateStore implements StateStore {
   }
 
   private rpc(operation: { op: "read" }, signal?: AbortSignal): Promise<WorkerState>;
+  private rpc(operation: { op: "readBinary"; key: string }, signal?: AbortSignal): Promise<Uint8Array | null>;
   private rpc(operation: { op: "init"; name: string }, signal?: AbortSignal): Promise<void>;
   private rpc(
     operation:
@@ -169,6 +238,11 @@ export class SqliteWasmStateStore implements StateStore {
           raw?: string;
           metadata?: string;
         }
+      | { op: "writeBinary"; key: string; bytes: Uint8Array }
+      | { op: "deleteBinary"; key: string }
+      | { op: "migrationAcquire"; lease: MigrationLease }
+      | { op: "migrationRenew"; leaseId: string; expiresAt: string }
+      | { op: "migrationRelease"; leaseId: string }
       | { op: "delete" }
       | { op: "close" },
     signal?: AbortSignal,
@@ -176,7 +250,7 @@ export class SqliteWasmStateStore implements StateStore {
   private rpc(
     operation: WorkerOperation,
     signal?: AbortSignal,
-  ): Promise<WorkerState | void> {
+  ): Promise<WorkerState | Uint8Array | null | void> {
     if (this.closed) return Promise.reject(new Error("LUNA_ERROR:sqlite-closed"));
     const id = this.nextId++;
     const request = { id, ...operation } as WorkerRequest;

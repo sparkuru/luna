@@ -14,16 +14,24 @@ import {
   createTransaction,
   decodeId,
   decodeMonth,
+  decodeTransactionDraft,
   localMonthFromTimestamp,
   normalizeWorkspaceSetup,
   parseMinorUnits,
   reviseTransaction,
   tombstoneTransaction,
 } from "../shared/domain";
-import type { LocalStore } from "../shared/ports";
+import {
+  decodeMigrationLease,
+  validateMigrationLeaseId,
+  validateMigrationLease as validateMigrationLeaseValue,
+  type LocalStore,
+  type MigrationLease,
+} from "../shared/ports";
 import {
   appendLedgerRevision,
   assertBudgetHeads,
+  attachmentInventory,
   budgetHeadIds,
   decodeLedgerDocument,
   mergeLedgerDocuments,
@@ -38,8 +46,39 @@ import {
   resolveLedgerChoice,
   type LedgerConflictChoice,
 } from "../shared/ledger-data";
+import {
+  createEncryptedAttachment,
+  decryptAttachmentBytes,
+  AttachmentContractError,
+  MAX_ATTACHMENTS_PER_TRANSACTION,
+  MAX_LEDGER_ATTACHMENT_BYTES,
+  MAX_LEDGER_ATTACHMENT_COUNT,
+  toAttachmentMetadata,
+  validateAttachmentInventoryQuota,
+  validateAttachmentDescriptor,
+  type AttachmentRef,
+  type AttachmentMetadata,
+  type StoredAttachmentDescriptor,
+} from "../shared/attachment-contract";
+import {
+  isStoredTransaction,
+  storedTransactionFromTransaction,
+  storedTransactionToTransaction,
+  type StoredTransaction,
+} from "../shared/ledger-record";
+import {
+  FullBackupError,
+  type FullBackupArchive,
+  type FullBackupAttachment,
+  type FullBackupRestoreSink,
+} from "../shared/full-backup";
+import type {
+  AttachmentBytes,
+  AttachmentUsage,
+  StagedAttachment,
+} from "../shared/api";
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 5;
 
 interface WorkspaceRow {
   id: string;
@@ -75,6 +114,31 @@ interface BudgetRow {
   budget_minor: string | null;
 }
 
+interface AttachmentRow {
+  attachment_id: string;
+  draft_token: string | null;
+  draft_session_id: string | null;
+  descriptor_json: string;
+  ciphertext: Buffer;
+  state: "staged" | "committed";
+  created_at: string;
+}
+
+interface BackupStagingRow {
+  session_id: string;
+  attachment_id: string;
+  descriptor_json: string;
+  ciphertext: Buffer;
+  created_at: string;
+}
+
+interface MigrationLeaseRow {
+  lease_id: string;
+  snapshot_version: string;
+  acquired_at: string;
+  expires_at: string;
+}
+
 /**
  * SQLite implementation of the local-only checkpoint.
  *
@@ -98,7 +162,7 @@ export class SQLiteLocalStore implements LocalStore {
           this.database.exec(
             "CREATE TABLE IF NOT EXISTS profile_metadata(singleton INTEGER PRIMARY KEY CHECK(singleton=1), binding_json TEXT NOT NULL)",
           );
-          this.database.pragma("user_version = 3");
+          this.database.pragma(`user_version = ${SCHEMA_VERSION}`);
         })
         .immediate();
   }
@@ -117,6 +181,122 @@ export class SQLiteLocalStore implements LocalStore {
       .get() as { binding_json: string } | undefined;
     return row ? decodeBinding(JSON.parse(row.binding_json)) : null;
   }
+
+  getMigrationLease(): MigrationLease | null {
+    const row = this.database
+      .prepare(
+        `SELECT lease_id, snapshot_version, acquired_at, expires_at
+         FROM migration_lease WHERE singleton = 1`,
+      )
+      .get() as MigrationLeaseRow | undefined;
+    if (row === undefined) return null;
+    return decodeMigrationLease({
+      id: row.lease_id,
+      snapshotVersion: row.snapshot_version,
+      acquiredAt: row.acquired_at,
+      expiresAt: row.expires_at,
+    });
+  }
+
+  acquireMigrationLease(lease: MigrationLease): void {
+    validateMigrationLeaseValue(lease);
+    this.database
+      .transaction(() => {
+        const current = this.getMigrationLease();
+        if (
+          current !== null &&
+          Date.parse(current.expiresAt) > Date.now() &&
+          current.id !== lease.id
+        )
+          throw new Error("LUNA_ERROR:migration-busy");
+        this.database
+          .prepare(
+            `INSERT INTO migration_lease
+              (singleton, lease_id, snapshot_version, acquired_at, expires_at)
+             VALUES (1, @lease_id, @snapshot_version, @acquired_at, @expires_at)
+             ON CONFLICT(singleton) DO UPDATE SET
+               lease_id = excluded.lease_id,
+               snapshot_version = excluded.snapshot_version,
+               acquired_at = excluded.acquired_at,
+               expires_at = excluded.expires_at`,
+          )
+          .run({
+            lease_id: lease.id,
+            snapshot_version: lease.snapshotVersion,
+            acquired_at: lease.acquiredAt,
+            expires_at: lease.expiresAt,
+          });
+      })
+      .immediate();
+  }
+
+  renewMigrationLease(leaseId: string, expiresAt: string): void {
+    validateMigrationLeaseId(leaseId);
+    validateMigrationExpiry(expiresAt);
+    this.database
+      .transaction(() => {
+        const current = this.getMigrationLease();
+        if (
+          current === null ||
+          current.id !== leaseId ||
+          Date.parse(current.expiresAt) <= Date.now()
+        )
+          throw new Error("LUNA_ERROR:migration-not-owner");
+        if (Date.parse(expiresAt) <= Date.parse(current.acquiredAt))
+          throw new Error("LUNA_ERROR:invalid-input");
+        this.database
+          .prepare(
+            `UPDATE migration_lease
+             SET expires_at = @expires_at
+             WHERE singleton = 1 AND lease_id = @lease_id`,
+          )
+          .run({ lease_id: leaseId, expires_at: expiresAt });
+      })
+      .immediate();
+  }
+
+  releaseMigrationLease(leaseId: string): void {
+    validateMigrationLeaseId(leaseId);
+    this.database
+      .transaction(() => {
+        const current = this.getMigrationLease();
+        if (current === null) return;
+        if (current.id !== leaseId)
+          throw new Error("LUNA_ERROR:migration-not-owner");
+        this.database
+          .prepare("DELETE FROM migration_lease WHERE singleton = 1")
+          .run();
+      })
+      .immediate();
+  }
+
+  getRemotePayloadVersion(targetId: string): 1 | 2 | null {
+    validateRemoteTargetId(targetId);
+    const row = this.database
+      .prepare(
+        "SELECT payload_version FROM ledger_target_versions WHERE target_id = @target_id",
+      )
+      .get({ target_id: targetId }) as { payload_version: number } | undefined;
+    return row?.payload_version === 1 || row?.payload_version === 2
+      ? row.payload_version
+      : null;
+  }
+  setRemotePayloadVersion(targetId: string, version: 1 | 2): void {
+    validateRemoteTargetId(targetId);
+    this.database
+      .transaction(() => {
+        this.assertMigrationWritable();
+        this.database
+          .prepare(
+            `INSERT INTO ledger_target_versions(target_id, payload_version)
+             VALUES (@target_id, @payload_version)
+             ON CONFLICT(target_id) DO UPDATE SET
+               payload_version = MAX(ledger_target_versions.payload_version, excluded.payload_version)`,
+          )
+          .run({ target_id: targetId, payload_version: version });
+      })
+      .immediate();
+  }
   bindProfile(
     document: LedgerDocument,
     binding: ServerBinding,
@@ -128,6 +308,7 @@ export class SQLiteLocalStore implements LocalStore {
     this.database
       .transaction(() => {
         signal.throwIfAborted();
+        this.assertMigrationWritable();
         const old = this.getProfileBinding();
         if (old && JSON.stringify(old) !== JSON.stringify(valid))
           throw new Error("LUNA_ERROR:server-binding-mismatch");
@@ -182,6 +363,236 @@ export class SQLiteLocalStore implements LocalStore {
     };
   }
 
+  async stageTransactionImage(
+    draftSessionId: string,
+    bytes: Uint8Array,
+    mime: string,
+    width: number,
+    height: number,
+  ): Promise<StagedAttachment> {
+    const workspace = this.requireWorkspace();
+    if (
+      typeof draftSessionId !== "string" ||
+      draftSessionId.trim().length === 0 ||
+      draftSessionId.length > 256
+    )
+      throw new Error("LUNA_ERROR:attachment-invalid-reference");
+    const encrypted = await createEncryptedAttachment(
+      new Uint8Array(bytes),
+      workspace.id,
+      mime,
+      width,
+      height,
+    );
+    const draftToken = `draft-${randomUUID()}`;
+    const write = this.database.transaction(() => {
+      this.assertMigrationWritable();
+      const usage = this.getAttachmentUsage();
+      if (
+        usage.usedBytes + usage.reservedBytes + encrypted.ciphertext.byteLength > usage.maxBytes ||
+        usage.count + usage.pendingCount + 1 > usage.maxCount
+      ) {
+        throw new AttachmentContractError("attachment-quota-exceeded");
+      }
+      this.database
+        .prepare(
+          `INSERT INTO attachment_blobs
+            (attachment_id, draft_token, draft_session_id, descriptor_json, ciphertext, state, created_at)
+           VALUES (@attachment_id, @draft_token, @draft_session_id, @descriptor_json, @ciphertext, 'staged', @created_at)`,
+        )
+        .run({
+          attachment_id: encrypted.descriptor.id,
+          draft_token: draftToken,
+          draft_session_id: draftSessionId,
+          descriptor_json: JSON.stringify(encrypted.descriptor),
+          ciphertext: Buffer.from(encrypted.ciphertext),
+          created_at: new Date().toISOString(),
+        });
+    });
+    write.immediate();
+    return {
+      draftToken,
+      metadata: toAttachmentMetadata(encrypted.descriptor),
+    };
+  }
+
+  async readDraftImage(draftToken: string): Promise<AttachmentBytes> {
+    const row = this.readAttachmentRowByToken(draftToken);
+    if (row === null) throw new Error("LUNA_ERROR:attachment-not-found");
+    const descriptor = this.readAttachmentDescriptor(row);
+    const bytes = await decryptAttachmentBytes(
+      new Uint8Array(row.ciphertext),
+      descriptor,
+    );
+    return {
+      bytes,
+      mime: descriptor.mime,
+      width: descriptor.width,
+      height: descriptor.height,
+    };
+  }
+
+  discardDraftImage(draftToken: string): Promise<void> {
+    if (typeof draftToken !== "string" || draftToken.length > 256)
+      throw new Error("LUNA_ERROR:attachment-invalid-reference");
+    this.database
+      .transaction(() => {
+        this.assertMigrationWritable();
+        this.database
+          .prepare(
+            "DELETE FROM attachment_blobs WHERE state = 'staged' AND draft_token = @draft_token",
+          )
+          .run({ draft_token: draftToken });
+      })
+      .immediate();
+    return Promise.resolve();
+  }
+
+  async readTransactionImage(
+    transactionId: string,
+    attachmentId: string,
+    conflictHeadId?: string,
+  ): Promise<AttachmentBytes> {
+    const record = this.readStoredTransaction(transactionId, conflictHeadId);
+    const descriptor = record.attachments.find((item) => item.id === attachmentId);
+    if (descriptor === undefined)
+      throw new Error("LUNA_ERROR:attachment-not-found");
+    const row = this.database
+      .prepare(
+        "SELECT attachment_id, draft_token, draft_session_id, descriptor_json, ciphertext, state, created_at FROM attachment_blobs WHERE attachment_id = @attachment_id AND state = 'committed'",
+      )
+      .get({ attachment_id: descriptor.id }) as AttachmentRow | undefined;
+    if (row === undefined) throw new Error("LUNA_ERROR:attachment-unavailable");
+    const stored = this.readAttachmentDescriptor(row);
+    if (JSON.stringify(stored) !== JSON.stringify(descriptor))
+      throw new Error("LUNA_ERROR:attachment-digest-mismatch");
+    const bytes = await decryptAttachmentBytes(
+      new Uint8Array(row.ciphertext),
+      stored,
+    );
+    return {
+      bytes,
+      mime: stored.mime,
+      width: stored.width,
+      height: stored.height,
+    };
+  }
+
+  async readAttachmentCiphertext(
+    attachmentId: string,
+  ): Promise<{ descriptor: StoredAttachmentDescriptor; ciphertext: Uint8Array } | null> {
+    const row = this.database
+      .prepare(
+        `SELECT attachment_id, draft_token, draft_session_id, descriptor_json,
+                ciphertext, state, created_at
+         FROM attachment_blobs
+         WHERE attachment_id = @attachment_id AND state = 'committed'`,
+      )
+      .get({ attachment_id: attachmentId }) as AttachmentRow | undefined;
+    if (row === undefined) return null;
+    const descriptor = this.readAttachmentDescriptor(row);
+    await decryptAttachmentBytes(new Uint8Array(row.ciphertext), descriptor);
+    return { descriptor, ciphertext: new Uint8Array(row.ciphertext) };
+  }
+
+  async saveDownloadedAttachment(
+    descriptor: StoredAttachmentDescriptor,
+    ciphertext: Uint8Array,
+  ): Promise<void> {
+    validateAttachmentDescriptor(descriptor);
+    const workspace = this.requireWorkspace();
+    if (descriptor.workspaceId !== workspace.id)
+      throw new Error("LUNA_ERROR:attachment-invalid-reference");
+    const verified = new Uint8Array(ciphertext);
+    await decryptAttachmentBytes(verified, descriptor);
+    this.database
+      .transaction(() => {
+        this.assertMigrationWritable();
+        const existing = this.database
+          .prepare(
+            `SELECT attachment_id, draft_token, draft_session_id, descriptor_json,
+                    ciphertext, state, created_at
+             FROM attachment_blobs WHERE attachment_id = @attachment_id`,
+          )
+          .get({ attachment_id: descriptor.id }) as AttachmentRow | undefined;
+        if (existing !== undefined) {
+          const current = this.readAttachmentDescriptor(existing);
+          if (
+            JSON.stringify(current) !== JSON.stringify(descriptor) ||
+            !existing.ciphertext.equals(Buffer.from(verified))
+          )
+            throw new Error("LUNA_ERROR:attachment-digest-mismatch");
+          if (existing.state === "staged")
+            this.database
+              .prepare(
+                `UPDATE attachment_blobs
+                 SET state = 'committed', draft_token = NULL, draft_session_id = NULL
+                 WHERE attachment_id = @attachment_id`,
+              )
+              .run({ attachment_id: descriptor.id });
+          return;
+        }
+        const usage = this.getAttachmentUsage();
+        if (
+          usage.usedBytes + usage.reservedBytes + verified.byteLength > usage.maxBytes ||
+          usage.count + usage.pendingCount + 1 > usage.maxCount
+        )
+          throw new AttachmentContractError("attachment-quota-exceeded");
+        this.database
+          .prepare(
+            `INSERT INTO attachment_blobs
+              (attachment_id, draft_token, draft_session_id, descriptor_json, ciphertext, state, created_at)
+             VALUES (@attachment_id, NULL, NULL, @descriptor_json, @ciphertext, 'committed', @created_at)`,
+          )
+          .run({
+            attachment_id: descriptor.id,
+            descriptor_json: JSON.stringify(descriptor),
+            ciphertext: Buffer.from(verified),
+            created_at: new Date().toISOString(),
+          });
+      })
+      .immediate();
+  }
+
+  getAttachmentUsage(): AttachmentUsage {
+    const row = this.database
+      .prepare(
+        `SELECT
+           COALESCE(SUM(CASE WHEN state = 'committed' THEN length(ciphertext) ELSE 0 END), 0) AS used,
+           COALESCE(SUM(CASE WHEN state = 'staged' THEN length(ciphertext) ELSE 0 END), 0) AS reserved,
+           SUM(CASE WHEN state = 'committed' THEN 1 ELSE 0 END) AS committed_count,
+           SUM(CASE WHEN state = 'staged' THEN 1 ELSE 0 END) AS staged_count
+         FROM attachment_blobs`,
+      )
+      .get() as {
+      used: number;
+      reserved: number;
+      committed_count: number | null;
+      staged_count: number | null;
+    };
+    return {
+      usedBytes: row.used,
+      reservedBytes: row.reserved,
+      maxBytes: MAX_LEDGER_ATTACHMENT_BYTES,
+      count: row.committed_count ?? 0,
+      maxCount: MAX_LEDGER_ATTACHMENT_COUNT,
+      pendingCount: row.staged_count ?? 0,
+    };
+  }
+
+  async retryAttachmentDownload(
+    transactionId: string,
+    attachmentId: string,
+    conflictHeadId?: string,
+  ): Promise<AttachmentMetadata> {
+    const record = this.readStoredTransaction(transactionId, conflictHeadId);
+    const descriptor = record.attachments.find((item) => item.id === attachmentId);
+    if (descriptor === undefined)
+      throw new Error("LUNA_ERROR:attachment-not-found");
+    await this.readTransactionImage(transactionId, attachmentId, conflictHeadId);
+    return toAttachmentMetadata(descriptor);
+  }
+
   getLedgerDocument(): LedgerDocument | null {
     const row = this.database
       .prepare("SELECT document_json FROM ledger_graph WHERE singleton = 1")
@@ -200,11 +611,315 @@ export class SQLiteLocalStore implements LocalStore {
     const incoming = decodeLedgerDocument(input);
     return this.database
       .transaction(() => {
+        this.assertMigrationWritable();
         const current = this.getLedgerDocument();
         const merged =
           current === null ? incoming : mergeLedgerDocuments(current, incoming);
+        validateAttachmentInventoryQuota(attachmentInventory(merged));
         this.persistGraph(merged);
         return merged;
+      })
+      .immediate();
+  }
+
+  async restoreFullBackup(archive: FullBackupArchive): Promise<void> {
+    const incoming = decodeLedgerDocument(archive.graph);
+    if (incoming.schemaVersion !== 2)
+      throw new FullBackupError("backup-invalid-container");
+    const inventory = attachmentInventory(incoming);
+    if (inventory.size !== archive.attachments.length)
+      throw new FullBackupError("backup-attachment-mismatch");
+    const verified = archive.attachments.map((item) => ({
+      descriptor: { ...item.descriptor },
+      ciphertext: new Uint8Array(item.ciphertext),
+    }));
+    const provided = new Set<string>();
+    for (const item of verified) {
+      const expected = inventory.get(item.descriptor.id);
+      if (
+        expected === undefined ||
+        JSON.stringify(expected) !== JSON.stringify(item.descriptor) ||
+        provided.has(item.descriptor.id) ||
+        item.ciphertext.byteLength !== item.descriptor.cipherByteLength
+      )
+        throw new FullBackupError("backup-attachment-mismatch");
+      provided.add(item.descriptor.id);
+      try {
+        await decryptAttachmentBytes(item.ciphertext, item.descriptor);
+      } catch (error) {
+        if (error instanceof AttachmentContractError)
+          throw new FullBackupError("backup-attachment-mismatch");
+        throw error;
+      }
+    }
+    if (provided.size !== inventory.size)
+      throw new FullBackupError("backup-attachment-missing");
+
+    this.database
+      .transaction(() => {
+        this.assertMigrationWritable();
+        const current = this.getLedgerDocument();
+        if (
+          current !== null &&
+          current.workspace.id !== incoming.workspace.id
+        )
+          throw new FullBackupError("backup-workspace-mismatch");
+        const merged =
+          current === null ? incoming : mergeLedgerDocuments(current, incoming);
+        try {
+          validateAttachmentInventoryQuota(attachmentInventory(merged));
+        } catch (error) {
+          if (error instanceof AttachmentContractError)
+            throw new FullBackupError("backup-too-large");
+          throw error;
+        }
+        const existingRows = new Map<string, AttachmentRow>();
+        for (const item of verified) {
+          const row = this.database
+            .prepare(
+              `SELECT attachment_id, draft_token, draft_session_id,
+                      descriptor_json, ciphertext, state, created_at
+               FROM attachment_blobs WHERE attachment_id = @attachment_id`,
+            )
+            .get({ attachment_id: item.descriptor.id }) as
+            | AttachmentRow
+            | undefined;
+          if (row !== undefined) existingRows.set(item.descriptor.id, row);
+        }
+        let addedBytes = 0;
+        let addedCount = 0;
+        for (const item of verified) {
+          const existing = existingRows.get(item.descriptor.id);
+          if (existing === undefined) {
+            addedBytes += item.ciphertext.byteLength;
+            addedCount += 1;
+            continue;
+          }
+          const descriptor = this.readAttachmentDescriptor(existing);
+          if (
+            JSON.stringify(descriptor) !== JSON.stringify(item.descriptor) ||
+            !existing.ciphertext.equals(Buffer.from(item.ciphertext))
+          )
+            throw new FullBackupError("backup-attachment-mismatch");
+        }
+        const usage = this.getAttachmentUsage();
+        if (
+          usage.usedBytes + usage.reservedBytes + addedBytes > usage.maxBytes ||
+          usage.count + usage.pendingCount + addedCount > usage.maxCount
+        )
+          throw new FullBackupError("backup-too-large");
+        // The graph and all new/previously staged ciphertexts commit together.
+        this.persistGraph(merged);
+        for (const item of verified) {
+          const existing = existingRows.get(item.descriptor.id);
+          if (existing !== undefined) {
+            if (existing.state === "staged")
+              this.database
+                .prepare(
+                  `UPDATE attachment_blobs
+                   SET draft_token = NULL, draft_session_id = NULL,
+                       state = 'committed'
+                   WHERE attachment_id = @attachment_id`,
+                )
+                .run({ attachment_id: item.descriptor.id });
+            continue;
+          }
+          this.database
+            .prepare(
+              `INSERT INTO attachment_blobs
+                (attachment_id, draft_token, draft_session_id,
+                 descriptor_json, ciphertext, state, created_at)
+               VALUES (@attachment_id, NULL, NULL, @descriptor_json,
+                       @ciphertext, 'committed', @created_at)`,
+            )
+            .run({
+              attachment_id: item.descriptor.id,
+              descriptor_json: JSON.stringify(item.descriptor),
+              ciphertext: Buffer.from(item.ciphertext),
+              created_at: new Date().toISOString(),
+            });
+        }
+      })
+      .immediate();
+  }
+
+  beginFullBackupRestore(
+    _graph: import("../shared/ledger-sync").LedgerDocumentV2,
+  ): FullBackupRestoreSink {
+    const sessionId = `backup-${randomUUID()}`;
+    return {
+      writeAttachment: (item) => {
+        validateAttachmentDescriptor(item.descriptor);
+        if (item.ciphertext.byteLength !== item.descriptor.cipherByteLength)
+          throw new FullBackupError("backup-attachment-mismatch");
+        this.database
+          .transaction(() => {
+            this.assertMigrationWritable();
+            this.database
+              .prepare(
+                `INSERT INTO backup_restore_staging
+                  (session_id, attachment_id, descriptor_json, ciphertext, created_at)
+                 VALUES (@session_id, @attachment_id, @descriptor_json,
+                         @ciphertext, @created_at)`,
+              )
+              .run({
+                session_id: sessionId,
+                attachment_id: item.descriptor.id,
+                descriptor_json: JSON.stringify(item.descriptor),
+                ciphertext: Buffer.from(item.ciphertext),
+                created_at: new Date().toISOString(),
+              });
+          })
+          .immediate();
+      },
+      commit: (graph) => this.commitStagedFullBackup(sessionId, graph),
+      abort: () => {
+        this.database
+          .transaction(() => {
+            this.assertMigrationWritable();
+            this.database
+              .prepare(
+                "DELETE FROM backup_restore_staging WHERE session_id = @session_id",
+              )
+              .run({ session_id: sessionId });
+          })
+          .immediate();
+      },
+    };
+  }
+
+  private commitStagedFullBackup(
+    sessionId: string,
+    incoming: import("../shared/ledger-sync").LedgerDocumentV2,
+  ): void {
+    const inventory = attachmentInventory(incoming);
+    this.database
+      .transaction(() => {
+        this.assertMigrationWritable();
+        const current = this.getLedgerDocument();
+        if (
+          current !== null &&
+          current.workspace.id !== incoming.workspace.id
+        )
+          throw new FullBackupError("backup-workspace-mismatch");
+        const stagedIds = this.database
+          .prepare(
+            `SELECT attachment_id
+             FROM backup_restore_staging
+             WHERE session_id = @session_id
+             ORDER BY attachment_id`,
+          )
+          .all({ session_id: sessionId }) as Array<{ attachment_id: string }>;
+        const staged = this.database.prepare(
+          `SELECT session_id, attachment_id, descriptor_json,
+                  ciphertext, created_at
+           FROM backup_restore_staging
+           WHERE session_id = @session_id AND attachment_id = @attachment_id`,
+        );
+        const seen = new Set<string>();
+        let addedBytes = 0;
+        let addedCount = 0;
+        for (const { attachment_id: attachmentId } of stagedIds) {
+          const row = staged.get({
+            session_id: sessionId,
+            attachment_id: attachmentId,
+          }) as BackupStagingRow | undefined;
+          if (row === undefined)
+            throw new FullBackupError("backup-attachment-missing");
+          const descriptor = this.decodeBackupStagingDescriptor(row);
+          const expected = inventory.get(descriptor.id);
+          if (
+            expected === undefined ||
+            JSON.stringify(expected) !== JSON.stringify(descriptor) ||
+            seen.has(descriptor.id) ||
+            row.ciphertext.byteLength !== descriptor.cipherByteLength
+          )
+            throw new FullBackupError("backup-attachment-mismatch");
+          seen.add(descriptor.id);
+          const existing = this.database
+            .prepare(
+              `SELECT attachment_id, draft_token, draft_session_id,
+                      descriptor_json, ciphertext, state, created_at
+               FROM attachment_blobs WHERE attachment_id = @attachment_id`,
+            )
+            .get({ attachment_id: descriptor.id }) as AttachmentRow | undefined;
+          if (existing === undefined) {
+            addedBytes += row.ciphertext.byteLength;
+            addedCount += 1;
+          } else {
+            const existingDescriptor = this.readAttachmentDescriptor(existing);
+            if (
+              JSON.stringify(existingDescriptor) !== JSON.stringify(descriptor) ||
+              !existing.ciphertext.equals(row.ciphertext)
+            )
+              throw new FullBackupError("backup-attachment-mismatch");
+          }
+        }
+        if (seen.size !== inventory.size)
+          throw new FullBackupError("backup-attachment-missing");
+        const usage = this.getAttachmentUsage();
+        if (
+          usage.usedBytes + usage.reservedBytes + addedBytes > usage.maxBytes ||
+          usage.count + usage.pendingCount + addedCount > usage.maxCount
+        )
+          throw new FullBackupError("backup-too-large");
+        const merged =
+          current === null ? incoming : mergeLedgerDocuments(current, incoming);
+        try {
+          validateAttachmentInventoryQuota(attachmentInventory(merged));
+        } catch (error) {
+          if (error instanceof AttachmentContractError)
+            throw new FullBackupError("backup-too-large");
+          throw error;
+        }
+        this.persistGraph(merged);
+        for (const { attachment_id: attachmentId } of stagedIds) {
+          const row = staged.get({
+            session_id: sessionId,
+            attachment_id: attachmentId,
+          }) as BackupStagingRow | undefined;
+          if (row === undefined)
+            throw new FullBackupError("backup-attachment-missing");
+          const descriptor = this.decodeBackupStagingDescriptor(row);
+          const existing = this.database
+            .prepare(
+              `SELECT attachment_id, draft_token, draft_session_id,
+                      descriptor_json, ciphertext, state, created_at
+               FROM attachment_blobs WHERE attachment_id = @attachment_id`,
+            )
+            .get({ attachment_id: descriptor.id }) as AttachmentRow | undefined;
+          if (existing !== undefined) {
+            if (existing.state === "staged")
+              this.database
+                .prepare(
+                  `UPDATE attachment_blobs
+                   SET draft_token = NULL, draft_session_id = NULL,
+                       state = 'committed'
+                   WHERE attachment_id = @attachment_id`,
+                )
+                .run({ attachment_id: descriptor.id });
+            continue;
+          }
+          this.database
+            .prepare(
+              `INSERT INTO attachment_blobs
+                (attachment_id, draft_token, draft_session_id,
+                 descriptor_json, ciphertext, state, created_at)
+               VALUES (@attachment_id, NULL, NULL, @descriptor_json,
+                       @ciphertext, 'committed', @created_at)`,
+            )
+            .run({
+              attachment_id: descriptor.id,
+              descriptor_json: JSON.stringify(descriptor),
+              ciphertext: row.ciphertext,
+              created_at: new Date().toISOString(),
+            });
+        }
+        this.database
+          .prepare(
+            "DELETE FROM backup_restore_staging WHERE session_id = @session_id",
+          )
+          .run({ session_id: sessionId });
       })
       .immediate();
   }
@@ -212,6 +927,7 @@ export class SQLiteLocalStore implements LocalStore {
   resolveLedgerConflict(input: LedgerConflictChoice): LedgerDocument {
     return this.database
       .transaction(() => {
+        this.assertMigrationWritable();
         const current = this.getLedgerDocument();
         if (current === null) throw new LedgerSyncError("ledger-stale-heads");
         const resolved = resolveLedgerChoice(
@@ -251,6 +967,7 @@ export class SQLiteLocalStore implements LocalStore {
     const currentMonth = localMonthFromTimestamp(now);
 
     const write = this.database.transaction(() => {
+      this.assertMigrationWritable();
       this.database
         .prepare(
           `INSERT INTO workspace (id, name, currency, precision, created_at)
@@ -288,14 +1005,21 @@ export class SQLiteLocalStore implements LocalStore {
     now: string,
   ): Transaction {
     const workspace = this.requireWorkspace();
+    const decodedInput = decodeTransactionDraft(input);
     const transaction = createTransaction(
       decodeId(id, "transaction id"),
-      input,
+      decodedInput,
       workspace.precision,
       now,
     );
+    const resolved = this.resolveAttachmentRefs(decodedInput.attachments, workspace.id);
+    const stored = storedTransactionFromTransaction(
+      withoutAttachmentMetadata(transaction),
+      resolved.descriptors,
+    );
 
     const write = this.database.transaction(() => {
+      this.assertMigrationWritable();
       this.insertTransaction(transaction);
       this.insertRevision(transaction, "create");
       this.insertPendingOperation(transaction, "create");
@@ -303,11 +1027,12 @@ export class SQLiteLocalStore implements LocalStore {
         id: randomUUID(),
         kind: "transaction",
         entityId: transaction.id,
-        value: transaction,
+        value: stored,
       });
+      this.promoteAttachmentRows(resolved.tokens, stored);
     });
     write();
-    return transaction;
+    return storedTransactionToTransaction(stored);
   }
 
   updateTransaction(
@@ -318,16 +1043,31 @@ export class SQLiteLocalStore implements LocalStore {
   ): Transaction {
     const workspace = this.requireWorkspace();
     const transactionId = decodeId(id, "transaction id");
+    const decodedInput = decodeTransactionDraft(input);
     const write = this.database.transaction(() => {
+      this.assertMigrationWritable();
       const current = this.readTransaction(transactionId);
       if (current === null)
         throw new DomainError("not-found", "Transaction was not found.");
       assertExpectedRevision(current, expectedRevision);
       const transaction = reviseTransaction(
         current,
-        input,
+        decodedInput,
         workspace.precision,
         now,
+      );
+      const currentStored = this.readStoredTransaction(transactionId);
+      const resolved =
+        decodedInput.attachments === undefined
+          ? { descriptors: [...currentStored.attachments], tokens: [] as string[] }
+          : this.resolveAttachmentRefs(
+              decodedInput.attachments,
+              workspace.id,
+              currentStored.attachments,
+            );
+      const stored = storedTransactionFromTransaction(
+        withoutAttachmentMetadata(transaction),
+        resolved.descriptors,
       );
       this.replaceTransaction(transaction);
       this.insertRevision(transaction, "update");
@@ -336,9 +1076,10 @@ export class SQLiteLocalStore implements LocalStore {
         id: randomUUID(),
         kind: "transaction",
         entityId: transaction.id,
-        value: transaction,
+        value: stored,
       });
-      return transaction;
+      this.promoteAttachmentRows(resolved.tokens, stored);
+      return storedTransactionToTransaction(stored);
     });
     return write.immediate();
   }
@@ -351,11 +1092,17 @@ export class SQLiteLocalStore implements LocalStore {
     this.requireWorkspace();
     const transactionId = decodeId(id, "transaction id");
     const write = this.database.transaction(() => {
+      this.assertMigrationWritable();
       const current = this.readTransaction(transactionId);
       if (current === null)
         throw new DomainError("not-found", "Transaction was not found.");
       assertExpectedRevision(current, expectedRevision);
+      const currentStored = this.readStoredTransaction(transactionId);
       const transaction = tombstoneTransaction(current, now);
+      const stored = storedTransactionFromTransaction(
+        withoutAttachmentMetadata(transaction),
+        currentStored.attachments,
+      );
       this.database
         .prepare(
           `UPDATE transactions
@@ -387,9 +1134,9 @@ export class SQLiteLocalStore implements LocalStore {
         id: randomUUID(),
         kind: "transaction",
         entityId: transaction.id,
-        value: transaction,
+        value: stored,
       });
-      return transaction;
+      return storedTransactionToTransaction(stored);
     });
     return write.immediate();
   }
@@ -406,6 +1153,7 @@ export class SQLiteLocalStore implements LocalStore {
 
     this.database
       .transaction(() => {
+        this.assertMigrationWritable();
         const document = this.getLedgerDocument();
         if (document === null)
           throw new DomainError(
@@ -431,7 +1179,6 @@ export class SQLiteLocalStore implements LocalStore {
     const currentVersion = Number(
       this.database.pragma("user_version", { simple: true }),
     );
-    if (currentVersion === 3) return;
     if (currentVersion > SCHEMA_VERSION) {
       throw new Error(
         `Database schema ${currentVersion} is newer than this app supports.`,
@@ -515,7 +1262,45 @@ export class SQLiteLocalStore implements LocalStore {
             singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
             document_json TEXT NOT NULL
           );
+
+          CREATE TABLE IF NOT EXISTS attachment_blobs (
+            attachment_id TEXT PRIMARY KEY NOT NULL,
+            draft_token TEXT UNIQUE,
+            draft_session_id TEXT,
+            descriptor_json TEXT NOT NULL,
+            ciphertext BLOB NOT NULL,
+            state TEXT NOT NULL CHECK (state IN ('staged', 'committed')),
+            created_at TEXT NOT NULL
+          );
+
+          CREATE INDEX IF NOT EXISTS idx_attachment_staging
+            ON attachment_blobs (state, draft_session_id, created_at);
+
+          CREATE TABLE IF NOT EXISTS backup_restore_staging (
+            session_id TEXT NOT NULL,
+            attachment_id TEXT NOT NULL,
+            descriptor_json TEXT NOT NULL,
+            ciphertext BLOB NOT NULL,
+            created_at TEXT NOT NULL,
+            PRIMARY KEY (session_id, attachment_id)
+          );
+
+          CREATE TABLE IF NOT EXISTS ledger_target_versions (
+            target_id TEXT PRIMARY KEY NOT NULL,
+            payload_version INTEGER NOT NULL CHECK (payload_version IN (1, 2))
+          );
+
+          CREATE TABLE IF NOT EXISTS migration_lease (
+            singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+            lease_id TEXT NOT NULL,
+            snapshot_version TEXT NOT NULL,
+            acquired_at TEXT NOT NULL,
+            expires_at TEXT NOT NULL
+          );
         `);
+        // A process cannot resume an in-flight restore safely after a crash;
+        // orphaned ciphertext staging is therefore discarded on reopen.
+        this.database.prepare("DELETE FROM backup_restore_staging").run();
         const workspace = this.readWorkspace();
         if (workspace !== null && this.getLedgerDocument() === null) {
           const budgets = this.database
@@ -618,48 +1403,160 @@ export class SQLiteLocalStore implements LocalStore {
   }
 
   private readTransaction(id: string): Transaction | null {
-    if (
-      this.getLedgerConflicts().some(
-        (item) => item.kind === "transaction" && item.entityId === id,
-      )
-    ) {
-      throw new LedgerSyncError("ledger-conflict");
+    try {
+      const stored = this.readStoredTransaction(id);
+      return stored.deletedAt === null ? storedTransactionToTransaction(stored) : null;
+    } catch (error) {
+      if (error instanceof DomainError && error.code === "not-found") return null;
+      throw error;
     }
+  }
+
+  private readAttachmentRowByToken(token: string): AttachmentRow | null {
+    if (typeof token !== "string" || token.trim().length === 0 || token.length > 256)
+      throw new Error("LUNA_ERROR:attachment-invalid-reference");
     const row = this.database
       .prepare(
-        `SELECT id, revision, type, amount_minor, local_date, merchant,
-                payment_method, notes, created_at, updated_at, deleted_at
-         FROM transactions WHERE id = @id`,
+        `SELECT attachment_id, draft_token, draft_session_id, descriptor_json,
+                ciphertext, state, created_at
+         FROM attachment_blobs
+         WHERE draft_token = @draft_token AND state = 'staged'`,
       )
-      .get({ id }) as TransactionRow | undefined;
-    if (row === undefined || row.deleted_at !== null) return null;
+      .get({ draft_token: token }) as AttachmentRow | undefined;
+    return row ?? null;
+  }
 
-    const splits = this.database
-      .prepare(
-        `SELECT transaction_id, position, category, amount_minor
-         FROM splits WHERE transaction_id = @id ORDER BY position`,
-      )
-      .all({ id }) as SplitRow[];
-    if (splits.length === 0) {
-      throw new Error(`Transaction ${id} has no category split.`);
+  private readAttachmentDescriptor(row: AttachmentRow): StoredAttachmentDescriptor {
+    let value: unknown;
+    try {
+      value = JSON.parse(row.descriptor_json);
+    } catch {
+      throw new Error("LUNA_ERROR:attachment-invalid-descriptor");
     }
-    return {
-      id: row.id,
-      revision: row.revision,
-      type: row.type,
-      amountMinor: row.amount_minor,
-      date: row.local_date,
-      splits: splits.map((split) => ({
-        category: split.category,
-        amountMinor: split.amount_minor,
-      })),
-      merchant: row.merchant,
-      paymentMethod: row.payment_method,
-      notes: row.notes,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      deletedAt: row.deleted_at,
-    };
+    validateAttachmentDescriptor(value);
+    if (value.id !== row.attachment_id)
+      throw new Error("LUNA_ERROR:attachment-invalid-descriptor");
+    if (row.ciphertext.byteLength !== value.cipherByteLength)
+      throw new Error("LUNA_ERROR:attachment-ciphertext-too-large");
+    return { ...value };
+  }
+
+  private decodeBackupStagingDescriptor(
+    row: BackupStagingRow,
+  ): StoredAttachmentDescriptor {
+    let value: unknown;
+    try {
+      value = JSON.parse(row.descriptor_json);
+    } catch {
+      throw new FullBackupError("backup-attachment-mismatch");
+    }
+    try {
+      validateAttachmentDescriptor(value);
+    } catch (error) {
+      if (error instanceof AttachmentContractError)
+        throw new FullBackupError("backup-attachment-mismatch");
+      throw error;
+    }
+    if (value.id !== row.attachment_id)
+      throw new FullBackupError("backup-attachment-mismatch");
+    return { ...value };
+  }
+
+  private readStoredTransaction(
+    id: string,
+    conflictHeadId?: string,
+  ): StoredTransaction {
+    const transactionId = decodeId(id, "transaction id");
+    const document = this.getLedgerDocument();
+    if (document === null) throw new DomainError("not-found", "Transaction was not found.");
+    const parents = new Set(document.revisions.flatMap((revision) => revision.parents));
+    const heads = document.revisions.filter(
+      (revision) =>
+        revision.kind === "transaction" &&
+        revision.entityId === transactionId &&
+        !parents.has(revision.id),
+    );
+    const selected =
+      conflictHeadId === undefined
+        ? heads.length === 1
+          ? heads[0]
+          : heads.length > 1
+            ? (() => {
+                throw new LedgerSyncError("ledger-conflict");
+              })()
+            : undefined
+        : heads.find((head) => head.id === conflictHeadId);
+    if (selected === undefined || selected.kind !== "transaction") {
+      if (conflictHeadId === undefined) {
+        throw new DomainError("not-found", "Transaction was not found.");
+      }
+      throw new LedgerSyncError("ledger-stale-heads");
+    }
+    const value = isStoredTransaction(selected.value)
+      ? selected.value
+      : storedTransactionFromTransaction(selected.value);
+    if (value.attachments.some((attachment) => attachment.workspaceId !== document.workspace.id))
+      throw new Error("LUNA_ERROR:attachment-invalid-descriptor");
+    return value;
+  }
+
+  private resolveAttachmentRefs(
+    refs: readonly AttachmentRef[] | undefined,
+    workspaceId: string,
+    current: readonly StoredAttachmentDescriptor[] = [],
+  ): { descriptors: StoredAttachmentDescriptor[]; tokens: string[] } {
+    if (refs === undefined) return { descriptors: [], tokens: [] };
+    if (refs.length > MAX_ATTACHMENTS_PER_TRANSACTION)
+      throw new Error("LUNA_ERROR:attachment-invalid-reference");
+    const currentById = new Map(current.map((descriptor) => [descriptor.id, descriptor]));
+    const descriptors: StoredAttachmentDescriptor[] = [];
+    const tokens: string[] = [];
+    const ids = new Set<string>();
+    for (const ref of refs) {
+      if (ref.attachmentId !== undefined) {
+        const descriptor = currentById.get(ref.attachmentId);
+        if (descriptor === undefined || descriptor.workspaceId !== workspaceId)
+          throw new Error("LUNA_ERROR:attachment-invalid-reference");
+        if (ids.has(descriptor.id)) throw new Error("LUNA_ERROR:attachment-invalid-reference");
+        ids.add(descriptor.id);
+        descriptors.push({ ...descriptor });
+        continue;
+      }
+      if (ref.draftToken === undefined)
+        throw new Error("LUNA_ERROR:attachment-invalid-reference");
+      const row = this.readAttachmentRowByToken(ref.draftToken);
+      if (row === null) throw new Error("LUNA_ERROR:attachment-not-found");
+      const descriptor = this.readAttachmentDescriptor(row);
+      if (descriptor.workspaceId !== workspaceId || ids.has(descriptor.id))
+        throw new Error("LUNA_ERROR:attachment-invalid-reference");
+      ids.add(descriptor.id);
+      descriptors.push(descriptor);
+      tokens.push(ref.draftToken);
+    }
+    return { descriptors, tokens };
+  }
+
+  private promoteAttachmentRows(
+    tokens: readonly string[],
+    transaction: StoredTransaction,
+  ): void {
+    if (tokens.length === 0) return;
+    const descriptors = new Map(transaction.attachments.map((item) => [item.id, item]));
+    for (const token of tokens) {
+      const row = this.readAttachmentRowByToken(token);
+      if (row === null) throw new Error("LUNA_ERROR:attachment-not-found");
+      const stored = this.readAttachmentDescriptor(row);
+      const expected = descriptors.get(stored.id);
+      if (expected === undefined || JSON.stringify(expected) !== JSON.stringify(stored))
+        throw new Error("LUNA_ERROR:attachment-invalid-reference");
+      this.database
+        .prepare(
+          `UPDATE attachment_blobs
+           SET draft_token = NULL, draft_session_id = NULL, state = 'committed'
+           WHERE attachment_id = @attachment_id AND state = 'staged' AND draft_token = @draft_token`,
+        )
+        .run({ attachment_id: stored.id, draft_token: token });
+    }
   }
 
   private readBudget(month: string): string | null {
@@ -690,7 +1587,18 @@ export class SQLiteLocalStore implements LocalStore {
     const current = this.getLedgerDocument();
     if (current === null)
       throw new DomainError("invalid-workspace", "Create a workspace first.");
-    this.persistGraph(appendLedgerRevision(current, input));
+    // Keep image-free ledgers on the legacy graph schema. A native write is
+    // represented internally as StoredTransaction so it can share the same
+    // promotion path as image writes, but an empty descriptor list must not
+    // force every old profile through the v2 migration.
+    const graphInput =
+      current.schemaVersion === 1 &&
+      input.kind === "transaction" &&
+      isStoredTransaction(input.value) &&
+      input.value.attachments.length === 0
+        ? { ...input, value: storedTransactionToTransaction(input.value) }
+        : input;
+    this.persistGraph(appendLedgerRevision(current, graphInput));
   }
 
   /** Called only inside the same write transaction as local mutations or a merge. */
@@ -857,6 +1765,18 @@ export class SQLiteLocalStore implements LocalStore {
     };
   }
 
+  private assertMigrationWritable(): void {
+    const lease = this.getMigrationLease();
+    if (lease === null) return;
+    if (Date.parse(lease.expiresAt) <= Date.now()) {
+      this.database
+        .prepare("DELETE FROM migration_lease WHERE singleton = 1")
+        .run();
+      return;
+    }
+    throw new Error("LUNA_ERROR:migration-locked");
+  }
+
   private normalizeBudget(value: string): string {
     const amount = parseMinorUnits(value);
     if (amount < 0n) {
@@ -871,4 +1791,21 @@ export class SQLiteLocalStore implements LocalStore {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "unknown database error";
+}
+
+function validateRemoteTargetId(value: string): void {
+  if (typeof value !== "string" || value.length === 0 || value.length > 2048)
+    throw new Error("LUNA_ERROR:invalid-input");
+}
+
+function validateMigrationExpiry(value: string): void {
+  if (typeof value !== "string" || !Number.isFinite(Date.parse(value)))
+    throw new Error("LUNA_ERROR:invalid-input");
+}
+
+function withoutAttachmentMetadata(
+  transaction: Transaction,
+): Omit<Transaction, "attachments"> {
+  const { attachments: _attachments, ...financial } = transaction;
+  return financial;
 }

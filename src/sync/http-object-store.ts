@@ -3,6 +3,9 @@ import { assertNotAborted } from "../shared/abort";
 import {
   getLedgerObject,
   putLedgerObject,
+  getLedgerAttachment,
+  putLedgerAttachment,
+  repairLedgerAttachment,
   getPreferenceObject,
   putPreferenceObject,
 } from "../api-client/generated/sdk.gen";
@@ -14,6 +17,7 @@ import {
   type ConfigObjectStore,
   type ConditionalPut,
 } from "./s3-config-store";
+import type { AttachmentObjectStore } from "./attachment-object-store";
 
 export class ServerTransportError extends Error {
   constructor(readonly code: string) {
@@ -96,6 +100,12 @@ function code(result: Result): string {
       "payload-too-large",
       "rate-limited",
       "unavailable",
+      "attachment-not-found",
+      "attachment-conflict",
+      "attachment-quota-exceeded",
+      "attachment-unavailable",
+      "attachment-reservation-expired",
+      "ledger-upgrade-required",
     ].includes(error.code)
     ? error.code
     : "network";
@@ -107,10 +117,13 @@ function etag(result: Result): string {
 }
 export class HttpLedgerObjectStore implements LedgerObjectStore {
   private closed = false;
+  readonly attachments: HttpLedgerAttachmentStore;
   constructor(
     private readonly client: Client,
     private readonly ledgerId: string,
-  ) {}
+  ) {
+    this.attachments = new HttpLedgerAttachmentStore(client, ledgerId);
+  }
   private check(key: string) {
     if (this.closed || key !== "ledger-v1.enc.json")
       throw new ServerTransportError("cancelled");
@@ -155,7 +168,10 @@ export class HttpLedgerObjectStore implements LedgerObjectStore {
         putLedgerObject({
           client: this.client,
           path: { id: this.ledgerId },
-          body: envelope,
+          // The generated v1 operation still describes the legacy envelope;
+          // the raw serializer carries the validated v1/v2 body until the
+          // server OpenAPI contract is regenerated for both versions.
+          body: envelope as never,
           bodySerializer: () => body,
           headers,
           signal,
@@ -177,6 +193,128 @@ export class HttpLedgerObjectStore implements LedgerObjectStore {
   }
   close() {
     this.closed = true;
+    this.attachments.close();
+  }
+}
+
+/** HTTP attachment transport; callers verify the returned digest before promotion. */
+export class HttpLedgerAttachmentStore implements AttachmentObjectStore {
+  private closed = false;
+  constructor(private readonly client: Client, private readonly ledgerId: string) {}
+
+  private check(): void {
+    if (this.closed) throw new ServerTransportError("cancelled");
+  }
+
+  async get(attachmentId: string, signal: AbortSignal) {
+    this.check();
+    const result = await send(
+      () =>
+        getLedgerAttachment({
+          client: this.client,
+          path: { id: this.ledgerId, attachmentId },
+          parseAs: "arrayBuffer",
+          signal,
+        }),
+      signal,
+    );
+    this.check();
+    if (result.response?.status === 404 && code(result) === "attachment-not-found")
+      return null;
+    if (!result.response?.ok) this.fail(result);
+    const data = result.data as unknown;
+    if (!(data instanceof ArrayBuffer))
+      throw new ServerTransportError("invalid-response");
+    const sha256 = result.response.headers.get("x-luna-cipher-sha256");
+    const responseEtag = result.response.headers.get("etag");
+    const length = Number(result.response.headers.get("content-length"));
+    if (
+      sha256 === null ||
+      !/^[0-9a-f]{64}$/.test(sha256) ||
+      responseEtag === null ||
+      !Number.isSafeInteger(length) ||
+      length !== data.byteLength
+    )
+      throw new ServerTransportError("invalid-response");
+    return { body: new Uint8Array(data), etag: responseEtag, sha256 };
+  }
+
+  async putImmutable(
+    attachmentId: string,
+    body: Uint8Array,
+    sha256: string,
+    signal: AbortSignal,
+    idempotencyKey = randomRequestId(),
+  ): Promise<{ etag: string }> {
+    this.check();
+    const result = await send(
+      () =>
+        putLedgerAttachment({
+          client: this.client,
+          path: { id: this.ledgerId, attachmentId },
+          // The generated OpenAPI type cannot express Request's raw
+          // ArrayBufferView body, but the generated fetch client passes this
+          // value directly to Request without serializing it.
+          body: body as unknown as Blob,
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "if-none-match": "*",
+            "idempotency-key": idempotencyKey,
+            "x-luna-cipher-sha256": sha256,
+          },
+          signal,
+        }),
+      signal,
+    );
+    this.check();
+    if (!result.response?.ok) this.fail(result);
+    return { etag: etag(result) };
+  }
+
+  async repairExpectedCiphertext(
+    attachmentId: string,
+    body: Uint8Array,
+    sha256: string,
+    observedEtag: string,
+    signal: AbortSignal,
+    idempotencyKey = randomRequestId(),
+  ): Promise<{ etag: string }> {
+    this.check();
+    const result = await send(
+      () =>
+        repairLedgerAttachment({
+          client: this.client,
+          path: { id: this.ledgerId, attachmentId },
+          body: body as unknown as Blob,
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "if-match": observedEtag,
+            "idempotency-key": idempotencyKey,
+            "x-luna-cipher-sha256": sha256,
+          },
+          signal,
+        }),
+      signal,
+    );
+    this.check();
+    if (!result.response?.ok) this.fail(result);
+    return { etag: etag(result) };
+  }
+
+  close(): void {
+    this.closed = true;
+  }
+
+  private fail(result: Result): never {
+    if (result.response?.status === 404)
+      throw new LedgerObjectError("not-found");
+    if (result.response?.status === 409)
+      throw new LedgerObjectError("conflict");
+    if (result.response?.status === 401)
+      throw new LedgerObjectError("authentication");
+    if (result.response?.status === 403)
+      throw new LedgerObjectError("permission");
+    throw new ServerTransportError(code(result));
   }
 }
 export class HttpPreferenceObjectStore implements ConfigObjectStore {

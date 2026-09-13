@@ -281,7 +281,8 @@ function createMainWindow(): BrowserWindow {
     "default-src 'self'",
     "script-src 'self'",
     "style-src 'self'",
-    "img-src 'self' data:",
+    "img-src 'self' data: blob:",
+    "worker-src 'self'",
     "font-src 'self'",
     connectPolicy,
     "object-src 'none'",
@@ -425,7 +426,7 @@ async function runPackagedStorageSmoke(): Promise<void> {
           await new Promise((resolve) => setTimeout(resolve, 50));
         };
         await waitFor('#month-picker');
-        location.hash = '/ledger/menu/settings';
+        location.hash = '/settings/preferences';
         await waitFor('#settings-language');
         const language = document.querySelector('#settings-language');
         if (!(language instanceof HTMLSelectElement)) throw new Error('language setting is missing');
@@ -435,7 +436,7 @@ async function runPackagedStorageSmoke(): Promise<void> {
           if (currentSettings.locale === 'zh-CN' && document.documentElement.lang === 'zh-CN') break;
           await new Promise((resolve) => setTimeout(resolve, 20));
         }
-        document.querySelector('#close-secondary-menu').click();
+        location.hash = '/ledger';
         const monthPicker = await waitFor('#month-picker');
         if (!(monthPicker instanceof HTMLInputElement)) throw new Error('month picker is missing');
         await setValue(monthPicker, '2026-08');
@@ -499,21 +500,21 @@ async function runPackagedStorageSmoke(): Promise<void> {
         const transactionEditEnabled = [...document.querySelectorAll('#transaction-list-region button')]
           .some((element) => element.textContent?.includes('编辑') && !(element instanceof HTMLButtonElement && element.disabled));
         const liveStatus = document.querySelector('#live-status')?.textContent ?? '';
-        document.querySelector('#open-secondary-menu').click();
+        location.hash = '/budget';
         await waitFor('#budget-input');
         const hasBudgetForm = document.querySelector('form#budget-form') !== null;
         const budgetEditorEnabled = document.querySelector('#budget-input:not(:disabled)') !== null
           && document.querySelector('#save-budget:not(:disabled)') !== null;
-        document.querySelector('#close-secondary-menu').click();
+        location.hash = '/ledger';
         await new Promise((resolve) => setTimeout(resolve, 50));
-        const originalLedger = await window.lunaLedger.getLedgerDocument();
+        const originalLedgerSnapshot = await window.lunaLedger.getSnapshot('2026-08');
         const backupPassword = 'packaged ledger backup phrase';
         const encryptedLedger = await window.lunaLedger.exportLedgerBackup(backupPassword);
         if (encryptedLedger.includes('UI form smoke') || encryptedLedger.includes(backupPassword)) {
           throw new Error('ledger backup leaked plaintext');
         }
         await window.lunaLedger.importLedgerBackup(encryptedLedger, backupPassword);
-        const ledgerBackupVerified = JSON.stringify(await window.lunaLedger.getLedgerDocument()) === JSON.stringify(originalLedger)
+        const ledgerBackupVerified = JSON.stringify(await window.lunaLedger.getSnapshot('2026-08')) === JSON.stringify(originalLedgerSnapshot)
           && JSON.parse(encryptedLedger).format === 'luna-ledger-envelope'
           && (await window.lunaLedger.syncLedgerNow()).code === 'disabled';
         const connectionStatus = await window.lunaLedger.configureLedgerSync({

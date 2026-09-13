@@ -800,6 +800,480 @@ export type CreateLedgerResponses = {
 
 export type CreateLedgerResponse = CreateLedgerResponses[keyof CreateLedgerResponses];
 
+export type GetLedgerAttachmentData = {
+    body?: never;
+    path: {
+        id: string;
+        attachmentId: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{id}/attachments/{attachmentId}';
+};
+
+export type GetLedgerAttachmentErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    412: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    413: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    415: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    428: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    429: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    503: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+};
+
+export type GetLedgerAttachmentError = GetLedgerAttachmentErrors[keyof GetLedgerAttachmentErrors];
+
+export type GetLedgerAttachmentResponses = {
+    /**
+     * Default Response
+     */
+    200: Blob | File;
+};
+
+export type GetLedgerAttachmentResponse = GetLedgerAttachmentResponses[keyof GetLedgerAttachmentResponses];
+
+export type PutLedgerAttachmentData = {
+    body: Blob | File | {
+        [key: string]: unknown;
+    };
+    headers: {
+        'idempotency-key': string;
+        'if-none-match': '*';
+        'x-luna-cipher-sha256': string;
+    };
+    path: {
+        id: string;
+        attachmentId: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{id}/attachments/{attachmentId}';
+};
+
+export type PutLedgerAttachmentErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    412: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    413: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    415: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    428: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    429: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    503: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+};
+
+export type PutLedgerAttachmentError = PutLedgerAttachmentErrors[keyof PutLedgerAttachmentErrors];
+
+export type PutLedgerAttachmentResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        etag: string;
+    };
+};
+
+export type PutLedgerAttachmentResponse = PutLedgerAttachmentResponses[keyof PutLedgerAttachmentResponses];
+
+export type RepairLedgerAttachmentData = {
+    body: Blob | File | {
+        [key: string]: unknown;
+    };
+    headers: {
+        'idempotency-key': string;
+        'if-match': string;
+        'x-luna-cipher-sha256': string;
+    };
+    path: {
+        id: string;
+        attachmentId: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{id}/attachments/{attachmentId}/repair';
+};
+
+export type RepairLedgerAttachmentErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    412: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    413: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    415: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    428: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    429: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    503: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+};
+
+export type RepairLedgerAttachmentError = RepairLedgerAttachmentErrors[keyof RepairLedgerAttachmentErrors];
+
+export type RepairLedgerAttachmentResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        etag: string;
+    };
+};
+
+export type RepairLedgerAttachmentResponse = RepairLedgerAttachmentResponses[keyof RepairLedgerAttachmentResponses];
+
+export type GetLedgerAttachmentUsageData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{id}/attachments/usage';
+};
+
+export type GetLedgerAttachmentUsageErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    412: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    413: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    415: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    428: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    429: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+    /**
+     * Default Response
+     */
+    503: {
+        code: string;
+        requestId: string;
+        retryable: boolean;
+    };
+};
+
+export type GetLedgerAttachmentUsageError = GetLedgerAttachmentUsageErrors[keyof GetLedgerAttachmentUsageErrors];
+
+export type GetLedgerAttachmentUsageResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        accountMaxBytes: number;
+        accountReservedBytes: number;
+        accountUsedBytes: number;
+        count: number;
+        maxBytes: number;
+        maxCount: number;
+        reservedBytes: number;
+        usedBytes: number;
+    };
+};
+
+export type GetLedgerAttachmentUsageResponse = GetLedgerAttachmentUsageResponses[keyof GetLedgerAttachmentUsageResponses];
+
 export type GetLedgerObjectData = {
     body?: never;
     path: {
@@ -920,8 +1394,8 @@ export type GetLedgerObjectResponses = {
             name: 'PBKDF2';
             salt: string;
         };
-        payloadSchemaVersion: 1;
-        version: 1;
+        payloadSchemaVersion: 1 | 2;
+        version: 1 | 2;
     };
 };
 
@@ -942,8 +1416,8 @@ export type PutLedgerObjectData = {
             name: 'PBKDF2';
             salt: string;
         };
-        payloadSchemaVersion: 1;
-        version: 1;
+        payloadSchemaVersion: 1 | 2;
+        version: 1 | 2;
     };
     headers: {
         'idempotency-key': string;
@@ -1282,8 +1756,15 @@ export type GetServerMetaResponses = {
      */
     200: {
         apiVersion: 1;
+        attachmentProtocolVersion: 1;
         instanceId: string;
+        ledgerEnvelopeVersions: Array<number>;
+        ledgerPayloadVersions: Array<number>;
         limits: {
+            accountAttachmentBytes: number;
+            attachmentBytes: number;
+            attachmentCount: number;
+            ledgerAttachmentBytes: number;
             ledgerBytes: number;
             preferenceBytes: number;
         };

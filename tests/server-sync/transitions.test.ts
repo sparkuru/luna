@@ -8,6 +8,7 @@ import { openTestDatabase } from "../server/support";
 import { BrowserProfiles } from "../../src/web/profile-host";
 import { ServerHost } from "../../src/sync/server-host";
 import { serverProfileId } from "../../src/shared/server-api";
+import { seedLedgerDocumentV2 } from "../../src/shared/ledger-sync";
 
 const emptyStorage: Storage = {
   get length() {
@@ -150,7 +151,7 @@ test(
       finish.resolve();
       await accepted;
       await switching;
-      assert.equal(await host.api.getLedgerDocument(), null);
+      assert.equal(await (await profiles.open(targetId)).ledger.getLedgerDocument(), null);
       assert.equal(
         (await local.ledger.getLedgerDocument())!.workspace.name,
         "Accepted original",
@@ -187,7 +188,7 @@ test(
         precision: 2,
         monthlyBudgetMinor: null,
       });
-      const original = await host.api.getLedgerDocument();
+      const original = await (await profiles.open("legacy-local")).ledger.getLedgerDocument();
       const source = await profiles.open("legacy-local");
       const oldStatus = source.api.getLedgerSyncStatus.bind(source.api);
       const oldSync = source.api.syncLedgerNow.bind(source.api);
@@ -251,9 +252,81 @@ test(
       assert.equal((await host.status()).profile.id, "legacy-local");
       assert.equal((await host.status()).account, null);
       assert.equal((await host.status()).connected, false);
-      assert.deepEqual(await host.api.getLedgerDocument(), original);
+      assert.deepEqual(await (await profiles.open("legacy-local")).ledger.getLedgerDocument(), original);
     } finally {
       gate.resolve();
+      await host.dispose();
+      await app.close();
+      database.close();
+    }
+  },
+);
+
+test(
+  "legacy server capabilities reject v2 migration before remote publication",
+  { timeout: 30000 },
+  async () => {
+    const database = await openTestDatabase();
+    const username = `legacy_capability_${randomUUID().slice(0, 8)}`;
+    await setAccount(database, username, "fixture-account-password");
+    const app = await createApp({ database });
+    const baseUrl = await app.listen({ host: "127.0.0.1", port: 0 });
+    const profiles = new BrowserProfiles(new IDBFactory(), emptyStorage);
+    const fetcher: typeof fetch = async (input, init) => {
+      const response = await fetch(input, init);
+      const url = (input as Request).url;
+      if (!url.endsWith("/api/v1/meta")) return response;
+      const meta = (await response.json()) as Record<string, unknown>;
+      delete meta.ledgerEnvelopeVersions;
+      delete meta.ledgerPayloadVersions;
+      delete meta.attachmentProtocolVersion;
+      return new Response(JSON.stringify(meta), {
+        status: response.status,
+        headers: { "content-type": "application/json" },
+      });
+    };
+    const host = new ServerHost(profiles, fetcher);
+    try {
+      await host.api.createWorkspace({
+        name: "Legacy capability source",
+        currency: "CNY",
+        precision: 2,
+        monthlyBudgetMinor: null,
+      });
+      const source = await profiles.open("legacy-local");
+      const original = await source.ledger.getLedgerDocument();
+      assert.ok(original);
+      const upgraded = await source.ledger.mergeLedgerDocument(
+        seedLedgerDocumentV2(original.workspace, [], {}),
+      );
+
+      const loggedIn = await host.login({
+        baseUrl,
+        username,
+        password: "fixture-account-password",
+        deviceLabel: "legacy-capability",
+      });
+      assert.equal(loggedIn.serverCapabilities?.supportsLedgerV2, false);
+      assert.equal(loggedIn.serverCapabilities?.supportsAttachments, false);
+      await assert.rejects(
+        host.connect({
+          passphrase: "fixture-ledger-passphrase",
+          sourceProfileId: "legacy-local",
+          allowLocalOnlyMigration: true,
+        }),
+        /unsupported-version/,
+      );
+      assert.deepEqual(await source.ledger.getLedgerDocument(), upgraded);
+      assert.equal(
+        (
+          database.sqlite
+            .prepare("SELECT count(*) AS count FROM ledgers WHERE owner_user_id = ?")
+            .get(loggedIn.account!.id) as { count: number }
+        ).count,
+        0,
+      );
+      assert.equal((await host.status()).profile.id, "legacy-local");
+    } finally {
       await host.dispose();
       await app.close();
       database.close();

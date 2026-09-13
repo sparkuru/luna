@@ -1,8 +1,13 @@
 import { createInterface } from "node:readline/promises";
 import { Writable } from "node:stream";
-import { createDatabase, environment } from "../config";
+import {
+  createDatabase,
+  createServerObjectStore,
+  environment,
+} from "../config";
 import { migrate } from "../db/migration";
 import { setAccount } from "../auth";
+import { reconcileAttachmentOrphans } from "../db/operations";
 
 async function main() {
   const action = process.argv[2];
@@ -12,7 +17,8 @@ async function main() {
     )
   )
     throw new Error("Invalid action");
-  const database = createDatabase(environment().databaseFile);
+  const config = environment();
+  const database = createDatabase(config.databaseFile);
   try {
     await migrate(database);
     if (action === "cleanup") {
@@ -29,6 +35,14 @@ async function main() {
           .prepare("DELETE FROM security_events WHERE created_at < ?")
           .run(oldEvents);
       });
+      const objectStore = createServerObjectStore(config);
+      try {
+        await objectStore.ensureReady();
+        const result = await reconcileAttachmentOrphans(database, objectStore);
+        if (result.failed > 0) throw new Error("attachment-cleanup-incomplete");
+      } finally {
+        objectStore.close();
+      }
     } else if (action !== "migrate") {
       if (!process.stdin.isTTY) throw new Error("Interactive terminal required");
       let muted = false;

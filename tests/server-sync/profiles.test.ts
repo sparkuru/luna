@@ -10,7 +10,13 @@ import {
 import { openTestDatabase } from "../server/support";
 import { BrowserProfiles } from "../../src/web/profile-host";
 import { ServerHost } from "../../src/sync/server-host";
-import type { TransactionDraft } from "../../src/shared/domain";
+import {
+  createTransaction,
+  type TransactionDraft,
+} from "../../src/shared/domain";
+import { createEncryptedAttachment } from "../../src/shared/attachment-contract";
+import { storedTransactionFromTransaction } from "../../src/shared/ledger-record";
+import { seedLedgerDocumentV2 } from "../../src/shared/ledger-sync";
 
 class MemoryStorage implements Storage {
   private values = new Map<string, string>();
@@ -41,6 +47,13 @@ const draft: TransactionDraft = {
   splits: [{ category: "Food", amountMinor: "1200" }],
   notes: "Private note fixture",
 };
+
+async function ledgerOf(
+  host: ServerHost,
+  profiles: BrowserProfiles,
+) {
+  return (await profiles.open((await host.status()).profile.id)).ledger.getLedgerDocument();
+}
 
 test(
   "two isolated profiles migrate, sync offline conflicts, preserve sources and restart without secrets",
@@ -111,9 +124,11 @@ test(
         monthlyBudgetMinor: "10000",
       });
       const transaction = await first.api.createTransaction(draft);
-      const original = await first.api.getLedgerDocument();
+      const original = await (await profiles1.open("legacy-local")).ledger.getLedgerDocument();
       const signed = await first.login(login);
       assert.equal(signed.profile.id, "legacy-local");
+      assert.equal(signed.serverCapabilities?.supportsLedgerV2, true);
+      assert.equal(signed.serverCapabilities?.supportsAttachments, true);
       assert.equal(
         (
           database.sqlite
@@ -162,8 +177,8 @@ test(
         allowLocalOnlyMigration: false,
       });
       assert.deepEqual(
-        await first.api.getLedgerDocument(),
-        await second.api.getLedgerDocument(),
+        await ledgerOf(first, profiles1),
+        await ledgerOf(second, profiles2),
       );
       const otherProfiles = new BrowserProfiles(
         new IDBFactory(),
@@ -176,7 +191,7 @@ test(
         precision: 2,
         monthlyBudgetMinor: null,
       });
-      const wrongSource = await other.api.getLedgerDocument();
+      const wrongSource = await (await otherProfiles.open("legacy-local")).ledger.getLedgerDocument();
       const objectKey = `ledger/${connected.profile.binding!.ledgerId}/v1.enc.json`;
       const serverBefore = (await objectStore.get(objectKey))!.body;
       await other.login(login);
@@ -187,7 +202,7 @@ test(
           allowLocalOnlyMigration: false,
         }),
       );
-      assert.deepEqual(await other.api.getLedgerDocument(), wrongSource);
+      assert.deepEqual(await ledgerOf(other, otherProfiles), wrongSource);
       assert.deepEqual(
         (await objectStore.get(objectKey))!.body,
         serverBefore,
@@ -231,8 +246,8 @@ test(
       await first.sync();
       await second.sync();
       assert.deepEqual(
-        await first.api.getLedgerDocument(),
-        await second.api.getLedgerDocument(),
+        await ledgerOf(first, profiles1),
+        await ledgerOf(second, profiles2),
       );
       assert.equal((await second.api.getLedgerConflicts()).length, 0);
       const converged = (await second.api.getSnapshot("2026-09")).transactions;
@@ -240,22 +255,22 @@ test(
       assert.ok(converged.some((t) => t.id === created2.id));
       await first.configurePreferences({ enabled: true, passphrase });
       await first.api.updateSettings({ locale: "en" });
-      const ledgerBefore = await first.api.getLedgerDocument();
+      const ledgerBefore = await ledgerOf(first, profiles1);
       await first.syncPreferences();
-      assert.deepEqual(await first.api.getLedgerDocument(), ledgerBefore);
+      assert.deepEqual(await ledgerOf(first, profiles1), ledgerBefore);
       assert.equal((await first.status()).preferences.code, "synced");
       assert.equal(preferencePuts[0]!.key, preferencePuts[1]!.key);
       assert.equal(preferencePuts[0]!.body, preferencePuts[1]!.body);
       await second.configurePreferences({ enabled: true, passphrase });
       await second.syncPreferences();
       assert.equal((await second.api.getSettings()).locale, "en");
-      const localBeforeRevocation = await first.api.getLedgerDocument();
+      const localBeforeRevocation = await ledgerOf(first, profiles1);
       database.sqlite
         .prepare("UPDATE sessions SET revoked_at = ? WHERE user_id = ?")
         .run(new Date().toISOString(), signed.account!.id);
       await assert.rejects(first.sync());
       assert.deepEqual(
-        await first.api.getLedgerDocument(),
+        await ledgerOf(first, profiles1),
         localBeforeRevocation,
       );
       assert.equal((await first.status()).account, null);
@@ -287,8 +302,8 @@ test(
       assert.equal((await restarted.status()).profile.id, profileId);
       await restarted.selectProfile(profileId);
       assert.deepEqual(
-        await restarted.api.getLedgerDocument(),
-        await first.api.getLedgerDocument(),
+        await ledgerOf(restarted, profiles1),
+        await ledgerOf(first, profiles1),
       );
       assert.equal((await restarted.status()).connected, false);
       assert.deepEqual(
@@ -298,6 +313,116 @@ test(
     } finally {
       await first.logout();
       await second.logout();
+      await app.close();
+      database.close();
+    }
+  },
+);
+
+test(
+  "local-only profile migration copies and verifies historical attachment ciphertext before activation",
+  { timeout: 30000 },
+  async () => {
+    const database = await openTestDatabase();
+    const username = `attachment_migration_${randomUUID().slice(0, 8)}`;
+    await setAccount(database, username, "account-fixture-password");
+    const app = await createApp({ database });
+    const baseUrl = await app.listen({ host: "127.0.0.1", port: 0 });
+    const idb = new IDBFactory();
+    const profiles = new BrowserProfiles(idb, new MemoryStorage());
+    const host = new ServerHost(profiles);
+    try {
+      await host.api.createWorkspace({
+        name: "Attachment source",
+        currency: "CNY",
+        precision: 2,
+        monthlyBudgetMinor: null,
+      });
+      const source = await profiles.open("legacy-local");
+      const original = await source.ledger.getLedgerDocument();
+      assert.ok(original);
+      const image = await createEncryptedAttachment(
+        new Uint8Array([
+          0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+          0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52,
+          0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0,
+          0, 0, 0, 0,
+        ]),
+        original.workspace.id,
+        "image/png",
+        1,
+        1,
+      );
+      const withImage = seedLedgerDocumentV2(
+        original.workspace,
+        [
+          storedTransactionFromTransaction(
+            createTransaction(
+              `migration-image-${randomUUID()}`,
+              draft,
+              original.workspace.precision,
+              "2026-09-08T00:00:00.000Z",
+            ),
+            [image.descriptor],
+          ),
+        ],
+        {},
+      );
+      await source.ledger.mergeLedgerDocument(withImage);
+      await source.ledger.saveDownloadedAttachment!(
+        image.descriptor,
+        image.ciphertext,
+      );
+      const sourceBeforeConnect = await source.ledger.getLedgerDocument();
+      let sourceWriteRejected = false;
+      const readSourceAttachment = source.ledger.readAttachmentCiphertext!;
+      source.ledger.readAttachmentCiphertext = async (attachmentId) => {
+        const observerProfiles = new BrowserProfiles(idb, new MemoryStorage());
+        try {
+          const observer = await observerProfiles.open("legacy-local");
+          await assert.rejects(
+            observer.api.createTransaction({
+              ...draft,
+              notes: "another window must not write during migration",
+            }),
+            /LUNA_ERROR:migration-locked/,
+          );
+          sourceWriteRejected = true;
+        } finally {
+          await observerProfiles.closeAll();
+        }
+        return readSourceAttachment.call(source.ledger, attachmentId);
+      };
+
+      await host.login({
+        baseUrl,
+        username,
+        password: "account-fixture-password",
+        deviceLabel: "attachment-migration",
+      });
+      const connected = await host.connect({
+        passphrase,
+        sourceProfileId: "legacy-local",
+        allowLocalOnlyMigration: true,
+      });
+      const destination = await profiles.open(connected.profile.id);
+      const copied = await destination.ledger.readAttachmentCiphertext!(
+        image.descriptor.id,
+      );
+      assert.ok(copied);
+      assert.deepEqual(copied.descriptor, image.descriptor);
+      assert.deepEqual(copied.ciphertext, image.ciphertext);
+      assert.deepEqual(
+        await destination.ledger.getLedgerDocument(),
+        sourceBeforeConnect,
+      );
+      assert.deepEqual(
+        await (await profiles.open("legacy-local")).ledger.getLedgerDocument(),
+        sourceBeforeConnect,
+      );
+      assert.equal(sourceWriteRejected, true);
+    } finally {
+      await host.dispose();
       await app.close();
       database.close();
     }

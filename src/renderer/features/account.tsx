@@ -59,6 +59,100 @@ function ServerFeedback() {
   );
 }
 
+/** Focused settings view for profile and local-ledger management. */
+export function LedgerDirectoryPanel() {
+  const app = useApp();
+  const server = window.lunaLedger.server;
+  const status = app.serverStatus;
+  const profiles = useProfiles();
+  const m = (key: Parameters<typeof serverMessage>[1]) =>
+    serverMessage(app.locale, key);
+  if (!server)
+    return (
+      <section className="panel" aria-labelledby="ledger-directory-title">
+        <h1 id="ledger-directory-title">{app.message("ledgersTitle")}</h1>
+        <p>{app.message("ledgersHelp")}</p>
+        <p className="helper">
+          {app.message("localLedger")}: {app.scope.profileId}
+        </p>
+      </section>
+    );
+  const removeProfile = async (id: string) => {
+    if (
+      id === status?.profile.id ||
+      !window.confirm(m("removeLocalCopyConfirm"))
+    )
+      return;
+    if (await app.runServer(() => server.removeProfile(id)))
+      await profiles.refetch();
+  };
+  return (
+    <section
+      className="panel space-y-4"
+      aria-labelledby="ledger-directory-title"
+    >
+      <div className="section-heading">
+        <div>
+          <span className="kicker">{m("profiles")}</span>
+          <h1 id="ledger-directory-title">{app.message("ledgersTitle")}</h1>
+          <p>{app.message("ledgersHelp")}</p>
+        </div>
+      </div>
+      <p className="helper">{m("removeLocalCopyWarning")}</p>
+      {profiles.error && (
+        <p role="alert">{app.errorMessage(profiles.error)}</p>
+      )}
+      <ul className="profile-directory-list">
+        {profiles.data?.map((profile) => (
+          <li
+            className="profile-card rounded-lg border border-border p-4"
+            key={profile.id}
+          >
+            <div className="profile-card-copy">
+              <strong>{profile.displayName}</strong>
+              <span className="helper">
+                {profile.binding ? m("serverCopy") : m("local")}
+              </span>
+            </div>
+            <div className="profile-card-actions">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={app.serverBusy || profile.id === status?.profile.id}
+                aria-current={
+                  profile.id === status?.profile.id ? "true" : undefined
+                }
+                onClick={() =>
+                  void app.runServer(
+                    () => server.selectProfile(profile.id),
+                    true,
+                  )
+                }
+              >
+                {profile.id === status?.profile.id
+                  ? m("active")
+                  : m("chooseProfile")}
+              </Button>
+              {profile.id !== "legacy-local" &&
+                profile.id !== status?.profile.id && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={app.serverBusy}
+                    onClick={() => void removeProfile(profile.id)}
+                  >
+                    {m("removeLocalCopy")}
+                  </Button>
+                )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {profiles.data?.length === 0 && <p>{m("local")}</p>}
+    </section>
+  );
+}
+
 function SyncOnboarding({
   account,
   bound,
@@ -93,7 +187,7 @@ function SyncOnboarding({
               <p className="sync-step-status">{m("signedIn")}</p>
             ) : (
               <Button asChild variant="link" className="sync-step-link">
-                <a href="/ledger/menu/account#server-login-form">
+                <a href="/settings/account#server-login-form">
                   {m("goToAccount")}
                 </a>
               </Button>
@@ -439,6 +533,12 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
         locale={app.locale}
       />
       {feedback && <ServerFeedback />}
+      {status?.serverCapabilities &&
+        !status.serverCapabilities.supportsAttachments && (
+          <p id="server-capability-warning" className="form-alert" role="status">
+            {m("upgradeRequired")}
+          </p>
+        )}
       <p id="server-sync-status" role="status">
         {status?.sync.remoteChangeAvailable
           ? m("remoteChangeAvailable")

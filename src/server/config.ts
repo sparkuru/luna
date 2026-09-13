@@ -5,6 +5,11 @@ import {
   isLoopbackHostname,
   isPrivateIpv4Hostname,
 } from "../shared/server-api";
+import {
+  FileServerObjectStore,
+  S3ServerObjectStore,
+  type ServerObjectStore,
+} from "./storage/object-store";
 
 export interface ServerS3Config {
   endpoint: string;
@@ -28,6 +33,22 @@ export interface ServerEnvironment {
 
 export function createDatabase(filePath: string): ServerDatabase {
   return new ServerDatabase(filePath);
+}
+
+export function createServerObjectStore(
+  config: Pick<ServerEnvironment, "dataDir" | "s3">,
+): ServerObjectStore {
+  return config.s3
+    ? new S3ServerObjectStore(config.s3.bucket, config.s3.prefix, {
+        endpoint: config.s3.endpoint,
+        region: config.s3.region,
+        forcePathStyle: config.s3.forcePathStyle,
+        credentials: {
+          accessKeyId: config.s3.accessKeyId,
+          secretAccessKey: config.s3.secretAccessKey,
+        },
+      })
+    : new FileServerObjectStore(`${config.dataDir}/objects`);
 }
 
 export function environment(env: NodeJS.ProcessEnv = process.env): ServerEnvironment {

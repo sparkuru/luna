@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { BarChart3, BookOpen, Plus, Settings as SettingsIcon, Wallet } from "lucide-react";
 import {
   useBlocker,
   useNavigate,
@@ -7,10 +8,14 @@ import {
 } from "@tanstack/react-router";
 import type { ProfileSummary, ServerStatus } from "../../shared/server-api";
 import type { AppSnapshot } from "../../shared/domain";
-import { AccountPanel, ServerSyncPanel } from "../features/account";
+import {
+  AccountPanel,
+  LedgerDirectoryPanel,
+  ServerSyncPanel,
+} from "../features/account";
 import { serverMessage } from "../features/server-i18n";
 import { ledgerToolsMessage } from "../ledger-tools-i18n";
-import { validateLedgerSearch } from "./search";
+import { defaultStatisticsAnchor, validateLedgerSearch } from "./search";
 import { currentLocalMonth } from "../../shared/domain";
 import type { RendererSettings } from "../../shared/settings";
 import { t, type MessageKey } from "../i18n";
@@ -24,18 +29,12 @@ import {
   scopedRead,
 } from "../data/local";
 import { Button } from "../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "../components/ui/dialog";
 import { LedgerHome } from "../features/ledger";
 import { Setup } from "../features/setup";
 import { TransactionDialog, type Entry } from "../features/entry";
 import { BudgetEditor, Statistics } from "../features/budget";
 import { Settings, LanguageSelect } from "../features/settings";
-import { LedgerTools, type ToolsPage } from "../features/tools";
+import { LedgerTools } from "../features/tools";
 export function App() {
   const navigate = useNavigate();
   const path = useRouterState({ select: (state) => state.location.pathname });
@@ -43,8 +42,15 @@ export function App() {
     useRouterState({ select: (state) => state.location.search }),
   );
   const month = search.month ?? currentLocalMonth();
-  const setMonth = (month: string) => {
-    void navigate({ to: path, search: { ...search, month } });
+  const setMonth = (nextMonth: string) => {
+    void navigate({
+      to: path,
+      search: {
+        ...search,
+        month: nextMonth,
+        anchor: defaultStatisticsAnchor(nextMonth),
+      },
+    });
   };
   const server = window.lunaLedger.server;
   const hostStatus = useQuery({
@@ -102,6 +108,19 @@ export function App() {
   }
   const settings = settingsQuery.data;
   const snapshot = snapshotQuery.data;
+  const legacyTarget = path === "/" && snapshot !== undefined && snapshot.workspace !== null
+    ? "/ledger"
+    : path === "/"
+      ? null
+      : legacyRouteTarget(path);
+  useEffect(() => {
+    if (legacyTarget === null) return;
+    void navigate({
+      to: legacyTarget,
+      search,
+      replace: true,
+    });
+  }, [legacyTarget, navigate, search.anchor, search.month, search.period, search.type]);
   const locale = settings?.locale ?? "zh-CN";
   const m = (
     key: MessageKey,
@@ -117,6 +136,9 @@ export function App() {
   const [announcement, setAnnouncement] = useState("");
   const [visibility, setVisibility] = useState([false, false, false]);
   const [entry, setEntry] = useState<Entry | null>(null);
+  const [statisticsType, setStatisticsType] = useState<"income" | "expense">(
+    "expense",
+  );
   const [entryOpen, setEntryOpen] = useState(false);
   const [entryKey, setEntryKey] = useState(0);
   const dirty = useRef(new Set<string>());
@@ -132,9 +154,10 @@ export function App() {
         window.dispatchEvent(new Event("luna:back"));
         return true;
       }
+      const targetMonth = next.search.month ?? currentLocalMonth();
+      const changingRoute = next.pathname !== path || targetMonth !== month;
       return (
-        (!["/ledger", "/ledger/menu"].includes(next.pathname) ||
-          (next.search.month ?? currentLocalMonth()) !== month) &&
+        changingRoute &&
         [...dirty.current].some((key) => key !== "entry") &&
         !window.confirm(m("discardDraft"))
       );
@@ -326,28 +349,50 @@ export function App() {
       unsubscribe?.();
     };
   }, [refresh, server, scope.profileId, scope.generation]);
-  const menu = path.startsWith("/ledger/menu");
-  const section = path.split("/")[3] ?? "";
+  const settingsSubpage = path.startsWith("/settings/")
+    ? path.split("/")[2] ?? ""
+    : "";
+  const primarySection =
+    path === "/statistics"
+      ? "statistics"
+      : path === "/budget"
+        ? "budget"
+        : path.startsWith("/settings")
+          ? "settings"
+          : "ledger";
   const goto = (to: string) => void navigate({ to, search });
-  const closeMenu = () => {
-    goto("/ledger");
+  const openEntry = (next: Entry) => {
+    if (
+      entry &&
+      dirty.current.has("entry") &&
+      entry.transaction?.id === next.transaction?.id &&
+      entry.type === next.type
+    ) {
+      setEntryOpen(true);
+      return;
+    }
+    if (entry && dirty.current.has("entry") && !window.confirm(m("discardDraft")))
+      return;
+    setEntry(next);
+    setEntryKey((key) => key + 1);
+    setEntryOpen(true);
   };
   useEffect(() => {
     const back = (event: Event) => {
       if (entryOpen) {
         event.preventDefault();
         window.dispatchEvent(new Event("luna:back"));
-      } else if (menu) {
+      } else if (path.startsWith("/settings/")) {
         event.preventDefault();
-        void navigate({
-          to: section ? "/ledger/menu" : "/ledger",
-          search,
-        });
+        void navigate({ to: "/settings", search });
+      } else if (path === "/settings" || path === "/statistics" || path === "/budget") {
+        event.preventDefault();
+        void navigate({ to: "/ledger", search });
       }
     };
     window.addEventListener("luna:navigate-back", back);
     return () => window.removeEventListener("luna:navigate-back", back);
-  }, [entryOpen, menu, section, navigate, search.month, search.type]);
+  }, [entryOpen, navigate, path, search.anchor, search.month, search.period, search.type]);
   if (server && hostStatus.error && !serverStatus)
     return (
       <main id="main-content" className="app-shell">
@@ -418,15 +463,6 @@ export function App() {
     );
   }
   const workspace = snapshot.workspace;
-  const pages: { path: string; label: MessageKey }[] = [
-    { path: "budget", label: "monthlyLimit" },
-    { path: "statistics", label: "categoryBreakdown" },
-    { path: "settings", label: "settingsTitle" },
-    { path: "sync", label: "ledgerToolsLink" },
-    { path: "backup", label: "ledgerToolsSummary" },
-    { path: "conflicts", label: "ledgerToolsLink" },
-    { path: "account", label: "accountTitle" },
-  ];
   return (
     <AppContext.Provider
       key={scope.profileId}
@@ -499,7 +535,7 @@ export function App() {
                   id="open-sync-status"
                   className="sync-status-button"
                   variant="outline"
-                  onClick={() => goto("/ledger/menu/sync")}
+                  onClick={() => goto("/settings/sync")}
                   aria-label={serverMessage(locale, "openSync")}
                 >
                   <span>{serverMessage(locale, "syncStatusLabel")}</span>
@@ -542,10 +578,8 @@ export function App() {
               id="open-secondary-menu"
               className="menu-button"
               variant="outline"
-              aria-label={m("openMenu")}
-              aria-haspopup="dialog"
-              aria-controls="secondary-menu-dialog"
-              onClick={() => goto("/ledger/menu")}
+              aria-label={m("openSettingsSection")}
+              onClick={() => goto("/settings")}
             >
               <span className="menu-icon" aria-hidden="true">
                 <span />
@@ -563,43 +597,93 @@ export function App() {
             </span>
           </div>
         </header>
+        {workspace && (
+          <PrimaryNavigation
+            active={primarySection}
+            locale={locale}
+            navigate={goto}
+            record={() =>
+              openEntry({ type: "expense", returnFocus: "primary-record" })
+            }
+            message={m}
+          />
+        )}
         <main id="main-content" tabIndex={-1}>
-          {workspace && snapshot.summary ? (
-            <LedgerHome
-              openEntry={(next) => {
-                if (
-                  entry &&
-                  dirty.current.has("entry") &&
-                  entry.transaction?.id === next.transaction?.id &&
-                  entry.type === next.type
-                ) {
-                  setEntryOpen(true);
-                  return;
-                }
-                if (
-                  entry &&
-                  dirty.current.has("entry") &&
-                  !window.confirm(m("discardDraft"))
-                )
-                  return;
-                setEntry(next);
-                setEntryKey((key) => key + 1);
-                setEntryOpen(true);
-              }}
-              changeMonth={setMonth}
-              type={search.type ?? "all"}
-              changeType={(type) => {
-                void navigate({ to: path, search: { ...search, type } });
-              }}
-              visibility={visibility}
-              toggle={(index) =>
-                setVisibility((values) =>
-                  values.map((value, i) => (i === index ? !value : value)),
-                )
+          {workspace && primarySection === "settings" && (
+            <SettingsNavigation
+              active={
+                path === "/settings/sync/advanced"
+                  ? "advanced"
+                  : settingsSubpage || "settings"
               }
+              navigate={goto}
+              message={m}
             />
+          )}
+          {workspace && snapshot.summary ? (
+            primarySection === "statistics" ? (
+              <Statistics
+                period={search.period ?? "month"}
+                anchor={search.anchor ?? defaultStatisticsAnchor(month)}
+                type={statisticsType}
+                onPeriodChange={(period) =>
+                  void navigate({ to: path, search: { ...search, period } })
+                }
+                onAnchorChange={(anchor) =>
+                  void navigate({
+                    to: path,
+                    search: { ...search, month: anchor.slice(0, 7), anchor },
+                  })
+                }
+                onTypeChange={setStatisticsType}
+              />
+            ) : primarySection === "budget" ? (
+              <BudgetEditor key={`${workspace.id}:${month}`} />
+            ) : primarySection === "settings" ? (
+              settingsSubpage === "ledgers" ? (
+                <LedgerDirectoryPanel />
+              ) : settingsSubpage === "account" ? (
+                <AccountPanel />
+              ) : settingsSubpage === "sync" ? (
+                path === "/settings/sync/advanced" ? (
+                  <Settings section="advanced" />
+                ) : server ? (
+                  <ServerSyncPanel />
+                ) : (
+                  <LedgerTools page="sync" active />
+                )
+              ) : settingsSubpage === "backup" ? (
+                <LedgerTools page="backup" active />
+              ) : settingsSubpage === "conflicts" ? (
+                <LedgerTools page="conflicts" active />
+              ) : settingsSubpage === "preferences" ? (
+                <Settings section="preferences" />
+              ) : (
+                <Settings section="overview" navigate={goto} />
+              )
+            ) : (
+              <LedgerHome
+                openEntry={openEntry}
+                changeMonth={setMonth}
+                type={search.type ?? "all"}
+                changeType={(type) => {
+                  void navigate({ to: path, search: { ...search, type } });
+                }}
+                visibility={visibility}
+                toggle={(index) =>
+                  setVisibility((values) =>
+                    values.map((value, i) => (i === index ? !value : value)),
+                  )
+                }
+              />
+            )
           ) : (
-            <Setup />
+            <>
+              <Setup />
+              {path === "/settings/backup" && (
+                <LedgerTools page="backup" active />
+              )}
+            </>
           )}
           {snapshotQuery.error && (
             <p className="global-alert" role="alert">
@@ -614,88 +698,6 @@ export function App() {
           )}
         </main>
       </div>
-      <Dialog
-        open={menu}
-        onOpenChange={(open) => {
-          if (!open) closeMenu();
-        }}
-      >
-        <DialogContent
-          active={menu}
-          id="secondary-menu-dialog"
-          aria-labelledby="secondary-menu-title"
-          aria-describedby="secondary-menu-description"
-          className="luna-dialog secondary-menu-panel"
-          onOpenAutoFocus={(event) => {
-            event.preventDefault();
-            document.getElementById("close-secondary-menu")?.focus();
-          }}
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            document.getElementById("open-secondary-menu")?.focus();
-          }}
-        >
-          <header className="dialog-header">
-            <div>
-              <span className="kicker" id="secondary-menu-kicker">
-                {m("menuKicker")}
-              </span>
-              <DialogTitle id="secondary-menu-title">
-                {m(workspace ? "menuTitle" : "ledgerToolsLink")}
-              </DialogTitle>
-              <DialogDescription id="secondary-menu-description">
-                {m(workspace ? "menuDescription" : "ledgerToolsSummary")}
-              </DialogDescription>
-            </div>
-            <Button
-              id="close-secondary-menu"
-              variant="outline"
-              onClick={closeMenu}
-            >
-              {m("closeMenu")}
-            </Button>
-          </header>
-          <nav className="flex flex-wrap gap-2" aria-label={m("menuTitle")}>
-            {section && (
-              <Button variant="outline" onClick={() => goto("/ledger/menu")}>
-                {m("menuBack")}
-              </Button>
-            )}
-            {pages.map((page) => (
-              <Button
-                key={page.path}
-                variant={section === page.path ? "default" : "outline"}
-                onClick={() => goto(`/ledger/menu/${page.path}`)}
-              >
-                {page.path === "backup"
-                  ? m("backupNav")
-                  : page.path === "conflicts"
-                    ? m("conflictsNav")
-                    : m(page.label)}
-              </Button>
-            ))}
-          </nav>
-          <div id="secondary-menu-content" className="secondary-menu-sections">
-            {workspace && (!section || section === "budget") && (
-              <BudgetEditor key={`${workspace.id}:${month}`} />
-            )}{" "}
-            {workspace && (!section || section === "statistics") && (
-              <Statistics />
-            )}
-            {(!section || section === "settings") && <Settings />}
-            {section === "account" && <AccountPanel />}
-            {section === "sync" && server && <ServerSyncPanel />}
-          </div>
-          {(!section || ["sync", "backup", "conflicts"].includes(section)) && (
-            <div id="ledger-tools-root" className="secondary-tools-host">
-              <LedgerTools
-                active={menu}
-                page={(section || "all") as ToolsPage}
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
       {entry && workspace && (
         <TransactionDialog
           key={entryKey}
@@ -709,6 +711,136 @@ export function App() {
         />
       )}
     </AppContext.Provider>
+  );
+}
+
+function legacyRouteTarget(pathname: string): string | null {
+  if (pathname === "/") return "/ledger";
+  const target: Record<string, string> = {
+    "/ledger/menu": "/settings",
+    "/ledger/menu/settings": "/settings/preferences",
+    "/ledger/menu/budget": "/budget",
+    "/ledger/menu/statistics": "/statistics",
+    "/ledger/menu/sync": "/settings/sync",
+    "/ledger/menu/backup": "/settings/backup",
+    "/ledger/menu/conflicts": "/settings/conflicts",
+    "/ledger/menu/account": "/settings/account",
+  };
+  return target[pathname] ?? null;
+}
+
+function PrimaryNavigation({
+  active,
+  locale,
+  navigate,
+  record,
+  message,
+}: {
+  active: string;
+  locale: import("../../shared/settings").AppLocale;
+  navigate: (to: string) => void;
+  record(): void;
+  message: (
+    key: MessageKey,
+    params?: Readonly<Record<string, string | number>>,
+  ) => string;
+}) {
+  const items = [
+    {
+      key: "ledger",
+      path: "/ledger",
+      label: message("recentLedger"),
+      icon: BookOpen,
+    },
+    {
+      key: "statistics",
+      path: "/statistics",
+      label: message("categoryBreakdown"),
+      icon: BarChart3,
+    },
+    {
+      key: "budget",
+      path: "/budget",
+      label: message("monthlyLimit"),
+      icon: Wallet,
+    },
+    {
+      key: "settings",
+      path: "/settings",
+      label: message("settingsTitle"),
+      icon: SettingsIcon,
+    },
+  ];
+  return (
+    <nav
+      className="primary-navigation"
+      aria-label={message("primaryNavigation")}
+    >
+      <div className="primary-navigation-links">
+        {items.map(({ key, path, label, icon: Icon }) => (
+          <button
+            key={key}
+            type="button"
+            className={`primary-navigation-link${active === key ? " is-active" : ""}`}
+            aria-current={active === key ? "page" : undefined}
+            onClick={() => navigate(path)}
+          >
+            <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        id="primary-record"
+        type="button"
+        className="primary-record-button"
+        onClick={record}
+      >
+        <span className="primary-record-icon">
+          <Plus size={24} strokeWidth={2.3} aria-hidden="true" />
+        </span>
+        <span>{message("addTransaction")}</span>
+      </button>
+    </nav>
+  );
+}
+
+function SettingsNavigation({
+  active,
+  navigate,
+  message,
+}: {
+  active: string;
+  navigate: (to: string) => void;
+  message: (
+    key: MessageKey,
+    params?: Readonly<Record<string, string | number>>,
+  ) => string;
+}) {
+  const items: { key: string; path: string; label: string }[] = [
+    { key: "settings", path: "/settings", label: message("settingsTitle") },
+    { key: "ledgers", path: "/settings/ledgers", label: message("ledgersTitle") },
+    { key: "preferences", path: "/settings/preferences", label: message("preferencesTitle") },
+    { key: "account", path: "/settings/account", label: message("accountTitle") },
+    { key: "sync", path: "/settings/sync", label: message("ledgerToolsLink") },
+    { key: "advanced", path: "/settings/sync/advanced", label: message("advancedSettingsTitle") },
+    { key: "backup", path: "/settings/backup", label: message("backupNav") },
+    { key: "conflicts", path: "/settings/conflicts", label: message("conflictsNav") },
+  ];
+  return (
+    <nav className="settings-navigation" aria-label={message("settingsTitle")}>
+      {items.map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          className={active === item.key ? "is-active" : undefined}
+          aria-current={active === item.key ? "page" : undefined}
+          onClick={() => navigate(item.path)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </nav>
   );
 }
 

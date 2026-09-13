@@ -11,9 +11,40 @@ import type {
   RendererSettings,
   SettingsUpdateInput,
 } from "./settings";
-import type { LedgerConflict, LedgerDocument } from "./ledger-sync";
+import type { PublicLedgerConflict } from "./ledger-public";
 import type { LedgerConflictChoice } from "./ledger-data";
 import type { LedgerSessionStatus } from "./ledger-session";
+import type {
+  AttachmentMetadata,
+  AttachmentRef,
+  NormalizedAttachmentMime,
+} from "./attachment-contract";
+import type {
+  BackupChunk,
+  BackupExportStart,
+  BackupImportReceipt,
+} from "./full-backup-session";
+
+export interface StagedAttachment {
+  draftToken: string;
+  metadata: AttachmentMetadata;
+}
+
+export interface AttachmentBytes {
+  bytes: Uint8Array;
+  mime: NormalizedAttachmentMime;
+  width: number;
+  height: number;
+}
+
+export interface AttachmentUsage {
+  usedBytes: number;
+  reservedBytes: number;
+  maxBytes: number;
+  count: number;
+  maxCount: number;
+  pendingCount: number;
+}
 
 /** The only API exposed to the renderer through contextBridge. */
 export interface LunaLedgerApi {
@@ -29,10 +60,44 @@ export interface LunaLedgerApi {
   /** Native hosts resolve only after the user-selected document is written. */
   saveLedgerBackup?(password: string): Promise<void>;
   importLedgerBackup(raw: string, password: string): Promise<void>;
-  getLedgerDocument(): Promise<LedgerDocument | null>;
-  mergeLedgerDocument(input: LedgerDocument): Promise<LedgerDocument>;
-  getLedgerConflicts(): Promise<LedgerConflict[]>;
-  resolveLedgerConflict(input: LedgerConflictChoice): Promise<LedgerDocument>;
+  /** Bounded complete-backup sessions; legacy string backup remains compatible. */
+  beginBackupExport?(password: string): Promise<BackupExportStart>;
+  readBackupChunk?(jobId: string, sequence: number): Promise<BackupChunk>;
+  finishBackupExport?(jobId: string): Promise<void>;
+  beginBackupImport?(
+    totalBytes: number | null,
+    password: string,
+  ): Promise<{ jobId: string }>;
+  appendBackupChunk?(
+    jobId: string,
+    sequence: number,
+    bytes: Uint8Array,
+  ): Promise<{ receivedBytes: number }>;
+  finishBackupImport?(jobId: string): Promise<BackupImportReceipt>;
+  cancelBackupJob?(jobId: string): Promise<void>;
+  stageTransactionImage(
+    draftSessionId: string,
+    bytes: Uint8Array,
+    mime: string,
+    width: number,
+    height: number,
+  ): Promise<StagedAttachment>;
+  readDraftImage(draftToken: string): Promise<AttachmentBytes>;
+  discardDraftImage(draftToken: string): Promise<void>;
+  readTransactionImage(
+    transactionId: string,
+    attachmentId: string,
+    conflictHeadId?: string,
+  ): Promise<AttachmentBytes>;
+  getAttachmentUsage(): Promise<AttachmentUsage>;
+  retryAttachmentDownload(
+    transactionId: string,
+    attachmentId: string,
+    conflictHeadId?: string,
+  ): Promise<AttachmentMetadata>;
+  /** Host-only graph descriptors never cross the public renderer boundary. */
+  getLedgerConflicts(): Promise<PublicLedgerConflict[]>;
+  resolveLedgerConflict(input: LedgerConflictChoice): Promise<void>;
   getSnapshot(month: string): Promise<AppSnapshot>;
   createWorkspace(input: WorkspaceSetupInput): Promise<Workspace>;
   createTransaction(input: TransactionDraft): Promise<Transaction>;

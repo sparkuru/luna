@@ -17,6 +17,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "smoke:electron": "tsx scripts/smoke-electron.ts",
+    "smoke:electron:file-input": "tsx scripts/smoke-electron-file-input.ts",
     "android:sync": "LUNA_ANDROID_DEBUG=true npm run web:build && cap sync android",
     "smoke:android": "tsx scripts/smoke-android.ts",
     "smoke:config-sync:provider": "tsx scripts/smoke-config-sync-provider.ts",
@@ -33,6 +34,7 @@
     "server:admin": "tsx src/server/cli/admin.ts",
     "api:generate": "tsx src/server/cli/generate.ts",
     "api:check": "tsx src/server/cli/generate.ts --check",
+    "measure:full-backup": "tsx scripts/measure-full-backup.ts --bytes=64MiB",
     "test:contracts": "tsx --test tests/contracts/*.test.ts",
     "test:server-sync": "tsx --test tests/server-sync/*.test.ts",
     "smoke:server-restore": "node scripts/smoke-server-restore.mjs"

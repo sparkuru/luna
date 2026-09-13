@@ -17,7 +17,11 @@ the active fullstack task, not inferred from this document.
 - npm run api:check regenerates in a temporary directory and compares complete contract/SDK output, including otherwise untracked files.
 - npm run server:test uses isolated in-memory/file SQLite databases and an injected object-store fixture.
 
-API prefix /api/v1: meta, auth/sessions, auth/me, auth/session, ledgers, ledgers/{id}/object and preferences/object. Health paths /healthz and /readyz are outside the version prefix. contracts/openapi.json owns exact HTTP fields and operationIds; authored route schemas are its source.
+API prefix /api/v1: meta, auth/sessions, auth/me, auth/session, ledgers,
+ledgers/{id}/object, ledgers/{id}/attachments/{attachmentId} and
+preferences/object. Health paths /healthz and /readyz are outside the version
+prefix. contracts/openapi.json owns exact HTTP fields and operationIds; authored
+route schemas are its source.
 
 ## 3. Contracts
 
@@ -43,6 +47,23 @@ the request must then fail authorization.
 
 First PUT requires If-None-Match: *, updates require If-Match. Idempotency-Key is mandatory for creation and object writes. Its scope includes actor/operation/target; its request hash also includes the original condition and exact body bytes. Same key+same request replays committed status/ETag; different input is rejected. Return success only after COMMIT. New merged/encrypted payload means a new key.
 
+Attachment PUT and repair requests must hash the received ciphertext bytes and
+compare that digest with `X-Luna-Cipher-SHA256` before creating or changing a
+database reservation. The object is published only after the immutable object
+write and the database publication both succeed. Attachment GET/HEAD verifies
+the physical object's length and digest against SQLite before returning it, and
+browser CORS responses expose `X-Luna-Cipher-SHA256` and `Content-Length` while
+preflight allows the attachment's conditional, idempotency and digest headers.
+
+Server schema v3 records exact attachment orphan generations. An expired or
+canceled reservation must first fence its token, then record the exact physical
+key for delayed reconciliation; cleanup retains the tombstone after a delete so
+a late upload of the same old generation is removed on a later sweep and can
+never affect a newer generation. The admin cleanup command runs this reconcile.
+Same actor/scope/key idempotency requests are serialized before object
+publication within the single-instance process, while final publish and repair
+authorization is rechecked after any writer-mutex wait.
+
 The object store retains exact envelope bytes; SQLite stores only object key,
 ETag, SHA-256, byte length and version metadata. The server validates the outer
 envelope and actual byte limits; the client still decrypts and validates
@@ -52,7 +73,7 @@ service-worker cache entry.
 
 Use a flat base64 alphabet/padding schema check followed by the shared canonical decoder. Repeated-group regexes can exhaust the Node/V8 stack on valid maximum-size ciphertext. Keep an actual maximum-size PUT/GET roundtrip and lock-wait expiry regression, in addition to invalid and oversized input tests.
 
-Generated files are not manually edited. Version-specific generator compatibility belongs in deterministic, tested generation steps and api:check. Keep exactOptionalPropertyTypes and strict checking for authored code. The HTTP runtime must preserve ETag/status/AbortSignal and bound actual response bytes before JSON parsing.
+Generated files are not manually edited. Version-specific generator compatibility belongs in deterministic, tested generation steps and api:check. Keep exactOptionalPropertyTypes and strict checking for authored code. The HTTP runtime must preserve ETag/status/AbortSignal and bound actual response bytes before JSON parsing. If a bounded fetch rebuilds a response after consuming/decompressing it, it must replace `Content-Length` with the decoded byte length rather than deleting it; binary adapters use that header to detect truncation or extra bytes.
 
 ## 4. Validation & Error Matrix
 
@@ -66,6 +87,8 @@ Generated files are not manually edited. Version-specific generator compatibilit
 | Stale ETag or competing initial insert | 412, prior object retained |
 | Same idempotency key with different request | 409 |
 | Oversized streamed request/response | Reject before applying/parsing beyond bound |
+| Attachment body/digest mismatch | 400, no reservation or repair publication |
+| Missing/corrupt published attachment object | Retryable 503, no ciphertext response |
 | Unsupported content type/compression | 415 |
 | Login/rate capacity exhausted | 429 and bounded retry hint |
 | Database failure | Sanitized unavailable response; no SQL/path/stack |
@@ -82,9 +105,12 @@ Errors contain code, requestId and retryable; localized user text is owned by th
 
 SQLite tests must cover two-account isolation, repeated migration, concurrent
 first PUT through the writer mutex, same-key replay, stale ETag, raw-byte
-roundtrip, invalid/oversized envelopes, session revoke/reset and transaction
-failure. Generated SDK must be used against an actual HTTP listener, with the
-object-store boundary tested by both memory and MinIO-backed fixtures.
+roundtrip, invalid/oversized envelopes, attachment digest/reservation/repair
+boundaries, session revoke/reset and transaction failure. Generated SDK must be
+used against an actual HTTP listener, with the object-store boundary tested by
+both memory and MinIO-backed fixtures. At least one browser-origin test must
+exercise the generated attachment client through real CORS headers and read
+back the decrypted bytes after a second client restores them.
 
 Runtime tests check response size with misleading/missing Content-Length, abort propagation, raw envelope mode, ETag/412 and header forwarding. Generation checks compare all emitted paths and content. Root strict typecheck remains required; a passing server-only build does not prove SDK compatibility with the frontend compiler.
 

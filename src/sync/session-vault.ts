@@ -12,6 +12,7 @@ export interface SessionVaultRecord {
     instanceId: string;
     id: string;
     username: string;
+    capabilities?: import("../shared/server-api").ServerCapabilities;
   };
   ledger: {
     profileId: string;

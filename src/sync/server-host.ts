@@ -14,11 +14,14 @@ import type { LunaLedgerApi } from "../shared/api";
 import { assertNotAborted } from "../shared/abort";
 import {
   decodeLogin,
+  decodeServerCapabilities,
   decodeProfileId,
   decodeServerId,
   decodeServerUrl,
+  legacyServerCapabilities,
   serverProfileId,
   type ProfileSummary,
+  type ServerCapabilities,
   type LunaServerApi,
   type ServerStatus,
   type ServerBinding,
@@ -28,13 +31,24 @@ import {
   decryptLedgerDocument,
   validateLedgerPassword,
 } from "../shared/ledger-crypto";
-import { mergeLedgerDocuments } from "../shared/ledger-sync";
+import {
+  attachmentInventory,
+  mergeLedgerDocuments,
+  type LedgerDocument,
+} from "../shared/ledger-sync";
+import {
+  AttachmentContractError,
+  decryptAttachmentBytes,
+} from "../shared/attachment-contract";
 import {
   LEDGER_SYNC_MODES,
   type LedgerSyncMode,
 } from "../shared/settings";
 import type { ProfileRepository, LocalProfile } from "./profile-port";
-import { LedgerSyncSession } from "./ledger-service";
+import {
+  httpLedgerTargetIdentity,
+  LedgerSyncSession,
+} from "./ledger-service";
 import {
   HttpLedgerObjectStore,
   HttpPreferenceObjectStore,
@@ -42,6 +56,10 @@ import {
   ServerTransportError,
 } from "./http-object-store";
 import type { SessionVault, SessionVaultRecord } from "./session-vault";
+import type { MigrationLease } from "../shared/ports";
+
+const MIGRATION_LEASE_TTL_MS = 10 * 60 * 1000;
+const MIGRATION_LEASE_RENEW_AFTER_MS = 2 * 60 * 1000;
 
 interface Account {
   forget: () => void;
@@ -51,6 +69,7 @@ interface Account {
   id: string;
   username: string;
   expiresAt: string;
+  capabilities: ServerCapabilities;
   client: Client;
 }
 export class ServerHost implements LunaServerApi {
@@ -202,9 +221,11 @@ export class ServerHost implements LunaServerApi {
           "updateTransaction",
           "deleteTransaction",
           "setMonthlyBudget",
-          "mergeLedgerDocument",
           "importLedgerBackup",
           "resolveLedgerConflict",
+          "stageTransactionImage",
+          "discardDraftImage",
+          "finishBackupImport",
           "updateSettings",
         ].includes(method);
         // Authentication can expire while a captured local write commits.
@@ -226,7 +247,6 @@ export class ServerHost implements LunaServerApi {
             "updateTransaction",
             "deleteTransaction",
             "setMonthlyBudget",
-            "mergeLedgerDocument",
             "importLedgerBackup",
             "resolveLedgerConflict",
           ].includes(method)
@@ -291,6 +311,30 @@ export class ServerHost implements LunaServerApi {
         await this.persistSession();
         return result;
       },
+      stageTransactionImage: (...args) =>
+        invoke("stageTransactionImage", ...args) as ReturnType<
+          LunaLedgerApi["stageTransactionImage"]
+        >,
+      readDraftImage: (...args) =>
+        invoke("readDraftImage", ...args) as ReturnType<
+          LunaLedgerApi["readDraftImage"]
+        >,
+      discardDraftImage: (...args) =>
+        invoke("discardDraftImage", ...args) as ReturnType<
+          LunaLedgerApi["discardDraftImage"]
+        >,
+      readTransactionImage: (...args) =>
+        invoke("readTransactionImage", ...args) as ReturnType<
+          LunaLedgerApi["readTransactionImage"]
+        >,
+      getAttachmentUsage: () =>
+        invoke("getAttachmentUsage") as ReturnType<
+          LunaLedgerApi["getAttachmentUsage"]
+        >,
+      retryAttachmentDownload: (...args) =>
+        invoke("retryAttachmentDownload", ...args) as ReturnType<
+          LunaLedgerApi["retryAttachmentDownload"]
+        >,
       getSnapshot: (month) =>
         invoke("getSnapshot", month) as ReturnType<
           LunaLedgerApi["getSnapshot"]
@@ -331,14 +375,6 @@ export class ServerHost implements LunaServerApi {
         invoke("clearConfigSync") as ReturnType<
           LunaLedgerApi["clearConfigSync"]
         >,
-      getLedgerDocument: () =>
-        invoke("getLedgerDocument") as ReturnType<
-          LunaLedgerApi["getLedgerDocument"]
-        >,
-      mergeLedgerDocument: (input) =>
-        invoke("mergeLedgerDocument", input) as ReturnType<
-          LunaLedgerApi["mergeLedgerDocument"]
-        >,
       getLedgerConflicts: () =>
         invoke("getLedgerConflicts") as ReturnType<
           LunaLedgerApi["getLedgerConflicts"]
@@ -361,6 +397,34 @@ export class ServerHost implements LunaServerApi {
         this.scheduleSync();
         this.emit();
       },
+      beginBackupExport: (password) =>
+        invoke("beginBackupExport", password) as ReturnType<
+          NonNullable<LunaLedgerApi["beginBackupExport"]>
+        >,
+      readBackupChunk: (jobId, sequence) =>
+        invoke("readBackupChunk", jobId, sequence) as ReturnType<
+          NonNullable<LunaLedgerApi["readBackupChunk"]>
+        >,
+      finishBackupExport: (jobId) =>
+        invoke("finishBackupExport", jobId) as ReturnType<
+          NonNullable<LunaLedgerApi["finishBackupExport"]>
+        >,
+      beginBackupImport: (totalBytes, password) =>
+        invoke("beginBackupImport", totalBytes, password) as ReturnType<
+          NonNullable<LunaLedgerApi["beginBackupImport"]>
+        >,
+      appendBackupChunk: (jobId, sequence, bytes) =>
+        invoke("appendBackupChunk", jobId, sequence, bytes) as ReturnType<
+          NonNullable<LunaLedgerApi["appendBackupChunk"]>
+        >,
+      finishBackupImport: (jobId) =>
+        invoke("finishBackupImport", jobId) as ReturnType<
+          NonNullable<LunaLedgerApi["finishBackupImport"]>
+        >,
+      cancelBackupJob: (jobId) =>
+        invoke("cancelBackupJob", jobId) as ReturnType<
+          NonNullable<LunaLedgerApi["cancelBackupJob"]>
+        >,
     };
   }
   private async stop(preserveS3 = false) {
@@ -416,6 +480,21 @@ export class ServerHost implements LunaServerApi {
     if (!this.account) throw new ServerTransportError("authentication");
     return this.account;
   }
+  private assertServerCanAccept(
+    account: Account,
+    document: LedgerDocument,
+  ): void {
+    if (
+      document.schemaVersion === 2 &&
+      !account.capabilities.supportsLedgerV2
+    )
+      throw new ServerTransportError("unsupported-version");
+    if (
+      attachmentInventory(document).size > 0 &&
+      !account.capabilities.supportsAttachments
+    )
+      throw new ServerTransportError("unsupported-version");
+  }
 
   private createAccountClient(
     baseUrl: string,
@@ -468,6 +547,7 @@ export class ServerHost implements LunaServerApi {
       id: saved.account.id,
       username: saved.account.username,
       expiresAt: saved.account.expiresAt,
+      capabilities: saved.account.capabilities ?? legacyServerCapabilities(),
       client: this.createAccountClient(saved.account.baseUrl, token, owner),
     };
     owner.value = account;
@@ -486,10 +566,16 @@ export class ServerHost implements LunaServerApi {
         binding.userId === account.id &&
         binding.baseUrl === account.baseUrl
       ) {
-        this.ledgerSession = new LedgerSyncSession(profile.ledger);
+        this.ledgerSession = new LedgerSyncSession(
+          profile.ledger,
+          undefined,
+          (document) => this.assertServerCanAccept(account, document),
+        );
         this.ledgerSession.configureTarget(
           new HttpLedgerObjectStore(account.client, ledger.ledgerId),
           ledger.passphrase,
+          "ledger-v1.enc.json",
+          httpLedgerTargetIdentity(account.instanceId, account.id, ledger.ledgerId),
         );
         this.ledgerVault = ledger;
         this.remoteEtag = ledger.remoteEtag;
@@ -528,6 +614,7 @@ export class ServerHost implements LunaServerApi {
             instanceId: account.instanceId,
             id: account.id,
             username: account.username,
+            capabilities: account.capabilities,
           },
           ledger: this.ledgerVault,
         })
@@ -572,6 +659,7 @@ export class ServerHost implements LunaServerApi {
             username: a.username,
           }
         : null,
+      serverCapabilities: a?.capabilities ?? null,
       connected: session !== null,
       syncMode: this.syncMode,
       sync,
@@ -621,6 +709,7 @@ export class ServerHost implements LunaServerApi {
       meta.data.limits.preferenceBytes > 1024 * 1024
     )
       throw new ServerTransportError("unsupported-version");
+    const capabilities = decodeServerCapabilities(meta.data);
     const instanceId = decodeServerId(meta.data.instanceId);
     const response = await createSession({
       client,
@@ -657,6 +746,7 @@ export class ServerHost implements LunaServerApi {
       id: decodeServerId(response.data.user.id),
       username: response.data.user.username,
       expiresAt: response.data.expiresAt,
+      capabilities,
       client,
     };
     owner = this.account;
@@ -744,43 +834,92 @@ export class ServerHost implements LunaServerApi {
     let sourceDocument = source
       ? await source.ledger.getLedgerDocument()
       : null;
-    const options = accountQueries(a.client, this.scope(a));
-    let ledgers = await this.queries.fetchQuery(options.ledgers);
-    this.assert(signal, a);
-    if (!ledgers.length) {
-      if (!sourceDocument) throw new ServerTransportError("empty");
-      const created = await createLedger({
-        client: a.client,
-        body: {},
-        headers: { "idempotency-key": randomRequestId() },
-        signal,
-      });
-      this.assert(signal, a);
-      if (!created.data) {
-        ledgers = await this.queries.fetchQuery(options.ledgers);
-        if (!ledgers.length) throw new ServerTransportError("unavailable");
-      } else ledgers = [created.data];
+    if (sourceDocument) this.assertServerCanAccept(a, sourceDocument);
+    const destinationId = serverProfileId(a.instanceId, a.id);
+    const migrationSource =
+      source !== null && source.id !== destinationId ? source : null;
+    const migrationSnapshot =
+      migrationSource === null ? null : JSON.stringify(sourceDocument);
+    let migrationLease: MigrationLease | null = null;
+    let migrationLeaseRenewAt = 0;
+    if (migrationSource !== null) {
+      const acquire = migrationSource.ledger.acquireMigrationLease;
+      const renew = migrationSource.ledger.renewMigrationLease;
+      const release = migrationSource.ledger.releaseMigrationLease;
+      if (acquire === undefined || renew === undefined || release === undefined)
+        throw new ServerTransportError("unavailable");
+      const now = new Date();
+      const lease: MigrationLease = {
+        id: `migration-${randomRequestId()}`,
+        snapshotVersion: migrationSnapshotVersion(sourceDocument),
+        acquiredAt: now.toISOString(),
+        expiresAt: new Date(now.getTime() + MIGRATION_LEASE_TTL_MS).toISOString(),
+      };
+      try {
+        await acquire.call(migrationSource.ledger, lease);
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message === "LUNA_ERROR:migration-busy"
+        )
+          throw new ServerTransportError("busy");
+        throw error;
+      }
+      migrationLease = lease;
     }
-    const ledgerId = decodeServerId(ledgers[0]!.id);
-    const binding: ServerBinding = {
-      baseUrl: a.baseUrl,
-      instanceId: a.instanceId,
-      userId: a.id,
-      ledgerId,
+    const touchMigrationLease = async (): Promise<void> => {
+      if (migrationSource === null || migrationLease === null) return;
+      if (Date.now() < migrationLeaseRenewAt) return;
+      const renew = migrationSource.ledger.renewMigrationLease;
+      if (renew === undefined)
+        throw new ServerTransportError("unavailable");
+      const expiresAt = new Date(
+        Date.now() + MIGRATION_LEASE_TTL_MS,
+      ).toISOString();
+      await renew.call(migrationSource.ledger, migrationLease.id, expiresAt);
+      migrationLease = { ...migrationLease, expiresAt };
+      migrationLeaseRenewAt = Date.now() + MIGRATION_LEASE_RENEW_AFTER_MS;
     };
-    const destination = await this.profilesStore.open(
-      serverProfileId(a.instanceId, a.id),
-    );
-    const oldBinding = await destination.binding();
-    if (
-      oldBinding &&
-      (oldBinding.ledgerId !== ledgerId ||
-        oldBinding.instanceId !== a.instanceId)
-    )
-      throw new ServerTransportError("binding-mismatch");
-    const remote = new HttpLedgerObjectStore(a.client, ledgerId);
     try {
+      const options = accountQueries(a.client, this.scope(a));
+      let ledgers = await this.queries.fetchQuery(options.ledgers);
+      await touchMigrationLease();
+      this.assert(signal, a);
+      if (!ledgers.length) {
+        if (!sourceDocument) throw new ServerTransportError("empty");
+        const created = await createLedger({
+          client: a.client,
+          body: {},
+          headers: { "idempotency-key": randomRequestId() },
+          signal,
+        });
+        await touchMigrationLease();
+        this.assert(signal, a);
+        if (!created.data) {
+          ledgers = await this.queries.fetchQuery(options.ledgers);
+          if (!ledgers.length) throw new ServerTransportError("unavailable");
+        } else ledgers = [created.data];
+      }
+      const ledgerId = decodeServerId(ledgers[0]!.id);
+      const binding: ServerBinding = {
+        baseUrl: a.baseUrl,
+        instanceId: a.instanceId,
+        userId: a.id,
+        ledgerId,
+      };
+      const destination = await this.profilesStore.open(destinationId);
+      const oldBinding = await destination.binding();
+      if (
+        oldBinding &&
+        (oldBinding.ledgerId !== ledgerId ||
+          oldBinding.instanceId !== a.instanceId)
+      )
+        throw new ServerTransportError("binding-mismatch");
+      const remote = new HttpLedgerObjectStore(a.client, ledgerId);
+    try {
+      await touchMigrationLease();
       const object = await remote.get("ledger-v1.enc.json", signal);
+      await touchMigrationLease();
       const remoteDocument = object
         ? await decryptLedgerDocument(object.body, input.passphrase)
         : null;
@@ -793,22 +932,56 @@ export class ServerHost implements LunaServerApi {
             ? mergeLedgerDocuments(candidate, document)
             : document;
       if (!candidate) throw new ServerTransportError("empty");
+      this.assertServerCanAccept(a, candidate);
       await destination.ledger.mergeLedgerDocument(candidate, signal);
+      await touchMigrationLease();
+      await copyLocalAttachments(
+        source,
+        destination,
+        candidate,
+        signal,
+        () => this.assert(signal, a),
+        touchMigrationLease,
+      );
+      await touchMigrationLease();
       this.assert(signal, a);
-      const session = new LedgerSyncSession(destination.ledger);
-      session.configureTarget(remote, input.passphrase);
+      const session = new LedgerSyncSession(
+        destination.ledger,
+        undefined,
+        (document) => this.assertServerCanAccept(a, document),
+      );
+      session.configureTarget(
+        remote,
+        input.passphrase,
+        "ledger-v1.enc.json",
+        httpLedgerTargetIdentity(a.instanceId, a.id, ledgerId),
+      );
       const abort = () => session.clear();
       signal.addEventListener("abort", abort, { once: true });
       try {
         const result = await session.syncNow();
+        await touchMigrationLease();
         if (result.code !== "synced") throw new ServerTransportError("pending");
         this.assert(signal, a);
         sourceDocument = source
           ? await source.ledger.getLedgerDocument()
           : null;
         if (sourceDocument) {
-          await destination.ledger.mergeLedgerDocument(sourceDocument, signal);
+          const merged = await destination.ledger.mergeLedgerDocument(
+            sourceDocument,
+            signal,
+          );
+          await copyLocalAttachments(
+            source,
+            destination,
+            merged,
+            signal,
+            () => this.assert(signal, a),
+            touchMigrationLease,
+          );
+          await touchMigrationLease();
           await session.syncNow();
+          await touchMigrationLease();
         }
         const verify = await remote.get("ledger-v1.enc.json", signal);
         if (!verify) throw new ServerTransportError("verification-failed");
@@ -833,9 +1006,9 @@ export class ServerHost implements LunaServerApi {
           throw new ServerTransportError("verification-failed");
         this.assert(signal, a);
         if (
-          source &&
-          JSON.stringify(await source.ledger.getLedgerDocument()) !==
-            JSON.stringify(sourceDocument)
+          migrationSource &&
+          JSON.stringify(await migrationSource.ledger.getLedgerDocument()) !==
+            migrationSnapshot
         )
           throw new ServerTransportError("source-changed");
         if (source) {
@@ -847,10 +1020,16 @@ export class ServerHost implements LunaServerApi {
         await this.profilesStore.activate?.(destination.id, signal);
         this.assert(signal, a);
         this.currentId = destination.id;
-        this.ledgerSession = new LedgerSyncSession(destination.ledger);
+        this.ledgerSession = new LedgerSyncSession(
+          destination.ledger,
+          undefined,
+          (document) => this.assertServerCanAccept(a, document),
+        );
         this.ledgerSession.configureTarget(
           new HttpLedgerObjectStore(a.client, ledgerId),
           input.passphrase,
+          "ledger-v1.enc.json",
+          httpLedgerTargetIdentity(a.instanceId, a.id, ledgerId),
         );
         await this.ledgerSession.syncNow();
         this.assert(signal, a);
@@ -870,6 +1049,13 @@ export class ServerHost implements LunaServerApi {
       }
     } finally {
       remote.close();
+    }
+    } finally {
+      if (migrationSource !== null && migrationLease !== null) {
+        const release = migrationSource.ledger.releaseMigrationLease;
+        if (release !== undefined)
+          await release.call(migrationSource.ledger, migrationLease.id);
+      }
     }
   }
   async unlock(passphrase: string) {
@@ -1181,6 +1367,59 @@ export class ServerHost implements LunaServerApi {
   }
 }
 
+async function copyLocalAttachments(
+  source: LocalProfile | null,
+  destination: LocalProfile,
+  document: LedgerDocument,
+  signal: AbortSignal,
+  check: () => void,
+  renew: () => Promise<void>,
+): Promise<void> {
+  const saveDestination = destination.ledger.saveDownloadedAttachment;
+  if (
+    source === null ||
+    source.ledger.readAttachmentCiphertext === undefined ||
+    saveDestination === undefined
+  )
+    return;
+
+  for (const [attachmentId, descriptor] of attachmentInventory(document)) {
+    check();
+    await renew();
+    const existing = destination.ledger.readAttachmentCiphertext
+      ? await destination.ledger.readAttachmentCiphertext(attachmentId)
+      : null;
+    if (existing !== null) {
+      if (JSON.stringify(existing.descriptor) !== JSON.stringify(descriptor))
+        throw new AttachmentContractError("attachment-digest-mismatch");
+      await decryptAttachmentBytes(existing.ciphertext, descriptor);
+      continue;
+    }
+
+    const copied = await source.ledger.readAttachmentCiphertext(attachmentId);
+    if (copied === null) continue;
+    if (JSON.stringify(copied.descriptor) !== JSON.stringify(descriptor))
+      throw new AttachmentContractError("attachment-digest-mismatch");
+    await decryptAttachmentBytes(copied.ciphertext, descriptor);
+    check();
+    await destination.ledger.saveDownloadedAttachment!(
+      descriptor,
+      copied.ciphertext,
+    );
+    await renew();
+  }
+}
+
+function migrationSnapshotVersion(document: LedgerDocument | null): string {
+  if (document === null) return "empty";
+  return [
+    document.schemaVersion,
+    document.workspace.id,
+    document.revisions.length,
+    document.revisions.at(-1)?.id ?? "",
+  ].join(":");
+}
+
 function accountToken(account: Account): string {
   const token = account.token();
   if (!token) throw new ServerTransportError("authentication");
@@ -1259,6 +1498,10 @@ function decodeSessionRecord(value: unknown): SessionVaultRecord | null {
       instanceId,
       id,
       username: a.username,
+      capabilities:
+        a.capabilities === undefined
+          ? legacyServerCapabilities()
+          : decodeServerCapabilities(a.capabilities),
     },
     ledger,
   };

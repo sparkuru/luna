@@ -142,15 +142,18 @@ async function until(check, description) {
 
 async function request(base, path, options = {}) {
   const { token, method = "GET", body, headers = {} } = options;
+  const binaryBody = body instanceof Uint8Array || body instanceof ArrayBuffer;
+  const serializedBody =
+    typeof body === "string" || binaryBody ? body : JSON.stringify(body);
   return fetch(`${base}${path}`, {
     method,
     signal: AbortSignal.timeout(15_000),
     headers: {
       ...(token ? { authorization: `Bearer ${token}` } : {}),
-      ...(body !== undefined ? { "content-type": "application/json" } : {}),
+      ...(body !== undefined && !binaryBody ? { "content-type": "application/json" } : {}),
       ...headers,
     },
-    ...(body === undefined ? {} : { body: typeof body === "string" ? body : JSON.stringify(body) }),
+    ...(body === undefined ? {} : { body: serializedBody }),
   });
 }
 
@@ -198,7 +201,39 @@ async function main() {
   assert.equal(created.status, 201);
   const ledgerId = (await created.json()).id;
   const objectPath = `/api/v1/ledgers/${ledgerId}/object`;
-  const raw = runFixture(sourceApi, { action: "encrypt" });
+  const attachmentFixture = runFixture(sourceApi, { action: "encrypt-with-attachment" });
+  const raw = attachmentFixture.raw;
+  const attachmentId = attachmentFixture.descriptor.id;
+  const attachmentPath = `/api/v1/ledgers/${ledgerId}/attachments/${attachmentId}`;
+  const attachmentUsagePath = `/api/v1/ledgers/${ledgerId}/attachments/usage`;
+  const attachmentBytes = Buffer.from(attachmentFixture.ciphertext, "base64");
+  assert.equal(attachmentBytes.byteLength, attachmentFixture.descriptor.cipherByteLength);
+  const attachmentIdempotencyKey = crypto.randomUUID();
+  const attachmentPut = await request(sourceBase, attachmentPath, {
+    token,
+    method: "PUT",
+    body: attachmentBytes,
+    headers: {
+      "content-type": "application/octet-stream",
+      "if-none-match": "*",
+      "idempotency-key": attachmentIdempotencyKey,
+      "x-luna-cipher-sha256": attachmentFixture.descriptor.cipherSha256,
+    },
+  });
+  assert.equal(attachmentPut.status, 200);
+  const originalAttachmentEtag = attachmentPut.headers.get("etag");
+  assert.ok(originalAttachmentEtag);
+  const sourceAttachmentUsage = await request(sourceBase, attachmentUsagePath, { token });
+  assert.equal(sourceAttachmentUsage.status, 200);
+  const sourceUsage = await sourceAttachmentUsage.json();
+  assert.deepEqual(
+    {
+      usedBytes: sourceUsage.usedBytes,
+      reservedBytes: sourceUsage.reservedBytes,
+      count: sourceUsage.count,
+    },
+    { usedBytes: attachmentBytes.byteLength, reservedBytes: 0, count: 1 },
+  );
   const idempotencyKey = crypto.randomUUID();
   const firstPut = await request(sourceBase, objectPath, {
     token,
@@ -209,7 +244,7 @@ async function main() {
   assert.equal(firstPut.status, 200);
   const originalEtag = firstPut.headers.get("etag");
   assert.ok(originalEtag);
-  checks.push("fresh SQLite/MinIO installation creates an account, ledger, encrypted object and ETag");
+  checks.push("fresh SQLite/MinIO installation creates an account, ledger graph, attachment metadata, ciphertext object, usage and ETags");
 
   docker(["stop", "--time", "15", sourceApi]);
   docker(["stop", "--time", "15", sourceMinio]);
@@ -229,6 +264,37 @@ async function main() {
   assert.equal(restored.status, 200);
   assert.equal(restored.headers.get("etag"), originalEtag);
   assert.equal(await restored.text(), raw);
+  const restoredAttachment = await request(restoredBase, attachmentPath, { token });
+  assert.equal(restoredAttachment.status, 200);
+  assert.equal(restoredAttachment.headers.get("etag"), originalAttachmentEtag);
+  assert.equal(
+    restoredAttachment.headers.get("x-luna-cipher-sha256"),
+    attachmentFixture.descriptor.cipherSha256,
+  );
+  assert.equal(
+    restoredAttachment.headers.get("content-length"),
+    String(attachmentBytes.byteLength),
+  );
+  assert.deepEqual(Buffer.from(await restoredAttachment.arrayBuffer()), attachmentBytes);
+  const restoredAttachmentUsage = await request(restoredBase, attachmentUsagePath, { token });
+  assert.equal(restoredAttachmentUsage.status, 200);
+  const restoredUsage = await restoredAttachmentUsage.json();
+  assert.equal(restoredUsage.usedBytes, attachmentBytes.byteLength);
+  assert.equal(restoredUsage.reservedBytes, 0);
+  assert.equal(restoredUsage.count, 1);
+  const attachmentReplay = await request(restoredBase, attachmentPath, {
+    token,
+    method: "PUT",
+    body: attachmentBytes,
+    headers: {
+      "content-type": "application/octet-stream",
+      "if-none-match": "*",
+      "idempotency-key": attachmentIdempotencyKey,
+      "x-luna-cipher-sha256": attachmentFixture.descriptor.cipherSha256,
+    },
+  });
+  assert.equal(attachmentReplay.status, 200);
+  assert.equal(attachmentReplay.headers.get("etag"), originalAttachmentEtag);
   const replay = await request(restoredBase, objectPath, {
     token,
     method: "PUT",
@@ -237,11 +303,11 @@ async function main() {
   });
   assert.equal(replay.status, 200);
   assert.equal(replay.headers.get("etag"), originalEtag);
-  checks.push("restored data retains instance identity, account session, exact ciphertext, ETag and idempotency replay");
+  checks.push("restored data retains instance identity, account session, graph and attachment ciphertext/metadata, exact ETags, usage and idempotency replays");
 
   const secondToken = await login(restoredBase, username, accountPassword, "restored-client-b");
-  const editA = runFixture(restoredApi, { action: "encrypt", records: ["first", "client-a"] });
-  const editB = runFixture(restoredApi, { action: "encrypt", records: ["first", "client-b"] });
+  const editA = runFixture(restoredApi, { action: "encrypt-v2", records: ["first", "client-a"] });
+  const editB = runFixture(restoredApi, { action: "encrypt-v2", records: ["first", "client-b"] });
   const writeA = await request(restoredBase, objectPath, {
     token,
     method: "PUT",
@@ -257,7 +323,25 @@ async function main() {
   });
   assert.equal(stale.status, 412);
   const latest = await request(restoredBase, objectPath, { token: secondToken });
+  assert.equal(latest.status, 200);
+  assert.equal(latest.headers.get("etag"), writeA.headers.get("etag"));
   const merged = runFixture(restoredApi, { action: "merge", a: await latest.text(), b: editB });
+  const mergedDocument = runFixture(restoredApi, { action: "decrypt", raw: merged });
+  const expectedDocuments = [editA, editB].map((raw) =>
+    runFixture(restoredApi, { action: "decrypt", raw }),
+  );
+  const expectedRevisions = new Map(
+    expectedDocuments.flatMap((document) => document.revisions.map((revision) => [revision.id, revision])),
+  );
+  assert.deepEqual(mergedDocument.workspace, expectedDocuments[0].workspace);
+  assert.equal(mergedDocument.revisions.length, expectedRevisions.size);
+  for (const revision of mergedDocument.revisions) {
+    assert.deepEqual(revision, expectedRevisions.get(revision.id));
+  }
+  assert.deepEqual(
+    mergedDocument.revisions.filter((revision) => revision.kind === "transaction").map((revision) => revision.entityId).sort(),
+    ["client-a", "client-b", "first"],
+  );
   const mergedWrite = await request(restoredBase, objectPath, {
     token: secondToken,
     method: "PUT",
@@ -265,15 +349,42 @@ async function main() {
     headers: { "if-match": latest.headers.get("etag"), "idempotency-key": crypto.randomUUID() },
   });
   assert.equal(mergedWrite.status, 200);
-  checks.push("two authenticated clients reject stale CAS and converge through decrypt/merge/conditional write");
+  const mergedEtag = mergedWrite.headers.get("etag");
+  assert.ok(mergedEtag);
+  assert.notEqual(mergedEtag, originalEtag);
+  for (const sessionToken of [token, secondToken]) {
+    const committed = await request(restoredBase, objectPath, { token: sessionToken });
+    assert.equal(committed.status, 200);
+    assert.equal(committed.headers.get("etag"), mergedEtag);
+    assert.equal(await committed.text(), merged);
+  }
+  checks.push("two authenticated clients reject stale CAS, retain both decoded revision sets and read identical merged ciphertext/ETag");
 
   docker(["stop", "--time", "15", restoredApi]);
   docker(["start", restoredApi]);
   const restartedBase = apiBase(restoredApi);
   await until(async () => (await fetch(`${restartedBase}/readyz`)).ok, "API restart readiness");
-  const final = await request(restartedBase, objectPath, { token: secondToken });
-  assert.equal(final.status, 200);
-  checks.push("API restart reopens the restored SQLite/MinIO boundary without changing the committed object");
+  const restartedMeta = await (await request(restartedBase, "/api/v1/meta")).json();
+  assert.equal(restartedMeta.instanceId, sourceMeta.instanceId);
+  for (const sessionToken of [token, secondToken]) {
+    const final = await request(restartedBase, objectPath, { token: sessionToken });
+    assert.equal(final.status, 200);
+    assert.equal(final.headers.get("etag"), mergedEtag);
+    const finalRaw = await final.text();
+    assert.equal(finalRaw, merged);
+    assert.deepEqual(runFixture(restoredApi, { action: "decrypt", raw: finalRaw }), mergedDocument);
+  }
+  const finalAttachment = await request(restartedBase, attachmentPath, { token });
+  assert.equal(finalAttachment.status, 200);
+  assert.equal(finalAttachment.headers.get("etag"), originalAttachmentEtag);
+  assert.deepEqual(Buffer.from(await finalAttachment.arrayBuffer()), attachmentBytes);
+  const finalAttachmentUsage = await request(restartedBase, attachmentUsagePath, { token });
+  assert.equal(finalAttachmentUsage.status, 200);
+  const finalUsage = await finalAttachmentUsage.json();
+  assert.equal(finalUsage.usedBytes, attachmentBytes.byteLength);
+  assert.equal(finalUsage.reservedBytes, 0);
+  assert.equal(finalUsage.count, 1);
+  checks.push("API restart retains instance identity, both sessions, exact merged ciphertext/ETag and decoded revision graph");
   return {
     checks,
     apiImage: docker(["image", "inspect", "--format", "{{.Id}}", apiImage]).toString().trim(),

@@ -56,6 +56,11 @@ Keep a short source comment and browser assertions for both Escape and category
 selection. Re-check this lifecycle when upgrading Radix; do not replace the
 contract with arbitrary sleeps or treat repeated passes as proof of ordering.
 
+When a dialog intentionally focuses a field below the mobile first viewport,
+use `focus({ preventScroll: true })` so opening it does not hide the dialog
+heading or the first-step controls. Test the initial scroll position visually
+and keep the focused control keyboard-reachable.
+
 ### Ledger Quick-Entry Composition
 
 The shared ledger home uses one recording mental model across Web, Electron,
@@ -67,8 +72,9 @@ persistent desktop-side transaction form, budget summary, settings panel, or
 sync/backup panel.
 
 The record action opens a modal transaction dialog. It exposes only the fields
-needed for the common path (transaction type, amount, and category); date,
-merchant, payment method, notes, and future split controls belong behind a
+needed for the common path (transaction type, amount, category, and date);
+date remains visible in the core form because it controls the financial period.
+Merchant, payment method, notes, and future split controls belong behind a
 native semantic `<details>` disclosure. Category suggestions use a separate
 short modal flow and must preserve custom input. The secondary menu is a
 modal dialog opened by the `#open-secondary-menu` control; budget, category
@@ -98,6 +104,10 @@ truth and preserves revision, conflict, and multi-category protections.
 - Keep a skip link, an `aria-live` status region, `aria-invalid`/descriptions
   for errors, and a predictable focus target after navigation or save.
 - Respect `prefers-reduced-motion` and test at narrow desktop window widths.
+- For fixed mobile navigation, measure the real geometry with representative
+  synthetic records: at 375×812 the month, all three summaries, two complete
+  transaction rows, and the central record action must clear the navigation;
+  an empty-state-only check is insufficient.
 - When summary amounts are hidden, no actual aggregate monetary value may
   appear in the three summary values' text, ARIA, title, dataset, or live
   regions. Budget editor values, budget detail text, category totals, and

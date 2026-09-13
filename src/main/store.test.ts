@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { DomainError } from '../shared/domain';
+import { FullBackupSessionManager } from '../shared/full-backup-session';
 import { SQLiteLocalStore } from './store';
 
 function withStore(callback: (filePath: string) => void): void {
@@ -78,6 +79,84 @@ test('SQLite migration is repeatable and local data survives reopen', () => {
     assert.equal(afterReopen.transactions[0]?.amountMinor, '-12345');
     assert.equal(afterReopen.transactions[0]?.splits[0]?.amountMinor, '-12345');
     reopened.close();
+  });
+});
+
+test('SQLite remote payload checkpoints persist per target and never downgrade', () => {
+  withStore((filePath) => {
+    const first = new SQLiteLocalStore(filePath);
+    assert.equal(first.getRemotePayloadVersion('s3:first'), null);
+    first.setRemotePayloadVersion('s3:first', 1);
+    first.setRemotePayloadVersion('s3:first', 2);
+    first.setRemotePayloadVersion('s3:first', 1);
+    first.setRemotePayloadVersion('s3:second', 1);
+    assert.equal(first.getRemotePayloadVersion('s3:first'), 2);
+    assert.equal(first.getRemotePayloadVersion('s3:second'), 1);
+    assert.throws(
+      () => first.getRemotePayloadVersion(''),
+      /LUNA_ERROR:invalid-input/,
+    );
+    first.close();
+
+    const reopened = new SQLiteLocalStore(filePath);
+    assert.equal(reopened.getRemotePayloadVersion('s3:first'), 2);
+    assert.equal(reopened.getRemotePayloadVersion('s3:second'), 1);
+    reopened.close();
+  });
+});
+
+test('SQLite migration leases are durable, block writes across connections, and expire safely', () => {
+  withStore((filePath) => {
+    const first = new SQLiteLocalStore(filePath);
+    const second = new SQLiteLocalStore(filePath);
+    const lease = {
+      id: 'migration-first',
+      snapshotVersion: '2:workspace:1:head',
+      acquiredAt: '2026-09-12T00:00:00.000Z',
+      expiresAt: '2099-09-12T00:00:00.000Z',
+    };
+    first.acquireMigrationLease(lease);
+    assert.deepEqual(second.getMigrationLease(), lease);
+    assert.throws(
+      () => second.createWorkspace(
+        {
+          name: 'Blocked',
+          currency: 'CNY',
+          precision: 2,
+          monthlyBudgetMinor: null,
+        },
+        'blocked-workspace',
+        '2026-09-12T00:01:00.000Z',
+      ),
+      /LUNA_ERROR:migration-locked/,
+    );
+    assert.equal(second.getSnapshot('2026-09').workspace, null);
+    assert.throws(
+      () => second.acquireMigrationLease({ ...lease, id: 'migration-second' }),
+      /LUNA_ERROR:migration-busy/,
+    );
+    first.releaseMigrationLease(lease.id);
+    second.createWorkspace(
+      {
+        name: 'Unblocked',
+        currency: 'CNY',
+        precision: 2,
+        monthlyBudgetMinor: null,
+      },
+      'unblocked-workspace',
+      '2026-09-12T00:02:00.000Z',
+    );
+    const expired = {
+      ...lease,
+      id: 'migration-expired',
+      acquiredAt: '2020-09-12T00:00:00.000Z',
+      expiresAt: '2021-09-12T00:00:00.000Z',
+    };
+    second.acquireMigrationLease(expired);
+    second.setRemotePayloadVersion('s3:after-expiry', 1);
+    assert.equal(second.getMigrationLease(), null);
+    first.close();
+    second.close();
   });
 });
 
@@ -206,4 +285,79 @@ test('monthly budgets can be overridden for one month and inherited later', () =
     assert.equal(store.getSnapshot('2026-10').summary?.budgetMinor, null);
     store.close();
   });
+});
+
+test('SQLite complete backup restores ciphertext through bounded staging', async () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'luna-backup-store-'));
+  const sourcePath = path.join(directory, 'source.sqlite');
+  const targetPath = path.join(directory, 'target.sqlite');
+  const source = new SQLiteLocalStore(sourcePath);
+  const target = new SQLiteLocalStore(targetPath);
+  const image = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52,
+    0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0,
+    0, 0, 0, 0,
+  ]);
+  const password = 'sqlite complete backup passphrase';
+  const managerFor = (store: SQLiteLocalStore) =>
+    new FullBackupSessionManager({
+      getLedgerDocument: () => store.getLedgerDocument(),
+      readAttachmentCiphertext: (id) => store.readAttachmentCiphertext(id),
+      beginFullBackupRestore: (graph) => store.beginFullBackupRestore(graph),
+      restoreFullBackup: (archive) => store.restoreFullBackup(archive),
+    });
+  try {
+    source.createWorkspace(
+      { name: 'Source', currency: 'CNY', precision: 2, monthlyBudgetMinor: null },
+      'workspace-backup-source',
+      '2026-09-12T00:00:00.000Z',
+    );
+    const staged = await source.stageTransactionImage(
+      'draft-backup',
+      image,
+      'image/png',
+      1,
+      1,
+    );
+    source.createTransaction(
+      {
+        type: 'expense',
+        amountMinor: '123',
+        date: '2026-09-12',
+        splits: [{ category: 'Food', amountMinor: '123' }],
+        attachments: [{ draftToken: staged.draftToken }],
+      },
+      'transaction-backup-image',
+      '2026-09-12T00:01:00.000Z',
+    );
+
+    const exporter = managerFor(source);
+    const exportStart = await exporter.beginBackupExport(password);
+    const chunks: Uint8Array[] = [];
+    for (let sequence = 0; ; sequence += 1) {
+      const chunk = await exporter.readBackupChunk(exportStart.jobId, sequence);
+      chunks.push(chunk.bytes);
+      if (chunk.eof) break;
+    }
+    exporter.finishBackupExport(exportStart.jobId);
+
+    const importer = managerFor(target);
+    const importStart = await importer.beginBackupImport(null, password);
+    for (let sequence = 0; sequence < chunks.length; sequence += 1) {
+      await importer.appendBackupChunk(importStart.jobId, sequence, chunks[sequence]!);
+    }
+    await importer.finishBackupImport(importStart.jobId);
+    assert.equal(target.getSnapshot('2026-09').transactions.length, 1);
+    const restored = await target.readTransactionImage(
+      'transaction-backup-image',
+      staged.metadata.id,
+    );
+    assert.deepEqual(restored.bytes, image);
+    restored.bytes.fill(0);
+  } finally {
+    source.close();
+    target.close();
+    rmSync(directory, { recursive: true, force: true });
+  }
 });

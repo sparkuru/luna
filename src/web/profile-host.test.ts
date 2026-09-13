@@ -99,7 +99,7 @@ test("deleting a local copy removes its catalog entry and never deletes the acti
     precision: 2,
     monthlyBudgetMinor: null,
   });
-  const original = await host.api.getLedgerDocument();
+  const original = await (await profiles.open("legacy-local")).ledger.getLedgerDocument();
   const copy = await profiles.open(id);
   await copy.bind(document(), binding, new AbortController().signal);
   assert.ok((await profiles.list()).some((profile) => profile.id === id));
@@ -143,7 +143,7 @@ test("late backup decrypt cannot import into either profile after switching", as
     await host.selectProfile(id);
     release();
     await rejected;
-    assert.equal(await host.api.getLedgerDocument(), null);
+    assert.equal(await (await profiles.open("legacy-local")).ledger.getLedgerDocument(), null);
     assert.equal(
       await (await profiles.open("legacy-local")).ledger.getLedgerDocument(),
       null,

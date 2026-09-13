@@ -12,6 +12,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(LedgerBackupPlugin.class);
+        registerPlugin(LedgerImageInputPlugin.class);
         super.onCreate(savedInstanceState);
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0
                 && getBridge() != null) {

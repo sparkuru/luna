@@ -387,6 +387,29 @@ test("SQLite authentication, account isolation, CAS, replay, quotas and revocati
       },
     );
     await t.test(
+      "v2 publication fences a later v1 write",
+      async () => {
+        const previous = await app.inject({ url, headers: auth });
+        const v2 = { ...envelope, version: 2, payloadSchemaVersion: 2 };
+        const upgraded = await put(
+          {
+            "idempotency-key": key(),
+            "if-match": String(previous.headers.etag),
+          },
+          v2,
+        );
+        assert.equal(upgraded.statusCode, 200, upgraded.body);
+        const rejected = await put(
+          {
+            "idempotency-key": key(),
+            "if-match": String(upgraded.headers.etag),
+          },
+          envelope,
+        );
+        assert.equal(rejected.statusCode, 409, rejected.body);
+      },
+    );
+    await t.test(
       "stored authentication contains only token digest and no password",
       async () => {
         const session = database.sqlite

@@ -1,8 +1,9 @@
 # Ledger Sync Contract
 
 Status: graph, transactional storage, encryption, transport and shared renderer
-implemented; browser, MinIO, Electron and Android-emulator checks passed
-(2026-09-05). Physical-device and independent security review remain separate.
+implemented; local browser, MinIO, Electron-package and Android-bridge checks
+are recorded in the active task validation (2026-09-12). Physical-device,
+emulator and independent security review remain separate.
 This is independent of the existing portable-settings-only S3 service.
 
 ## Shared document and causality
@@ -80,11 +81,14 @@ set captured when the budget value was rendered. Draft-preserving sync/locale/
 privacy refreshes retain that original token. Changed heads reject with
 `ledger-stale-budget`; a conflicted budget still requires explicit resolution.
 
-SQLite schema2 adds singleton `ledger_graph(singleton=1,document_json)`;
-constructor migration seeds existing active/deleted records and budget history
-once. Existing financial tables become transactional projections. Browser
-state v2 is `{schemaVersion:2,settings,ledger:LedgerDocument|null}`; validated
-v1 bytes remain intact until a successful mutation commits v2. The old
+SQLite schema5 adds singleton `ledger_graph(singleton=1,document_json)`,
+attachment/blob staging, per-target remote payload checkpoints and a durable
+per-profile migration lease; constructor migration seeds existing
+active/deleted records and budget history once. Existing financial tables
+become transactional projections. Browser state v4 is
+`{schemaVersion:4,settings,ledger,attachments,remotePayloadVersions}`; its
+IndexedDB compatibility adapter is database version2. Validated legacy bytes
+remain intact until a successful mutation commits the current state. The old
 localStorage migration source is never overwritten.
 
 ### 3. Contracts
@@ -127,6 +131,24 @@ localStorage migration source is never overwritten.
 - Snapshots include conflictCount; unresolved financial conflicts are visibly
   flagged above totals. Backup import is merge/adopt-only, never destructive
   replacement, and cannot combine independently created workspace identities.
+- A v2 attachment inventory is the union of every historical transaction
+  revision, not only effective heads. Attachment ciphertext is verified by
+  exact descriptor, length, SHA-256 and GCM before local promotion or remote
+  graph publication. Profile migration copies available source ciphertexts
+  into the inactive destination before activation, then re-reads source graph
+  state and refuses activation if the source changed or verification failed.
+- Each local ledger target stores a highest observed remote payload version.
+  The checkpoint is scoped by target identity, never decreases, and makes a
+  later v1 response fail after v2 has been observed; a new target starts
+  independently. HTTP server capabilities and its durable minimum version are
+  the stronger server-side gate.
+- A profile migration acquires a durable `MigrationLease` in the source
+  profile before copying data. Financial graph, attachment, restore and
+  checkpoint writes reject an active lease with `LUNA_ERROR:migration-locked`;
+  reads remain available. The migration renews the lease during long copies,
+  verifies the original source snapshot before activation, and releases the
+  lease after the destination has been activated. Expired leases are
+  recoverable and may be replaced by a new migration.
 
 ### 4. Validation & Error Matrix
 
@@ -142,6 +164,7 @@ localStorage migration source is never overwritten.
 | HTTP403 | permission failure, never absence/create |
 | Missing ETag/oversized stream | invalid response; never unconditional PUT |
 | Local disk/IDB failure | entire graph/projection transaction rolls back |
+| Active profile migration lease | `LUNA_ERROR:migration-locked`; reads remain available and no local write is committed |
 | Disconnect while IDB open/queued/write pending | `ledger-sync-cancelled`; abort before commit, prior state intact |
 
 ### 5. Good/Base/Bad Cases
@@ -217,9 +240,12 @@ A successful
 captured local mutation still returns its committed receipt after authentication
 changes. Stale read projections must be rejected, never presented as current.
 
-Migration preserves revision graphs, verifies a downloaded/decrypted upload,
-atomically binds, rereads durable destination state and checks source stability
-before activation. Failure retains the source and recoverable destination.
+Migration acquires a durable source-profile lease, preserves revision graphs,
+verifies a downloaded/decrypted upload, atomically binds, rereads durable
+destination state and checks source stability before activation. The lease has
+a bounded TTL and is renewed during long attachment copies; expiry is fail-safe
+because the next write clears only an expired lease before proceeding. Failure
+retains the source and recoverable destination.
 Cross-tab notifications contain a profile ID only and invalidate matching views.
 HTTP preference sessions keep their enabled/status state separate from legacy
 S3 settings acknowledgements and from ledger synchronization.
@@ -249,11 +275,12 @@ mistaking its disabled status for proof that migration has no remote source.
 ### 6. Tests Required
 
 `tests/server-sync/*.test.ts` uses SQLite API listeners, injected object stores and
-generated HTTP clients for
-two-client conflict/merge, lost-response idempotency, revocation, migration and
-transition regressions. `src/web/profile-host.test.ts` and native profile tests
-exercise atomic binding, independent reads and late-import cancellation. Real
-browser profile/UI tests and packaged native gates remain separate requirements.
+generated HTTP clients for two-client conflict/merge, lost-response idempotency,
+revocation, migration and transition regressions. Migration tests exercise a
+second browser adapter attempting a source write while attachment ciphertext is
+being copied. `src/web/profile-host.test.ts` and native profile tests exercise
+atomic binding, independent reads and late-import cancellation. Real browser
+profile/UI tests and packaged native gates remain separate requirements.
 
 ### 7. Wrong vs Correct
 

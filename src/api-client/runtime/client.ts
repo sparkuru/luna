@@ -47,7 +47,9 @@ export function boundedFetch(
     }
     const headers = new Headers(response.headers);
     headers.delete("content-encoding");
-    headers.delete("content-length");
+    // The body is now the bounded, decoded byte sequence. Preserve a truthful
+    // length for binary protocol consumers that verify the response boundary.
+    headers.set("content-length", String(bytes.byteLength));
     return new Response(bytes, {
       status: response.status,
       statusText: response.statusText,

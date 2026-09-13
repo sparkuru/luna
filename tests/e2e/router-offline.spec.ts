@@ -11,8 +11,7 @@ test('production menu deep links cold-open offline without caching API requests'
   await page.close();
   await context.setOffline(true);
   const offline = await context.newPage();
-  await offline.goto('/ledger/menu/budget');
-  await expect(offline.locator('#secondary-menu-dialog')).toBeVisible();
+  await offline.goto('/budget');
   await expect(offline.locator('#budget-form')).toBeVisible();
   await offline.reload();
   await expect(offline.locator('#budget-form')).toBeVisible();

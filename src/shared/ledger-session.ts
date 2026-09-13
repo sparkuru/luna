@@ -1,7 +1,7 @@
 import { decodeConfigureConfigSync, type ConfigureConfigSyncInput } from './settings';
 
 export class LedgerSessionError extends Error {
-  constructor(readonly code: 'ledger-insecure-connection' | 'ledger-sync-busy' | 'ledger-sync-cancelled' | 'ledger-empty') {
+  constructor(readonly code: 'ledger-insecure-connection' | 'ledger-sync-busy' | 'ledger-sync-cancelled' | 'ledger-empty' | 'ledger-remote-downgrade') {
     super(`LUNA_ERROR:${code}`);
     this.name = 'LedgerSessionError';
   }
@@ -12,6 +12,10 @@ export interface LedgerSessionStatus {
   configured: boolean;
   code: 'disabled' | 'ready' | 'syncing' | 'synced' | 'pending' | 'failed';
   lastSyncedAt: string | null;
+  /** Attachment inventory is reported separately from the financial graph. */
+  attachmentPendingCount?: number;
+  attachmentFailedCount?: number;
+  overall?: "synced" | "pending" | "failed";
   /** True when a safe remote marker changed and manual mode is awaiting an explicit pull. */
   remoteChangeAvailable?: boolean;
 }

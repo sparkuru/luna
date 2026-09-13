@@ -7,6 +7,7 @@ import { decryptLedgerDocument, encryptLedgerDocument } from '../src/shared/ledg
 import { appendLedgerRevision } from '../src/shared/ledger-sync';
 import { createTransaction } from '../src/shared/domain';
 import { verifyAndroidBackup } from './android-backup-smoke';
+import { verifyAndroidImagePicker } from './android-image-picker-smoke';
 import { verifyAndroidSettings } from './android-settings-smoke';
 
 const appId = 'majo.im.luna';
@@ -15,14 +16,24 @@ const expect = playwrightExpect.configure({ timeout: 30_000 });
 /** Send actual Android BACK input, not a synthetic DOM keyboard event. */
 async function verifyHardwareBack(page: Page, device: AndroidDevice): Promise<Page> {
   const imeShown = async () => {
-    const dump = (await device.shell('dumpsys input_method')).toString();
-    const matches = [...dump.matchAll(/^\s*mInputShown=(true|false)\s*$/gm)];
-    assert.equal(matches.length, 1, 'Expected one current IME service visibility value');
-    // mIsInputViewShown can remain true after the actual keyboard is dismissed.
-    return matches[0]?.[1] === 'true';
+    let shown: boolean | undefined;
+    await expect.poll(async () => {
+      try {
+        const dump = (await device.shell('dumpsys input_method | grep mInputShown')).toString();
+        const matches = [...dump.matchAll(/^\s*mInputShown=(true|false)\s*$/gm)];
+        if (matches.length !== 1) return false;
+        // mIsInputViewShown can remain true after the actual keyboard is dismissed.
+        shown = matches[0]?.[1] === 'true';
+        return true;
+      } catch {
+        return false;
+      }
+    }, { timeout: 10_000, message: 'Expected a readable Android IME state.' }).toBe(true);
+    assert.equal(typeof shown, 'boolean');
+    return shown;
   };
   const pressBack = async () => {
-    await expect.poll(async () => (await device.shell('dumpsys window')).toString()
+    await expect.poll(async () => (await device.shell('dumpsys window | grep mCurrentFocus')).toString()
       .split('\n').find((line) => line.includes('mCurrentFocus')) ?? 'No focused native window',
     { timeout: 10_000, message: 'Hardware BACK requires Luna focus, not an Android system dialog' }).toContain(appId);
     await device.shell('input keyevent KEYCODE_BACK');
@@ -32,7 +43,7 @@ async function verifyHardwareBack(page: Page, device: AndroidDevice): Promise<Pa
     if (await imeShown()) {
       const previousUrl = page.url();
       let activeDialog: string | undefined;
-      for (const selector of ['#category-dialog', '#transaction-dialog', '#secondary-menu-dialog']) {
+      for (const selector of ['#category-dialog', '#transaction-dialog']) {
         if (await page.locator(selector).isVisible()) { activeDialog = selector; break; }
       }
       await pressBack();
@@ -43,13 +54,13 @@ async function verifyHardwareBack(page: Page, device: AndroidDevice): Promise<Pa
     await pressBack();
   };
   await page.locator('#open-secondary-menu').click();
-  await expect(page).toHaveURL(/#\/ledger\/menu$/);
-  await page.locator('#secondary-menu-dialog nav').getByRole('button', { name: 'Monthly spending limit', exact: true }).click();
-  await expect(page).toHaveURL(/#\/ledger\/menu\/budget$/);
+  await expect(page).toHaveURL(/#\/settings$/);
+  await page.locator('.settings-navigation').getByRole('button', { name: 'Preferences', exact: true }).click();
+  await expect(page).toHaveURL(/#\/settings\/preferences$/);
   await back();
-  await expect(page).toHaveURL(/#\/ledger\/menu$/);
+  await expect(page).toHaveURL(/#\/settings$/);
   await back();
-  await expect(page.locator('#secondary-menu-dialog')).not.toBeVisible();
+  await expect(page.locator('.settings-navigation')).toHaveCount(0);
   await expect(page).toHaveURL(/#\/ledger$/);
   await page.locator('#record-expense').click();
   await page.locator('#transaction-amount').fill('42.00');
@@ -183,7 +194,7 @@ async function verifyEncryptedSync(page: Page, device: AndroidDevice): Promise<v
   body = await encryptLedgerDocument(appendLedgerRevision(document, { id: 'node-income-revision', kind: 'transaction', entityId: incoming.id, value: incoming }), password);
   revision++;
   assert.equal((await page.evaluate(() => window.lunaLedger.syncLedgerNow())).code, 'synced');
-  assert.equal((await page.evaluate(() => window.lunaLedger.getLedgerDocument()))?.revisions.some((item) => item.kind === 'transaction' && item.entityId === 'node-income'), true);
+  assert.equal((await page.evaluate((month) => window.lunaLedger.getSnapshot(month), original.value.date.slice(0, 7))).transactions.some((item) => item.id === 'node-income'), true);
   assert.ok(gets >= 2 && puts >= 1);
   await page.evaluate(() => window.lunaLedger.clearLedgerSync());
   await page.unroute('https://luna-smoke.invalid/**');
@@ -254,8 +265,9 @@ async function main(): Promise<void> {
     await page.locator('#transaction-merchant').fill('Android offline market');
     await page.locator('#transaction-form button[type="submit"]').click();
     await expect(page.locator('#transaction-list-region')).toContainText('12.50');
-    // WebView's compositor repeats viewport tiles for CDP full-page captures.
-    await page.screenshot({ path: resolve(artifacts, 'android-offline-created.png') });
+    // Capture the disposable device surface; WebView CDP screenshots can
+    // detach transiently while the IME settles after form submission.
+    await device.screenshot({ path: resolve(artifacts, 'android-offline-created.png') });
     await device.shell(`am force-stop ${appId}`);
     page = await openApp(device);
     await expect(page.locator('#transaction-list-region')).toContainText('Android offline market');
@@ -268,7 +280,7 @@ async function main(): Promise<void> {
     }));
     assert.ok(dimensions.contentWidth <= dimensions.width, 'Android WebView has horizontal overflow.');
     await expect(page.locator('#page-title')).toHaveCount(1);
-    await page.screenshot({ path: resolve(artifacts, 'android-offline-restarted.png') });
+    await device.screenshot({ path: resolve(artifacts, 'android-offline-restarted.png') });
     console.log('ANDROID_SMOKE_STAGE offline-create-restart-passed');
     page = await verifyHardwareBack(page, device);
     console.log('ANDROID_SMOKE_STAGE hardware-back-passed');
@@ -276,6 +288,8 @@ async function main(): Promise<void> {
     console.log('ANDROID_SMOKE_STAGE encrypted-ledger-sync-passed');
     await device.shell('svc wifi disable');
     await device.shell('svc data disable');
+    page = await verifyAndroidImagePicker(device, page);
+    console.log('ANDROID_SMOKE_STAGE native-image-picker-passed');
     await device.shell(`am force-stop ${appId}`);
     page = await openApp(device);
     await expect(page.locator('#transaction-list-region')).toContainText('Node remote income');
@@ -292,7 +306,7 @@ async function main(): Promise<void> {
     assert.equal(portable.hideSensitiveAmountsByDefault, false);
     assert.equal(portable.hasConfigSyncSecrets, false);
     await expect(page.locator('#transaction-list-region')).toContainText('Node remote income');
-    await page.screenshot({ path: resolve(artifacts, 'android-synced-restarted.png') });
+    await device.screenshot({ path: resolve(artifacts, 'android-synced-restarted.png') });
     console.log(JSON.stringify({
       result: 'passed', appId, avdName, secureOrigin: page.url(),
       apkSha256: createHash('sha256').update(apkBytes).digest('hex'),
@@ -300,7 +314,8 @@ async function main(): Promise<void> {
       android: (await device.shell('getprop ro.build.version.release')).toString().trim(),
       checks: ['offline-first-launch', 'offline-write', 'process-restart-persistence', 'summary-privacy', 'no-service-worker', 'viewport',
         'webview-sdk-https-protocol-fixture', 'android-to-node-decrypt', 'node-to-android-merge', 'synced-offline-restart',
-        'native-backup-cancel', 'native-backup-file-decrypt', 'settings-v1-node-android-interchange', 'settings-offline-restart',
+        'native-image-picker-selection-save-restart-readback', 'native-backup-cancel', 'native-backup-file-decrypt',
+        'settings-v1-node-android-interchange', 'settings-offline-restart',
         'hardware-back-menu-parent', 'hardware-back-category-entry', 'hardware-back-draft-retain-discard', 'hardware-back-native-home-fallback'],
       artifacts,
     }));

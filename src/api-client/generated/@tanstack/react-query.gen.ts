@@ -3,8 +3,8 @@
 import { queryOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { getCurrentUser, getHealth, getLedgerObject, getLedgerObjectStatus, getPreferenceObject, getReadiness, getServerMeta, listLedgers, listSessions, type Options } from '../sdk.gen';
-import type { GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetHealthData, GetHealthError, GetHealthResponse, GetLedgerObjectData, GetLedgerObjectError, GetLedgerObjectResponse, GetLedgerObjectStatusData, GetLedgerObjectStatusError, GetLedgerObjectStatusResponse, GetPreferenceObjectData, GetPreferenceObjectError, GetPreferenceObjectResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetServerMetaData, GetServerMetaError, GetServerMetaResponse, ListLedgersData, ListLedgersError, ListLedgersResponse, ListSessionsData, ListSessionsError, ListSessionsResponse } from '../types.gen';
+import { getCurrentUser, getHealth, getLedgerAttachment, getLedgerAttachmentUsage, getLedgerObject, getLedgerObjectStatus, getPreferenceObject, getReadiness, getServerMeta, listLedgers, listSessions, type Options } from '../sdk.gen';
+import type { GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetHealthData, GetHealthError, GetHealthResponse, GetLedgerAttachmentData, GetLedgerAttachmentError, GetLedgerAttachmentResponse, GetLedgerAttachmentUsageData, GetLedgerAttachmentUsageError, GetLedgerAttachmentUsageResponse, GetLedgerObjectData, GetLedgerObjectError, GetLedgerObjectResponse, GetLedgerObjectStatusData, GetLedgerObjectStatusError, GetLedgerObjectStatusResponse, GetPreferenceObjectData, GetPreferenceObjectError, GetPreferenceObjectResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetServerMetaData, GetServerMetaError, GetServerMetaResponse, ListLedgersData, ListLedgersError, ListLedgersResponse, ListSessionsData, ListSessionsError, ListSessionsResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -82,6 +82,36 @@ export const listLedgersOptions = (options?: Options<ListLedgersData>) => queryO
         return data;
     },
     queryKey: listLedgersQueryKey(options)
+});
+
+export const getLedgerAttachmentQueryKey = (options: Options<GetLedgerAttachmentData>) => createQueryKey('getLedgerAttachment', options);
+
+export const getLedgerAttachmentOptions = (options: Options<GetLedgerAttachmentData>) => queryOptions<GetLedgerAttachmentResponse, GetLedgerAttachmentError, GetLedgerAttachmentResponse, ReturnType<typeof getLedgerAttachmentQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getLedgerAttachment({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getLedgerAttachmentQueryKey(options)
+});
+
+export const getLedgerAttachmentUsageQueryKey = (options: Options<GetLedgerAttachmentUsageData>) => createQueryKey('getLedgerAttachmentUsage', options);
+
+export const getLedgerAttachmentUsageOptions = (options: Options<GetLedgerAttachmentUsageData>) => queryOptions<GetLedgerAttachmentUsageResponse, GetLedgerAttachmentUsageError, GetLedgerAttachmentUsageResponse, ReturnType<typeof getLedgerAttachmentUsageQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getLedgerAttachmentUsage({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getLedgerAttachmentUsageQueryKey(options)
 });
 
 export const getLedgerObjectQueryKey = (options: Options<GetLedgerObjectData>) => createQueryKey('getLedgerObject', options);

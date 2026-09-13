@@ -10,7 +10,8 @@ import { LedgerSessionError } from '../shared/ledger-session';
 import type { LedgerDataPort } from '../sync/ledger-service';
 import { createWebLedgerApi } from './web-api';
 import {
-  WEB_DATABASE_NAME, WEB_DATABASE_RECORD, WEB_DATABASE_STORE, WEB_LEGACY_STORAGE_KEY,
+  WEB_DATABASE_NAME, WEB_DATABASE_RECORD, WEB_DATABASE_STORE, WEB_DATABASE_VERSION,
+  WEB_LEGACY_STORAGE_KEY,
 } from './browser-state-store';
 
 const setup = { name: 'Household', currency: 'CNY', precision: 2, monthlyBudgetMinor: '50000' };
@@ -101,7 +102,7 @@ test('two browser clients reject stale budget drafts inside the write transactio
   assert.equal((await second.getSnapshot('2025-02')).summary?.budgetMinor, '400');
 });
 
-async function openDatabase(factory: IDBFactory, version = 1): Promise<IDBDatabase> {
+async function openDatabase(factory: IDBFactory, version = WEB_DATABASE_VERSION): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = factory.open(WEB_DATABASE_NAME, version);
     request.onerror = () => reject(request.error);
@@ -130,6 +131,100 @@ test('workspace persists in IndexedDB, survives reopening, and never writes the 
   assert.equal(snapshot.summary?.budgetMinor, setup.monthlyBudgetMinor);
   assert.equal(storage.getItem(WEB_LEGACY_STORAGE_KEY), null);
   assert.ok(await rawState(database));
+});
+
+test('browser remote payload checkpoints persist per target and never downgrade', async () => {
+  const { api, storage, database } = fixture();
+  assert.equal(await api.getRemotePayloadVersion('s3:first'), null);
+  await api.setRemotePayloadVersion('s3:first', 1);
+  await api.setRemotePayloadVersion('s3:first', 2);
+  await api.setRemotePayloadVersion('s3:first', 1);
+  await api.setRemotePayloadVersion('s3:second', 1);
+  assert.equal(await api.getRemotePayloadVersion('s3:first'), 2);
+  assert.equal(await api.getRemotePayloadVersion('s3:second'), 1);
+
+  const reopened = createWebLedgerApi(storage, database);
+  assert.equal(await reopened.getRemotePayloadVersion('s3:first'), 2);
+  assert.equal(await reopened.getRemotePayloadVersion('s3:second'), 1);
+  await assert.rejects(
+    reopened.getRemotePayloadVersion(''),
+    /LUNA_ERROR:invalid-input/,
+  );
+});
+
+test('browser migration leases are shared across adapters, block writes, and expire safely', async () => {
+  const { api, storage, database } = fixture();
+  const second = createWebLedgerApi(storage, database);
+  const lease = {
+    id: 'migration-first',
+    snapshotVersion: '2:workspace:1:head',
+    acquiredAt: '2026-09-12T00:00:00.000Z',
+    expiresAt: '2099-09-12T00:00:00.000Z',
+  };
+  await api.acquireMigrationLease(lease);
+  assert.deepEqual(await second.getMigrationLease(), lease);
+  await assert.rejects(second.createWorkspace(setup), /LUNA_ERROR:migration-locked/);
+  assert.equal((await second.getSnapshot('2026-09')).workspace, null);
+  await assert.rejects(
+    second.acquireMigrationLease({ ...lease, id: 'migration-second' }),
+    /LUNA_ERROR:migration-busy/,
+  );
+  await api.releaseMigrationLease(lease.id);
+  await second.createWorkspace(setup);
+  const expired = {
+    ...lease,
+    id: 'migration-expired',
+    acquiredAt: '2020-09-12T00:00:00.000Z',
+    expiresAt: '2021-09-12T00:00:00.000Z',
+  };
+  await second.acquireMigrationLease(expired);
+  await second.setRemotePayloadVersion('s3:after-expiry', 1);
+  assert.equal(await api.getMigrationLease(), null);
+});
+
+test('browser complete backup streams image ciphertext before adopting the ledger', async () => {
+  const source = fixture();
+  const target = fixture();
+  const image = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52,
+    0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0,
+    0, 0, 0, 0,
+  ]);
+  const password = 'browser complete backup passphrase';
+  await source.api.createWorkspace(setup);
+  const staged = await source.api.stageTransactionImage(
+    'draft-browser-backup',
+    image,
+    'image/png',
+    1,
+    1,
+  );
+  const created = await source.api.createTransaction({
+    ...draft,
+    attachments: [{ draftToken: staged.draftToken }],
+  });
+
+  const exportStart = await source.api.beginBackupExport!(password);
+  const chunks: Uint8Array[] = [];
+  for (let sequence = 0; ; sequence += 1) {
+    const chunk = await source.api.readBackupChunk!(exportStart.jobId, sequence);
+    chunks.push(chunk.bytes);
+    if (chunk.eof) break;
+  }
+  await source.api.finishBackupExport!(exportStart.jobId);
+
+  const importStart = await target.api.beginBackupImport!(null, password);
+  for (let sequence = 0; sequence < chunks.length; sequence += 1)
+    await target.api.appendBackupChunk!(importStart.jobId, sequence, chunks[sequence]!);
+  await target.api.finishBackupImport!(importStart.jobId);
+  const restored = await target.api.readTransactionImage(
+    created.id,
+    staged.metadata.id,
+  );
+  assert.deepEqual(restored.bytes, image);
+  restored.bytes.fill(0);
+  assert.equal((await target.api.getSnapshot('2026-09')).transactions.length, 1);
 });
 
 test('quota failure during put rejects without publishing state and permits retry', async (t) => {
@@ -293,7 +388,7 @@ test('a blocked schema upgrade rejects, cancels the abandoned upgrade, and allow
   const heldConnection = await openDatabase(database);
   const originalOpen = database.open.bind(database);
   // Exercise the same open/blocked lifecycle that a future schema version uses.
-  t.mock.method(database, 'open', (name: string) => originalOpen(name, 2));
+  t.mock.method(database, 'open', (name: string) => originalOpen(name, 3));
   try {
     await assert.rejects(api.getSettings(), /LUNA_ERROR:web-storage-blocked/);
   } finally {
@@ -316,10 +411,10 @@ test('unavailable migration source is retryable and is ignored after an IndexedD
 test('future IndexedDB schema is rejected without destroying its existing record', async () => {
   const { database, api } = fixture();
   await api.createWorkspace(setup);
-  const future = await openDatabase(database, 2);
+  const future = await openDatabase(database, 3);
   future.close();
   await assert.rejects(api.getSettings(), /LUNA_ERROR:web-storage-invalid/);
-  const reopened = await openDatabase(database, 2);
+  const reopened = await openDatabase(database, 3);
   assert.ok(reopened.objectStoreNames.contains(WEB_DATABASE_STORE));
   reopened.close();
 });
@@ -422,7 +517,7 @@ test('v1 migration seeds graph history and tombstones, retaining original bytes 
   put.mock.restore();
   await api.setMonthlyBudget('2026-09', '30000');
   const saved = await rawState(database);
-  assert.ok(saved?.startsWith('{"schemaVersion":2,"settings":'));
+  assert.ok(saved?.startsWith('{"schemaVersion":4,"settings":'));
   assert.equal(storage.getItem(WEB_LEGACY_STORAGE_KEY), legacy);
   const reopened = createWebLedgerApi(storage, database);
   assert.equal((await reopened.getSnapshot('2026-09')).summary?.budgetMinor, '30000');
@@ -617,7 +712,7 @@ test('cancellation during a delayed real IndexedDB open closes its late handle w
   open.mock.restore();
   assert.equal(await rawState(first.database), before);
   // A late open handle must not remain alive and block future version changes.
-  const upgraded = await openDatabase(first.database, 2);
+  const upgraded = await openDatabase(first.database, 3);
   upgraded.close();
 });
 

@@ -44,13 +44,58 @@ const api: LunaLedgerApi = {
     ipcRenderer.invoke(IPC_CHANNELS.configureLedgerSync, input),
   syncLedgerNow: () => ipcRenderer.invoke(IPC_CHANNELS.syncLedgerNow),
   clearLedgerSync: () => ipcRenderer.invoke(IPC_CHANNELS.clearLedgerSync),
+  saveLedgerBackup: (password) =>
+    ipcRenderer.invoke(IPC_CHANNELS.saveLedgerBackup, password),
   exportLedgerBackup: (password) =>
     ipcRenderer.invoke(IPC_CHANNELS.exportLedgerBackup, password),
   importLedgerBackup: (raw, password) =>
     ipcRenderer.invoke(IPC_CHANNELS.importLedgerBackup, raw, password),
-  getLedgerDocument: () => ipcRenderer.invoke(IPC_CHANNELS.getLedgerDocument),
-  mergeLedgerDocument: (input) =>
-    ipcRenderer.invoke(IPC_CHANNELS.mergeLedgerDocument, input),
+  beginBackupExport: (password) =>
+    ipcRenderer.invoke(IPC_CHANNELS.beginBackupExport, password),
+  readBackupChunk: (jobId, sequence) =>
+    ipcRenderer.invoke(IPC_CHANNELS.readBackupChunk, { jobId, sequence }),
+  finishBackupExport: (jobId) =>
+    ipcRenderer.invoke(IPC_CHANNELS.finishBackupExport, jobId),
+  beginBackupImport: (totalBytes, password) =>
+    ipcRenderer.invoke(IPC_CHANNELS.beginBackupImport, {
+      totalBytes,
+      password,
+    }),
+  appendBackupChunk: (jobId, sequence, bytes) =>
+    ipcRenderer.invoke(IPC_CHANNELS.appendBackupChunk, {
+      jobId,
+      sequence,
+      bytes,
+    }),
+  finishBackupImport: (jobId) =>
+    ipcRenderer.invoke(IPC_CHANNELS.finishBackupImport, jobId),
+  cancelBackupJob: (jobId) =>
+    ipcRenderer.invoke(IPC_CHANNELS.cancelBackupJob, jobId),
+  stageTransactionImage: (draftSessionId, bytes, mime, width, height) =>
+    ipcRenderer.invoke(IPC_CHANNELS.stageTransactionImage, {
+      draftSessionId,
+      bytes,
+      mime,
+      width,
+      height,
+    }),
+  readDraftImage: (draftToken) =>
+    ipcRenderer.invoke(IPC_CHANNELS.readDraftImage, draftToken),
+  discardDraftImage: (draftToken) =>
+    ipcRenderer.invoke(IPC_CHANNELS.discardDraftImage, draftToken),
+  readTransactionImage: (transactionId, attachmentId, conflictHeadId) =>
+    ipcRenderer.invoke(IPC_CHANNELS.readTransactionImage, {
+      transactionId,
+      attachmentId,
+      conflictHeadId,
+    }),
+  getAttachmentUsage: () => ipcRenderer.invoke(IPC_CHANNELS.getAttachmentUsage),
+  retryAttachmentDownload: (transactionId, attachmentId, conflictHeadId) =>
+    ipcRenderer.invoke(IPC_CHANNELS.retryAttachmentDownload, {
+      transactionId,
+      attachmentId,
+      conflictHeadId,
+    }),
   getLedgerConflicts: () => ipcRenderer.invoke(IPC_CHANNELS.getLedgerConflicts),
   resolveLedgerConflict: (input) =>
     ipcRenderer.invoke(IPC_CHANNELS.resolveLedgerConflict, input),

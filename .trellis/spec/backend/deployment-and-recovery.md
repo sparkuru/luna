@@ -50,6 +50,12 @@ HTTP exception; HTTPS remains required for production or untrusted networks.
 - The server SQLite schema stores users, sessions, account-ledger ownership,
   object metadata, idempotency records and sanitized security events. It does
   not store financial plaintext. MinIO stores client-encrypted envelope bytes.
+- Server schema v3 also stores exact attachment orphan generations. Expired or
+  canceled reservation tokens are fenced before their physical keys enter the
+  delayed reconcile queue; `admin cleanup` must run that queue against the
+  configured File/S3 object store. Orphan tombstones remain after a successful
+  delete so a late upload of the same old generation cannot survive the next
+  sweep or affect a newer published key.
 - API writes use one in-process writer mutex around authorization, CAS,
   object-store operation and metadata update. The single-instance deployment
   must not be scaled horizontally without a shared locking/transaction design.

@@ -5,6 +5,7 @@ import { decryptLedgerDocument, encryptLedgerDocument } from '../../src/shared/l
 import type { LedgerConflictChoice } from '../../src/shared/ledger-data';
 import { appendLedgerRevision, seedLedgerDocument } from '../../src/shared/ledger-sync';
 import type { ConfigureConfigSyncInput } from '../../src/shared/settings';
+import { readLedgerDocument } from './helpers/public-ledger';
 
 const PASSWORD = 'browser-test-only-ledger-password';
 const ACCESS_KEY = 'BROWSER_TEST_ACCESS_SENTINEL';
@@ -36,11 +37,12 @@ async function sync(page: Page): Promise<void> {
 }
 
 async function persistedState(page: Page): Promise<string> {
-  return page.evaluate(async () => JSON.stringify({
-    ledger: await window.lunaLedger.getLedgerDocument(),
+  const ledger = await readLedgerDocument(page, PASSWORD);
+  const state = await page.evaluate(async () => ({
     settings: await window.lunaLedger.getSettings(),
     legacy: localStorage.getItem('luna.web.state.v1'),
   }));
+  return JSON.stringify({ ledger, ...state });
 }
 
 test('real browser clients sync encrypted ledgers, merge offline edit/delete conflicts, and converge', async ({ page, context, browser, baseURL }) => {
@@ -62,10 +64,10 @@ test('real browser clients sync encrypted ledgers, merge offline edit/delete con
     expect(remote.state.conflicts).toBe(1);
     expect(remote.state.gets).toBe(2);
     expect(remote.state.puts).toBe(2);
-    expect(await second.evaluate(() => window.lunaLedger.getLedgerDocument())).toBeNull();
+    expect(await readLedgerDocument(second, PASSWORD)).toBeNull();
     await second.evaluate((input) => window.lunaLedger.configureLedgerSync(input), connection(remote.endpoint));
     await sync(second);
-    expect(await second.evaluate(() => window.lunaLedger.getLedgerDocument())).toEqual(await page.evaluate(() => window.lunaLedger.getLedgerDocument()));
+    expect(await readLedgerDocument(second, PASSWORD)).toEqual(await readLedgerDocument(page, PASSWORD));
     expect((await page.evaluate(() => window.lunaLedger.getLedgerSyncStatus())).code).toBe('synced');
     expect((await second.evaluate(() => window.lunaLedger.getLedgerSyncStatus())).code).toBe('synced');
     const callsBeforeOffline = { gets: remote.state.gets, puts: remote.state.puts };
@@ -94,8 +96,8 @@ test('real browser clients sync encrypted ledgers, merge offline edit/delete con
     await page.evaluate((input) => window.lunaLedger.resolveLedgerConflict(input), choice);
     await sync(page);
     await sync(second);
-    const final = await page.evaluate(() => window.lunaLedger.getLedgerDocument());
-    expect(await second.evaluate(() => window.lunaLedger.getLedgerDocument())).toEqual(final);
+    const final = await readLedgerDocument(page, PASSWORD);
+    expect(await readLedgerDocument(second, PASSWORD)).toEqual(final);
     expect(await second.evaluate(() => window.lunaLedger.getLedgerConflicts())).toEqual([]);
     const snapshot = await second.evaluate(() => window.lunaLedger.getSnapshot('2026-09'));
     expect(snapshot.transactions[0]?.deletedAt).not.toBeNull();
@@ -115,7 +117,7 @@ test('real browser clients sync encrypted ledgers, merge offline edit/delete con
     await page.reload();
     await page.waitForFunction(() => typeof window.lunaLedger?.getLedgerSyncStatus === 'function');
     expect((await page.evaluate(() => window.lunaLedger.getLedgerSyncStatus())).code).toBe('disabled');
-    expect(await page.evaluate(() => window.lunaLedger.getLedgerDocument())).toEqual(final);
+    expect(await readLedgerDocument(page, PASSWORD)).toEqual(final);
   } finally {
     try {
       await context.setOffline(false);
@@ -123,6 +125,97 @@ test('real browser clients sync encrypted ledgers, merge offline edit/delete con
     } finally {
       await remote.close();
     }
+  }
+});
+
+test('real browser clients sync encrypted image objects and read them after the second client restarts', async ({ page, context, browser, baseURL }) => {
+  test.setTimeout(90_000);
+  await ready(page);
+  const remote = await startObjectServer(new URL(page.url()).origin);
+  const image = [
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52,
+    0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0,
+    0, 0, 0, 0,
+  ];
+  let secondContext: BrowserContext | undefined;
+  try {
+    await page.evaluate(() => window.lunaLedger.createWorkspace({
+      name: 'Browser image sync household', currency: 'CNY', precision: 2, monthlyBudgetMinor: null,
+    }));
+    await context.setOffline(true);
+    const created = await page.evaluate(async (bytes) => {
+      const staged = await window.lunaLedger.stageTransactionImage(
+        'browser-image-draft', new Uint8Array(bytes), 'image/png', 1, 1,
+      );
+      return window.lunaLedger.createTransaction({
+        type: 'expense', amountMinor: '1234', date: '2026-09-05',
+        splits: [{ category: 'Browser image category', amountMinor: '1234' }],
+        merchant: 'Browser image merchant', notes: 'Browser encrypted image note',
+        attachments: [{ draftToken: staged.draftToken }],
+      });
+    }, image);
+    await context.setOffline(false);
+    await page.evaluate((input) => window.lunaLedger.configureLedgerSync(input), connection(remote.endpoint));
+    const firstSync = await page.evaluate(() => window.lunaLedger.syncLedgerNow());
+    if (firstSync.code !== 'synced') {
+      throw new Error(`Image sync did not complete: ${JSON.stringify({
+        status: firstSync,
+        events: remote.state.events,
+        attachmentGets: remote.state.attachmentGets,
+        attachmentPuts: remote.state.attachmentPuts,
+        failures: remote.state.failures,
+      })}`);
+    }
+
+    const attachmentId = created.attachments?.[0]?.id;
+    expect(attachmentId).toBeDefined();
+    expect(remote.state.attachments.has(attachmentId!)).toBe(true);
+    const attachmentPut = remote.state.events.findIndex((event) => event === `attachment-put:${attachmentId}`);
+    const graphPut = remote.state.events.indexOf('graph-put');
+    expect(attachmentPut).toBeGreaterThanOrEqual(0);
+    expect(graphPut).toBeGreaterThan(attachmentPut);
+    expect(remote.state.attachmentPuts).toBe(1);
+    expect(remote.state.attachmentGets).toBeGreaterThanOrEqual(2);
+    expect(remote.state.failures).toEqual([]);
+    const remoteObject = remote.state.attachments.get(attachmentId!);
+    expect(remoteObject).toBeDefined();
+    expect(remoteObject!.body.equals(Buffer.from(image))).toBe(false);
+    expect(remoteObject!.body.length).toBe(image.length + 16);
+
+    secondContext = await browser.newContext({
+      ...(baseURL === undefined ? {} : { baseURL }),
+      locale: 'en-US', viewport: page.viewportSize() ?? { width: 375, height: 800 },
+    });
+    const second = await secondContext.newPage();
+    await ready(second);
+    await second.evaluate((input) => window.lunaLedger.configureLedgerSync(input), connection(remote.endpoint));
+    await sync(second);
+    const secondSnapshot = await second.evaluate(() => window.lunaLedger.getSnapshot('2026-09'));
+    const secondTransaction = secondSnapshot.transactions.find((transaction) => transaction.id === created.id);
+    expect(secondTransaction?.attachments?.map((item) => item.id)).toEqual([attachmentId]);
+    const restored = await second.evaluate(async ({ transactionId, id }) => {
+      const result = await window.lunaLedger.readTransactionImage(transactionId, id);
+      const value = {
+        bytes: Array.from(result.bytes), mime: result.mime, width: result.width, height: result.height,
+      };
+      result.bytes.fill(0);
+      return value;
+    }, { transactionId: created.id, id: attachmentId! });
+    expect(restored).toEqual({ bytes: image, mime: 'image/png', width: 1, height: 1 });
+    await second.reload();
+    await second.waitForFunction(() => typeof window.lunaLedger?.readTransactionImage === 'function');
+    const afterRestart = await second.evaluate(async ({ transactionId, id }) => {
+      const result = await window.lunaLedger.readTransactionImage(transactionId, id);
+      const bytes = Array.from(result.bytes);
+      result.bytes.fill(0);
+      return { bytes, mime: result.mime, width: result.width, height: result.height };
+    }, { transactionId: created.id, id: attachmentId! });
+    expect(afterRestart).toEqual(restored);
+  } finally {
+    await context.setOffline(false);
+    await secondContext?.close();
+    await remote.close();
   }
 });
 
@@ -138,12 +231,12 @@ test('Node-encrypted restore and browser password, tamper, and HTTP 403 failures
     const originalRemote = remote.state.body;
     await page.evaluate((input) => window.lunaLedger.configureLedgerSync(input), connection(remote.endpoint, 'wrong-browser-ledger-password'));
     await expect(page.evaluate(() => window.lunaLedger.syncLedgerNow())).rejects.toThrow('ledger-wrong-password-or-tampered');
-    expect(await page.evaluate(() => window.lunaLedger.getLedgerDocument())).toBeNull();
+    expect(await readLedgerDocument(page, PASSWORD)).toBeNull();
     expect(remote.state.body).toBe(originalRemote);
     expect(remote.state.puts).toBe(0);
     await page.evaluate((input) => window.lunaLedger.configureLedgerSync(input), connection(remote.endpoint));
     await sync(page);
-    expect(await page.evaluate(() => window.lunaLedger.getLedgerDocument())).toEqual(document);
+    expect(await readLedgerDocument(page, PASSWORD)).toEqual(document);
     const committed = await persistedState(page);
     remote.state.denyReads = true;
     await expect(page.evaluate(() => window.lunaLedger.syncLedgerNow())).rejects.toThrow('ledger-remote-permission');
@@ -167,22 +260,24 @@ test('budget forms reject another tab update without losing the stale draft', as
   await ready(page);
   await page.evaluate(() => window.lunaLedger.createWorkspace({ name: 'Budget tabs', currency: 'CNY', precision: 2, monthlyBudgetMinor: '100000' }));
   await page.reload();
-  await page.getByRole('button', { name: 'Open more menu' }).click();
+  await page
+    .getByRole('navigation', { name: 'Primary navigation' })
+    .getByRole('button', { name: 'Monthly spending limit', exact: true })
+    .click();
   await expect(page.locator('#budget-input')).toHaveValue('1000.00');
   const second = await context.newPage();
   await second.goto(page.url());
-  await expect(second.locator('#secondary-menu-dialog')).toBeVisible();
   await expect(second.locator('#budget-input')).toHaveValue('1000.00');
   await page.locator('#budget-input').fill('1500.00');
   await second.locator('#budget-input').fill('2000.00');
   await second.locator('#save-budget').click();
   await expect(second.locator('#save-budget')).toBeEnabled();
-  const committed = await second.evaluate(() => window.lunaLedger.getLedgerDocument());
+  const committed = await readLedgerDocument(second, PASSWORD);
   await page.locator('#save-budget').click();
   await expect(page.locator('#budget-alert')).toContainText(/budget.*changed/i);
   await expect(page.locator('#budget-input')).toHaveValue('1500.00');
   await expect(page.locator('#budget-input')).toBeFocused();
-  expect(await page.evaluate(() => window.lunaLedger.getLedgerDocument())).toEqual(committed);
+  expect(await readLedgerDocument(page, PASSWORD)).toEqual(committed);
   await second.close();
 });
 
@@ -190,32 +285,35 @@ test('encrypted sync and presentation refresh never upgrade a budget draft preco
   await ready(page);
   await page.evaluate(() => window.lunaLedger.createWorkspace({ name: 'Budget sync', currency: 'CNY', precision: 2, monthlyBudgetMinor: '100000' }));
   await page.reload();
-  await page.getByRole('button', { name: 'Open more menu' }).click();
-  await expect(page.locator('#budget-input')).toHaveValue('1000.00');
-  const original = await page.evaluate(() => window.lunaLedger.getLedgerDocument());
-  if (original === null) throw new Error('Missing budget fixture');
+  await page
+    .getByRole('navigation', { name: 'Primary navigation' })
+    .getByRole('button', { name: 'Recent ledger', exact: true })
+    .click();
   const month = await page.locator('#month-picker').inputValue();
+  await page
+    .getByRole('navigation', { name: 'Primary navigation' })
+    .getByRole('button', { name: 'Monthly spending limit', exact: true })
+    .click();
+  await expect(page.locator('#budget-input')).toHaveValue('1000.00');
+  const original = await readLedgerDocument(page, PASSWORD);
+  if (original === null) throw new Error('Missing budget fixture');
   const updated = appendLedgerRevision(original, { id: 'remote-budget-update', kind: 'budget', entityId: month, value: '200000' });
   const remote = await startObjectServer(new URL(page.url()).origin);
   try {
     remote.replace(await encryptLedgerDocument(updated, PASSWORD));
     await page.locator('#budget-input').fill('1500.00');
     await page.evaluate((input) => window.lunaLedger.configureLedgerSync(input), connection(remote.endpoint));
-    await page.locator('#close-secondary-menu').click();
-    await page.locator('#toggle-income-amounts').click();
-    await page.getByRole('button', { name: 'Open more menu' }).click();
+    await page.evaluate(() => window.lunaLedger.updateSettings({ hideSensitiveAmountsByDefault: true }));
     const syncStatus = await page.evaluate(() => window.lunaLedger.syncLedgerNow());
     expect(syncStatus.code).toBe('synced');
     await expect(page.locator('#budget-input')).toHaveValue('1500.00');
-    expect(await page.evaluate(() => window.lunaLedger.getLedgerDocument())).toEqual(updated);
+    expect(await readLedgerDocument(page, PASSWORD)).toEqual(updated);
     // Re-rendering committed presentation settings must retain the old causal token too.
-    await page.locator('#close-secondary-menu').click();
-    await page.locator('#toggle-income-amounts').click();
-    await page.getByRole('button', { name: 'Open more menu' }).click();
+    await page.evaluate(() => window.lunaLedger.updateSettings({ hideSensitiveAmountsByDefault: false }));
     await page.locator('#save-budget').click();
     await expect(page.locator('#budget-alert')).toContainText(/budget.*changed/i);
     await expect(page.locator('#budget-input')).toHaveValue('1500.00');
-    expect(await page.evaluate(() => window.lunaLedger.getLedgerDocument())).toEqual(updated);
+    expect(await readLedgerDocument(page, PASSWORD)).toEqual(updated);
     expect(remote.state.failures).toEqual([]);
   } finally { await remote.close(); }
 });

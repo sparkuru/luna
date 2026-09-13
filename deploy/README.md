@@ -20,10 +20,14 @@ docker compose exec api node dist/server/server/cli/admin.js create-account
 最后一条命令会交互式创建管理员账号；没有默认账号，也没有公开注册。然后打开
 `http://127.0.0.1:8080`。其他电脑或 Android 设备不能使用它们自己的
 `localhost` 访问宿主机；跨设备使用时，默认需要一个设备可达的主机名/IP，以及受信任
-的 HTTPS 反向代理。若只在可信的 RFC1918 IPv4 局域网内直连 HTTP，可显式设置
+的 HTTPS 反向代理。目标跨设备入口为 `https://luna.majo.im`，具体配置见下文。若只在
+可信的 RFC1918 IPv4 局域网内直连 HTTP，可显式设置
 `LUNA_BIND_HOST=0.0.0.0`、`LUNA_ALLOWED_ORIGINS=http://<宿主机IP>:<端口>` 和
-`LUNA_ALLOW_INSECURE_LAN=true`；这不会放开公网或任意域名 HTTP。Compose 不会替你配置
-DNS、防火墙或证书信任。
+`LUNA_ALLOW_INSECURE_LAN=true`；这不会放开公网或任意域名 HTTP。这个选项只适合可信
+局域网内的 API/开发访问，不是完整的 Web 离线部署：普通 LAN HTTP 不是安全上下文，
+Service Worker 和 SQLite-WASM/OPFS 不能依赖它。浏览器若以普通 LAN HTTP 打开 Web
+客户端，会显示需要 HTTPS 或 localhost 的可操作错误，且不会静默回退到 IndexedDB 或
+localStorage。Compose 不会替你配置 DNS、防火墙或证书信任。
 
 启动顺序由 Compose 管理：`instance-init` 先创建安装状态，MinIO 使用同一份
 内部凭据启动，API 等待 MinIO 可用后才监听，Web 等 API healthy 后才提供服务。
@@ -62,13 +66,78 @@ LUNA_ALLOWED_ORIGINS=http://127.0.0.1:8081,http://localhost:8081
 ```
 
 生产或跨设备使用时，在外部 HTTPS 代理上转发 `/` 和 `/api/`，保留 `Origin`、
-`Authorization`、`If-Match`、`If-None-Match` 等请求头，并保留 API 的错误状态码。
-代理响应也必须保留 COOP/COEP 头；Web 端借此启用支持多标签锁的普通 SQLite-WASM/OPFS：
+`Authorization`、`If-Match`、`If-None-Match`、`ETag` 和 `Idempotency-Key` 等请求头，
+并保留 API 的错误状态码。代理响应也必须保留 COOP/COEP 头；Web 端借此启用支持多
+标签锁的普通 SQLite-WASM/OPFS：
 
 ```text
 Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 ```
+
+### 跨设备 HTTPS：`luna.majo.im`
+
+使用 `https://luna.majo.im` 作为浏览器和跨设备 Web 的唯一目标 origin。外部 TLS
+终止层负责证书和 `/`、`/api/` 的同源反向代理；Compose Web 只监听内部主机端口，
+API 和 MinIO 仍只在 Compose 私有网络中可达。目标部署的 `.env` 覆盖如下：
+
+```dotenv
+LUNA_BIND_HOST=127.0.0.1
+LUNA_PORT=8080
+LUNA_ALLOWED_ORIGINS=https://luna.majo.im
+LUNA_ALLOW_INSECURE_LAN=false
+```
+
+外部 Nginx 的最小路由形状如下。`127.0.0.1:8080` 是运行 Compose Web 的主机内部
+upstream，适用于 TLS 终止层与 Compose Web 同机。若 TLS 终止层在另一台主机，必须把
+`LUNA_BIND_HOST` 改成代理可达的私有接口（或使用只供该代理访问的专用隧道），并在
+防火墙上只允许该代理访问 Web 端口；随后将 upstream 替换为这个受保护地址。不要绑定
+公网接口，也不要公开 API 或 MinIO 端口：
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name luna.majo.im;
+
+    # Configure the trusted certificate at this TLS termination layer only.
+    ssl_certificate /path/managed-by-tls-terminator/fullchain.pem;
+    ssl_certificate_key /path/managed-by-tls-terminator/private.key;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_request_buffering off;
+        proxy_set_header Host $host;
+        proxy_set_header Origin $http_origin;
+        proxy_set_header Authorization $http_authorization;
+        proxy_set_header If-Match $http_if_match;
+        proxy_set_header If-None-Match $http_if_none_match;
+        proxy_set_header Idempotency-Key $http_idempotency_key;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_pass_header ETag;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header Origin $http_origin;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}
+```
+
+实际配置还必须保留 Compose Web 已提供的 `Cross-Origin-Opener-Policy: same-origin`、
+`Cross-Origin-Embedder-Policy: require-corp`、严格 CSP，以及 `/api/` 的
+`Cache-Control: no-store`；代理不得把未知 API 或缺失资源改写成应用 shell。浏览器和
+Android WebView 必须能通过系统信任链校验证书，且证书 SAN 覆盖 `luna.majo.im`。证书
+私钥只留在 TLS 终止层，不进入仓库、容器镜像或 APK；不要用 `ignoreHTTPSErrors`、自定义
+测试 CA 或其他证书绕过参数作为正式验收条件。
+
+DNS 记录、TLS 终止层到 Web upstream 的连通性和证书有效期属于部署前置条件，应在目标
+网络中单独验证。变更外部代理时使用独立、可回滚的路由，先通过配置检查再 reload，
+并确认健康、`/api/v1/meta`、登录和条件写仍返回原始状态码与请求语义。
 
 内置 MinIO 是服务端内部实现细节。不要把 `.luna/runtime.json` 中的内容复制到
 客户端、前端环境变量、公开 issue 或日志中。客户端账本同步界面不会要求 S3 配置。

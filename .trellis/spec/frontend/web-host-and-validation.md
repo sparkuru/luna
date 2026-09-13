@@ -39,8 +39,8 @@ The Web entry point must install the same renderer-facing port used by Electron:
 createWebLedgerApi(storage?: Storage | null, testDatabase?: IDBFactory | null): LunaLedgerApi;
 createWebProfileHost(testDatabase?: IDBFactory | null, storage?: Storage | null, fetcher?: typeof fetch): ServerHost;
 window.lunaLedger: LunaLedgerApi;
-randomId(prefix: string): string;
-randomUuidFromValues(cryptoApi: Crypto): string;
+secureRandomUuid(cryptoApi?: Crypto): string;
+secureRandomId(prefix: string, cryptoApi?: Crypto): string;
 ```
 
 The default `npm run web` server listens on all interfaces at `0.0.0.0:4173`.
@@ -119,6 +119,11 @@ npm run smoke:electron
   the Worker uses short `BEGIN IMMEDIATE` transactions with an optimistic
   precondition for concurrent tabs. Storage unavailability is explicit; no
   unsafe in-memory or localStorage write fallback.
+- The explicit Android IndexedDB compatibility adapter stores a durable
+  per-profile migration lease alongside its state. While a profile is being
+  copied, graph, attachment, restore, binding, and checkpoint writes fail with
+  `LUNA_ERROR:migration-locked`; reads remain available. The SQLite-WASM
+  worker applies the same lease check to binary writes and short transactions.
 - Profile-directory reads are presentation reads, not catalog writes. Keep one
   stable catalog store per browser host and coalesce concurrent `profiles()`
   consumers; a top-bar profile picker and an account panel must not compete
@@ -240,6 +245,24 @@ npm run smoke:electron
 - Bad: importing the renderer stylesheet only from TypeScript and assuming the
   Vite dev server will inject it; the strict Web CSP blocks that inline style,
   leaving a functionally passing but visually unstyled page.
+- Bad: treating SQLite-WASM `db.selectArray(sql)` as an all-row introspection
+  API. It returns only the first result row, so checking every row from
+  `PRAGMA table_info(...)` can miss a later column and repeat an `ALTER TABLE`,
+  producing `duplicate column name` during startup.
+- Correct: constrain schema introspection to the column being tested and
+  inspect the single returned row, or use the API that explicitly returns all
+  rows:
+
+  ```typescript
+  const column = db.selectArray(
+    "SELECT name FROM pragma_table_info('luna_state') WHERE name = 'migration_json'",
+  );
+  if (column?.[0] !== 'migration_json')
+    db.exec({ sql: 'ALTER TABLE luna_state ADD COLUMN migration_json TEXT' });
+  ```
+
+  Keep a browser regression that opens an existing pre-column database and
+  reaches the public settings/snapshot APIs after the migration check.
 
 ## 6. Tests Required
 
@@ -304,18 +327,14 @@ Electron filesystem, SQLite, safeStorage and display-settings provider work in
 the desktop host. Ledger crypto and transport use the portable shared/session
 modules on Web and in Electron main; see the backend ledger-sync contract.
 
-For browser-generated IDs, do not assume localhost capabilities:
+For browser-generated IDs, use the shared `secureRandomUuid` and
+`secureRandomId` helpers; do not assume localhost capabilities or duplicate
+their fallback logic:
 
 ```typescript
-// Wrong: randomUUID is secure-context-only in browsers.
-const id = crypto.randomUUID();
-
-// Correct: preserve cryptographic randomness on a plain-HTTP LAN origin.
-const id = typeof crypto.randomUUID === 'function'
-  ? crypto.randomUUID()
-  : uuidV4FromBytes(crypto.getRandomValues(new Uint8Array(16)));
+const id = secureRandomUuid();
 ```
 
 The fallback must set UUID version and variant bits after filling the byte
-array; the abbreviated helper above represents the `randomUuidFromValues`
-contract rather than a second implementation.
+array. If cryptographic randomness is unavailable, the helpers must throw
+`LUNA_ERROR:secure-random-unavailable`.

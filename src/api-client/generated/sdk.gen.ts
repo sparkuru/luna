@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateLedgerData, CreateLedgerErrors, CreateLedgerResponses, CreateSessionData, CreateSessionErrors, CreateSessionResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetLedgerObjectData, GetLedgerObjectErrors, GetLedgerObjectResponses, GetLedgerObjectStatusData, GetLedgerObjectStatusErrors, GetLedgerObjectStatusResponses, GetPreferenceObjectData, GetPreferenceObjectErrors, GetPreferenceObjectResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetServerMetaData, GetServerMetaErrors, GetServerMetaResponses, ListLedgersData, ListLedgersErrors, ListLedgersResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, LogoutSessionData, LogoutSessionErrors, LogoutSessionResponses, PutLedgerObjectData, PutLedgerObjectErrors, PutLedgerObjectResponses, PutPreferenceObjectData, PutPreferenceObjectErrors, PutPreferenceObjectResponses, RevokeSessionData, RevokeSessionErrors, RevokeSessionResponses } from './types.gen';
+import type { CreateLedgerData, CreateLedgerErrors, CreateLedgerResponses, CreateSessionData, CreateSessionErrors, CreateSessionResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetLedgerAttachmentData, GetLedgerAttachmentErrors, GetLedgerAttachmentResponses, GetLedgerAttachmentUsageData, GetLedgerAttachmentUsageErrors, GetLedgerAttachmentUsageResponses, GetLedgerObjectData, GetLedgerObjectErrors, GetLedgerObjectResponses, GetLedgerObjectStatusData, GetLedgerObjectStatusErrors, GetLedgerObjectStatusResponses, GetPreferenceObjectData, GetPreferenceObjectErrors, GetPreferenceObjectResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetServerMetaData, GetServerMetaErrors, GetServerMetaResponses, ListLedgersData, ListLedgersErrors, ListLedgersResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, LogoutSessionData, LogoutSessionErrors, LogoutSessionResponses, PutLedgerAttachmentData, PutLedgerAttachmentErrors, PutLedgerAttachmentResponses, PutLedgerObjectData, PutLedgerObjectErrors, PutLedgerObjectResponses, PutPreferenceObjectData, PutPreferenceObjectErrors, PutPreferenceObjectResponses, RepairLedgerAttachmentData, RepairLedgerAttachmentErrors, RepairLedgerAttachmentResponses, RevokeSessionData, RevokeSessionErrors, RevokeSessionResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -65,6 +65,40 @@ export const createLedger = <ThrowOnError extends boolean = false>(options: Opti
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+export const getLedgerAttachment = <ThrowOnError extends boolean = false>(options: Options<GetLedgerAttachmentData, ThrowOnError>): RequestResult<GetLedgerAttachmentResponses, GetLedgerAttachmentErrors, ThrowOnError> => (options.client ?? client).get<GetLedgerAttachmentResponses, GetLedgerAttachmentErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/ledgers/{id}/attachments/{attachmentId}',
+    ...options
+});
+
+export const putLedgerAttachment = <ThrowOnError extends boolean = false>(options: Options<PutLedgerAttachmentData, ThrowOnError>): RequestResult<PutLedgerAttachmentResponses, PutLedgerAttachmentErrors, ThrowOnError> => (options.client ?? client).put<PutLedgerAttachmentResponses, PutLedgerAttachmentErrors, ThrowOnError>({
+    bodySerializer: null,
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/ledgers/{id}/attachments/{attachmentId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/octet-stream',
+        ...options.headers
+    }
+});
+
+export const repairLedgerAttachment = <ThrowOnError extends boolean = false>(options: Options<RepairLedgerAttachmentData, ThrowOnError>): RequestResult<RepairLedgerAttachmentResponses, RepairLedgerAttachmentErrors, ThrowOnError> => (options.client ?? client).post<RepairLedgerAttachmentResponses, RepairLedgerAttachmentErrors, ThrowOnError>({
+    bodySerializer: null,
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/ledgers/{id}/attachments/{attachmentId}/repair',
+    ...options,
+    headers: {
+        'Content-Type': 'application/octet-stream',
+        ...options.headers
+    }
+});
+
+export const getLedgerAttachmentUsage = <ThrowOnError extends boolean = false>(options: Options<GetLedgerAttachmentUsageData, ThrowOnError>): RequestResult<GetLedgerAttachmentUsageResponses, GetLedgerAttachmentUsageErrors, ThrowOnError> => (options.client ?? client).get<GetLedgerAttachmentUsageResponses, GetLedgerAttachmentUsageErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/ledgers/{id}/attachments/usage',
+    ...options
 });
 
 export const getLedgerObject = <ThrowOnError extends boolean = false>(options: Options<GetLedgerObjectData, ThrowOnError>): RequestResult<GetLedgerObjectResponses, GetLedgerObjectErrors, ThrowOnError> => (options.client ?? client).get<GetLedgerObjectResponses, GetLedgerObjectErrors, ThrowOnError>({

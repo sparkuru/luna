@@ -49,9 +49,10 @@ interface LocalStore {
 ```
 
 The public renderer API is asynchronous, while the native adapter may remain
-synchronous internally. The schema currently contains `workspace`,
+synchronous internally. The current native schema5 contains `workspace`,
 `monthly_budgets`, `transactions`, `splits`, `revisions`, `tombstones`,
-`pending_operations`, `conflicts`, and schema2 `ledger_graph`.
+`pending_operations`, `conflicts`, `ledger_graph`, attachment/blob staging,
+per-target remote version checkpoints, and a durable migration lease.
 See ledger-sync-guidelines.md for the authoritative graph and v1 migration.
 
 ### 3. Contracts
@@ -75,6 +76,10 @@ See ledger-sync-guidelines.md for the authoritative graph and v1 migration.
   Legacy `sync.remoteSyncEnabled`/pending rows are not the new session status;
   `getLedgerSyncStatus` owns actual encrypted ledger acknowledgement. Settings
   sync must never acknowledge ledger mutations.
+- An active source-profile migration lease blocks every financial, graph,
+  attachment, restore, binding, and remote-checkpoint write transaction with
+  `LUNA_ERROR:migration-locked`; reads remain available. Lease expiry is
+  recoverable and must be compared by parsed timestamps, not string ordering.
 
 ### 4. Validation & Error Matrix
 
@@ -102,7 +107,8 @@ See ledger-sync-guidelines.md for the authoritative graph and v1 migration.
   validation, summary exclusion, and filters without importing SQLite/Electron.
 - Store tests assert first/repeated migration, close/reopen recovery, values
   above `Number.MAX_SAFE_INTEGER`, rollback after invalid writes, budget
-  inheritance/override, tombstone exclusion, and pending-operation counts.
+  inheritance/override, tombstone exclusion, pending-operation counts, and
+  durable cross-connection migration-lease blocking/recovery.
 - Packaged smoke asserts the made executable starts, uses isolated `userData`,
   saves through preload/IPC, closes, and reopens with both records intact.
 
@@ -140,6 +146,12 @@ guarded by `PRAGMA user_version`. A database with a newer schema version is
 rejected. Any migration error is wrapped without returning the database path
 or SQL payload. Future schema changes must add a versioned migration and a
 reopen/rollback test before changing the schema version.
+
+The server metadata database has its own versioned migration sequence; its
+current schema is v3. The v3 attachment orphan table records exact physical
+generations for delayed cleanup and must be covered by first-run, repeated-open,
+identity-preservation and old-schema migration tests. Do not conflate this
+server metadata version with the Native/Web `LocalStore` schema versions above.
 
 ## Naming Conventions
 

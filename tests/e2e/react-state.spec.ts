@@ -89,30 +89,54 @@ test("validated month and type deep links leave free text filters out of history
   await page.locator("#filter-details summary").click();
   await expect(page.locator("#filter-type")).toHaveValue("all");
   await page.goto("/ledger/menu/settings");
+  await expect(page).toHaveURL(/\/settings\/preferences$/);
   await expect(page.locator("#settings-language")).toBeVisible();
-  await page.locator("#close-secondary-menu").click();
+  await page.goto("/ledger");
   await expect(page).toHaveURL(/\/ledger$/);
+});
+
+test("empty regex mode keeps the unfiltered ledger visible", async ({ page }) => {
+  await ready(page);
+  await page.evaluate(async () => {
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    for (const [category, amountMinor] of [['Regex one', '100'], ['Regex two', '200']] as const) {
+      await window.lunaLedger.createTransaction({
+        type: 'expense',
+        amountMinor,
+        date,
+        splits: [{ category, amountMinor }],
+      });
+    }
+  });
+  await page.reload();
+  await expect(page.locator('#transaction-list-region .transaction-item')).toHaveCount(2);
+  await page.locator('#filter-details summary').click();
+  await page.locator('#filter-regex').check();
+  await expect(page.locator('#transaction-list-region .transaction-item')).toHaveCount(2);
+  await expect(page.locator('[role="alert"]')).toHaveText('');
 });
 
 test("route blocker preserves a budget draft until the user discards it", async ({
   page,
 }) => {
   await ready(page);
-  await page.locator("#open-secondary-menu").click();
+  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("button", { name: "Monthly spending limit", exact: true }).click();
   await page.locator("#budget-input").fill("321.09");
   page.once("dialog", (dialog) => void dialog.dismiss());
   await page
-    .locator("nav")
+    .getByRole("navigation", { name: "Primary navigation" })
     .getByRole("button", { name: "Settings", exact: true })
     .click();
-  await expect(page).toHaveURL(/\/ledger\/menu$/);
+  await expect(page).toHaveURL(/\/budget$/);
   await expect(page.locator("#budget-input")).toHaveValue("321.09");
   page.once("dialog", (dialog) => void dialog.accept());
   await page
-    .locator("nav")
+    .getByRole("navigation", { name: "Primary navigation" })
     .getByRole("button", { name: "Settings", exact: true })
     .click();
-  await expect(page).toHaveURL(/\/ledger\/menu\/settings$/);
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page.locator("#budget-input")).toHaveCount(0);
 });
 
 test("native back closes nested dialogs and follows menu parents before leaving the app", async ({
@@ -138,12 +162,10 @@ test("native back closes nested dialogs and follows menu parents before leaving 
   await expect(page.locator("#transaction-amount")).toHaveValue("45.67");
   expect(await back()).toBe(false);
   await page.locator("#open-secondary-menu").click();
-  await page
-    .locator("nav")
-    .getByRole("button", { name: "Settings", exact: true })
-    .click();
+  await expect(page).toHaveURL(/\/settings$/);
+  await page.getByRole("navigation", { name: "Settings" }).getByRole("button", { name: "Preferences", exact: true }).click();
   expect(await back()).toBe(false);
-  await expect(page).toHaveURL(/\/ledger\/menu$/);
+  await expect(page).toHaveURL(/\/settings$/);
   expect(await back()).toBe(false);
   await expect(page).toHaveURL(/\/ledger$/);
   expect(await back()).toBe(true);
@@ -153,7 +175,7 @@ test("an older settings query cannot overwrite a confirmed locale update", async
   page,
 }) => {
   await ready(page);
-  await page.goto("/ledger/menu/settings");
+  await page.goto("/settings/preferences");
   await expect(page.locator("#settings-language")).toBeVisible();
   await page.evaluate(async () => {
     const api = window.lunaLedger;

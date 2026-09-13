@@ -18,6 +18,13 @@ async function record(page: Page, merchant: string): Promise<void> {
   await expect(page.locator('#transaction-list-region')).toContainText(merchant);
 }
 
+async function openTransactionActions(page: Page, merchant: string): Promise<void> {
+  const row = page.locator('.transaction-item').filter({ hasText: merchant });
+  await expect(row).toBeVisible();
+  const trigger = row.locator('.transaction-actions-trigger');
+  if (await trigger.isVisible()) await trigger.click();
+}
+
 test('production shell cold-opens offline and persists new records', async ({ page, context }) => {
   test.skip(!process.env.LUNA_TEST_BASE_URL && process.env.LUNA_TEST_PRODUCTION !== '1', 'Production build only');
   await setup(page);
@@ -44,6 +51,8 @@ test('a stale financial edit is rejected and its input is retained', async ({ pa
   await record(page, 'Shared shop');
   const second = await context.newPage();
   await second.goto('/');
+  await openTransactionActions(page, 'Shared shop');
+  await openTransactionActions(second, 'Shared shop');
   await page.getByRole('button', { name: /Edit Shared shop/ }).click();
   await second.getByRole('button', { name: /Edit Shared shop/ }).click();
   await page.locator('#transaction-amount').fill('45.67');

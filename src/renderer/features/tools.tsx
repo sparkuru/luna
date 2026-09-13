@@ -4,6 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import type { LedgerSessionStatus } from "../../shared/ledger-session";
 import type { ConfigureConfigSyncInput } from "../../shared/settings";
 import { MAX_LEDGER_ENVELOPE_BYTES } from "../../shared/ledger-crypto";
+import {
+  MAX_ATTACHMENT_BRIDGE_CHUNK_BYTES,
+  MAX_BACKUP_FILE_BYTES,
+} from "../../shared/attachment-contract";
+import { FULL_BACKUP_MAGIC } from "../../shared/full-backup";
+import { secureRandomUuid } from "../../shared/secure-random";
 import { formatDate, formatMoney, formatMonth } from "../i18n";
 import {
   ledgerToolsMessage,
@@ -21,6 +27,18 @@ import { Field } from "../components/form";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 export type ToolsPage = "all" | "sync" | "backup" | "conflicts";
+
+type BackupWriteChunk = Parameters<FileSystemWritableFileStream["write"]>[0];
+type BackupWriter = {
+  write(chunk: BackupWriteChunk): Promise<void>;
+  close(): Promise<void>;
+  abort?(): Promise<void>;
+};
+type TrackedDownload = {
+  timer: number;
+  cleanup(): void;
+};
+
 export function LedgerTools({
   page = "all",
   active = true,
@@ -71,15 +89,33 @@ export function LedgerTools({
   const connectionRef = useRef<HTMLFormElement>(null);
   const exportRef = useRef<HTMLFormElement>(null);
   const importRef = useRef<HTMLFormElement>(null);
-  const downloads = useRef(new Map<string, number>());
+  const downloads = useRef(new Map<string, TrackedDownload>());
+  const trackDownload = (url: string, removeTemporary?: () => void): (() => void) => {
+    let timer = 0;
+    const cleanup = () => {
+      window.clearTimeout(timer);
+      URL.revokeObjectURL(url);
+      removeTemporary?.();
+      downloads.current.delete(url);
+    };
+    timer = window.setTimeout(cleanup, 60_000);
+    downloads.current.set(url, { timer, cleanup });
+    return cleanup;
+  };
+  const completeBackup =
+    typeof api.beginBackupExport === "function" &&
+    typeof api.readBackupChunk === "function" &&
+    typeof api.finishBackupExport === "function" &&
+    typeof api.beginBackupImport === "function" &&
+    typeof api.appendBackupChunk === "function" &&
+    typeof api.finishBackupImport === "function" &&
+    typeof api.cancelBackupJob === "function";
   useEffect(
     () => () => {
       mounted.current = false;
       generation.current++;
-      for (const [url, timer] of downloads.current) {
-        window.clearTimeout(timer);
-        URL.revokeObjectURL(url);
-      }
+      for (const download of downloads.current.values()) download.cleanup();
+      downloads.current.clear();
       app.setDirty("tools", false);
     },
     [],
@@ -200,6 +236,99 @@ export function LedgerTools({
       } finally {
         form.reset();
       }
+      app.setDirty("tools", false);
+      return;
+    }
+    if (completeBackup) {
+      const start = await api.beginBackupExport!(password);
+      let finished = false;
+      let writer: BackupWriter | null = null;
+      let temporaryRoot: FileSystemDirectoryHandle | null = null;
+      let temporaryName: string | null = null;
+      let cleanupDownload: (() => void) | null = null;
+      try {
+        if (
+          typeof start.jobId !== "string" ||
+          start.jobId.length === 0 ||
+          !Number.isSafeInteger(start.totalBytes) ||
+          start.totalBytes < 1 ||
+          start.totalBytes > MAX_BACKUP_FILE_BYTES
+        )
+          throw new Error("LUNA_ERROR:backup-invalid-container");
+        // Browser downloads use OPFS as a bounded temporary sink. A native
+        // file picker can be exposed by Chromium, but invoking it here would
+        // bypass the download contract and makes headless/browser automation
+        // dependent on an OS dialog. Native hosts expose saveLedgerBackup.
+        if (writer === null) {
+          const storage = navigator.storage as StorageManager & {
+            getDirectory?: () => Promise<FileSystemDirectoryHandle>;
+          };
+          if (typeof storage.getDirectory !== "function")
+            throw new Error("LUNA_ERROR:backup-unsupported-container");
+          temporaryRoot = await storage.getDirectory();
+          temporaryName = `.luna-backup-${secureRandomUuid()}`;
+          const fileHandle = await temporaryRoot.getFileHandle(temporaryName, {
+            create: true,
+          });
+          writer = await fileHandle.createWritable();
+        }
+        const outputWriter = writer;
+        if (outputWriter === null)
+          throw new Error("LUNA_ERROR:backup-unsupported-container");
+        let writtenBytes = 0;
+        let reachedEof = false;
+        for (let sequence = 0; sequence <= MAX_BACKUP_FILE_BYTES / MAX_ATTACHMENT_BRIDGE_CHUNK_BYTES; sequence += 1) {
+          const chunk = await api.readBackupChunk!(start.jobId, sequence);
+          if (chunk.bytes.byteLength > MAX_ATTACHMENT_BRIDGE_CHUNK_BYTES)
+            throw new Error("LUNA_ERROR:backup-too-large");
+          const nextWrittenBytes = writtenBytes + chunk.bytes.byteLength;
+          if (nextWrittenBytes > start.totalBytes || nextWrittenBytes > MAX_BACKUP_FILE_BYTES)
+            throw new Error("LUNA_ERROR:backup-invalid-container");
+          await outputWriter.write(Uint8Array.from(chunk.bytes));
+          writtenBytes = nextWrittenBytes;
+          if (chunk.eof) {
+            reachedEof = true;
+            break;
+          }
+          if (sequence === Math.floor(MAX_BACKUP_FILE_BYTES / MAX_ATTACHMENT_BRIDGE_CHUNK_BYTES))
+            throw new Error("LUNA_ERROR:backup-invalid-container");
+        }
+        if (!reachedEof || writtenBytes !== start.totalBytes)
+          throw new Error("LUNA_ERROR:backup-invalid-container");
+        await outputWriter.close();
+        if (temporaryRoot !== null && temporaryName !== null) {
+          const file = await temporaryRoot.getFileHandle(temporaryName).then((handle) => handle.getFile());
+          const url = URL.createObjectURL(file);
+          const anchor = document.createElement("a");
+          anchor.href = url;
+          anchor.download = `luna-ledger-${new Date().toISOString().slice(0, 10)}.luna-backup`;
+          document.body.append(anchor);
+          try {
+            anchor.click();
+          } finally {
+            anchor.remove();
+            const root = temporaryRoot;
+            const name = temporaryName;
+            cleanupDownload = trackDownload(url, () => {
+              if (root !== null && name !== null)
+                void root.removeEntry(name).catch(() => undefined);
+            });
+          }
+        }
+        await api.finishBackupExport!(start.jobId);
+        finished = true;
+      } finally {
+        if (!finished) await api.cancelBackupJob!(start.jobId).catch(() => undefined);
+        if (!finished && writer?.abort) await writer.abort().catch(() => undefined);
+        if (!finished && cleanupDownload !== null) {
+          cleanupDownload();
+          cleanupDownload = null;
+        }
+        if (temporaryRoot !== null && temporaryName !== null && cleanupDownload === null)
+          await temporaryRoot.removeEntry(temporaryName).catch(() => undefined);
+        form.reset();
+      }
+      app.setDirty("tools", false);
       return;
     }
     const raw = await api.exportLedgerBackup(password);
@@ -214,13 +343,7 @@ export function LedgerTools({
       anchor.click();
     } finally {
       anchor.remove();
-      downloads.current.set(
-        url,
-        window.setTimeout(() => {
-          URL.revokeObjectURL(url);
-          downloads.current.delete(url);
-        }, 1000),
-      );
+      trackDownload(url);
     }
     form.reset();
     app.setDirty("tools", false);
@@ -232,10 +355,69 @@ export function LedgerTools({
       !formChecked(form, "confirm") ||
       !(file instanceof File) ||
       file.size === 0 ||
-      file.size > MAX_LEDGER_ENVELOPE_BYTES
+      file.size > MAX_BACKUP_FILE_BYTES
     )
       throw new Error("LUNA_ERROR:ledger-file-invalid");
-    await api.importLedgerBackup(await file.text(), password);
+    const prefix = new TextDecoder().decode(
+      new Uint8Array(await file.slice(0, FULL_BACKUP_MAGIC.length).arrayBuffer()),
+    );
+    if (prefix === FULL_BACKUP_MAGIC) {
+      if (!completeBackup) throw new Error("LUNA_ERROR:backup-unsupported-container");
+      const { jobId } = await api.beginBackupImport!(file.size, password);
+      let finished = false;
+      let pending = new Uint8Array(0);
+      let receivedBytes = 0;
+      try {
+        const reader = file.stream().getReader();
+        const append = async (bytes: Uint8Array, sequence: number) => {
+          const nextReceivedBytes = receivedBytes + bytes.byteLength;
+          if (nextReceivedBytes > file.size || nextReceivedBytes > MAX_BACKUP_FILE_BYTES)
+            throw new Error("LUNA_ERROR:backup-too-large");
+          const receipt = await api.appendBackupChunk!(jobId, sequence, bytes);
+          if (!Number.isSafeInteger(receipt.receivedBytes) || receipt.receivedBytes !== nextReceivedBytes)
+            throw new Error("LUNA_ERROR:backup-invalid-container");
+          receivedBytes = nextReceivedBytes;
+        };
+        let sequence = 0;
+        try {
+          for (;;) {
+            const next = await reader.read();
+            if (next.done) break;
+            const chunk = new Uint8Array(next.value);
+            let offset = 0;
+            while (offset < chunk.byteLength) {
+              const remaining = chunk.byteLength - offset;
+              const capacity = MAX_ATTACHMENT_BRIDGE_CHUNK_BYTES - pending.byteLength;
+              const take = Math.min(remaining, capacity);
+              const joined = new Uint8Array(pending.byteLength + take);
+              joined.set(pending);
+              joined.set(chunk.subarray(offset, offset + take), pending.byteLength);
+              pending = joined;
+              offset += take;
+              if (pending.byteLength === MAX_ATTACHMENT_BRIDGE_CHUNK_BYTES) {
+                await append(pending, sequence);
+                sequence += 1;
+                pending = new Uint8Array(0);
+              }
+            }
+          }
+          if (pending.byteLength > 0) await append(pending, sequence);
+          if (receivedBytes !== file.size)
+            throw new Error("LUNA_ERROR:backup-invalid-container");
+          await api.finishBackupImport!(jobId);
+          finished = true;
+        } finally {
+          await reader.cancel().catch(() => undefined);
+          reader.releaseLock();
+        }
+      } finally {
+        if (!finished) await api.cancelBackupJob!(jobId).catch(() => undefined);
+      }
+    } else {
+      if (file.size > MAX_LEDGER_ENVELOPE_BYTES)
+        throw new Error("LUNA_ERROR:ledger-file-invalid");
+      await api.importLedgerBackup(await file.text(), password);
+    }
     form.reset();
     app.setDirty("tools", false);
   }
@@ -471,7 +653,7 @@ export function LedgerTools({
               name="file"
               label={m("importFile")}
               type="file"
-              accept=".json,application/json"
+              accept=".luna-backup,.json,application/octet-stream,application/json"
               required
               disabled={busy}
             />

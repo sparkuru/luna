@@ -1,11 +1,7 @@
 import { createApp } from "./app";
-import { createDatabase, environment } from "./config";
+import { createDatabase, createServerObjectStore, environment } from "./config";
 import { migrate } from "./db/migration";
-import {
-  FileServerObjectStore,
-  S3ServerObjectStore,
-  type ServerObjectStore,
-} from "./storage/object-store";
+import type { ServerObjectStore } from "./storage/object-store";
 
 async function main() {
   const config = environment();
@@ -13,17 +9,7 @@ async function main() {
   let objectStore: ServerObjectStore;
   try {
     await migrate(database);
-    objectStore = config.s3
-      ? new S3ServerObjectStore(config.s3.bucket, config.s3.prefix, {
-          endpoint: config.s3.endpoint,
-          region: config.s3.region,
-          forcePathStyle: config.s3.forcePathStyle,
-          credentials: {
-            accessKeyId: config.s3.accessKeyId,
-            secretAccessKey: config.s3.secretAccessKey,
-          },
-        })
-      : new FileServerObjectStore(`${config.dataDir}/objects`);
+    objectStore = createServerObjectStore(config);
     await waitForObjectStore(objectStore);
     const app = await createApp({
       database,

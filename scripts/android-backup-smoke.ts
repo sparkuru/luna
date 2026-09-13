@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { expect, type AndroidDevice, type Page } from '@playwright/test';
-import { decryptLedgerDocument } from '../src/shared/ledger-crypto';
+import { decodeFullBackup, FULL_BACKUP_MAGIC } from '../src/shared/full-backup';
+import { projectLedgerDocument } from '../src/shared/ledger-sync';
 
 /** Driverless SAF interaction, restricted by the caller to its disposable AVD. */
 export async function verifyAndroidBackup(device: AndroidDevice, page: Page): Promise<void> {
@@ -37,7 +38,10 @@ export async function verifyAndroidBackup(device: AndroidDevice, page: Page): Pr
   try {
     assert.equal(await page.evaluate(() => typeof window.lunaLedger.saveLedgerBackup), 'function');
     await page.locator('#open-secondary-menu').click();
-    await page.locator('#ledger-backup-details summary').click();
+    await page.locator('.settings-navigation').getByRole('button', { name: 'Encrypted backup', exact: true }).click();
+    const backupDetails = page.locator('#ledger-backup-details');
+    if (!(await backupDetails.evaluate((element) => (element as HTMLDetailsElement).open)))
+      await backupDetails.locator('summary').click();
     await openPicker();
     // First Back dismisses an optional keyboard; the next exits the picker.
     await device.shell('input keyevent KEYCODE_BACK');
@@ -49,16 +53,20 @@ export async function verifyAndroidBackup(device: AndroidDevice, page: Page): Pr
     await tap((node) => node.includes(`package="${picker}"`) && node.includes('content-desc="Show roots"'));
     await tap((node) => node.includes(`package="${picker}"`) && node.includes('text="Downloads"') && node.includes('resource-id="android:id/title"'));
     const title = await nodeWhere((node) => node.includes('class="android.widget.EditText"') && node.includes('text="luna-ledger-'));
-    const filename = /text="(luna-ledger-\d+\.encrypted\.json)"/.exec(title)?.[1];
+    const filename = /text="(luna-ledger-\d{4}-\d{2}-\d{2}\.luna-backup)"/.exec(title)?.[1];
     assert.ok(filename);
     savedPath = `/sdcard/Download/${filename}`;
     assert.equal((await device.shell(`test -e ${savedPath} && echo exists`)).toString().trim(), '');
     await tap((node) => node.includes(`package="${picker}"`) && node.includes('resource-id="android:id/button1"'));
     await expect(page.locator('#ledger-tools-alert')).toContainText('Encrypted backup saved.');
     await expect(page.locator('#ledger-export-password')).toHaveValue('');
-    const raw = (await device.shell(`cat ${savedPath}`)).toString('utf8');
-    assert.ok(!raw.includes(phrase) && !raw.includes('Android offline market'));
-    assert.deepEqual(await decryptLedgerDocument(raw, phrase), await page.evaluate(() => window.lunaLedger.getLedgerDocument()));
+    const raw = await device.shell(`cat ${savedPath}`);
+    assert.equal(raw.subarray(0, FULL_BACKUP_MAGIC.length).toString('ascii'), FULL_BACKUP_MAGIC);
+    assert.ok(!raw.toString('utf8').includes(phrase) && !raw.toString('utf8').includes('Android offline market'));
+    const restored = projectLedgerDocument((await decodeFullBackup(new Uint8Array(raw), phrase)).graph);
+    const visible = await page.evaluate(() => window.lunaLedger.getSnapshot('2026-09'));
+    assert.deepEqual(restored.workspace, visible.workspace);
+    assert.deepEqual(restored.transactions, visible.transactions);
   } finally {
     await device.shell(`rm -f ${dumpPath}`);
     if (savedPath !== undefined) await device.shell(`rm -f ${savedPath}`);

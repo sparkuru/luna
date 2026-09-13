@@ -12,6 +12,89 @@ export interface ProfileSummary {
   displayName: string;
   binding: ServerBinding | null;
 }
+export interface ServerCapabilityLimits {
+  ledgerBytes: number;
+  preferenceBytes: number;
+  attachmentBytes: number;
+  ledgerAttachmentBytes: number;
+  accountAttachmentBytes: number;
+  attachmentCount: number;
+}
+export interface ServerCapabilities {
+  ledgerEnvelopeVersions: number[];
+  ledgerPayloadVersions: number[];
+  attachmentProtocolVersion: number | null;
+  limits: ServerCapabilityLimits | null;
+  supportsLedgerV2: boolean;
+  supportsAttachments: boolean;
+}
+export function legacyServerCapabilities(): ServerCapabilities {
+  return {
+    ledgerEnvelopeVersions: [1],
+    ledgerPayloadVersions: [1],
+    attachmentProtocolVersion: null,
+    limits: null,
+    supportsLedgerV2: false,
+    supportsAttachments: false,
+  };
+}
+/** Decode optional meta capability fields without trusting an old server. */
+export function decodeServerCapabilities(value: unknown): ServerCapabilities {
+  const fallback = legacyServerCapabilities();
+  if (typeof value !== "object" || value === null || Array.isArray(value))
+    return fallback;
+  const record = value as Record<string, unknown>;
+  const decodeVersions = (candidate: unknown): number[] => {
+    if (!Array.isArray(candidate)) return [1];
+    const versions = candidate.filter(
+      (version): version is number =>
+        Number.isSafeInteger(version) && version >= 1 && version <= 2,
+    );
+    return versions.length > 0 ? [...new Set(versions)].sort() : [1];
+  };
+  const ledgerEnvelopeVersions = decodeVersions(record.ledgerEnvelopeVersions);
+  const ledgerPayloadVersions = decodeVersions(record.ledgerPayloadVersions);
+  const positiveLimit = (candidate: unknown): number | null => {
+    if (
+      typeof candidate !== "number" ||
+      !Number.isSafeInteger(candidate) ||
+      candidate <= 0
+    )
+      return null;
+    return candidate;
+  };
+  let limits: ServerCapabilityLimits | null = null;
+  if (
+    typeof record.limits === "object" &&
+    record.limits !== null &&
+    !Array.isArray(record.limits)
+  ) {
+    const raw = record.limits as Record<string, unknown>;
+    const values = {
+      ledgerBytes: positiveLimit(raw.ledgerBytes),
+      preferenceBytes: positiveLimit(raw.preferenceBytes),
+      attachmentBytes: positiveLimit(raw.attachmentBytes),
+      ledgerAttachmentBytes: positiveLimit(raw.ledgerAttachmentBytes),
+      accountAttachmentBytes: positiveLimit(raw.accountAttachmentBytes),
+      attachmentCount: positiveLimit(raw.attachmentCount),
+    };
+    if (Object.values(values).every((value): value is number => value !== null))
+      limits = values as ServerCapabilityLimits;
+  }
+  const attachmentProtocolVersion =
+    record.attachmentProtocolVersion === 1 ? 1 : null;
+  const supportsLedgerV2 =
+    ledgerEnvelopeVersions.includes(2) && ledgerPayloadVersions.includes(2);
+  return {
+    ledgerEnvelopeVersions,
+    ledgerPayloadVersions,
+    attachmentProtocolVersion,
+    limits,
+    supportsLedgerV2,
+    supportsAttachments:
+      supportsLedgerV2 && attachmentProtocolVersion === 1 && limits !== null,
+  };
+}
 export interface ServerStatus {
   generation: number;
   profile: ProfileSummary;
@@ -21,6 +104,7 @@ export interface ServerStatus {
     id: string;
     username: string;
   } | null;
+  serverCapabilities: ServerCapabilities | null;
   connected: boolean;
   /** Automatic while the app is active by default; manual disables background sync. */
   syncMode: LedgerSyncMode;

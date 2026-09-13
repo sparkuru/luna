@@ -38,6 +38,16 @@ async function files(
     Object.entries(result).sort(([a], [b]) => a.localeCompare(b)),
   );
 }
+function normalizeGeneratedText(value: string): string {
+  return value.replace(/[ \t]+(?=\r\n|\n|\r|$)/g, "");
+}
+async function normalizeGeneratedFiles(output: string): Promise<void> {
+  for (const [name, content] of Object.entries(await files(output))) {
+    const normalized = normalizeGeneratedText(content);
+    if (normalized !== content)
+      await writeFile(join(output, name), normalized);
+  }
+}
 /** Hey's bundled runtime uses explicit undefined for optional fields. Compile only
  * that upstream runtime to JS/declarations; SDK/types/Query and all application
  * sources retain the repository's exactOptionalPropertyTypes checking. */
@@ -105,6 +115,7 @@ async function main() {
       ],
     });
     await compileVendorRuntime(output);
+    await normalizeGeneratedFiles(output);
     if (check) {
       if (contract !== (await readFile("contracts/openapi.json", "utf8")))
         throw new Error("OpenAPI differs");

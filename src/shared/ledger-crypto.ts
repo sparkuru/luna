@@ -18,8 +18,8 @@ export class LedgerCryptoError extends Error {
 
 interface LedgerEnvelope {
   format: 'luna-ledger-envelope';
-  version: 1;
-  payloadSchemaVersion: 1;
+  version: 1 | 2;
+  payloadSchemaVersion: 1 | 2;
   kdf: { name: 'PBKDF2'; hash: 'SHA-256'; iterations: 600000; salt: string };
   cipher: { name: 'AES-GCM'; iv: string; tagLength: 128 };
   ciphertext: string;
@@ -33,7 +33,9 @@ export async function encryptLedgerDocument(document: LedgerDocument, password: 
   const passwordBytes = decodePassword(password);
   let plaintext: Uint8Array<ArrayBuffer> | undefined;
   try {
-    plaintext = encoder.encode(JSON.stringify(decodeLedgerDocument(document)));
+    const decodedDocument = decodeLedgerDocument(document);
+    const version = decodedDocument.schemaVersion;
+    plaintext = encoder.encode(JSON.stringify(decodedDocument));
     if (plaintext.byteLength > MAX_LEDGER_DOCUMENT_BYTES) throw new LedgerSyncError('ledger-too-large');
     const crypto = requireCrypto();
     let encrypted: ArrayBuffer;
@@ -42,7 +44,7 @@ export async function encryptLedgerDocument(document: LedgerDocument, password: 
       const salt = crypto.getRandomValues(new Uint8Array(16));
       const iv = crypto.getRandomValues(new Uint8Array(12));
       envelope = {
-        format: 'luna-ledger-envelope', version: 1, payloadSchemaVersion: 1,
+        format: 'luna-ledger-envelope', version, payloadSchemaVersion: version,
         kdf: { name: 'PBKDF2', hash: 'SHA-256', iterations: ITERATIONS, salt: encodeBase64(salt) },
         cipher: { name: 'AES-GCM', iv: encodeBase64(iv), tagLength: 128 },
         ciphertext: '',
@@ -88,7 +90,10 @@ export async function decryptLedgerDocument(raw: string, password: string): Prom
     } catch {
       throw new LedgerCryptoError('ledger-invalid-envelope');
     }
-    return decodeLedgerDocument(parsed);
+    const document = decodeLedgerDocument(parsed);
+    if (document.schemaVersion !== envelope.version)
+      throw new LedgerCryptoError('ledger-invalid-envelope');
+    return document;
   } finally {
     passwordBytes.fill(0);
     plaintext?.fill(0);
@@ -141,7 +146,14 @@ export function decodeLedgerEnvelope(raw: string): {
   let parsed: unknown;
   try { parsed = JSON.parse(raw); } catch { fail('ledger-invalid-envelope'); }
   const envelope = exactRecord(parsed, ['format', 'version', 'payloadSchemaVersion', 'kdf', 'cipher', 'ciphertext']);
-  if (envelope.format !== 'luna-ledger-envelope' || envelope.version !== 1 || envelope.payloadSchemaVersion !== 1) {
+  const version = envelope.version;
+  const payloadSchemaVersion = envelope.payloadSchemaVersion;
+  if (
+    envelope.format !== 'luna-ledger-envelope' ||
+    !isLedgerVersion(version) ||
+    !isLedgerVersion(payloadSchemaVersion) ||
+    payloadSchemaVersion !== version
+  ) {
     fail('ledger-unsupported-envelope');
   }
   const kdf = exactRecord(envelope.kdf, ['name', 'hash', 'iterations', 'salt']);
@@ -155,7 +167,7 @@ export function decodeLedgerEnvelope(raw: string): {
   const ciphertext = decodeBase64(envelope.ciphertext, TAG_BYTES, MAX_LEDGER_DOCUMENT_BYTES + TAG_BYTES);
   return {
     envelope: {
-      format: 'luna-ledger-envelope', version: 1, payloadSchemaVersion: 1,
+      format: 'luna-ledger-envelope', version, payloadSchemaVersion,
       kdf: { name: 'PBKDF2', hash: 'SHA-256', iterations: ITERATIONS, salt: kdf.salt as string },
       cipher: { name: 'AES-GCM', iv: cipher.iv as string, tagLength: 128 },
       ciphertext: envelope.ciphertext as string,
@@ -207,4 +219,8 @@ function decodeBase64(value: unknown, minimumBytes: number, maximumBytes: number
 
 function fail(code: LedgerCryptoErrorCode): never {
   throw new LedgerCryptoError(code);
+}
+
+function isLedgerVersion(value: unknown): value is 1 | 2 {
+  return value === 1 || value === 2;
 }

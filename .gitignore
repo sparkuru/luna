@@ -65,6 +65,9 @@ $RECYCLE.BIN/
 *.dmp
 core
 core.*
+# Hey API's generated core runtime is a checked-in build input, not a dump.
+!src/api-client/generated/core/
+!src/api-client/generated/core/**
 tmp/
 temp/
 .cache/

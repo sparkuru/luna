@@ -20,6 +20,40 @@ import {
   type WorkspaceSetupInput,
 } from "../shared/domain";
 import type { LunaLedgerApi } from "../shared/api";
+import type {
+  AttachmentBytes,
+  AttachmentUsage,
+  StagedAttachment,
+} from "../shared/api";
+import {
+  AttachmentContractError,
+  MAX_ATTACHMENTS_PER_TRANSACTION,
+  MAX_LEDGER_ATTACHMENT_BYTES,
+  MAX_LEDGER_ATTACHMENT_COUNT,
+  createEncryptedAttachment,
+  decryptAttachmentBytes,
+  toAttachmentMetadata,
+  validateAttachmentInventoryQuota,
+  validateAttachmentDescriptor,
+  type AttachmentMetadata,
+  type AttachmentRef,
+  type StoredAttachmentDescriptor,
+} from "../shared/attachment-contract";
+import {
+  FullBackupError,
+  type FullBackupRestoreSink,
+  type FullBackupArchive,
+} from "../shared/full-backup";
+import { FullBackupSessionManager } from "../shared/full-backup-session";
+import { secureRandomId } from "../shared/secure-random";
+import {
+  isStoredTransaction,
+  storedTransactionFromTransaction,
+  storedTransactionToTransaction,
+  type StoredTransaction,
+} from "../shared/ledger-record";
+import type { PublicLedgerConflict } from "../shared/ledger-public";
+import { projectLedgerConflicts } from "../shared/ledger-public";
 import { LedgerSyncSession } from "../sync/ledger-service";
 import {
   ConfigSyncService,
@@ -31,16 +65,17 @@ import {
   encryptLedgerDocument,
 } from "../shared/ledger-crypto";
 import type { LedgerSessionStatus } from "../shared/ledger-session";
+import type { MigrationLease } from "../shared/ports";
 import {
   appendLedgerRevision,
   assertBudgetHeads,
+  attachmentInventory,
   budgetHeadIds,
   decodeLedgerDocument,
   LedgerSyncError,
   mergeLedgerDocuments,
   projectLedgerDocument,
   seedLedgerDocument,
-  type LedgerConflict,
   type LedgerDocument,
 } from "../shared/ledger-sync";
 import {
@@ -64,12 +99,24 @@ import {
   type SettingsUpdateInput,
 } from "../shared/settings";
 
-const WEB_STATE_SCHEMA_VERSION = 2 as const;
+const WEB_STATE_SCHEMA_VERSION = 4 as const;
+
+interface WebAttachmentRecord {
+  attachmentId: string;
+  draftToken: string | null;
+  draftSessionId: string | null;
+  descriptor: StoredAttachmentDescriptor;
+  binaryKey: string;
+  state: "staged" | "committed";
+  createdAt: string;
+}
 
 interface WebLedgerState {
   schemaVersion: typeof WEB_STATE_SCHEMA_VERSION;
   settings: AppSettingsFileV1;
   ledger: LedgerDocument | null;
+  attachments: WebAttachmentRecord[];
+  remotePayloadVersions: Record<string, 1 | 2>;
 }
 
 /**
@@ -79,7 +126,7 @@ interface WebLedgerState {
 export function createWebLedgerApi(
   storage: Storage | null = safeLocalStorage(),
   database?: IDBFactory | null,
-): LunaLedgerApi {
+): WebLedgerApi {
   const store =
     database === undefined
       ? new SqliteWasmStateStore("luna-ledger-legacy-local")
@@ -91,6 +138,7 @@ export function createWebLedgerApi(
 
 export class WebLedgerApi implements LunaLedgerApi {
   private readonly ledgerSession = new LedgerSyncSession(this);
+  private readonly fullBackupSessions: FullBackupSessionManager;
   readonly configSession: ConfigSyncService;
   constructor(private readonly store: StateStore) {
     this.configSession = new ConfigSyncService(
@@ -106,6 +154,13 @@ export class WebLedgerApi implements LunaLedgerApi {
       createS3ConfigObjectStore,
       { now: () => new Date().toISOString() },
     );
+    this.fullBackupSessions = new FullBackupSessionManager({
+      getLedgerDocument: () => this.getLedgerDocument(),
+      readAttachmentCiphertext: (attachmentId) =>
+        this.readAttachmentCiphertext(attachmentId),
+      beginFullBackupRestore: (graph) => this.beginFullBackupRestore(graph),
+      restoreFullBackup: (archive) => this.restoreFullBackupArchive(archive),
+    });
   }
 
   async getLedgerSyncStatus(): Promise<LedgerSessionStatus> {
@@ -130,6 +185,303 @@ export class WebLedgerApi implements LunaLedgerApi {
   async importLedgerBackup(raw: string, password: string): Promise<void> {
     await this.mergeLedgerDocument(await decryptLedgerDocument(raw, password));
   }
+  beginBackupExport = (password: string) =>
+    this.fullBackupSessions.beginBackupExport(password);
+  readBackupChunk = (jobId: string, sequence: number) =>
+    this.fullBackupSessions.readBackupChunk(jobId, sequence);
+  finishBackupExport = (jobId: string) => {
+    this.fullBackupSessions.finishBackupExport(jobId);
+    return Promise.resolve();
+  };
+  beginBackupImport = (totalBytes: number | null, password: string) =>
+    this.fullBackupSessions.beginBackupImport(totalBytes, password);
+  appendBackupChunk = (jobId: string, sequence: number, bytes: Uint8Array) =>
+    this.fullBackupSessions.appendBackupChunk(jobId, sequence, bytes);
+  finishBackupImport = (jobId: string) =>
+    this.fullBackupSessions.finishBackupImport(jobId);
+  cancelBackupJob = (jobId: string) => {
+    return this.fullBackupSessions.cancelBackupJob(jobId);
+  };
+
+  private async beginFullBackupRestore(
+    _graph: import("../shared/ledger-sync").LedgerDocumentV2,
+  ): Promise<FullBackupRestoreSink> {
+    const before = decodeStoredState(await this.store.read());
+    const existingIds = new Set(
+      before.attachments.map((record) => record.attachmentId),
+    );
+    const staged = new Map<
+      string,
+      { descriptor: StoredAttachmentDescriptor; binaryKey: string }
+    >();
+    const sessionId = randomId("backup");
+    return {
+      writeAttachment: async (item) => {
+        validateAttachmentDescriptor(item.descriptor);
+        if (
+          staged.has(item.descriptor.id) ||
+          item.ciphertext.byteLength !== item.descriptor.cipherByteLength
+        )
+          throw new FullBackupError("backup-attachment-mismatch");
+        const binaryKey = attachmentBinaryKey(
+          item.descriptor.workspaceId,
+          item.descriptor.id,
+        );
+        await this.store.writeBinary(binaryKey, item.ciphertext);
+        staged.set(item.descriptor.id, {
+          descriptor: { ...item.descriptor },
+          binaryKey,
+        });
+      },
+      commit: (graph) =>
+        this.commitStagedFullBackup(sessionId, graph, staged),
+      abort: async () => {
+        const current = decodeStoredState(await this.store.read());
+        for (const item of staged.values()) {
+          if (
+            existingIds.has(item.descriptor.id) ||
+            current.attachments.some(
+              (record) => record.attachmentId === item.descriptor.id,
+            )
+          )
+            continue;
+          await this.store.deleteBinary(item.binaryKey).catch(() => undefined);
+        }
+        staged.clear();
+      },
+    };
+  }
+
+  async stageTransactionImage(
+    draftSessionId: string,
+    bytes: Uint8Array,
+    mime: string,
+    width: number,
+    height: number,
+  ): Promise<StagedAttachment> {
+    const before = decodeStoredState(await this.store.read());
+    const workspace = this.requireLedger(before).workspace;
+    validateDraftSessionId(draftSessionId);
+    const encrypted = await createEncryptedAttachment(
+      new Uint8Array(bytes),
+      workspace.id,
+      mime,
+      width,
+      height,
+    );
+    const draftToken = randomId("draft");
+    const binaryKey = attachmentBinaryKey(workspace.id, encrypted.descriptor.id);
+    await this.store.writeBinary(binaryKey, encrypted.ciphertext);
+    try {
+      await this.mutate((state) => {
+        const currentWorkspace = this.requireLedger(state).workspace;
+        if (currentWorkspace.id !== workspace.id)
+          throw new Error("LUNA_ERROR:attachment-invalid-reference");
+        assertAttachmentQuota(state.attachments, encrypted.ciphertext.byteLength, 1);
+        if (state.attachments.some((item) => item.attachmentId === encrypted.descriptor.id))
+          throw new Error("LUNA_ERROR:attachment-invalid-reference");
+        state.attachments.push({
+          attachmentId: encrypted.descriptor.id,
+          draftToken,
+          draftSessionId,
+          descriptor: { ...encrypted.descriptor },
+          binaryKey,
+          state: "staged",
+          createdAt: new Date().toISOString(),
+        });
+        return {
+          draftToken,
+          metadata: toAttachmentMetadata(encrypted.descriptor),
+        };
+      });
+    } catch (error) {
+      await this.store.deleteBinary(binaryKey).catch(() => undefined);
+      throw error;
+    }
+    return {
+      draftToken,
+      metadata: toAttachmentMetadata(encrypted.descriptor),
+    };
+  }
+
+  async readDraftImage(draftToken: string): Promise<AttachmentBytes> {
+    const state = decodeStoredState(await this.store.read());
+    const record = state.attachments.find(
+      (item) => item.state === "staged" && item.draftToken === draftToken,
+    );
+    if (record === undefined) throw new Error("LUNA_ERROR:attachment-not-found");
+    return this.readAttachmentRecord(record);
+  }
+
+  async discardDraftImage(draftToken: string): Promise<void> {
+    const removed = await this.mutate((state) => {
+      const index = state.attachments.findIndex(
+        (item) => item.state === "staged" && item.draftToken === draftToken,
+      );
+      if (index < 0) return null;
+      const [record] = state.attachments.splice(index, 1);
+      return record ?? null;
+    });
+    if (removed !== null) await this.store.deleteBinary(removed.binaryKey);
+  }
+
+  async readTransactionImage(
+    transactionId: string,
+    attachmentId: string,
+    conflictHeadId?: string,
+  ): Promise<AttachmentBytes> {
+    const state = decodeStoredState(await this.store.read());
+    const record = readStoredTransactionFromLedger(
+      this.requireLedger(state),
+      transactionId,
+      conflictHeadId,
+    );
+    const descriptor = record.attachments.find((item) => item.id === attachmentId);
+    if (descriptor === undefined)
+      throw new Error("LUNA_ERROR:attachment-not-found");
+    const stored = state.attachments.find(
+      (item) => item.state === "committed" && item.attachmentId === descriptor.id,
+    );
+    if (stored === undefined || JSON.stringify(stored.descriptor) !== JSON.stringify(descriptor))
+      throw new Error("LUNA_ERROR:attachment-unavailable");
+    return this.readAttachmentRecord(stored);
+  }
+
+  async readAttachmentCiphertext(
+    attachmentId: string,
+  ): Promise<{ descriptor: StoredAttachmentDescriptor; ciphertext: Uint8Array } | null> {
+    const state = decodeStoredState(await this.store.read());
+    const record = state.attachments.find(
+      (item) => item.state === "committed" && item.attachmentId === attachmentId,
+    );
+    if (record === undefined) return null;
+    const ciphertext = await this.store.readBinary(record.binaryKey);
+    if (ciphertext === null) throw new Error("LUNA_ERROR:attachment-unavailable");
+    await decryptAttachmentBytes(ciphertext, record.descriptor);
+    return { descriptor: { ...record.descriptor }, ciphertext };
+  }
+
+  async saveDownloadedAttachment(
+    descriptor: StoredAttachmentDescriptor,
+    ciphertext: Uint8Array,
+  ): Promise<void> {
+    validateAttachmentDescriptor(descriptor);
+    const state = decodeStoredState(await this.store.read());
+    const workspace = this.requireLedger(state).workspace;
+    if (descriptor.workspaceId !== workspace.id)
+      throw new Error("LUNA_ERROR:attachment-invalid-reference");
+    const verified = new Uint8Array(ciphertext);
+    await decryptAttachmentBytes(verified, descriptor);
+    const binaryKey = attachmentBinaryKey(workspace.id, descriptor.id);
+    const existing = state.attachments.find(
+      (item) => item.attachmentId === descriptor.id,
+    );
+    if (existing !== undefined) {
+      if (JSON.stringify(existing.descriptor) !== JSON.stringify(descriptor))
+        throw new Error("LUNA_ERROR:attachment-digest-mismatch");
+      if (existing.state === "committed") return;
+    }
+    await this.store.writeBinary(binaryKey, verified);
+    try {
+      await this.mutate((next) => {
+        const current = this.requireLedger(next).workspace;
+        if (current.id !== workspace.id)
+          throw new Error("LUNA_ERROR:attachment-invalid-reference");
+        const present = next.attachments.find(
+          (item) => item.attachmentId === descriptor.id,
+        );
+        if (present !== undefined) {
+          if (JSON.stringify(present.descriptor) !== JSON.stringify(descriptor))
+            throw new Error("LUNA_ERROR:attachment-digest-mismatch");
+          present.state = "committed";
+          present.draftToken = null;
+          present.draftSessionId = null;
+          return undefined;
+        }
+        assertAttachmentQuota(next.attachments, verified.byteLength, 1);
+        next.attachments.push({
+          attachmentId: descriptor.id,
+          draftToken: null,
+          draftSessionId: null,
+          descriptor: { ...descriptor },
+          binaryKey,
+          state: "committed",
+          createdAt: new Date().toISOString(),
+        });
+        return undefined;
+      });
+    } catch (error) {
+      const after = decodeStoredState(await this.store.read()).attachments.some(
+        (item) => item.attachmentId === descriptor.id,
+      );
+      if (!after) await this.store.deleteBinary(binaryKey).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  async getAttachmentUsage(): Promise<AttachmentUsage> {
+    const state = decodeStoredState(await this.store.read());
+    const usedBytes = state.attachments
+      .filter((item) => item.state === "committed")
+      .reduce((total, item) => total + item.descriptor.cipherByteLength, 0);
+    const reservedBytes = state.attachments
+      .filter((item) => item.state === "staged")
+      .reduce((total, item) => total + item.descriptor.cipherByteLength, 0);
+    return {
+      usedBytes,
+      reservedBytes,
+      maxBytes: MAX_LEDGER_ATTACHMENT_BYTES,
+      count: state.attachments.filter((item) => item.state === "committed").length,
+      maxCount: MAX_LEDGER_ATTACHMENT_COUNT,
+      pendingCount: state.attachments.filter((item) => item.state === "staged").length,
+    };
+  }
+
+  async retryAttachmentDownload(
+    transactionId: string,
+    attachmentId: string,
+    conflictHeadId?: string,
+  ): Promise<AttachmentMetadata> {
+    await this.readTransactionImage(transactionId, attachmentId, conflictHeadId);
+    const state = decodeStoredState(await this.store.read());
+    const transaction = readStoredTransactionFromLedger(
+      this.requireLedger(state),
+      transactionId,
+      conflictHeadId,
+    );
+    const descriptor = transaction.attachments.find((item) => item.id === attachmentId);
+    if (descriptor === undefined) throw new Error("LUNA_ERROR:attachment-not-found");
+    return toAttachmentMetadata(descriptor);
+  }
+
+  private async readAttachmentRecord(
+    record: WebAttachmentRecord,
+  ): Promise<AttachmentBytes> {
+    const bytes = await this.store.readBinary(record.binaryKey);
+    if (bytes === null) throw new Error("LUNA_ERROR:attachment-unavailable");
+    const plain = await decryptAttachmentBytes(bytes, record.descriptor);
+    return {
+      bytes: plain,
+      mime: record.descriptor.mime,
+      width: record.descriptor.width,
+      height: record.descriptor.height,
+    };
+  }
+
+  private async ensureDraftImages(
+    refs: readonly AttachmentRef[] | undefined,
+  ): Promise<void> {
+    if (refs === undefined) return;
+    const state = decodeStoredState(await this.store.read());
+    for (const ref of refs) {
+      if (ref.draftToken === undefined) continue;
+      const record = state.attachments.find(
+        (item) => item.state === "staged" && item.draftToken === ref.draftToken,
+      );
+      if (record === undefined) throw new Error("LUNA_ERROR:attachment-not-found");
+      await this.readAttachmentRecord(record);
+    }
+  }
 
   async getSnapshot(month: string): Promise<AppSnapshot> {
     const selectedMonth = decodeMonth(month);
@@ -142,6 +494,9 @@ export class WebLedgerApi implements LunaLedgerApi {
       conflictCount: projection?.conflicts.length ?? 0,
       budgetHeadIds:
         state.ledger === null ? [] : budgetHeadIds(state.ledger, selectedMonth),
+      // Keep tombstones in the public snapshot for migration/conflict
+      // inspection. Financial summaries and the renderer query layer exclude
+      // deleted records from visible totals and results.
       transactions: projection?.transactions ?? [],
       summary:
         projection === null
@@ -184,6 +539,7 @@ export class WebLedgerApi implements LunaLedgerApi {
 
   async createTransaction(input: TransactionDraft): Promise<Transaction> {
     const decoded = decodeTransactionDraft(input);
+    await this.ensureDraftImages(decoded.attachments);
     return this.mutate((state) => {
       const ledger = this.requireLedger(state);
       const transaction = createTransaction(
@@ -192,17 +548,24 @@ export class WebLedgerApi implements LunaLedgerApi {
         ledger.workspace.precision,
         new Date().toISOString(),
       );
+      const resolved = resolveWebAttachmentRefs(
+        state,
+        decoded.attachments,
+        ledger.workspace.id,
+      );
+      const value = graphTransactionValue(ledger, transaction, resolved.descriptors);
       state.ledger = appendLedgerRevision(
         ledger,
         {
           id: randomId("revision"),
           kind: "transaction",
           entityId: transaction.id,
-          value: transaction,
+          value,
         },
         [],
       );
-      return transaction;
+      promoteWebAttachments(state, resolved.tokens, value);
+      return publicTransactionValue(value);
     });
   }
 
@@ -213,6 +576,7 @@ export class WebLedgerApi implements LunaLedgerApi {
   ): Promise<Transaction> {
     const transactionId = decodeId(id, "transaction id");
     const decoded = decodeTransactionDraft(input);
+    await this.ensureDraftImages(decoded.attachments);
     return this.mutate((state) => {
       const ledger = this.requireLedger(state);
       const current = this.requireTransaction(ledger, transactionId);
@@ -223,13 +587,25 @@ export class WebLedgerApi implements LunaLedgerApi {
         ledger.workspace.precision,
         new Date().toISOString(),
       );
+      const currentStored = readStoredTransactionFromLedger(ledger, transactionId);
+      const resolved =
+        decoded.attachments === undefined
+          ? { descriptors: [...currentStored.attachments], tokens: [] as string[] }
+          : resolveWebAttachmentRefs(
+              state,
+              decoded.attachments,
+              ledger.workspace.id,
+              currentStored.attachments,
+            );
+      const value = graphTransactionValue(ledger, transaction, resolved.descriptors);
       state.ledger = appendLedgerRevision(ledger, {
         id: randomId("revision"),
         kind: "transaction",
         entityId: transaction.id,
-        value: transaction,
+        value,
       });
-      return transaction;
+      promoteWebAttachments(state, resolved.tokens, value);
+      return publicTransactionValue(value);
     });
   }
 
@@ -246,13 +622,15 @@ export class WebLedgerApi implements LunaLedgerApi {
         current,
         new Date().toISOString(),
       );
+      const currentStored = readStoredTransactionFromLedger(ledger, transactionId);
+      const value = graphTransactionValue(ledger, transaction, currentStored.attachments);
       state.ledger = appendLedgerRevision(ledger, {
         id: randomId("revision"),
         kind: "transaction",
         entityId: transaction.id,
-        value: transaction,
+        value,
       });
-      return transaction;
+      return publicTransactionValue(value);
     });
   }
 
@@ -282,37 +660,310 @@ export class WebLedgerApi implements LunaLedgerApi {
     return decodeStoredState(await this.store.read()).ledger;
   }
 
+  async getMigrationLease(): Promise<MigrationLease | null> {
+    return this.store.getMigrationLease();
+  }
+
+  async acquireMigrationLease(
+    lease: MigrationLease,
+  ): Promise<void> {
+    await this.store.acquireMigrationLease(lease);
+  }
+
+  async renewMigrationLease(
+    leaseId: string,
+    expiresAt: string,
+  ): Promise<void> {
+    await this.store.renewMigrationLease(leaseId, expiresAt);
+  }
+
+  async releaseMigrationLease(leaseId: string): Promise<void> {
+    await this.store.releaseMigrationLease(leaseId);
+  }
+
+  async getRemotePayloadVersion(targetId: string): Promise<1 | 2 | null> {
+    validateRemoteTargetId(targetId);
+    const state = decodeStoredState(await this.store.read());
+    return state.remotePayloadVersions[targetId] ?? null;
+  }
+
+  async setRemotePayloadVersion(
+    targetId: string,
+    version: 1 | 2,
+  ): Promise<void> {
+    validateRemoteTargetId(targetId);
+    await this.mutate((state) => {
+      const current = state.remotePayloadVersions[targetId];
+      if (current === 2 || current === version) return;
+      state.remotePayloadVersions[targetId] = version;
+    });
+  }
+
   async mergeLedgerDocument(
     input: LedgerDocument,
     signal?: AbortSignal,
   ): Promise<LedgerDocument> {
     const remote = decodeLedgerDocument(input);
     return this.mutate((state) => {
-      state.ledger =
+      const merged =
         state.ledger === null
           ? remote
           : mergeLedgerDocuments(state.ledger, remote);
+      validateAttachmentInventoryQuota(attachmentInventory(merged));
+      state.ledger = merged;
       return state.ledger;
     }, signal);
   }
 
-  async getLedgerConflicts(): Promise<LedgerConflict[]> {
+  private async restoreFullBackupArchive(
+    archive: FullBackupArchive,
+  ): Promise<void> {
+    const incoming = decodeLedgerDocument(archive.graph);
+    if (incoming.schemaVersion !== 2)
+      throw new FullBackupError("backup-invalid-container");
+    const inventory = attachmentInventory(incoming);
+    if (inventory.size !== archive.attachments.length)
+      throw new FullBackupError("backup-attachment-mismatch");
+    const verified = archive.attachments.map((item) => ({
+      descriptor: { ...item.descriptor },
+      ciphertext: new Uint8Array(item.ciphertext),
+    }));
+    const provided = new Set<string>();
+    for (const item of verified) {
+      const expected = inventory.get(item.descriptor.id);
+      if (
+        expected === undefined ||
+        JSON.stringify(expected) !== JSON.stringify(item.descriptor) ||
+        provided.has(item.descriptor.id) ||
+        item.ciphertext.byteLength !== item.descriptor.cipherByteLength
+      )
+        throw new FullBackupError("backup-attachment-mismatch");
+      provided.add(item.descriptor.id);
+      try {
+        await decryptAttachmentBytes(item.ciphertext, item.descriptor);
+      } catch (error) {
+        if (error instanceof AttachmentContractError)
+          throw new FullBackupError("backup-attachment-mismatch");
+        throw error;
+      }
+    }
+    if (provided.size !== inventory.size)
+      throw new FullBackupError("backup-attachment-missing");
+
+    const before = decodeStoredState(await this.store.read());
+    if (
+      before.ledger !== null &&
+      before.ledger.workspace.id !== incoming.workspace.id
+    )
+      throw new FullBackupError("backup-workspace-mismatch");
+    const newBinaryKeys: string[] = [];
+    try {
+      for (const item of verified) {
+        const existing = before.attachments.find(
+          (record) => record.attachmentId === item.descriptor.id,
+        );
+        if (
+          existing !== undefined &&
+          JSON.stringify(existing.descriptor) !== JSON.stringify(item.descriptor)
+        )
+          throw new FullBackupError("backup-attachment-mismatch");
+        const binaryKey = attachmentBinaryKey(
+          item.descriptor.workspaceId,
+          item.descriptor.id,
+        );
+        if (existing === undefined) newBinaryKeys.push(binaryKey);
+        // Rewriting an existing key repairs a damaged local blob while the
+        // graph is still unpublished; the JSON state remains the commit point.
+        await this.store.writeBinary(binaryKey, item.ciphertext);
+      }
+      await this.mutate((state) => {
+        const current = state.ledger;
+        if (
+          current !== null &&
+          current.workspace.id !== incoming.workspace.id
+        )
+          throw new FullBackupError("backup-workspace-mismatch");
+        const merged =
+          current === null ? incoming : mergeLedgerDocuments(current, incoming);
+        try {
+          validateAttachmentInventoryQuota(attachmentInventory(merged));
+        } catch (error) {
+          if (error instanceof AttachmentContractError)
+            throw new FullBackupError("backup-too-large");
+          throw error;
+        }
+        for (const item of verified) {
+          const present = state.attachments.find(
+            (record) => record.attachmentId === item.descriptor.id,
+          );
+          if (present !== undefined) {
+            if (
+              JSON.stringify(present.descriptor) !==
+              JSON.stringify(item.descriptor)
+            )
+              throw new FullBackupError("backup-attachment-mismatch");
+            present.state = "committed";
+            present.draftToken = null;
+            present.draftSessionId = null;
+            continue;
+          }
+          assertAttachmentQuota(
+            state.attachments,
+            item.ciphertext.byteLength,
+            1,
+          );
+          state.attachments.push({
+            attachmentId: item.descriptor.id,
+            draftToken: null,
+            draftSessionId: null,
+            descriptor: { ...item.descriptor },
+            binaryKey: attachmentBinaryKey(
+              item.descriptor.workspaceId,
+              item.descriptor.id,
+            ),
+            state: "committed",
+            createdAt: new Date().toISOString(),
+          });
+        }
+        state.ledger = merged;
+      });
+    } catch (error) {
+      const after = decodeStoredState(await this.store.read()).attachments;
+      for (const key of newBinaryKeys) {
+        if (!after.some((record) => record.binaryKey === key))
+          await this.store.deleteBinary(key).catch(() => undefined);
+      }
+      throw error;
+    }
+  }
+
+  private async commitStagedFullBackup(
+    _sessionId: string,
+    incoming: import("../shared/ledger-sync").LedgerDocumentV2,
+    staged: ReadonlyMap<
+      string,
+      { descriptor: StoredAttachmentDescriptor; binaryKey: string }
+    >,
+  ): Promise<void> {
+    const inventory = attachmentInventory(incoming);
+    if (inventory.size !== staged.size)
+      throw new FullBackupError("backup-attachment-mismatch");
+    const before = decodeStoredState(await this.store.read());
+    if (
+      before.ledger !== null &&
+      before.ledger.workspace.id !== incoming.workspace.id
+    )
+      throw new FullBackupError("backup-workspace-mismatch");
+
+    let addedBytes = 0;
+    let addedCount = 0;
+    for (const item of staged.values()) {
+      const expected = inventory.get(item.descriptor.id);
+      if (
+        expected === undefined ||
+        JSON.stringify(expected) !== JSON.stringify(item.descriptor)
+      )
+        throw new FullBackupError("backup-attachment-mismatch");
+      const ciphertext = await this.store.readBinary(item.binaryKey);
+      if (
+        ciphertext === null ||
+        ciphertext.byteLength !== item.descriptor.cipherByteLength
+      )
+        throw new FullBackupError("backup-attachment-mismatch");
+      let plaintext: Uint8Array | undefined;
+      try {
+        plaintext = await decryptAttachmentBytes(ciphertext, item.descriptor);
+      } catch (error) {
+        if (error instanceof AttachmentContractError)
+          throw new FullBackupError("backup-attachment-mismatch");
+        throw error;
+      } finally {
+        plaintext?.fill(0);
+        ciphertext.fill(0);
+      }
+      const existing = before.attachments.find(
+        (record) => record.attachmentId === item.descriptor.id,
+      );
+      if (existing === undefined) {
+        addedBytes += item.descriptor.cipherByteLength;
+        addedCount += 1;
+      } else if (
+        JSON.stringify(existing.descriptor) !== JSON.stringify(item.descriptor)
+      ) {
+        throw new FullBackupError("backup-attachment-mismatch");
+      }
+    }
+    try {
+      assertAttachmentQuota(before.attachments, addedBytes, addedCount);
+    } catch (error) {
+      if (error instanceof AttachmentContractError)
+        throw new FullBackupError("backup-too-large");
+      throw error;
+    }
+
+    await this.mutate((state) => {
+      const current = state.ledger;
+      if (
+        current !== null &&
+        current.workspace.id !== incoming.workspace.id
+      )
+        throw new FullBackupError("backup-workspace-mismatch");
+      const merged =
+        current === null ? incoming : mergeLedgerDocuments(current, incoming);
+      try {
+        validateAttachmentInventoryQuota(attachmentInventory(merged));
+      } catch (error) {
+        if (error instanceof AttachmentContractError)
+          throw new FullBackupError("backup-too-large");
+        throw error;
+      }
+      for (const item of staged.values()) {
+        const present = state.attachments.find(
+          (record) => record.attachmentId === item.descriptor.id,
+        );
+        if (present !== undefined) {
+          if (
+            JSON.stringify(present.descriptor) !==
+            JSON.stringify(item.descriptor)
+          )
+            throw new FullBackupError("backup-attachment-mismatch");
+          present.state = "committed";
+          present.draftToken = null;
+          present.draftSessionId = null;
+          continue;
+        }
+        state.attachments.push({
+          attachmentId: item.descriptor.id,
+          draftToken: null,
+          draftSessionId: null,
+          descriptor: { ...item.descriptor },
+          binaryKey: item.binaryKey,
+          state: "committed",
+          createdAt: new Date().toISOString(),
+        });
+      }
+      state.ledger = merged;
+    });
+  }
+
+  async getLedgerConflicts(): Promise<PublicLedgerConflict[]> {
     const ledger = await this.getLedgerDocument();
-    return ledger === null ? [] : projectLedgerDocument(ledger).conflicts;
+    return ledger === null
+      ? []
+      : projectLedgerConflicts(projectLedgerDocument(ledger).conflicts);
   }
 
   async resolveLedgerConflict(
     input: LedgerConflictChoice,
-  ): Promise<LedgerDocument> {
+  ): Promise<void> {
     const choice = decodeLedgerConflictChoice(input);
-    return this.mutate((state) => {
+    await this.mutate((state) => {
       state.ledger = resolveLedgerChoice(
         this.requireLedger(state),
         choice,
         randomId("revision"),
         new Date().toISOString(),
       );
-      return state.ledger;
     });
   }
 
@@ -409,6 +1060,8 @@ function createInitialState(): WebLedgerState {
       typeof navigator === "undefined" ? "en" : navigator.language,
     ),
     ledger: null,
+    attachments: [],
+    remotePayloadVersions: {},
   };
 }
 
@@ -417,11 +1070,51 @@ function decodeWebState(value: unknown): WebLedgerState {
     throw new Error("Invalid browser state.");
   }
   if (value.schemaVersion === WEB_STATE_SCHEMA_VERSION) {
+    assertExactKeys(value, [
+      "schemaVersion",
+      "settings",
+      "ledger",
+      "attachments",
+      "remotePayloadVersions",
+    ]);
+    if (
+      !Array.isArray(value.attachments) ||
+      value.attachments.length > MAX_LEDGER_ATTACHMENT_COUNT
+    )
+      throw new Error("Invalid browser attachments.");
+    return {
+      schemaVersion: WEB_STATE_SCHEMA_VERSION,
+      settings: decodeSettingsFile(value.settings),
+      ledger: value.ledger === null ? null : decodeLedgerDocument(value.ledger),
+      attachments: value.attachments.map(decodeWebAttachment),
+      remotePayloadVersions: decodeRemotePayloadVersions(
+        value.remotePayloadVersions,
+      ),
+    };
+  }
+  if (value.schemaVersion === 3) {
+    assertExactKeys(value, ["schemaVersion", "settings", "ledger", "attachments"]);
+    if (
+      !Array.isArray(value.attachments) ||
+      value.attachments.length > MAX_LEDGER_ATTACHMENT_COUNT
+    )
+      throw new Error("Invalid browser attachments.");
+    return {
+      schemaVersion: WEB_STATE_SCHEMA_VERSION,
+      settings: decodeSettingsFile(value.settings),
+      ledger: value.ledger === null ? null : decodeLedgerDocument(value.ledger),
+      attachments: value.attachments.map(decodeWebAttachment),
+      remotePayloadVersions: {},
+    };
+  }
+  if (value.schemaVersion === 2) {
     assertExactKeys(value, ["schemaVersion", "settings", "ledger"]);
     return {
       schemaVersion: WEB_STATE_SCHEMA_VERSION,
       settings: decodeSettingsFile(value.settings),
       ledger: value.ledger === null ? null : decodeLedgerDocument(value.ledger),
+      attachments: [],
+      remotePayloadVersions: {},
     };
   }
   if (value.schemaVersion !== 1) throw new Error("Invalid browser state.");
@@ -457,6 +1150,8 @@ function decodeWebState(value: unknown): WebLedgerState {
   return {
     schemaVersion: WEB_STATE_SCHEMA_VERSION,
     settings,
+    attachments: [],
+    remotePayloadVersions: {},
     ledger:
       workspace === null
         ? null
@@ -470,27 +1165,216 @@ function normalizeBudget(value: string): string {
   return normalized;
 }
 
-function randomId(prefix: string): string {
-  const cryptoApi = globalThis.crypto;
-  const uuid =
-    typeof cryptoApi?.randomUUID === "function"
-      ? cryptoApi.randomUUID()
-      : randomUuidFromValues(cryptoApi);
-  return `${prefix}-${uuid}`;
+function decodeWebAttachment(value: unknown): WebAttachmentRecord {
+  if (!isRecord(value)) throw new Error("Invalid browser attachment.");
+  assertExactKeys(value, [
+    "attachmentId",
+    "draftToken",
+    "draftSessionId",
+    "descriptor",
+    "binaryKey",
+    "state",
+    "createdAt",
+  ]);
+  validateAttachmentDescriptor(value.descriptor);
+  const descriptor = { ...value.descriptor };
+  if (value.attachmentId !== descriptor.id) throw new Error("Invalid browser attachment.");
+  if (
+    typeof value.attachmentId !== "string" ||
+    typeof value.binaryKey !== "string" ||
+    value.binaryKey !== attachmentBinaryKey(descriptor.workspaceId, descriptor.id) ||
+    typeof value.createdAt !== "string" ||
+    Number.isNaN(Date.parse(value.createdAt))
+  )
+    throw new Error("Invalid browser attachment.");
+  if (value.state !== "staged" && value.state !== "committed")
+    throw new Error("Invalid browser attachment.");
+  if (value.state === "staged") {
+    if (
+      typeof value.draftToken !== "string" ||
+      value.draftToken.length === 0 ||
+      value.draftToken.length > 256 ||
+      typeof value.draftSessionId !== "string" ||
+      value.draftSessionId.length === 0 ||
+      value.draftSessionId.length > 256
+    )
+      throw new Error("Invalid browser attachment.");
+  } else if (value.draftToken !== null || value.draftSessionId !== null) {
+    throw new Error("Invalid browser attachment.");
+  }
+  return {
+    attachmentId: descriptor.id,
+    draftToken: value.draftToken as string | null,
+    draftSessionId: value.draftSessionId as string | null,
+    descriptor,
+    binaryKey: value.binaryKey,
+    state: value.state,
+    createdAt: value.createdAt,
+  };
 }
 
-function randomUuidFromValues(cryptoApi: Crypto | undefined): string {
-  if (typeof cryptoApi?.getRandomValues !== "function") {
-    throw new Error("LUNA_ERROR:secure-random-unavailable");
+function decodeRemotePayloadVersions(value: unknown): Record<string, 1 | 2> {
+  if (!isRecord(value) || Object.keys(value).length > 1000)
+    throw new Error("Invalid browser remote checkpoints.");
+  const result: Record<string, 1 | 2> = {};
+  for (const [targetId, version] of Object.entries(value)) {
+    validateRemoteTargetId(targetId);
+    if (version !== 1 && version !== 2)
+      throw new Error("Invalid browser remote checkpoint version.");
+    result[targetId] = version;
   }
+  return result;
+}
 
-  const bytes = cryptoApi.getRandomValues(new Uint8Array(16));
-  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x40;
-  bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80;
-  const hex = Array.from(bytes, (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+function validateRemoteTargetId(value: string): void {
+  if (typeof value !== "string" || value.length === 0 || value.length > 2048)
+    throw new Error("LUNA_ERROR:invalid-input");
+}
+
+function resolveWebAttachmentRefs(
+  state: WebLedgerState,
+  refs: readonly AttachmentRef[] | undefined,
+  workspaceId: string,
+  current: readonly StoredAttachmentDescriptor[] = [],
+): { descriptors: StoredAttachmentDescriptor[]; tokens: string[] } {
+  if (refs === undefined) return { descriptors: [], tokens: [] };
+  if (refs.length > MAX_ATTACHMENTS_PER_TRANSACTION)
+    throw new Error("LUNA_ERROR:attachment-invalid-reference");
+  const currentById = new Map(current.map((descriptor) => [descriptor.id, descriptor]));
+  const descriptors: StoredAttachmentDescriptor[] = [];
+  const tokens: string[] = [];
+  const ids = new Set<string>();
+  for (const ref of refs) {
+    let descriptor: StoredAttachmentDescriptor | undefined;
+    if (ref.attachmentId !== undefined) {
+      descriptor = currentById.get(ref.attachmentId);
+    } else if (ref.draftToken !== undefined) {
+      const staged = state.attachments.find(
+        (item) => item.state === "staged" && item.draftToken === ref.draftToken,
+      );
+      descriptor = staged?.descriptor;
+      if (staged !== undefined) tokens.push(ref.draftToken);
+    }
+    if (descriptor === undefined || descriptor.workspaceId !== workspaceId || ids.has(descriptor.id))
+      throw new Error("LUNA_ERROR:attachment-invalid-reference");
+    ids.add(descriptor.id);
+    descriptors.push({ ...descriptor });
+  }
+  return { descriptors, tokens };
+}
+
+function promoteWebAttachments(
+  state: WebLedgerState,
+  tokens: readonly string[],
+  value: Transaction | StoredTransaction,
+): void {
+  if (tokens.length === 0) return;
+  if (!isStoredTransaction(value))
+    throw new Error("LUNA_ERROR:attachment-invalid-reference");
+  const descriptors = new Map(value.attachments.map((item) => [item.id, item]));
+  for (const token of tokens) {
+    const record = state.attachments.find(
+      (item) => item.state === "staged" && item.draftToken === token,
+    );
+    if (record === undefined) throw new Error("LUNA_ERROR:attachment-not-found");
+    const descriptor = descriptors.get(record.attachmentId);
+    if (descriptor === undefined || JSON.stringify(descriptor) !== JSON.stringify(record.descriptor))
+      throw new Error("LUNA_ERROR:attachment-invalid-reference");
+    record.state = "committed";
+    record.draftToken = null;
+    record.draftSessionId = null;
+  }
+}
+
+function graphTransactionValue(
+  ledger: LedgerDocument,
+  transaction: Transaction,
+  attachments: readonly StoredAttachmentDescriptor[],
+): Transaction | StoredTransaction {
+  const financial = withoutAttachmentMetadata(transaction);
+  return ledger.schemaVersion === 2 || attachments.length > 0
+    ? storedTransactionFromTransaction(financial, attachments)
+    : financial;
+}
+
+function publicTransactionValue(value: Transaction | StoredTransaction): Transaction {
+  return isStoredTransaction(value)
+    ? storedTransactionToTransaction(value)
+    : {
+        ...value,
+        splits: value.splits.map((split) => ({ ...split })),
+        ...(value.attachments === undefined
+          ? {}
+          : { attachments: value.attachments.map((attachment) => ({ ...attachment })) }),
+      };
+}
+
+function withoutAttachmentMetadata(
+  transaction: Transaction,
+): Omit<Transaction, "attachments"> {
+  const { attachments: _attachments, ...financial } = transaction;
+  return financial;
+}
+
+function readStoredTransactionFromLedger(
+  ledger: LedgerDocument,
+  id: string,
+  conflictHeadId?: string,
+): StoredTransaction {
+  const transactionId = decodeId(id, "transaction id");
+  const parentIds = new Set(ledger.revisions.flatMap((revision) => revision.parents));
+  const heads = ledger.revisions.filter(
+    (revision) =>
+      revision.kind === "transaction" &&
+      revision.entityId === transactionId &&
+      !parentIds.has(revision.id),
+  );
+  const selected =
+    conflictHeadId === undefined
+      ? heads.length === 1
+        ? heads[0]
+        : heads.length > 1
+          ? (() => {
+              throw new LedgerSyncError("ledger-conflict");
+            })()
+          : undefined
+      : heads.find((head) => head.id === conflictHeadId);
+  if (selected === undefined || selected.kind !== "transaction") {
+    if (conflictHeadId !== undefined) throw new LedgerSyncError("ledger-stale-heads");
+    throw new Error("LUNA_ERROR:not-found");
+  }
+  return isStoredTransaction(selected.value)
+    ? selected.value
+    : storedTransactionFromTransaction(selected.value);
+}
+
+function assertAttachmentQuota(
+  records: readonly WebAttachmentRecord[],
+  extraBytes: number,
+  extraCount: number,
+): void {
+  const bytes = records.reduce(
+    (total, record) => total + record.descriptor.cipherByteLength,
+    0,
+  );
+  if (
+    bytes + extraBytes > MAX_LEDGER_ATTACHMENT_BYTES ||
+    records.length + extraCount > MAX_LEDGER_ATTACHMENT_COUNT
+  )
+    throw new AttachmentContractError("attachment-quota-exceeded");
+}
+
+function attachmentBinaryKey(workspaceId: string, attachmentId: string): string {
+  return `attachment:${workspaceId}:${attachmentId}`;
+}
+
+function validateDraftSessionId(value: string): void {
+  if (typeof value !== "string" || value.trim().length === 0 || value.length > 256)
+    throw new Error("LUNA_ERROR:attachment-invalid-reference");
+}
+
+function randomId(prefix: string): string {
+  return secureRandomId(prefix);
 }
 
 function safeLocalStorage(): Storage | null {

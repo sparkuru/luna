@@ -1,9 +1,17 @@
 import { LedgerSessionError } from "../shared/ledger-session";
+import {
+  decodeMigrationLease,
+  validateMigrationLease,
+  validateMigrationLeaseId,
+  type MigrationLease,
+} from "../shared/ports";
 
 export const WEB_DATABASE_NAME = "luna-ledger";
-export const WEB_DATABASE_VERSION = 1;
+export const WEB_DATABASE_VERSION = 2;
 export const WEB_DATABASE_STORE = "state";
+export const WEB_DATABASE_ATTACHMENT_STORE = "attachments";
 export const WEB_DATABASE_RECORD = "current";
+export const WEB_MIGRATION_RECORD = "migration";
 export const WEB_LEGACY_STORAGE_KEY = "luna.web.state.v1";
 
 export interface StateChange<T> {
@@ -23,6 +31,13 @@ export interface StateStore {
     change: (raw: string | null, metadata: string | null) => StateChange<T>,
     signal?: AbortSignal,
   ): Promise<T>;
+  readBinary(key: string): Promise<Uint8Array | null>;
+  writeBinary(key: string, bytes: Uint8Array): Promise<void>;
+  deleteBinary(key: string): Promise<void>;
+  getMigrationLease(): Promise<MigrationLease | null>;
+  acquireMigrationLease(lease: MigrationLease): Promise<void>;
+  renewMigrationLease(leaseId: string, expiresAt: string): Promise<void>;
+  releaseMigrationLease(leaseId: string): Promise<void>;
   /** Permanently removes this store's local database, when supported. */
   destroy?(signal?: AbortSignal): Promise<void>;
   close?(): Promise<void> | void;
@@ -67,7 +82,102 @@ export class BrowserStateStore implements StateStore {
     return this.transact(change, signal);
   }
 
+  async readBinary(key: string): Promise<Uint8Array | null> {
+    return (await this.transactBinary(key, undefined)) as Uint8Array | null;
+  }
+
+  async writeBinary(key: string, bytes: Uint8Array): Promise<void> {
+    await this.transactBinary(key, new Uint8Array(bytes));
+  }
+
+  async deleteBinary(key: string): Promise<void> {
+    await this.transactBinary(key, null);
+  }
+
+  async getMigrationLease(): Promise<MigrationLease | null> {
+    const database = await this.open();
+    return new Promise<MigrationLease | null>((resolve, reject) => {
+      let transaction: IDBTransaction;
+      try {
+        transaction = database.transaction(WEB_DATABASE_STORE, "readonly");
+      } catch {
+        database.close();
+        reject(new Error("LUNA_ERROR:web-storage-unavailable"));
+        return;
+      }
+      const request = transaction.objectStore(WEB_DATABASE_STORE).get(
+        WEB_MIGRATION_RECORD,
+      );
+      transaction.oncomplete = () => {
+        database.close();
+      };
+      transaction.onerror = () => {
+        database.close();
+        reject(new Error("LUNA_ERROR:web-storage-unavailable"));
+      };
+      request.onsuccess = () => {
+        try {
+          resolve(decodeMigrationLease(request.result ?? null));
+        } catch (error) {
+          try {
+            transaction.abort();
+          } catch {
+            database.close();
+          }
+          reject(error);
+        }
+      };
+    });
+  }
+
+  async acquireMigrationLease(lease: MigrationLease): Promise<void> {
+    validateMigrationLease(lease);
+    await this.updateMigrationLease((current) => {
+      if (
+        current !== null &&
+        Date.parse(current.expiresAt) > Date.now() &&
+        current.id !== lease.id
+      )
+        throw new Error("LUNA_ERROR:migration-busy");
+      return lease;
+    });
+  }
+
+  async renewMigrationLease(
+    leaseId: string,
+    expiresAt: string,
+  ): Promise<void> {
+    validateMigrationLeaseId(leaseId);
+    if (!Number.isFinite(Date.parse(expiresAt)))
+      throw new Error("LUNA_ERROR:invalid-input");
+    await this.updateMigrationLease((current) => {
+      if (
+        current === null ||
+        current.id !== leaseId ||
+        Date.parse(current.expiresAt) <= Date.now()
+      )
+        throw new Error("LUNA_ERROR:migration-not-owner");
+      if (Date.parse(expiresAt) <= Date.parse(current.acquiredAt))
+        throw new Error("LUNA_ERROR:invalid-input");
+      return { ...current, expiresAt };
+    });
+  }
+
+  async releaseMigrationLease(leaseId: string): Promise<void> {
+    validateMigrationLeaseId(leaseId);
+    await this.updateMigrationLease((current) => {
+      if (current === null) return null;
+      if (current.id !== leaseId)
+        throw new Error("LUNA_ERROR:migration-not-owner");
+      return null;
+    });
+  }
+
   destroy(): Promise<void> {
+    return this.deleteDatabase(this.stateDatabaseName());
+  }
+
+  private deleteDatabase(name: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.factory === null) {
         reject(new Error("LUNA_ERROR:web-storage-unavailable"));
@@ -75,9 +185,7 @@ export class BrowserStateStore implements StateStore {
       }
       let request: IDBOpenDBRequest;
       try {
-        request = this.factory.deleteDatabase(
-          this.options.databaseName ?? WEB_DATABASE_NAME,
-        );
+        request = this.factory.deleteDatabase(name);
       } catch {
         reject(new Error("LUNA_ERROR:web-storage-unavailable"));
         return;
@@ -87,6 +195,106 @@ export class BrowserStateStore implements StateStore {
       request.onerror = () =>
         reject(new Error("LUNA_ERROR:web-storage-unavailable"));
       request.onsuccess = () => resolve();
+    });
+  }
+
+  private async transactBinary(
+    key: string,
+    bytes: Uint8Array | null | undefined,
+    signal?: AbortSignal,
+  ): Promise<Uint8Array | null | void> {
+    if (typeof key !== "string" || key.length === 0 || key.length > 256)
+      throw new Error("LUNA_ERROR:web-storage-invalid");
+    assertNotCancelled(signal);
+    const database = await this.open(signal);
+    return new Promise<Uint8Array | null | void>((resolve, reject) => {
+      let transaction: IDBTransaction;
+      try {
+        transaction = database.transaction(
+          bytes === undefined
+            ? WEB_DATABASE_ATTACHMENT_STORE
+            : [WEB_DATABASE_STORE, WEB_DATABASE_ATTACHMENT_STORE],
+          bytes === undefined ? "readonly" : "readwrite",
+        );
+      } catch {
+        database.close();
+        reject(new Error("LUNA_ERROR:web-storage-unavailable"));
+        return;
+      }
+      let failure: unknown;
+      const cancel = () => {
+        failure = new LedgerSessionError("ledger-sync-cancelled");
+        try {
+          transaction.abort();
+        } catch {
+          /* Completion/abort already owns settlement. */
+        }
+      };
+      const cleanup = () => {
+        signal?.removeEventListener("abort", cancel);
+        database.close();
+      };
+      transaction.oncomplete = () => {
+        cleanup();
+        if (signal?.aborted) reject(new LedgerSessionError("ledger-sync-cancelled"));
+        else resolve(bytes === undefined ? result : undefined);
+      };
+      transaction.onabort = () => {
+        cleanup();
+        reject(failure ?? new Error("LUNA_ERROR:web-storage-write-failed"));
+      };
+      signal?.addEventListener("abort", cancel, { once: true });
+      if (signal?.aborted) {
+        cancel();
+        return;
+      }
+      let result: Uint8Array | null = null;
+      const store = transaction.objectStore(WEB_DATABASE_ATTACHMENT_STORE);
+      if (bytes === undefined) {
+        const request = store.get(key);
+        request.onsuccess = () => {
+          const value: unknown = request.result;
+          if (value === undefined) {
+            result = null;
+          } else if (value instanceof Uint8Array) {
+            result = new Uint8Array(value);
+          } else if (value instanceof ArrayBuffer) {
+            result = new Uint8Array(value.slice(0));
+          } else {
+            failure = new Error("LUNA_ERROR:web-storage-invalid");
+            try {
+              transaction.abort();
+            } catch {
+              cleanup();
+              reject(failure);
+            }
+          }
+        };
+      } else {
+        const migrationStore = transaction.objectStore(WEB_DATABASE_STORE);
+        const migrationRequest = migrationStore.get(WEB_MIGRATION_RECORD);
+        migrationRequest.onsuccess = () => {
+          try {
+            const lease = decodeMigrationLease(
+              migrationRequest.result ?? null,
+            );
+            if (lease !== null && Date.parse(lease.expiresAt) > Date.now())
+              throw new Error("LUNA_ERROR:migration-locked");
+            if (lease !== null)
+              migrationStore.delete(WEB_MIGRATION_RECORD);
+            if (bytes === null) store.delete(key);
+            else store.put(new Uint8Array(bytes), key);
+          } catch (error) {
+            failure = error;
+            try {
+              transaction.abort();
+            } catch {
+              cleanup();
+              reject(failure);
+            }
+          }
+        };
+      }
     });
   }
 
@@ -105,7 +313,10 @@ export class BrowserStateStore implements StateStore {
       try {
         // Reads may perform the one-time migration, so they share the same
         // serialized transaction boundary as mutations across every tab.
-        transaction = database.transaction(WEB_DATABASE_STORE, "readwrite");
+        transaction = database.transaction(
+          [WEB_DATABASE_STORE, WEB_DATABASE_ATTACHMENT_STORE],
+          "readwrite",
+        );
       } catch {
         database.close();
         reject(new Error("LUNA_ERROR:web-storage-unavailable"));
@@ -145,6 +356,7 @@ export class BrowserStateStore implements StateStore {
       }
       const store = transaction.objectStore(WEB_DATABASE_STORE);
       const metadataRequest = store.get("profile");
+      const migrationRequest = store.get(WEB_MIGRATION_RECORD);
       const request = store.get(WEB_DATABASE_RECORD);
       request.onsuccess = () => {
         try {
@@ -160,6 +372,16 @@ export class BrowserStateStore implements StateStore {
             throw new Error("LUNA_ERROR:web-storage-invalid");
           const next = change(raw, metadata ?? null);
           assertNotCancelled(signal);
+          const lease = decodeMigrationLease(migrationRequest.result ?? null);
+          const writesState =
+            next.metadata !== undefined ||
+            next.value !== undefined ||
+            (stored === undefined && raw !== null);
+          if (writesState && lease !== null) {
+            if (Date.parse(lease.expiresAt) > Date.now())
+              throw new Error("LUNA_ERROR:migration-locked");
+            store.delete(WEB_MIGRATION_RECORD);
+          }
           result = { value: next.result };
           if (next.metadata !== undefined) store.put(next.metadata, "profile");
           if (next.value !== undefined)
@@ -181,6 +403,55 @@ export class BrowserStateStore implements StateStore {
       };
       // Request errors retain their default abort behavior. Only oncomplete
       // publishes success; a successful put request alone is not a commit.
+    });
+  }
+
+  private async updateMigrationLease(
+    change: (current: MigrationLease | null) => MigrationLease | null,
+  ): Promise<void> {
+    const database = await this.open();
+    await new Promise<void>((resolve, reject) => {
+      let transaction: IDBTransaction;
+      try {
+        transaction = database.transaction(WEB_DATABASE_STORE, "readwrite");
+      } catch {
+        database.close();
+        reject(new Error("LUNA_ERROR:web-storage-unavailable"));
+        return;
+      }
+      let failure: unknown;
+      let settled = false;
+      const finish = (error?: unknown) => {
+        if (settled) return;
+        settled = true;
+        database.close();
+        if (error === undefined) resolve();
+        else reject(error);
+      };
+      transaction.oncomplete = () => finish();
+      transaction.onabort = () =>
+        finish(failure ?? new Error("LUNA_ERROR:web-storage-write-failed"));
+      transaction.onerror = () => undefined;
+      const store = transaction.objectStore(WEB_DATABASE_STORE);
+      const request = store.get(WEB_MIGRATION_RECORD);
+      request.onsuccess = () => {
+        try {
+          const current = decodeMigrationLease(request.result ?? null);
+          const next = change(current);
+          if (next === null) store.delete(WEB_MIGRATION_RECORD);
+          else {
+            validateMigrationLease(next);
+            store.put(next, WEB_MIGRATION_RECORD);
+          }
+        } catch (error) {
+          failure = error;
+          try {
+            transaction.abort();
+          } catch {
+            finish(failure);
+          }
+        }
+      };
     });
   }
 
@@ -239,6 +510,9 @@ export class BrowserStateStore implements StateStore {
         if (!request.result.objectStoreNames.contains(WEB_DATABASE_STORE)) {
           request.result.createObjectStore(WEB_DATABASE_STORE);
         }
+        if (!request.result.objectStoreNames.contains(WEB_DATABASE_ATTACHMENT_STORE)) {
+          request.result.createObjectStore(WEB_DATABASE_ATTACHMENT_STORE);
+        }
       };
       request.onerror = () => {
         cleanup();
@@ -261,6 +535,11 @@ export class BrowserStateStore implements StateStore {
       if (signal?.aborted) cancel();
     });
   }
+
+  private stateDatabaseName(): string {
+    return this.options.databaseName ?? WEB_DATABASE_NAME;
+  }
+
 }
 
 function assertNotCancelled(signal?: AbortSignal): void {
