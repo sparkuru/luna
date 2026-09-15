@@ -29,6 +29,25 @@
   after wrapping transport for authentication/error handling. Passing Node HTTP
   tests does not establish WebIDL invocation compatibility.
 
+## Async page transitions across surfaces
+
+- When a route context changes, inspect both the data-isolation boundary and
+  the rendered loading branch. Sanitizing a cached snapshot prevents stale
+  financial data leakage, but it does not prevent a visible flash if the
+  loading branch removes the ready page's hero, controls, summary, or panel.
+- For an interactive page with route-scoped data, keep the same page-level
+  geometry while the new snapshot is pending. Use static, non-financial
+  placeholders; put status/error/retry in that frame; and avoid a shimmer
+  animation when the reported defect is a layout flash.
+- Prove the transition by delaying the real host read in a browser test. Assert
+  the old sentinel record and aggregate are absent during the delay, the
+  loading frame's major regions remain present at the same positions, and the
+  new month's record appears after release. Exercise the narrow Web layout as
+  well as the desktop layout when the CTA or fixed navigation is involved.
+- If Web and native share the feature component, verify that host-specific
+  controls remain separated: a Web page keeps one page-level record action,
+  while native shortcuts and their semantics do not become Web loading DOM.
+
 Executable contracts: [Android runtime](../frontend/android-runtime.md),
 [Web host](../frontend/web-host-and-validation.md),
 [ledger sync](../backend/ledger-sync-guidelines.md).

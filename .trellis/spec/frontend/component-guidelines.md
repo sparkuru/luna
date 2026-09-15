@@ -122,6 +122,15 @@ attachment sections. Radix portals render outside `.app-shell`, so portal
 geometry must use `html[data-client-surface="web"]` selectors in addition to
 the scoped shell selectors.
 
+On the Web ledger, place the unique `#primary-record` after the month controls
+inside `.page-heading-actions`; desktop CSS therefore presents the record CTA
+directly below the month selector, while narrow layouts may make both controls
+full width. During a month transition, `LedgerMonthLoading` must keep the
+ready-state hero, month controls, summary grid, and transactions panel in the
+same page frame, use static non-financial placeholders, and keep loading/error
+status plus retry in that frame. Do not animate loading placeholders when the
+purpose is to prevent a layout flash.
+
 ```tsx
 <WebSidebar />
 <LedgerHome web />
@@ -162,6 +171,12 @@ Good: while `/ledger?month=2026-08` is loading, show the August loader and no
 July records; after loading, show only August records. Bad: leave the old
 transaction list mounted while changing only `#month-picker`, or render thirty
 daily rows as the dominant first view without a compact visual summary.
+
+New transaction drafts always initialize `date` from `currentLocalDate()`;
+the route-selected month does not change that default, so a record created
+while viewing a historical month still belongs to today unless the user edits
+the date. Editing an existing transaction preserves its stored date in the
+initial draft.
 
 ## Accessibility
 
