@@ -121,3 +121,24 @@ Implemented ledger v3 managed category catalogs, safe reassignment and delete fl
 ### Status
 
 [OK] **Completed**
+
+
+## Session 6: Refine entry dialog controls
+
+**Date**: 2026-09-15
+**Task**: Refine entry dialog controls
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+Refined the shared entry dialog with a button-only category selector, calculator results in the header display, and centered responsive image selection controls. Updated the frontend component contract and added focused browser coverage. Typecheck, web build, desktop Chrome 3/3, narrow Chrome 3/3, task validation, and diff checks passed.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2efa0b579675be98bbb73d4171aa2fb367bb1bd3` | (see git log) |
+
+### Status
+
+[OK] **Completed**
