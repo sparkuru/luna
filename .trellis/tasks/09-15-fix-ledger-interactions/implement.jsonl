@@ -1,0 +1,10 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Web-first renderer boundary and shared Web/Android/Electron delivery constraints"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Ledger composition, semantic controls, stable locators, responsive layout and dialog behavior"}
+{"file":".trellis/spec/frontend/hook-guidelines.md","reason":"Query-owned snapshots, refresh behavior and renderer hook boundaries"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Month snapshot isolation, source-of-truth data and form state contracts"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Loading/error/accessibility/privacy requirements and validation expectations"}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Typed renderer/API DTO boundary for the changed components"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Web viewport, CSP, Playwright and offline validation contract"}
+{"file":".trellis/tasks/09-13-web-visual-redesign/prd.md","reason":"Upstream Web visual contract and the feedback pass that introduced the current month loader and CTA placement"}
+{"file":".trellis/tasks/09-13-web-visual-redesign/design.md","reason":"Existing Web shell, ledger page composition and shared/native surface boundary"}
+{"file":".trellis/tasks/09-15-fix-ledger-interactions/research/feedback.md","reason":"Curated local evidence for the remaining month flicker, CTA placement and default date defects"}

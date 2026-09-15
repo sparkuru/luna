@@ -35,6 +35,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "../components/ui/dialog";
+import { getClientSurface } from "../client-surface";
 import type { Entry } from "./entry";
 
 type ImageViewerState = {
@@ -68,6 +69,54 @@ type SearchWorkerResponse = {
   error?: { code: string };
 };
 
+function MonthControls({
+  month,
+  message: m,
+  changeMonth,
+}: {
+  month: string;
+  message: (
+    key: MessageKey,
+    params?: Readonly<Record<string, string | number>>,
+  ) => string;
+  changeMonth(month: string): void;
+}) {
+  return (
+    <div className="month-controls month-navigator" aria-label={m("monthNavigation")}>
+      <Button
+        id="previous-month"
+        variant="outline"
+        aria-label={m("previousMonth")}
+        onClick={() => changeMonth(previousMonth(month))}
+      >
+        <ChevronLeft className="month-control-icon" aria-hidden="true" />
+        <span className="month-control-label">{m("previousMonth")}</span>
+      </Button>
+      <label className="visually-hidden" htmlFor="month-picker">
+        {m("selectedMonth")}
+      </label>
+      <Input
+        id="month-picker"
+        type="month"
+        aria-label={m("selectedMonth")}
+        value={month}
+        onChange={(event) => {
+          if (event.currentTarget.value) changeMonth(event.currentTarget.value);
+        }}
+      />
+      <Button
+        id="next-month"
+        variant="outline"
+        aria-label={m("nextMonth")}
+        onClick={() => changeMonth(nextMonth(month))}
+      >
+        <span className="month-control-label">{m("nextMonth")}</span>
+        <ChevronRight className="month-control-icon" aria-hidden="true" />
+      </Button>
+    </div>
+  );
+}
+
 export function LedgerMonthLoading({
   month,
   locale,
@@ -86,63 +135,175 @@ export function LedgerMonthLoading({
   onRetry(): void;
   error: string;
 }) {
+  const web = getClientSurface() === "web";
+  const summaryPlaceholders: readonly {
+    key: string;
+    label: MessageKey;
+    className: string;
+  }[] = [
+    { key: "income", label: "income", className: "income" },
+    { key: "spending", label: "spending", className: "expense" },
+    { key: "netFlow", label: "netFlow", className: "net" },
+  ];
   return (
-    <section className="panel month-loading-state" aria-labelledby="month-loading-title">
-      <div className="month-loading-header">
-        <div>
+    <>
+      <section
+        className="page-heading dashboard-hero month-loading-hero"
+        data-ledger-state="loading"
+        aria-labelledby="page-title"
+        aria-busy={error === ""}
+      >
+        <div className="page-heading-copy">
           <span className="kicker">{m("ledgerKicker")}</span>
-          <h1 id="month-loading-title">{formatMonth(locale, month)}</h1>
-          <p>{error || m("loadingMonth")}</p>
+          <h1 id="page-title">{m("dashboardTitle")}</h1>
+          <p>
+            <span id="month-label">{formatMonth(locale, month)}</span>
+          </p>
+          <p className="hero-description">{m("ledgerIntro")}</p>
         </div>
-        <div className="month-controls month-navigator" aria-label={m("monthNavigation")}>
-          <Button
-            id="previous-month"
-            variant="outline"
-            aria-label={m("previousMonth")}
-            onClick={() => changeMonth(previousMonth(month))}
+        <div className="page-heading-actions">
+          {!web && (
+            <div
+              className="entry-actions"
+              role="group"
+              aria-label={m("quickEntryType")}
+            >
+              <Button
+                id="record-expense"
+                className="entry-button expense"
+                type="button"
+                disabled
+              >
+                {m("recordExpense")}
+              </Button>
+              <Button
+                id="record-income"
+                className="entry-button income"
+                type="button"
+                disabled
+              >
+                {m("recordIncome")}
+              </Button>
+            </div>
+          )}
+          <MonthControls month={month} message={m} changeMonth={changeMonth} />
+          {web && (
+            <button
+              id="primary-record"
+              type="button"
+              className="primary-record-button"
+              disabled
+              aria-describedby="month-loading-status"
+            >
+              <span className="primary-record-icon">
+                <Plus size={21} strokeWidth={2.3} aria-hidden="true" />
+              </span>
+              <span>{m("addTransaction")}</span>
+            </button>
+          )}
+        </div>
+      </section>
+      <section
+        id="summary-grid"
+        className="summary-grid month-loading-summary"
+        aria-label={m("monthlySummary")}
+        aria-busy={error === ""}
+      >
+        {summaryPlaceholders.map((summary) => (
+          <article
+            key={summary.key}
+            className={`summary-card ${summary.className} month-loading-summary-card`}
           >
-            <ChevronLeft className="month-control-icon" aria-hidden="true" />
-            <span className="month-control-label">{m("previousMonth")}</span>
-          </Button>
-          <label className="visually-hidden" htmlFor="month-picker">
-            {m("selectedMonth")}
-          </label>
-          <Input
-            id="month-picker"
-            type="month"
-            aria-label={m("selectedMonth")}
-            value={month}
-            onChange={(event) => {
-              if (event.currentTarget.value) changeMonth(event.currentTarget.value);
-            }}
-          />
-          <Button
-            id="next-month"
-            variant="outline"
-            aria-label={m("nextMonth")}
-            onClick={() => changeMonth(nextMonth(month))}
-          >
-            <span className="month-control-label">{m("nextMonth")}</span>
-            <ChevronRight className="month-control-icon" aria-hidden="true" />
-          </Button>
+            <div className="summary-card-heading">
+              <span className="eyebrow">{m(summary.label)}</span>
+            </div>
+            <span
+              className="metric month-loading-placeholder month-loading-metric"
+              aria-hidden="true"
+            />
+            <span className="subtext">
+              <span
+                className="month-loading-placeholder month-loading-subtext"
+                aria-hidden="true"
+              />
+            </span>
+          </article>
+        ))}
+      </section>
+      <section
+        className="panel transactions-panel month-loading-transactions"
+        aria-labelledby="transactions-title"
+        aria-busy={error === ""}
+      >
+        <div className="section-heading">
+          <div>
+            <h2 id="transactions-title" tabIndex={-1}>
+              {m("recentLedger")}
+            </h2>
+            <p>{m("recentLedgerHelp")}</p>
+          </div>
+          <p id="transaction-count" className="month-loading-count">
+            <span id="month-loading-status" role="status">
+              {error || m("loadingMonth")}
+            </span>
+          </p>
         </div>
-      </div>
-      {error ? (
-        <div className="month-loading-error" role="alert">
-          <p>{error}</p>
-          <Button type="button" variant="outline" onClick={onRetry}>
-            <RefreshCw size={17} aria-hidden="true" />
-            {m("tryAgain")}
-          </Button>
+        <div
+          className="filter-disclosure month-loading-filter"
+          aria-hidden="true"
+        >
+          <div className="filter-disclosure-trigger">
+            <span className="filter-disclosure-icon" aria-hidden="true">
+              <SlidersHorizontal size={17} strokeWidth={2} />
+            </span>
+            <span className="filter-disclosure-label">
+              {m("filterTransactions")}
+            </span>
+            <span className="filter-disclosure-meta">{m("filterHint")}</span>
+          </div>
         </div>
-      ) : (
-        <div className="month-loading-skeleton" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-      )}
-    </section>
+        {error ? (
+          <div id="month-loading-error" className="month-loading-error" role="alert">
+            <p>{error}</p>
+            <Button type="button" variant="outline" onClick={onRetry}>
+              <RefreshCw size={17} aria-hidden="true" />
+              {m("tryAgain")}
+            </Button>
+          </div>
+        ) : (
+          <div id="transaction-list-region" className="month-loading-list" aria-hidden="true">
+            <ul className="transaction-list">
+              <li className="transaction-day-group">
+                <div className="transaction-day-heading">
+                  <span className="month-loading-placeholder month-loading-day" />
+                  <span className="month-loading-placeholder month-loading-day-count" />
+                </div>
+                <ul className="transaction-day-list">
+                  {["first", "second"].map((key) => (
+                    <li className="transaction-item" key={key}>
+                      <div className="transaction-main-button">
+                        <div className="transaction-topline">
+                          <span className="month-loading-placeholder month-loading-title" />
+                          <span className="month-loading-placeholder month-loading-tag" />
+                          <span className="month-loading-placeholder month-loading-amount" />
+                        </div>
+                        <div className="transaction-bottomline">
+                          <span className="month-loading-placeholder month-loading-category" />
+                          <span className="month-loading-placeholder month-loading-secondary" />
+                        </div>
+                      </div>
+                      <div className="transaction-actions">
+                        <span className="month-loading-placeholder month-loading-action" />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            </ul>
+          </div>
+        )}
+      </section>
+    </>
   );
 }
 
@@ -616,21 +777,6 @@ export function LedgerHome({
             <span id="month-label">{formatMonth(locale, month)}</span>
           </p>
           <p className="hero-description">{m("ledgerIntro")}</p>
-          {web && (
-            <button
-              id="primary-record"
-              type="button"
-              className="primary-record-button"
-              onClick={() =>
-                openEntry({ type: "expense", returnFocus: "primary-record" })
-              }
-            >
-              <span className="primary-record-icon">
-                <Plus size={21} strokeWidth={2.3} aria-hidden="true" />
-              </span>
-              <span>{m("addTransaction")}</span>
-            </button>
-          )}
         </div>
         <div className="page-heading-actions">
           {!web && (
@@ -651,38 +797,22 @@ export function LedgerHome({
               ))}
             </div>
           )}
-          <div className="month-controls month-navigator" aria-label={m("monthNavigation")}>
-            <Button
-              id="previous-month"
-              variant="outline"
-              aria-label={m("previousMonth")}
-              onClick={() => changeMonth(previousMonth(month))}
+          <MonthControls month={month} message={m} changeMonth={changeMonth} />
+          {web && (
+            <button
+              id="primary-record"
+              type="button"
+              className="primary-record-button"
+              onClick={() =>
+                openEntry({ type: "expense", returnFocus: "primary-record" })
+              }
             >
-              <ChevronLeft className="month-control-icon" aria-hidden="true" />
-              <span className="month-control-label">{m("previousMonth")}</span>
-            </Button>
-            <label className="visually-hidden" htmlFor="month-picker">
-              {m("selectedMonth")}
-            </label>
-            <Input
-              id="month-picker"
-              type="month"
-              aria-label={m("selectedMonth")}
-              value={month}
-              onChange={(e) => {
-                if (e.target.value) changeMonth(e.target.value);
-              }}
-            />
-            <Button
-              id="next-month"
-              variant="outline"
-              aria-label={m("nextMonth")}
-              onClick={() => changeMonth(nextMonth(month))}
-            >
-              <span className="month-control-label">{m("nextMonth")}</span>
-              <ChevronRight className="month-control-icon" aria-hidden="true" />
-            </Button>
-          </div>
+              <span className="primary-record-icon">
+                <Plus size={21} strokeWidth={2.3} aria-hidden="true" />
+              </span>
+              <span>{m("addTransaction")}</span>
+            </button>
+          )}
         </div>
       </section>
       <p

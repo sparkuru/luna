@@ -3,7 +3,6 @@ import { Calculator, ImagePlus, X } from "lucide-react";
 import type { Transaction, TransactionType } from "../../shared/domain";
 import {
   currentLocalDate,
-  currentLocalMonth,
   formatMinorUnits,
   formatMinorMagnitude,
 } from "../../shared/domain";
@@ -160,7 +159,7 @@ export function TransactionDialog({
   saved(): void;
 }) {
   const app = useApp();
-  const { message: m, snapshot, month } = app;
+  const { message: m, snapshot } = app;
   const workspace = snapshot.workspace!;
   const isWebSurface = getClientSurface() === "web";
   const original = entry.transaction;
@@ -173,9 +172,7 @@ export function TransactionDialog({
         ).replaceAll(",", "")
       : "",
     category: original?.splits.map((s) => s.category).join(" · ") ?? "",
-    date:
-      original?.date ??
-      (month === currentLocalMonth() ? currentLocalDate() : `${month}-01`),
+    date: original?.date ?? currentLocalDate(),
     merchant: original?.merchant ?? "",
     payment: original?.paymentMethod ?? "",
     notes: original?.notes ?? "",

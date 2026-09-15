@@ -3663,35 +3663,26 @@ html[data-client-surface="web"] .settings-navigation-icon {
   }
 }
 
-/* Latest Web information hierarchy: the page action belongs to the hero,
- * while the period control stays a quiet control on the opposite edge. */
+/* Keep the Web period control and page action in one aligned action column. */
 @media (min-width: 1024px) {
   html[data-client-surface="web"] .dashboard-hero {
     align-items: flex-start;
   }
 
-  html[data-client-surface="web"] .dashboard-hero .page-heading-copy {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  html[data-client-surface="web"] .dashboard-hero .page-heading-copy > .primary-record-button {
-    width: auto;
-    min-width: 10.5rem;
-    min-height: 48px;
-    margin-top: 1.15rem;
-    padding: 0.35rem 0.85rem 0.35rem 0.45rem;
-  }
-
   html[data-client-surface="web"] .dashboard-hero .page-heading-actions {
-    width: auto;
-    align-items: flex-end;
+    width: min(100%, 20rem);
+    justify-items: stretch;
     gap: 0.75rem;
   }
 
   html[data-client-surface="web"] .dashboard-hero .page-heading-actions .month-controls {
-    width: min(18rem, 100%);
+    width: 100%;
+  }
+
+  html[data-client-surface="web"] .dashboard-hero .page-heading-actions > .primary-record-button {
+    width: 100%;
+    min-height: 56px;
+    justify-content: center;
   }
 }
 
@@ -3721,47 +3712,114 @@ html[data-client-surface="web"] .month-loading-state {
   box-shadow: var(--web-surface-shadow);
 }
 
-html[data-client-surface="web"] .month-loading-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-
-html[data-client-surface="web"] .month-loading-header h1 {
-  margin: 0.2rem 0 0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.8rem, 3vw, 2.6rem);
-}
-
-html[data-client-surface="web"] .month-loading-header p {
-  margin: 0.5rem 0 0;
-  color: var(--color-muted);
-}
-
-html[data-client-surface="web"] .month-loading-skeleton {
-  display: grid;
-  gap: 0.7rem;
-}
-
-html[data-client-surface="web"] .month-loading-skeleton span {
+.month-loading-placeholder {
   display: block;
-  height: 3.25rem;
-  border-radius: 12px;
-  background: linear-gradient(90deg, var(--color-surface-muted), var(--color-surface), var(--color-surface-muted));
-  background-size: 200% 100%;
-  animation: luna-month-loading 1.4s ease-in-out infinite;
+  border-radius: 0.45rem;
+  background: var(--color-surface-muted);
 }
 
-html[data-client-surface="web"] .month-loading-skeleton span:nth-child(2) {
-  width: 86%;
+.month-loading-hero .page-heading-copy,
+.month-loading-summary,
+.month-loading-transactions {
+  min-width: 0;
 }
 
-html[data-client-surface="web"] .month-loading-skeleton span:nth-child(3) {
-  width: 72%;
+.month-loading-summary-card .month-loading-metric {
+  width: min(10rem, 76%);
+  height: 2rem;
 }
 
-html[data-client-surface="web"] .month-loading-error {
+.month-loading-summary-card .month-loading-subtext {
+  width: min(8rem, 72%);
+  height: 0.75rem;
+}
+
+.month-loading-count {
+  min-width: 7rem;
+}
+
+.month-loading-count #month-loading-status {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.month-loading-filter {
+  pointer-events: none;
+}
+
+.month-loading-filter .filter-disclosure-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 44px;
+  padding: var(--space-2) 0;
+  color: var(--color-muted);
+  cursor: default;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+html[data-client-surface="web"] .month-loading-filter .filter-disclosure-trigger {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: 11px;
+  color: var(--color-ink);
+  list-style: none;
+}
+
+.month-loading-list .transaction-list {
+  min-width: 0;
+}
+
+.month-loading-day {
+  width: min(8rem, 40%);
+  height: 0.8rem;
+}
+
+.month-loading-day-count {
+  width: 4rem;
+  height: 0.7rem;
+}
+
+.month-loading-title {
+  flex: 1 1 8rem;
+  min-width: 4rem;
+  height: 1rem;
+}
+
+.month-loading-tag {
+  width: 4rem;
+  height: 1.4rem;
+}
+
+.month-loading-amount {
+  width: 5rem;
+  height: 1rem;
+}
+
+.month-loading-category {
+  width: min(9rem, 45%);
+  height: 0.75rem;
+}
+
+.month-loading-secondary {
+  width: min(12rem, 50%);
+  height: 0.75rem;
+}
+
+.month-loading-action {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+}
+
+.month-loading-error {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3772,7 +3830,7 @@ html[data-client-surface="web"] .month-loading-error {
   background: var(--color-danger-soft);
 }
 
-html[data-client-surface="web"] .month-loading-error p {
+.month-loading-error p {
   margin: 0;
   color: var(--color-danger);
 }
@@ -3907,11 +3965,6 @@ html[data-client-surface="web"] #statistics-categories-toggle {
   margin-top: 0.85rem;
 }
 
-@keyframes luna-month-loading {
-  from { background-position: 100% 0; }
-  to { background-position: -100% 0; }
-}
-
 @media (max-width: 767px) {
   html[data-client-surface="web"] .web-sidebar .primary-navigation {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3943,7 +3996,7 @@ html[data-client-surface="web"] #statistics-categories-toggle {
     white-space: nowrap;
   }
 
-  html[data-client-surface="web"] .client-surface-web .dashboard-hero .page-heading-copy > .primary-record-button {
+  html[data-client-surface="web"] .client-surface-web .dashboard-hero .page-heading-actions > .primary-record-button {
     display: inline-flex;
     width: 100%;
     min-height: 52px;
@@ -3961,14 +4014,20 @@ html[data-client-surface="web"] #statistics-categories-toggle {
     height: 38px;
   }
 
-  html[data-client-surface="web"] .month-loading-header,
   html[data-client-surface="web"] .month-loading-error {
     flex-direction: column;
   }
 
-  html[data-client-surface="web"] .month-loading-header .month-controls,
   html[data-client-surface="web"] .month-loading-error button {
     width: 100%;
+  }
+
+  html[data-client-surface="web"] .month-loading-transactions #transaction-count {
+    display: block;
+  }
+
+  html[data-client-surface="web"] .month-loading-transactions .section-heading {
+    margin-bottom: 1.25rem;
   }
 
   html[data-client-surface="web"] .settings-overview-statuses {
@@ -3987,11 +4046,5 @@ html[data-client-surface="web"] #statistics-categories-toggle {
   html[data-client-surface="web"] .web-action-toast {
     top: 0.75rem;
     right: 0.75rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-client-surface="web"] .month-loading-skeleton span {
-    animation: none;
   }
 }

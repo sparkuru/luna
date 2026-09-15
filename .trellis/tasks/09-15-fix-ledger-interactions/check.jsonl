@@ -1,0 +1,9 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Review semantic HTML, focus targets, stable IDs and responsive composition after the layout change"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Review loading/error states, privacy boundary and renderer quality checks"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Review Web viewport, browser regression and offline-safe validation boundaries"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Verify old-month data is not rendered during transition and committed writes remain unchanged"}
+{"file":".trellis/tasks/09-15-fix-ledger-interactions/prd.md","reason":"Check all three user-reported outcomes and acceptance criteria"}
+{"file":".trellis/tasks/09-15-fix-ledger-interactions/design.md","reason":"Check implementation against the selected loading, CTA and date design"}
+{"file":".trellis/tasks/09-15-fix-ledger-interactions/research/feedback.md","reason":"Compare the final interaction and layout behavior with the user's recorded evidence"}
+{"file":".trellis/tasks/09-15-fix-ledger-interactions/research/break-loop.md","reason":"Review the repeated-flicker root cause and prevention mechanisms before closing the task"}
+{"file":".trellis/spec/guides/cross-platform-thinking-guide.md","reason":"Review the cross-surface async transition checklist added after the bug fix"}

@@ -27,6 +27,26 @@ async function openTransactionActions(page: Page, row: Locator): Promise<void> {
   if (await trigger.isVisible()) await trigger.click();
 }
 
+async function expectRecordBelowMonth(page: Page, aligned = true): Promise<void> {
+  await expect(page.locator('.page-heading-copy > #primary-record')).toHaveCount(0);
+  await expect(page.locator('.page-heading-actions > #primary-record')).toHaveCount(1);
+  const [monthBox, recordBox] = await Promise.all([
+    page.locator('.page-heading-actions .month-controls').boundingBox(),
+    page.locator('.page-heading-actions > #primary-record').boundingBox(),
+  ]);
+  expect(monthBox).not.toBeNull();
+  expect(recordBox).not.toBeNull();
+  expect(recordBox?.y ?? 0).toBeGreaterThanOrEqual(
+    (monthBox?.y ?? 0) + (monthBox?.height ?? 0),
+  );
+  if (aligned) {
+    expect(Math.abs(
+      (recordBox?.x ?? 0) + (recordBox?.width ?? 0) -
+        ((monthBox?.x ?? 0) + (monthBox?.width ?? 0)),
+    )).toBeLessThanOrEqual(1);
+  }
+}
+
 test('empty ledger makes the next record obvious and saves a focused expense', async ({ page }) => {
   await setupWorkspace(page);
 
@@ -38,9 +58,16 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
   await expect(page.locator('#budget-total')).toHaveCount(0);
   await expect(page.locator('#transaction-merchant')).not.toBeVisible();
 
+  const today = await page.evaluate(() => {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+      date.getDate(),
+    ).padStart(2, '0')}`;
+  });
   await openEntry(page, 'expense');
   await expect(page.locator('#transaction-advanced-details')).not.toHaveAttribute('open', '');
   await expect(page.locator('#transaction-date')).toBeVisible();
+  await expect(page.locator('#transaction-date')).toHaveValue(today);
   await expect(page.locator('#transaction-type')).toHaveValue('expense');
   await page.getByRole('button', { name: 'Food', exact: true }).click();
   page.once('dialog', async (dialog) => {
@@ -190,7 +217,31 @@ test.describe('desktop primary layout', () => {
     await expect(page.locator('.transactions-panel')).toBeVisible();
     await expect(page.locator('.quick-entry-panel')).toHaveCount(0);
     await expect(page.locator('#open-secondary-menu')).toBeVisible();
+    await expectRecordBelowMonth(page);
     await openEntry(page, 'expense');
+  });
+});
+
+test.describe('wide desktop primary layout', () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test('keeps the record action below the month control at 1440px', async ({ page }) => {
+    await setupWorkspace(page, 'Wide desktop household');
+    await expectRecordBelowMonth(page);
+  });
+});
+
+test.describe('tablet primary layout', () => {
+  test.use({ viewport: { width: 768, height: 900 } });
+
+  test('keeps the record action visible without horizontal overflow at 768px', async ({ page }) => {
+    await setupWorkspace(page, 'Tablet household');
+    await expectRecordBelowMonth(page, false);
+    const dimensions = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   });
 });
 

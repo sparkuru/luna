@@ -139,6 +139,202 @@ test("month navigation scopes the ledger to the selected month", async ({
   );
 });
 
+test("month loading keeps the ledger frame stable and isolates the old month", async ({
+  page,
+}) => {
+  await ready(page);
+  const currentMonth = await page.locator("#month-picker").inputValue();
+  const year = Number(currentMonth.slice(0, 4));
+  const monthNumber = Number(currentMonth.slice(5, 7));
+  const previousDate = new Date(year, monthNumber - 2, 15);
+  const previousMonth = `${previousDate.getFullYear()}-${String(
+    previousDate.getMonth() + 1,
+  ).padStart(2, "0")}`;
+  await page.evaluate(async ({ currentMonth, previousMonth }) => {
+    await window.lunaLedger.createTransaction({
+      type: "expense",
+      amountMinor: "1200",
+      date: `${currentMonth}-05`,
+      splits: [{ category: "Loading current sentinel", amountMinor: "1200" }],
+    });
+    await window.lunaLedger.createTransaction({
+      type: "expense",
+      amountMinor: "3400",
+      date: `${previousMonth}-15`,
+      splits: [{ category: "Loading previous sentinel", amountMinor: "3400" }],
+    });
+  }, { currentMonth, previousMonth });
+  await page.reload();
+  await expect(page.locator("#transaction-list-region")).toContainText(
+    "Loading current sentinel",
+  );
+  const readFrame = () =>
+    page.evaluate(() => {
+      const read = (selector: string) => {
+        const element = document.querySelector(selector);
+        if (!(element instanceof HTMLElement)) return null;
+        const rect = element.getBoundingClientRect();
+        return { top: rect.top, height: rect.height };
+      };
+      return {
+        hero: read(".dashboard-hero"),
+        summary: read("#summary-grid"),
+        transactions: read(".transactions-panel"),
+      };
+    });
+  const readyFrame = await readFrame();
+
+  await page.evaluate((targetMonth) => {
+    const api = window.lunaLedger;
+    const getSnapshot = api.getSnapshot.bind(api);
+    const state = window as unknown as {
+      monthSnapshotStarted: boolean;
+      releaseMonthSnapshot: (() => void) | undefined;
+    };
+    state.monthSnapshotStarted = false;
+    state.releaseMonthSnapshot = undefined;
+    api.getSnapshot = async (month) => {
+      if (month === targetMonth) {
+        state.monthSnapshotStarted = true;
+        await new Promise<void>((resolve) => {
+          state.releaseMonthSnapshot = resolve;
+        });
+      }
+      return getSnapshot(month);
+    };
+  }, previousMonth);
+
+  await page.locator("#previous-month").click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { monthSnapshotStarted: boolean })
+            .monthSnapshotStarted,
+      ),
+    )
+    .toBe(true);
+  await expect(page.locator('[data-ledger-state="loading"]')).toBeVisible();
+  await expect(page.locator(".dashboard-hero")).toHaveCount(1);
+  await expect(page.locator("#summary-grid.month-loading-summary")).toHaveCount(1);
+  await expect(page.locator(".month-loading-transactions")).toHaveCount(1);
+  const loadingFrame = await readFrame();
+  for (const key of ["hero", "summary", "transactions"] as const) {
+    expect(readyFrame[key]).not.toBeNull();
+    expect(loadingFrame[key]).not.toBeNull();
+    expect(Math.abs(
+      (loadingFrame[key]?.top ?? 0) - (readyFrame[key]?.top ?? 0),
+    )).toBeLessThanOrEqual(1);
+  }
+  await expect(page.locator("#transaction-list-region")).not.toContainText(
+    "Loading current sentinel",
+  );
+  await expect(page.locator("#transaction-list-region")).not.toContainText(
+    "1200",
+  );
+
+  await page.evaluate(() => {
+    const state = window as unknown as {
+      releaseMonthSnapshot: (() => void) | undefined;
+    };
+    state.releaseMonthSnapshot?.();
+  });
+  await expect(page.locator("#transaction-list-region")).toContainText(
+    "Loading previous sentinel",
+  );
+});
+
+test("month loading keeps its frame and retries a failed snapshot", async ({
+  page,
+}) => {
+  await ready(page);
+  const currentMonth = await page.locator("#month-picker").inputValue();
+  const year = Number(currentMonth.slice(0, 4));
+  const monthNumber = Number(currentMonth.slice(5, 7));
+  const previousDate = new Date(year, monthNumber - 2, 15);
+  const previousMonth = `${previousDate.getFullYear()}-${String(
+    previousDate.getMonth() + 1,
+  ).padStart(2, "0")}`;
+  await page.evaluate(async (date) => {
+    await window.lunaLedger.createTransaction({
+      type: "expense",
+      amountMinor: "3400",
+      date,
+      splits: [{ category: "Retry target sentinel", amountMinor: "3400" }],
+    });
+  }, `${previousMonth}-15`);
+  await page.reload();
+
+  await page.evaluate((targetMonth) => {
+    const api = window.lunaLedger;
+    const getSnapshot = api.getSnapshot.bind(api);
+    let failures = 0;
+    api.getSnapshot = async (month) => {
+      if (month === targetMonth && failures++ === 0) {
+        throw new Error("LUNA_ERROR:web-storage-unavailable");
+      }
+      return getSnapshot(month);
+    };
+  }, previousMonth);
+  await page.locator("#previous-month").click();
+  await expect(page.locator('[data-ledger-state="loading"]')).toBeVisible();
+  await expect(page.locator("#month-loading-error")).toBeVisible();
+  await expect(page.locator(".month-loading-transactions")).not.toContainText(
+    "Retry target sentinel",
+  );
+  await page.locator("#month-loading-error button").click();
+  await expect(page.locator("#transaction-list-region")).toContainText(
+    "Retry target sentinel",
+  );
+});
+
+test("new transactions use today from a historical month and edits keep their original date", async ({
+  page,
+}) => {
+  await ready(page);
+  const currentMonth = await page.locator("#month-picker").inputValue();
+  const year = Number(currentMonth.slice(0, 4));
+  const monthNumber = Number(currentMonth.slice(5, 7));
+  const previousDate = new Date(year, monthNumber - 2, 15);
+  const previousMonth = `${previousDate.getFullYear()}-${String(
+    previousDate.getMonth() + 1,
+  ).padStart(2, "0")}`;
+  const originalDate = `${previousMonth}-15`;
+  const today = await page.evaluate(() => {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+      date.getDate(),
+    ).padStart(2, "0")}`;
+  });
+  await page.evaluate(async (date) => {
+    await window.lunaLedger.createTransaction({
+      type: "expense",
+      amountMinor: "3400",
+      date,
+      merchant: "Historical date record",
+      splits: [{ category: "Historical date category", amountMinor: "3400" }],
+    });
+  }, originalDate);
+  await page.goto(`/ledger?month=${previousMonth}`);
+  await expect(page.locator("#transaction-list-region")).toContainText(
+    "Historical date record",
+  );
+
+  await page.locator("#primary-record").click();
+  await expect(page.locator("#transaction-date")).toHaveValue(today);
+  await page.locator("#close-transaction").click();
+
+  const row = page.locator(".transaction-item").filter({
+    hasText: "Historical date record",
+  });
+  const trigger = row.locator(".transaction-actions-trigger");
+  if (await trigger.isVisible()) await trigger.click();
+  await row
+    .getByRole("button", { name: "Edit Historical date record", exact: true })
+    .click();
+  await expect(page.locator("#transaction-date")).toHaveValue(originalDate);
+});
+
 test("empty regex mode keeps the unfiltered ledger visible", async ({ page }) => {
   await ready(page);
   await page.evaluate(async () => {
