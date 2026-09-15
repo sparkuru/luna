@@ -145,6 +145,17 @@ putting a second Settings button or a record button in the sidebar, or styling
 only `.client-surface-web .transaction-dialog-panel` and leaving its portal
 with the old two-column blank area.
 
+### Workspace Setup Composition
+
+The no-workspace `Setup` surface uses a single centered column on every
+viewport: `.setup-copy` presents the welcome context above `.setup-card`, and
+both share the same readable axis. Keep the form card width-constrained and
+let the page flow vertically; do not restore a tall two-column setup with
+`align-items: center`, because the card's form height pushes the brand copy
+into the lower half of the first screen and creates a large blank upper area.
+At `<=768px`, retain the same single-column flow and verify the card has no
+horizontal overflow at a 375px viewport.
+
 After a successful mutation, reload the host snapshot before announcing the
 result. A failed mutation keeps the draft and its recovery path visible. This
 keeps the simple entry surface from becoming a second financial source of
