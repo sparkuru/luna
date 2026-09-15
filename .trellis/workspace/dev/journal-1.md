@@ -142,3 +142,24 @@ Refined the shared entry dialog with a button-only category selector, calculator
 ### Status
 
 [OK] **Completed**
+
+
+## Session 7: Center workspace setup welcome page
+
+**Date**: 2026-09-15
+**Task**: Center workspace setup welcome page
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+将无工作区初始化页改为品牌说明在上、表单卡片在下的单列居中欢迎构图；补充 375px 无横向溢出回归测试，并把布局约定写入前端组件规范。通过 typecheck、Web build、diff check、任务上下文校验和 4/4 Playwright 验证，完成桌面与窄屏截图复核。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0a64817` | (see git log) |
+
+### Status
+
+[OK] **Completed**
