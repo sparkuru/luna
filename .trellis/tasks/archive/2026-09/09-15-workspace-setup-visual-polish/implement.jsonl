@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/index.md","reason":"共享 renderer 的 Web-first 交付顺序、初始化页边界与响应式要求"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Setup 语义结构、表单组成、键盘焦点和布局/CSS 约定"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"可访问性、错误聚焦、窄屏无溢出和 UI 回归门禁"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Web-first 初始化流程、Playwright 视口和离线边界验证"}

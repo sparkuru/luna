@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"检查欢迎页结构、表单卡片层级、控件焦点和响应式组成"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"检查初始化错误聚焦、键盘操作、窄屏溢出和语义状态"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"运行 Web 构建与桌面/窄屏 Playwright，验证共享初始化流程"}
+{"file":".trellis/tasks/09-15-workspace-setup-visual-polish/prd.md","reason":"逐项核对居中欢迎页方向、非目标和验收条件"}
