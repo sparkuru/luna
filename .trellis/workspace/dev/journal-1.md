@@ -100,3 +100,24 @@ Resolved the remaining product decisions, rewrote the root PRD for an offline-fi
 ### Status
 
 [OK] **Completed**
+
+
+## Session 5: Entry form and category catalog polish
+
+**Date**: 2026-09-15
+**Task**: Entry form and category catalog polish
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+Implemented ledger v3 managed category catalogs, safe reassignment and delete flow, calculator precision and operators, custom upload surface, local date default, and month transition stability. Shared, Web, sync, focused Chrome, and production preview checks passed; native SQLite checks remain blocked by environment better-sqlite3 SIGSEGV.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3573e692653e81f3c8b082ba2510c8884d9be676` | (see git log) |
+
+### Status
+
+[OK] **Completed**
