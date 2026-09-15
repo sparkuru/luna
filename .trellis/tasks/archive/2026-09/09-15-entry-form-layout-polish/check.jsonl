@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"检查分类选择、计算器结果和上传卡片的语义、焦点与响应式呈现"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"检查可访问性、错误/禁用状态、低动效和 renderer 回归门禁"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"运行 Web 构建与 focused/production Playwright，覆盖共享 renderer 行为"}
+{"file":".trellis/tasks/09-15-entry-form-layout-polish/prd.md","reason":"逐项核对本次三个视觉验收条件与明确的非目标"}

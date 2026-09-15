@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/index.md","reason":"共享 renderer 的 Web-first 交付顺序与记账弹窗布局边界"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"表单语义、只读选择面、焦点目标、Dialog portal 与响应式 CSS 约定"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"键盘可用性、ARIA、最小点击目标与 UI 回归验证要求"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Web-first 验证、窄屏布局、CSP 外部样式和 Playwright 命令契约"}
