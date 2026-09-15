@@ -220,6 +220,10 @@ export class ServerHost implements LunaServerApi {
           "createTransaction",
           "updateTransaction",
           "deleteTransaction",
+          "createCategory",
+          "updateCategory",
+          "deleteCategory",
+          "reassignCategory",
           "setMonthlyBudget",
           "importLedgerBackup",
           "resolveLedgerConflict",
@@ -246,6 +250,10 @@ export class ServerHost implements LunaServerApi {
             "createTransaction",
             "updateTransaction",
             "deleteTransaction",
+            "createCategory",
+            "updateCategory",
+            "deleteCategory",
+            "reassignCategory",
             "setMonthlyBudget",
             "importLedgerBackup",
             "resolveLedgerConflict",
@@ -354,6 +362,26 @@ export class ServerHost implements LunaServerApi {
       deleteTransaction: (...args) =>
         invoke("deleteTransaction", ...args) as ReturnType<
           LunaLedgerApi["deleteTransaction"]
+        >,
+      createCategory: (...args) =>
+        invoke("createCategory", ...args) as ReturnType<
+          LunaLedgerApi["createCategory"]
+        >,
+      updateCategory: (...args) =>
+        invoke("updateCategory", ...args) as ReturnType<
+          LunaLedgerApi["updateCategory"]
+        >,
+      deleteCategory: (...args) =>
+        invoke("deleteCategory", ...args) as ReturnType<
+          LunaLedgerApi["deleteCategory"]
+        >,
+      getCategoryUsage: (...args) =>
+        invoke("getCategoryUsage", ...args) as ReturnType<
+          LunaLedgerApi["getCategoryUsage"]
+        >,
+      reassignCategory: (...args) =>
+        invoke("reassignCategory", ...args) as ReturnType<
+          LunaLedgerApi["reassignCategory"]
         >,
       setMonthlyBudget: (...args) =>
         invoke("setMonthlyBudget", ...args) as Promise<void>,
@@ -487,6 +515,11 @@ export class ServerHost implements LunaServerApi {
     if (
       document.schemaVersion === 2 &&
       !account.capabilities.supportsLedgerV2
+    )
+      throw new ServerTransportError("unsupported-version");
+    if (
+      document.schemaVersion >= 3 &&
+      !account.capabilities.ledgerPayloadVersions.includes(3)
     )
       throw new ServerTransportError("unsupported-version");
     if (

@@ -153,7 +153,7 @@ export function requireLedger(
 export function assertLedgerPayloadVersion(
   database: ServerDatabase,
   ledgerId: string,
-  payloadVersion: 1 | 2,
+  payloadVersion: 1 | 2 | 3,
 ): void {
   const row = database.sqlite
     .prepare("SELECT min_payload_version FROM ledgers WHERE id = ?")
@@ -726,7 +726,7 @@ export async function putObject(
   preferences: boolean,
   body: Buffer,
   condition: ObjectCondition,
-  payloadVersion?: 1 | 2,
+  payloadVersion?: 1 | 2 | 3,
   signal?: AbortSignal,
 ): Promise<StoredResult> {
   const kind = preferences ? "preference" : "ledger";

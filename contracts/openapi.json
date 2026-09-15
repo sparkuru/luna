@@ -4033,14 +4033,16 @@
                     "payloadSchemaVersion": {
                       "enum": [
                         1,
-                        2
+                        2,
+                        3
                       ],
                       "type": "integer"
                     },
                     "version": {
                       "enum": [
                         1,
-                        2
+                        2,
+                        3
                       ],
                       "type": "integer"
                     }
@@ -4494,14 +4496,16 @@
                   "payloadSchemaVersion": {
                     "enum": [
                       1,
-                      2
+                      2,
+                      3
                     ],
                     "type": "integer"
                   },
-                  "version": {
-                    "enum": [
-                      1,
-                      2
+                "version": {
+                  "enum": [
+                    1,
+                    2,
+                    3
                     ],
                     "type": "integer"
                   }

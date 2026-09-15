@@ -1,4 +1,5 @@
 import type { Transaction } from "./domain";
+import type { CategoryCatalog } from "./category-catalog";
 import { isStoredTransaction, storedTransactionToTransaction } from "./ledger-record";
 import type { LedgerConflict } from "./ledger-sync";
 
@@ -16,6 +17,13 @@ export type PublicLedgerConflictHead =
       entityId: string;
       parents: string[];
       value: string | null;
+    }
+  | {
+      id: string;
+      kind: "category-catalog";
+      entityId: string;
+      parents: string[];
+      value: CategoryCatalog;
     };
 
 export type PublicLedgerConflict =
@@ -28,6 +36,11 @@ export type PublicLedgerConflict =
       kind: "budget";
       entityId: string;
       heads: Extract<PublicLedgerConflictHead, { kind: "budget" }>[];
+    }
+  | {
+      kind: "category-catalog";
+      entityId: string;
+      heads: Extract<PublicLedgerConflictHead, { kind: "category-catalog" }>[];
     };
 
 /** Recursively removes host-only attachment descriptors from conflict DTOs. */
@@ -45,6 +58,19 @@ export function projectLedgerConflicts(
           entityId: head.entityId,
           parents: [...head.parents],
           value: head.value,
+        })),
+      };
+    }
+    if (conflict.kind === "category-catalog") {
+      return {
+        kind: "category-catalog" as const,
+        entityId: conflict.entityId,
+        heads: conflict.heads.map((head) => ({
+          id: head.id,
+          kind: "category-catalog" as const,
+          entityId: head.entityId,
+          parents: [...head.parents],
+          value: { categories: head.value.categories.map((category) => ({ ...category })) },
         })),
       };
     }

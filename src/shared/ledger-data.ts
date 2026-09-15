@@ -12,7 +12,7 @@ export function decodeBudgetUpdate(value: unknown): BudgetInput & { expectedHead
 }
 
 export interface LedgerConflictChoice {
-  kind: 'transaction' | 'budget';
+  kind: 'transaction' | 'budget' | 'category-catalog';
   entityId: string;
   selectedHeadId: string;
   expectedHeadIds: string[];
@@ -25,7 +25,7 @@ export function decodeLedgerConflictChoice(value: unknown): LedgerConflictChoice
   const input = value as Record<string, unknown>;
   const keys = ['kind', 'entityId', 'selectedHeadId', 'expectedHeadIds'];
   if (Object.keys(input).length !== keys.length || keys.some((key) => !(key in input)) ||
-      (input.kind !== 'transaction' && input.kind !== 'budget') ||
+      (input.kind !== 'transaction' && input.kind !== 'budget' && input.kind !== 'category-catalog') ||
       !Array.isArray(input.expectedHeadIds) || input.expectedHeadIds.length < 2 ||
       input.expectedHeadIds.length > 10_000) {
     throw new LedgerSyncError('ledger-invalid-document');
@@ -59,6 +59,14 @@ export function resolveLedgerChoice(
   if (selected.kind === 'budget') {
     return resolveLedgerConflict(document, {
       id: revisionId, kind: 'budget', entityId: selected.entityId, value: selected.value,
+    }, choice.expectedHeadIds);
+  }
+  if (selected.kind === 'category-catalog') {
+    return resolveLedgerConflict(document, {
+      id: revisionId,
+      kind: 'category-catalog',
+      entityId: selected.entityId,
+      value: { categories: selected.value.categories.map((category) => ({ ...category })) },
     }, choice.expectedHeadIds);
   }
   const revision = Math.max(...conflict.heads.map(

@@ -48,8 +48,8 @@ const base64 = {
 };
 export const ledgerEnvelope = object({
   format: { const: "luna-ledger-envelope" },
-  version: { type: "integer", enum: [1, 2] },
-  payloadSchemaVersion: { type: "integer", enum: [1, 2] },
+  version: { type: "integer", enum: [1, 2, 3] },
+  payloadSchemaVersion: { type: "integer", enum: [1, 2, 3] },
   kdf: object({
     name: { const: "PBKDF2" },
     hash: { const: "SHA-256" },

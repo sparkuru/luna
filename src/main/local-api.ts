@@ -28,7 +28,7 @@ export function createNativeLedgerApi(
       : {}),
     ...(store.beginFullBackupRestore
       ? {
-          beginFullBackupRestore: (graph: import("../shared/ledger-sync").LedgerDocumentV2) =>
+          beginFullBackupRestore: (graph: import("../shared/ledger-sync").LedgerDocument) =>
             store.beginFullBackupRestore!(graph),
         }
       : {}),
@@ -54,14 +54,24 @@ export function createNativeLedgerApi(
     retryAttachmentDownload: (transactionId, attachmentId, conflictHeadId) =>
       store.retryAttachmentDownload(transactionId, attachmentId, conflictHeadId),
     getSnapshot: async (month) => store.getSnapshot(month),
-    createWorkspace: async (input) =>
-      store.createWorkspace(input, randomUUID(), new Date().toISOString()),
+    createWorkspace: async (input) => {
+      const { locale } = await config.getRendererSettings();
+      return store.createWorkspace(input, randomUUID(), new Date().toISOString(), locale);
+    },
     createTransaction: async (input) =>
       store.createTransaction(input, randomUUID(), new Date().toISOString()),
     updateTransaction: async (id, input, expected) =>
       store.updateTransaction(id, input, new Date().toISOString(), expected),
     deleteTransaction: async (id, expected) =>
       store.deleteTransaction(id, new Date().toISOString(), expected),
+    createCategory: async (input, expectedHeadIds) =>
+      store.createCategory(input, expectedHeadIds),
+    updateCategory: async (id, input, expectedHeadIds) =>
+      store.updateCategory(id, input, expectedHeadIds),
+    deleteCategory: async (id, expectedHeadIds) =>
+      store.deleteCategory(id, expectedHeadIds),
+    getCategoryUsage: async (id) => store.getCategoryUsage(id),
+    reassignCategory: async (input) => store.reassignCategory(input),
     setMonthlyBudget: async (month, amount, heads) =>
       store.setMonthlyBudget(month, amount, heads),
     getSettings: () => config.getRendererSettings(),

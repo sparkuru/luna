@@ -20,6 +20,7 @@ separate assurance boundary; never claim an audit from automated tests.
 | [Error Handling](./error-handling.md) | Domain, IPC, and safe renderer errors | Current |
 | [Portable Settings and Config Sync](./config-sync-guidelines.md) | Versioned settings, secret isolation, encrypted S3 conditions, merge, and tests | Current |
 | [Ledger Sync](./ledger-sync-guidelines.md) | Causal graph, conflicts, tombstones, encrypted session transport | Current |
+| [Category Catalog](./category-catalog-guidelines.md) | Stable category IDs, v3 catalog revisions, safe deletion and batch reassignment | Current |
 | [Quality Guidelines](./quality-guidelines.md) | Required checks and forbidden patterns | Current |
 | [Logging Guidelines](./logging-guidelines.md) | Sanitized diagnostics and smoke markers | Current |
 

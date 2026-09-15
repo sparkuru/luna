@@ -4,7 +4,11 @@ import { IDBFactory, IDBObjectStore } from "fake-indexeddb";
 import { BrowserProfiles } from "./profile-host";
 import { ServerHost } from "../sync/server-host";
 import { serverProfileId, type ServerBinding } from "../shared/server-api";
-import { seedLedgerDocument } from "../shared/ledger-sync";
+import {
+  seedLedgerDocument,
+  upgradeLedgerDocumentV3,
+} from "../shared/ledger-sync";
+import { defaultCategoryCatalog } from "../shared/category-catalog";
 import { encryptLedgerDocument } from "../shared/ledger-crypto";
 import type {
   SessionVault,
@@ -75,7 +79,10 @@ test("IDB graph and binding commit together; metadata abort rolls back both", as
     profile.id,
   );
   assert.deepEqual(await reopened.binding(), binding);
-  assert.deepEqual(await reopened.readDurable(), document());
+  assert.deepEqual(
+    await reopened.readDurable(),
+    upgradeLedgerDocumentV3(document(), defaultCategoryCatalog("en")),
+  );
   const before = await reopened.readDurable();
   await assert.rejects(
     reopened.bind(

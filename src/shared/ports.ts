@@ -14,6 +14,14 @@ import type {
 } from './api';
 import type { AttachmentMetadata } from './attachment-contract';
 import type { StoredAttachmentDescriptor } from './attachment-contract';
+import type { AppLocale } from './settings';
+import type {
+  CategoryCreateInput,
+  CategoryDefinition,
+  CategoryReassignmentInput,
+  CategoryUpdateInput,
+  CategoryUsage,
+} from './category-catalog';
 import type {
   FullBackupArchive,
   FullBackupRestoreSink,
@@ -109,10 +117,10 @@ export interface LocalStore {
     descriptor: StoredAttachmentDescriptor,
     ciphertext: Uint8Array,
   ): Promise<void>;
-  getRemotePayloadVersion?(targetId: string): 1 | 2 | null | Promise<1 | 2 | null>;
+  getRemotePayloadVersion?(targetId: string): 1 | 2 | 3 | null | Promise<1 | 2 | 3 | null>;
   setRemotePayloadVersion?(
     targetId: string,
-    version: 1 | 2,
+    version: 1 | 2 | 3,
   ): void | Promise<void>;
   getMigrationLease?(): MigrationLease | null | Promise<MigrationLease | null>;
   acquireMigrationLease?(lease: MigrationLease): void | Promise<void>;
@@ -122,12 +130,22 @@ export interface LocalStore {
   ): void | Promise<void>;
   releaseMigrationLease?(leaseId: string): void | Promise<void>;
   restoreFullBackup(archive: FullBackupArchive): Promise<void>;
-  beginFullBackupRestore?(graph: import('./ledger-sync').LedgerDocumentV2): FullBackupRestoreSink;
+  beginFullBackupRestore?(graph: LedgerDocument): FullBackupRestoreSink;
   getSnapshot(month: string): AppSnapshot;
-  createWorkspace(input: WorkspaceSetupInput, id: string, now: string): Workspace;
+  createWorkspace(
+    input: WorkspaceSetupInput,
+    id: string,
+    now: string,
+    locale?: AppLocale,
+  ): Workspace;
   createTransaction(input: TransactionDraft, id: string, now: string): Transaction;
   updateTransaction(id: string, input: TransactionDraft, now: string, expectedRevision?: number): Transaction;
   deleteTransaction(id: string, now: string, expectedRevision?: number): Transaction;
+  createCategory(input: CategoryCreateInput, expectedHeadIds?: string[]): CategoryDefinition;
+  updateCategory(id: string, input: CategoryUpdateInput, expectedHeadIds?: string[]): CategoryDefinition;
+  deleteCategory(id: string, expectedHeadIds?: string[]): void;
+  getCategoryUsage(id: string): CategoryUsage[];
+  reassignCategory(input: CategoryReassignmentInput): void;
   setMonthlyBudget(month: string, budgetMinor: string | null, expectedHeadIds?: string[]): void;
   close(): void;
 }

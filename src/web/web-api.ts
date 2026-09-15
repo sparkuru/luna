@@ -4,6 +4,7 @@ import {
   canonicalMinorUnits,
   createTransaction,
   decodeId,
+  parseMinorUnits,
   decodeMonth,
   decodeTransaction,
   decodeTransactionDraft,
@@ -67,15 +68,31 @@ import {
 import type { LedgerSessionStatus } from "../shared/ledger-session";
 import type { MigrationLease } from "../shared/ports";
 import {
+  categoryDefinitionById,
+  defaultCategoryCatalog,
+  decodeCategoryCreateInput,
+  decodeCategoryReassignmentInput,
+  decodeCategoryUpdateInput,
+  validateCategoryCatalog,
+  type CategoryCatalog,
+  type CategoryCreateInput,
+  type CategoryDefinition,
+  type CategoryReassignmentInput,
+  type CategoryUpdateInput,
+  type CategoryUsage,
+} from "../shared/category-catalog";
+import {
   appendLedgerRevision,
   assertBudgetHeads,
   attachmentInventory,
   budgetHeadIds,
+  categoryHeadIds,
+  decodeLedgerHeadIds,
   decodeLedgerDocument,
   LedgerSyncError,
   mergeLedgerDocuments,
   projectLedgerDocument,
-  seedLedgerDocument,
+  seedLedgerDocumentV3,
   type LedgerDocument,
 } from "../shared/ledger-sync";
 import {
@@ -116,7 +133,7 @@ interface WebLedgerState {
   settings: AppSettingsFileV1;
   ledger: LedgerDocument | null;
   attachments: WebAttachmentRecord[];
-  remotePayloadVersions: Record<string, 1 | 2>;
+  remotePayloadVersions: Record<string, 1 | 2 | 3>;
 }
 
 /**
@@ -204,7 +221,7 @@ export class WebLedgerApi implements LunaLedgerApi {
   };
 
   private async beginFullBackupRestore(
-    _graph: import("../shared/ledger-sync").LedgerDocumentV2,
+    _graph: import("../shared/ledger-sync").LedgerDocument,
   ): Promise<FullBackupRestoreSink> {
     const before = decodeStoredState(await this.store.read());
     const existingIds = new Set(
@@ -494,6 +511,9 @@ export class WebLedgerApi implements LunaLedgerApi {
       conflictCount: projection?.conflicts.length ?? 0,
       budgetHeadIds:
         state.ledger === null ? [] : budgetHeadIds(state.ledger, selectedMonth),
+      categories: projection?.categories ?? [],
+      categoryHeadIds:
+        state.ledger === null ? [] : categoryHeadIds(state.ledger),
       // Keep tombstones in the public snapshot for migration/conflict
       // inspection. Financial summaries and the renderer query layer exclude
       // deleted records from visible totals and results.
@@ -530,9 +550,9 @@ export class WebLedgerApi implements LunaLedgerApi {
         precision: normalized.precision,
         createdAt: now,
       };
-      state.ledger = seedLedgerDocument(workspace, [], {
+      state.ledger = seedLedgerDocumentV3(workspace, [], {
         [localMonthFromTimestamp(now)]: normalized.monthlyBudgetMinor,
-      });
+      }, defaultCategoryCatalog(state.settings.portable.locale.value));
       return workspace;
     });
   }
@@ -548,6 +568,7 @@ export class WebLedgerApi implements LunaLedgerApi {
         ledger.workspace.precision,
         new Date().toISOString(),
       );
+      assertWebTransactionCategories(ledger, transaction, true);
       const resolved = resolveWebAttachmentRefs(
         state,
         decoded.attachments,
@@ -587,6 +608,7 @@ export class WebLedgerApi implements LunaLedgerApi {
         ledger.workspace.precision,
         new Date().toISOString(),
       );
+      assertWebTransactionCategories(ledger, transaction, false);
       const currentStored = readStoredTransactionFromLedger(ledger, transactionId);
       const resolved =
         decoded.attachments === undefined
@@ -631,6 +653,152 @@ export class WebLedgerApi implements LunaLedgerApi {
         value,
       });
       return publicTransactionValue(value);
+    });
+  }
+
+  async createCategory(
+    input: CategoryCreateInput,
+    expectedHeadIds?: string[],
+  ): Promise<CategoryDefinition> {
+    const decoded = decodeCategoryCreateInput(input);
+    return this.mutate((state) => {
+      const ledger = this.requireLedger(state);
+      const catalog = this.readCategoryCatalog(ledger);
+      assertWebCategoryHeads(ledger, expectedHeadIds);
+      const position = catalog.categories
+        .filter((category) => category.type === decoded.type)
+        .reduce((highest, category) => Math.max(highest, category.position), -1) + 1;
+      const category: CategoryDefinition = {
+        id: randomId("category"),
+        type: decoded.type,
+        name: decoded.name,
+        enabled: true,
+        position,
+        deletedAt: null,
+      };
+      state.ledger = appendLedgerRevision(ledger, {
+        id: randomId("revision"),
+        kind: "category-catalog",
+        entityId: ledger.workspace.id,
+        value: validateCategoryCatalog({ categories: [...catalog.categories, category] }),
+      }, expectedHeadIds);
+      return category;
+    });
+  }
+
+  async updateCategory(
+    id: string,
+    input: CategoryUpdateInput,
+    expectedHeadIds?: string[],
+  ): Promise<CategoryDefinition> {
+    const categoryId = decodeId(id, "category id");
+    const decoded = decodeCategoryUpdateInput(input);
+    return this.mutate((state) => {
+      const ledger = this.requireLedger(state);
+      const catalog = this.readCategoryCatalog(ledger);
+      assertWebCategoryHeads(ledger, expectedHeadIds);
+      const current = categoryDefinitionById(catalog, categoryId);
+      if (current === undefined || current.deletedAt !== null)
+        throw new Error("LUNA_ERROR:not-found");
+      const updated: CategoryDefinition = {
+        ...current,
+        ...(decoded.name === undefined ? {} : { name: decoded.name }),
+        ...(decoded.enabled === undefined ? {} : { enabled: decoded.enabled }),
+      };
+      state.ledger = appendLedgerRevision(ledger, {
+        id: randomId("revision"),
+        kind: "category-catalog",
+        entityId: ledger.workspace.id,
+        value: validateCategoryCatalog({
+          categories: catalog.categories.map((category) =>
+            category.id === categoryId ? updated : category,
+          ),
+        }),
+      }, expectedHeadIds);
+      return updated;
+    });
+  }
+
+  async deleteCategory(id: string, expectedHeadIds?: string[]): Promise<void> {
+    const categoryId = decodeId(id, "category id");
+    return this.mutate((state) => {
+      const ledger = this.requireLedger(state);
+      const catalog = this.readCategoryCatalog(ledger);
+      assertWebCategoryHeads(ledger, expectedHeadIds);
+      const current = categoryDefinitionById(catalog, categoryId);
+      if (current === undefined || current.deletedAt !== null)
+        throw new Error("LUNA_ERROR:not-found");
+      const usage = categoryUsageFromDocument(ledger, categoryId);
+      if (usage.length > 0)
+        throw new Error("LUNA_ERROR:category-in-use");
+      state.ledger = appendLedgerRevision(ledger, {
+        id: randomId("revision"),
+        kind: "category-catalog",
+        entityId: ledger.workspace.id,
+        value: validateCategoryCatalog({
+          categories: catalog.categories.map((category) =>
+            category.id === categoryId
+              ? { ...category, enabled: false, deletedAt: new Date().toISOString() }
+              : category,
+          ),
+        }),
+      }, expectedHeadIds);
+    });
+  }
+
+  async getCategoryUsage(id: string): Promise<CategoryUsage[]> {
+    const categoryId = decodeId(id, "category id");
+    const ledger = this.requireLedger(decodeStoredState(await this.store.read()));
+    const catalog = this.readCategoryCatalog(ledger);
+    if (categoryDefinitionById(catalog, categoryId) === undefined)
+      throw new Error("LUNA_ERROR:not-found");
+    return categoryUsageFromDocument(ledger, categoryId);
+  }
+
+  async reassignCategory(input: CategoryReassignmentInput): Promise<void> {
+    const decoded = decodeCategoryReassignmentInput(input);
+    return this.mutate((state) => {
+      const ledger = this.requireLedger(state);
+      const catalog = this.readCategoryCatalog(ledger);
+      assertWebCategoryHeads(ledger, decoded.expectedHeadIds);
+      const source = categoryDefinitionById(catalog, decoded.sourceCategoryId);
+      const target = categoryDefinitionById(catalog, decoded.targetCategoryId);
+      if (
+        source === undefined || target === undefined ||
+        source.deletedAt !== null || target.deletedAt !== null ||
+        !target.enabled || source.type !== target.type || source.id === target.id
+      )
+        throw new Error("LUNA_ERROR:invalid-category");
+      const projection = projectLedgerDocument(ledger);
+      const updates: Array<{ next: Transaction; value: Transaction | StoredTransaction }> = [];
+      for (const transactionId of decoded.transactionIds) {
+        const transaction = projection.transactions.find(
+          (item) => item.id === transactionId && item.deletedAt === null,
+        );
+        if (transaction === undefined) throw new Error("LUNA_ERROR:not-found");
+        assertExpectedRevision(transaction, decoded.expectedRevisions[transactionId]);
+        if (!transaction.splits.some((split) => split.category === source.id))
+          throw new Error("LUNA_ERROR:invalid-category");
+        const next = reassignWebTransactionCategory(
+          transaction,
+          source.id,
+          target.id,
+          new Date().toISOString(),
+        );
+        const currentStored = readStoredTransactionFromLedger(ledger, transaction.id);
+        updates.push({
+          next,
+          value: graphTransactionValue(ledger, next, currentStored.attachments),
+        });
+      }
+      for (const update of updates) {
+        state.ledger = appendLedgerRevision(state.ledger!, {
+          id: randomId("revision"),
+          kind: "transaction",
+          entityId: update.next.id,
+          value: update.value,
+        });
+      }
     });
   }
 
@@ -681,7 +849,7 @@ export class WebLedgerApi implements LunaLedgerApi {
     await this.store.releaseMigrationLease(leaseId);
   }
 
-  async getRemotePayloadVersion(targetId: string): Promise<1 | 2 | null> {
+  async getRemotePayloadVersion(targetId: string): Promise<1 | 2 | 3 | null> {
     validateRemoteTargetId(targetId);
     const state = decodeStoredState(await this.store.read());
     return state.remotePayloadVersions[targetId] ?? null;
@@ -689,12 +857,12 @@ export class WebLedgerApi implements LunaLedgerApi {
 
   async setRemotePayloadVersion(
     targetId: string,
-    version: 1 | 2,
+    version: 1 | 2 | 3,
   ): Promise<void> {
     validateRemoteTargetId(targetId);
     await this.mutate((state) => {
       const current = state.remotePayloadVersions[targetId];
-      if (current === 2 || current === version) return;
+      if (current !== undefined && current >= version) return;
       state.remotePayloadVersions[targetId] = version;
     });
   }
@@ -719,7 +887,7 @@ export class WebLedgerApi implements LunaLedgerApi {
     archive: FullBackupArchive,
   ): Promise<void> {
     const incoming = decodeLedgerDocument(archive.graph);
-    if (incoming.schemaVersion !== 2)
+    if (incoming.schemaVersion !== 2 && incoming.schemaVersion !== 3)
       throw new FullBackupError("backup-invalid-container");
     const inventory = attachmentInventory(incoming);
     if (inventory.size !== archive.attachments.length)
@@ -839,7 +1007,7 @@ export class WebLedgerApi implements LunaLedgerApi {
 
   private async commitStagedFullBackup(
     _sessionId: string,
-    incoming: import("../shared/ledger-sync").LedgerDocumentV2,
+    incoming: import("../shared/ledger-sync").LedgerDocument,
     staged: ReadonlyMap<
       string,
       { descriptor: StoredAttachmentDescriptor; binaryKey: string }
@@ -998,6 +1166,17 @@ export class WebLedgerApi implements LunaLedgerApi {
     return state.ledger;
   }
 
+  private readCategoryCatalog(ledger: LedgerDocument): CategoryCatalog {
+    if (ledger.schemaVersion < 3)
+      throw new Error("LUNA_ERROR:invalid-category");
+    const projection = projectLedgerDocument(ledger);
+    if (projection.conflicts.some((conflict) => conflict.kind === "category-catalog"))
+      throw new Error("LUNA_ERROR:category-conflict");
+    return validateCategoryCatalog({
+      categories: projection.categories.map((category) => ({ ...category })),
+    });
+  }
+
   private requireTransaction(ledger: LedgerDocument, id: string): Transaction {
     const projection = projectLedgerDocument(ledger);
     if (
@@ -1082,11 +1261,16 @@ function decodeWebState(value: unknown): WebLedgerState {
       value.attachments.length > MAX_LEDGER_ATTACHMENT_COUNT
     )
       throw new Error("Invalid browser attachments.");
+    const settings = decodeSettingsFile(value.settings);
+    const decodedLedger = decodeWebLedgerState(value.ledger, settings.portable.locale.value);
     return {
       schemaVersion: WEB_STATE_SCHEMA_VERSION,
-      settings: decodeSettingsFile(value.settings),
-      ledger: value.ledger === null ? null : decodeLedgerDocument(value.ledger),
-      attachments: value.attachments.map(decodeWebAttachment),
+      settings,
+      ledger: decodedLedger.ledger,
+      // Legacy ledger graphs are intentionally reset to a fresh catalog, so
+      // staged/committed attachment blobs from those discarded records must
+      // not remain as unreachable browser state.
+      attachments: decodedLedger.legacy ? [] : value.attachments.map(decodeWebAttachment),
       remotePayloadVersions: decodeRemotePayloadVersions(
         value.remotePayloadVersions,
       ),
@@ -1099,20 +1283,23 @@ function decodeWebState(value: unknown): WebLedgerState {
       value.attachments.length > MAX_LEDGER_ATTACHMENT_COUNT
     )
       throw new Error("Invalid browser attachments.");
+    const settings = decodeSettingsFile(value.settings);
+    const decodedLedger = decodeWebLedgerState(value.ledger, settings.portable.locale.value);
     return {
       schemaVersion: WEB_STATE_SCHEMA_VERSION,
-      settings: decodeSettingsFile(value.settings),
-      ledger: value.ledger === null ? null : decodeLedgerDocument(value.ledger),
-      attachments: value.attachments.map(decodeWebAttachment),
+      settings,
+      ledger: decodedLedger.ledger,
+      attachments: decodedLedger.legacy ? [] : value.attachments.map(decodeWebAttachment),
       remotePayloadVersions: {},
     };
   }
   if (value.schemaVersion === 2) {
     assertExactKeys(value, ["schemaVersion", "settings", "ledger"]);
+    const settings = decodeSettingsFile(value.settings);
     return {
       schemaVersion: WEB_STATE_SCHEMA_VERSION,
-      settings: decodeSettingsFile(value.settings),
-      ledger: value.ledger === null ? null : decodeLedgerDocument(value.ledger),
+      settings,
+      ledger: decodeWebLedgerState(value.ledger, settings.portable.locale.value).ledger,
       attachments: [],
       remotePayloadVersions: {},
     };
@@ -1155,7 +1342,26 @@ function decodeWebState(value: unknown): WebLedgerState {
     ledger:
       workspace === null
         ? null
-        : seedLedgerDocument(workspace, transactions, budgets),
+        : seedLedgerDocumentV3(workspace, [], budgets, defaultCategoryCatalog(settings.portable.locale.value)),
+  };
+}
+
+function decodeWebLedgerState(
+  value: unknown,
+  locale: import("../shared/settings").AppLocale,
+): { ledger: LedgerDocument | null; legacy: boolean } {
+  if (value === null) return { ledger: null, legacy: false };
+  const ledger = decodeLedgerDocument(value);
+  if (ledger.schemaVersion >= 3) return { ledger, legacy: false };
+  const projection = projectLedgerDocument(ledger);
+  return {
+    ledger: seedLedgerDocumentV3(
+      projection.workspace,
+      [],
+      projection.budgets,
+      defaultCategoryCatalog(locale),
+    ),
+    legacy: true,
   };
 }
 
@@ -1163,6 +1369,95 @@ function normalizeBudget(value: string): string {
   const normalized = canonicalMinorUnits(value);
   if (normalized.startsWith("-")) throw new Error("LUNA_ERROR:invalid-amount");
   return normalized;
+}
+
+function assertWebCategoryHeads(
+  document: LedgerDocument,
+  expected: string[] | undefined,
+): void {
+  if (expected === undefined) return;
+  if (JSON.stringify(decodeLedgerHeadIds(expected)) !== JSON.stringify(categoryHeadIds(document)))
+    throw new Error("LUNA_ERROR:category-stale");
+}
+
+function assertWebTransactionCategories(
+  document: LedgerDocument,
+  transaction: Transaction,
+  isCreate: boolean,
+): void {
+  const catalog = validateCategoryCatalog({
+    categories: projectLedgerDocument(document).categories.map((category) => ({ ...category })),
+  });
+  for (const split of transaction.splits) {
+    const category = categoryDefinitionById(catalog, split.category);
+    if (
+      category === undefined ||
+      category.type !== transaction.type ||
+      (isCreate && (!category.enabled || category.deletedAt !== null))
+    ) {
+      throw new Error("LUNA_ERROR:invalid-category");
+    }
+  }
+}
+
+function categoryUsageFromDocument(
+  document: LedgerDocument,
+  categoryId: string,
+): CategoryUsage[] {
+  return projectLedgerDocument(document).transactions
+    .filter((transaction) => transaction.deletedAt === null)
+    .flatMap((transaction) => {
+      const matching = transaction.splits.filter((split) => split.category === categoryId);
+      if (matching.length === 0) return [];
+      const sourceAmountMinor = matching
+        .reduce((total, split) => total + parseMinorUnits(split.amountMinor), 0n)
+        .toString();
+      return [{
+        transactionId: transaction.id,
+        revision: transaction.revision,
+        date: transaction.date,
+        type: transaction.type,
+        amountMinor: transaction.amountMinor,
+        merchant: transaction.merchant,
+        notes: transaction.notes,
+        sourceAmountMinor,
+      }];
+    })
+    .sort((left, right) =>
+      right.date.localeCompare(left.date) || left.transactionId.localeCompare(right.transactionId),
+    );
+}
+
+function reassignWebTransactionCategory(
+  transaction: Transaction,
+  sourceCategoryId: string,
+  targetCategoryId: string,
+  now: string,
+): Transaction {
+  const sourceSplits = transaction.splits.filter((split) => split.category === sourceCategoryId);
+  if (sourceSplits.length === 0) throw new Error("LUNA_ERROR:invalid-category");
+  const target = transaction.splits.find((split) => split.category === targetCategoryId);
+  const sourceAmount = sourceSplits.reduce((total, split) => total + parseMinorUnits(split.amountMinor), 0n);
+  const splits = target === undefined
+    ? transaction.splits.reduce<Array<{ category: string; amountMinor: string }>>((result, split) => {
+        if (split.category !== sourceCategoryId) {
+          result.push({ ...split });
+        } else if (!result.some((candidate) => candidate.category === targetCategoryId)) {
+          result.push({ ...split, category: targetCategoryId, amountMinor: canonicalMinorUnits(sourceAmount.toString()) });
+        }
+        return result;
+      }, [])
+    : transaction.splits
+        .filter((split) => split.category !== sourceCategoryId)
+        .map((split) => split.category === targetCategoryId
+          ? {
+              ...split,
+              amountMinor: canonicalMinorUnits(
+                (parseMinorUnits(split.amountMinor) + sourceAmount).toString(),
+              ),
+            }
+          : { ...split });
+  return { ...transaction, revision: transaction.revision + 1, updatedAt: now, splits };
 }
 
 function decodeWebAttachment(value: unknown): WebAttachmentRecord {
@@ -1213,13 +1508,13 @@ function decodeWebAttachment(value: unknown): WebAttachmentRecord {
   };
 }
 
-function decodeRemotePayloadVersions(value: unknown): Record<string, 1 | 2> {
+function decodeRemotePayloadVersions(value: unknown): Record<string, 1 | 2 | 3> {
   if (!isRecord(value) || Object.keys(value).length > 1000)
     throw new Error("Invalid browser remote checkpoints.");
-  const result: Record<string, 1 | 2> = {};
+  const result: Record<string, 1 | 2 | 3> = {};
   for (const [targetId, version] of Object.entries(value)) {
     validateRemoteTargetId(targetId);
-    if (version !== 1 && version !== 2)
+    if (version !== 1 && version !== 2 && version !== 3)
       throw new Error("Invalid browser remote checkpoint version.");
     result[targetId] = version;
   }
@@ -1292,7 +1587,7 @@ function graphTransactionValue(
   attachments: readonly StoredAttachmentDescriptor[],
 ): Transaction | StoredTransaction {
   const financial = withoutAttachmentMetadata(transaction);
-  return ledger.schemaVersion === 2 || attachments.length > 0
+  return ledger.schemaVersion >= 2 || attachments.length > 0
     ? storedTransactionFromTransaction(financial, attachments)
     : financial;
 }

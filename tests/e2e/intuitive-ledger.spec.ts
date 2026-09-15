@@ -21,6 +21,11 @@ async function openEntry(page: Page, type: 'expense' | 'income'): Promise<void> 
   await expect(page.locator('#transaction-amount')).toBeFocused();
 }
 
+async function chooseCategory(page: Page, name: string): Promise<void> {
+  await page.locator('#choose-category').click();
+  await page.getByRole('button', { name, exact: true }).click();
+}
+
 async function openTransactionActions(page: Page, row: Locator): Promise<void> {
   await expect(row).toBeVisible();
   const trigger = row.locator('.transaction-actions-trigger');
@@ -69,7 +74,7 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
   await expect(page.locator('#transaction-date')).toBeVisible();
   await expect(page.locator('#transaction-date')).toHaveValue(today);
   await expect(page.locator('#transaction-type')).toHaveValue('expense');
-  await page.getByRole('button', { name: 'Food', exact: true }).click();
+  await chooseCategory(page, 'Food');
   page.once('dialog', async (dialog) => {
     expect(dialog.message()).toContain('not used for the selected type');
     await dialog.dismiss();
@@ -85,11 +90,8 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
   await page.locator('#quick-expense').click();
   await expect(page.locator('#transaction-type')).toHaveValue('expense');
   await page.locator('#transaction-amount').fill('18.50');
-  await page.locator('#choose-category').click();
-  await expect(page.locator('#category-dialog')).toBeVisible();
-  await page.locator('#category-custom').fill('Lunch');
-  await page.locator('#use-category').click();
-  await expect(page.locator('#transaction-category')).toHaveValue('Lunch');
+  await chooseCategory(page, 'Food');
+  await expect(page.locator('#transaction-category')).toHaveValue('Food');
   await page.locator('#transaction-advanced-details summary').click();
   await page.locator('#transaction-merchant').fill('Corner cafe');
   await page.getByRole('button', { name: 'Save transaction' }).click();
@@ -122,7 +124,7 @@ test('income entry and advanced fields are keyboard reachable', async ({ page })
   await expect(page.locator('#transaction-dialog')).toBeVisible();
   await expect(page.locator('#transaction-amount')).toHaveValue('0.30');
   await page.locator('#transaction-amount').fill('2400.00');
-  await page.locator('#transaction-category').fill('Salary');
+  await chooseCategory(page, 'Salary');
 
   const details = page.locator('#transaction-advanced-details');
   await details.locator('summary').focus();
@@ -145,7 +147,7 @@ test('statistics show the top five expenses first and reveal the complete rankin
         type: 'expense',
         amountMinor,
         date,
-        splits: [{ category: `Rank ${index + 1}`, amountMinor }],
+        splits: [{ category: `expense:${index}`, amountMinor }],
         merchant: `Ranked expense ${index + 1}`,
       });
     }
@@ -165,7 +167,7 @@ test('image attachments stage, save, reload, and preview through the Web host', 
   await setupWorkspace(page, 'Image household');
   await openEntry(page, 'expense');
   await page.locator('#transaction-amount').fill('8.50');
-  await page.locator('#transaction-category').fill('Photo');
+  await chooseCategory(page, 'Food');
   await page.locator('#transaction-images').setInputFiles({
     name: 'pixel.png',
     mimeType: 'image/png',
@@ -265,9 +267,9 @@ test('375px home viewport keeps the month, summary, two records, and central ent
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     for (const [type, amountMinor, category, merchant] of [
-      ['expense', '1850', 'Food', 'Lunch'],
-      ['expense', '4200', 'Home', ''],
-      ['income', '250000', 'Salary', 'Employer'],
+      ['expense', '1850', 'expense:0', 'Lunch'],
+      ['expense', '4200', 'expense:3', ''],
+      ['income', '250000', 'income:0', 'Employer'],
     ] as const) {
       await window.lunaLedger.createTransaction({
         type,
@@ -277,7 +279,7 @@ test('375px home viewport keeps the month, summary, two records, and central ent
         merchant,
         ...(merchant === 'Lunch'
           ? { notes: 'A long note that must remain complete in transaction details.' }
-          : category === 'Home'
+          : category === 'expense:3'
             ? { notes: 'Home note fallback title' }
             : {}),
       });
@@ -348,7 +350,7 @@ test('minimum mobile width keeps critical actions above the fixed navigation', a
       type: 'expense',
       amountMinor: '88888888',
       date,
-      splits: [{ category: 'Large amount', amountMinor: '88888888' }],
+      splits: [{ category: 'expense:0', amountMinor: '88888888' }],
       merchant: 'Large amount regression',
     });
   });

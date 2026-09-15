@@ -16,7 +16,6 @@ import {
   decodeLedgerDocument,
   upgradeLedgerDocument,
   type LedgerDocument,
-  type LedgerDocumentV2,
 } from "./ledger-sync";
 import { isStoredTransaction } from "./ledger-record";
 import { LedgerCryptoError, validateLedgerPassword } from "./ledger-crypto";
@@ -62,7 +61,7 @@ export interface FullBackupAttachment {
 }
 
 export interface FullBackupArchive {
-  graph: LedgerDocumentV2;
+  graph: LedgerDocument;
   attachments: FullBackupAttachment[];
 }
 
@@ -84,12 +83,12 @@ export interface FullBackupStream {
  */
 export interface FullBackupRestoreSink {
   writeAttachment(item: FullBackupAttachment): Promise<void> | void;
-  commit(graph: LedgerDocumentV2): Promise<void> | void;
+  commit(graph: LedgerDocument): Promise<void> | void;
   abort(): Promise<void> | void;
 }
 
 export interface FullBackupStreamImportReceipt {
-  graph: LedgerDocumentV2;
+  graph: LedgerDocument;
   attachmentCount: number;
   totalBytes: number;
 }
@@ -103,7 +102,7 @@ export interface FullBackupStreamDecoder {
 interface FullBackupManifest {
   format: typeof FULL_BACKUP_FORMAT;
   version: typeof FULL_BACKUP_VERSION;
-  graph: LedgerDocumentV2;
+  graph: LedgerDocument;
   attachments: Array<{
     id: string;
     cipherByteLength: number;
@@ -386,7 +385,7 @@ export function createFullBackupStreamDecoder(
   password: string,
   expectedTotalBytes: number | null,
   beginRestore: (
-    graph: LedgerDocumentV2,
+    graph: LedgerDocument,
   ) => Promise<FullBackupRestoreSink> | FullBackupRestoreSink,
 ): FullBackupStreamDecoder {
   return new FullBackupStreamDecoderImpl(password, expectedTotalBytes, beginRestore);
@@ -419,7 +418,7 @@ class FullBackupStreamDecoderImpl implements FullBackupStreamDecoder {
     private password: string,
     private readonly expectedTotalBytes: number | null,
     private readonly beginRestore: (
-      graph: LedgerDocumentV2,
+      graph: LedgerDocument,
     ) => Promise<FullBackupRestoreSink> | FullBackupRestoreSink,
   ) {
     if (
@@ -805,9 +804,10 @@ export async function decodeFullBackup(
   return { graph: manifest.graph, attachments };
 }
 
-function normalizeGraph(document: LedgerDocument): LedgerDocumentV2 {
+function normalizeGraph(document: LedgerDocument): LedgerDocument {
   try {
-    return upgradeLedgerDocument(decodeLedgerDocument(document));
+    const decoded = decodeLedgerDocument(document);
+    return decoded.schemaVersion >= 3 ? decoded : upgradeLedgerDocument(decoded);
   } catch (error) {
     if (error instanceof FullBackupError) throw error;
     throw error;
@@ -815,7 +815,7 @@ function normalizeGraph(document: LedgerDocument): LedgerDocumentV2 {
 }
 
 function validateGraphInventory(
-  graph: LedgerDocumentV2,
+  graph: LedgerDocument,
 ): Map<string, StoredAttachmentDescriptor> {
   const inventory = new Map<string, StoredAttachmentDescriptor>();
   for (const revision of graph.revisions) {
@@ -912,10 +912,11 @@ function decodeManifest(value: unknown): FullBackupManifest {
   if (!Array.isArray(value.attachments)) fail("backup-invalid-container");
   if (value.attachments.length > MAX_LEDGER_ATTACHMENT_COUNT)
     fail("backup-too-large");
-  let graph: LedgerDocumentV2;
+  let graph: LedgerDocument;
   try {
     const decodedGraph = decodeLedgerDocument(value.graph);
-    if (decodedGraph.schemaVersion !== 2) fail("backup-invalid-container");
+    if (decodedGraph.schemaVersion !== 2 && decodedGraph.schemaVersion !== 3)
+      fail("backup-invalid-container");
     graph = decodedGraph;
   } catch (error) {
     if (error instanceof FullBackupError) throw error;

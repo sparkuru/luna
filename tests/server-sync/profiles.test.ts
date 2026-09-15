@@ -44,7 +44,7 @@ const draft: TransactionDraft = {
   type: "expense",
   amountMinor: "1200",
   date: "2026-09-08",
-  splits: [{ category: "Food", amountMinor: "1200" }],
+  splits: [{ category: "expense:0", amountMinor: "1200" }],
   notes: "Private note fixture",
 };
 

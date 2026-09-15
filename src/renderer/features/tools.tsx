@@ -708,7 +708,9 @@ export function LedgerTools({
                   <legend>
                     {conflict.kind === "budget"
                       ? `${m("budgetConflict")} · ${formatMonth(app.locale, conflict.entityId)}`
-                      : m("transactionConflict")}
+                      : conflict.kind === "category-catalog"
+                        ? m("categoryConflict")
+                        : m("transactionConflict")}
                   </legend>
                   <div className="ledger-conflict-candidates">
                     {conflict.heads.map((head, index) => {
@@ -722,7 +724,9 @@ export function LedgerTools({
                                   : money(head.value),
                               ],
                             ]
-                          : [
+                          : head.kind === "category-catalog"
+                            ? [["amount", String(head.value.categories.length)]]
+                            : [
                               ["date", formatDate(app.locale, head.value.date)],
                               ["type", m(head.value.type)],
                               ["amount", money(head.value.amountMinor)],

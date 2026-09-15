@@ -26,6 +26,7 @@ export interface ServerCapabilities {
   attachmentProtocolVersion: number | null;
   limits: ServerCapabilityLimits | null;
   supportsLedgerV2: boolean;
+  supportsLedgerV3?: boolean;
   supportsAttachments: boolean;
 }
 export function legacyServerCapabilities(): ServerCapabilities {
@@ -35,6 +36,7 @@ export function legacyServerCapabilities(): ServerCapabilities {
     attachmentProtocolVersion: null,
     limits: null,
     supportsLedgerV2: false,
+    supportsLedgerV3: false,
     supportsAttachments: false,
   };
 }
@@ -48,7 +50,7 @@ export function decodeServerCapabilities(value: unknown): ServerCapabilities {
     if (!Array.isArray(candidate)) return [1];
     const versions = candidate.filter(
       (version): version is number =>
-        Number.isSafeInteger(version) && version >= 1 && version <= 2,
+        Number.isSafeInteger(version) && version >= 1 && version <= 3,
     );
     return versions.length > 0 ? [...new Set(versions)].sort() : [1];
   };
@@ -85,12 +87,15 @@ export function decodeServerCapabilities(value: unknown): ServerCapabilities {
     record.attachmentProtocolVersion === 1 ? 1 : null;
   const supportsLedgerV2 =
     ledgerEnvelopeVersions.includes(2) && ledgerPayloadVersions.includes(2);
+  const supportsLedgerV3 =
+    ledgerEnvelopeVersions.includes(3) && ledgerPayloadVersions.includes(3);
   return {
     ledgerEnvelopeVersions,
     ledgerPayloadVersions,
     attachmentProtocolVersion,
     limits,
     supportsLedgerV2,
+    supportsLedgerV3,
     supportsAttachments:
       supportsLedgerV2 && attachmentProtocolVersion === 1 && limits !== null,
   };

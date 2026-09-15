@@ -369,7 +369,7 @@ async function runPackagedStorageSmoke(): Promise<void> {
         type: "expense",
         amountMinor: "1250",
         date: "2026-08-30",
-        splits: [{ category: "Smoke", amountMinor: "1250" }],
+        splits: [{ category: "expense:0", amountMinor: "1250" }],
         merchant: "Local smoke",
         paymentMethod: "Test",
         notes: "Packaged storage verification",
@@ -459,10 +459,14 @@ async function runPackagedStorageSmoke(): Promise<void> {
           }
           await setValue(field, value);
         };
-        await setField('type', 'income');
         await setField('amount', '24.50');
         await setField('date', '2026-08-30');
-        await setField('category', 'Freelance');
+        document.querySelector('#choose-category').click();
+        await waitFor('#category-dialog');
+        const category = [...document.querySelectorAll('#category-options button')]
+          .find((element) => element.textContent?.trim() === '兼职');
+        if (!(category instanceof HTMLButtonElement)) throw new Error('income category option is missing');
+        category.click();
         await setField('merchant', 'UI form smoke');
         await setField('payment', 'Bank transfer');
         await setField('notes', 'Packaged UI form verification');

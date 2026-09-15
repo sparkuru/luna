@@ -34,6 +34,7 @@ import { Setup } from "../features/setup";
 import { TransactionDialog, type Entry } from "../features/entry";
 import { BudgetEditor, Statistics } from "../features/budget";
 import { Settings, LanguageSelect } from "../features/settings";
+import { Categories } from "../features/categories";
 import { LedgerTools } from "../features/tools";
 import { getClientSurface } from "../client-surface";
 export function App() {
@@ -739,6 +740,8 @@ export function App() {
             ) : primarySection === "settings" ? (
               settingsSubpage === "ledgers" ? (
                 <LedgerDirectoryPanel />
+              ) : settingsSubpage === "categories" ? (
+                <Categories />
               ) : settingsSubpage === "budget" ? (
                 <BudgetEditor key={`${workspace.id}:${month}`} />
               ) : settingsSubpage === "account" ? (
@@ -902,8 +905,10 @@ function WebPageTopbar({
       : active === "budget"
         ? message("monthlyLimit")
         : active === "settings"
-          ? settingsSubpage === "ledgers"
-            ? message("ledgersTitle")
+            ? settingsSubpage === "ledgers"
+              ? message("ledgersTitle")
+            : settingsSubpage === "categories"
+              ? message("categoriesTitle")
             : settingsSubpage === "preferences"
               ? message("preferencesTitle")
               : settingsSubpage === "account"
@@ -1046,6 +1051,7 @@ function SettingsNavigation({
   const items: { key: string; path: string; label: string }[] = [
     { key: "settings", path: "/settings", label: message("settingsTitle") },
     { key: "ledgers", path: "/settings/ledgers", label: message("ledgersTitle") },
+    { key: "categories", path: "/settings/categories", label: message("categoriesTitle") },
     { key: "preferences", path: "/settings/preferences", label: message("preferencesTitle") },
     { key: "account", path: "/settings/account", label: message("accountTitle") },
     { key: "sync", path: "/settings/sync", label: message("ledgerToolsLink") },
@@ -1079,20 +1085,20 @@ function SettingsNavigation({
       label: "settingsGroupWorkspace",
       items: web
         ? [
-            ...items.slice(1, 3),
+            ...items.slice(1, 4),
             { key: "budget", path: "/budget", label: message("monthlyLimit") },
           ]
-        : items.slice(1, 3),
+        : items.slice(1, 4),
     },
     {
       key: "access",
       label: "settingsGroupAccess",
-      items: items.slice(3, 6),
+      items: items.slice(4, 7),
     },
     {
       key: "data",
       label: "settingsGroupData",
-      items: items.slice(6),
+      items: items.slice(7),
     },
   ];
   return (

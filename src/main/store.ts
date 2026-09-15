@@ -33,15 +33,33 @@ import {
   assertBudgetHeads,
   attachmentInventory,
   budgetHeadIds,
+  categoryHeadIds,
   decodeLedgerDocument,
+  decodeLedgerHeadIds,
   mergeLedgerDocuments,
   projectLedgerDocument,
-  seedLedgerDocument,
+  seedLedgerDocumentV3,
   LedgerSyncError,
   type LedgerConflict,
   type LedgerDocument,
   type LedgerRevisionInput,
 } from "../shared/ledger-sync";
+import {
+  categoryDefinitionById,
+  defaultCategoryCatalog,
+  decodeCategoryCreateInput,
+  decodeCategoryReassignmentInput,
+  decodeCategoryUpdateInput,
+  normalizeCategoryName,
+  validateCategoryCatalog,
+  type CategoryCatalog,
+  type CategoryCreateInput,
+  type CategoryDefinition,
+  type CategoryReassignmentInput,
+  type CategoryUpdateInput,
+  type CategoryUsage,
+} from "../shared/category-catalog";
+import type { AppLocale } from "../shared/settings";
 import {
   resolveLedgerChoice,
   type LedgerConflictChoice,
@@ -156,6 +174,8 @@ export class SQLiteLocalStore implements LocalStore {
       this.database.pragma("journal_mode = WAL");
     }
     this.migrate();
+    this.migrateTargetPayloadVersions();
+    this.resetLegacyLedgerIfNeeded();
     if (profile)
       this.database
         .transaction(() => {
@@ -270,18 +290,18 @@ export class SQLiteLocalStore implements LocalStore {
       .immediate();
   }
 
-  getRemotePayloadVersion(targetId: string): 1 | 2 | null {
+  getRemotePayloadVersion(targetId: string): 1 | 2 | 3 | null {
     validateRemoteTargetId(targetId);
     const row = this.database
       .prepare(
         "SELECT payload_version FROM ledger_target_versions WHERE target_id = @target_id",
       )
       .get({ target_id: targetId }) as { payload_version: number } | undefined;
-    return row?.payload_version === 1 || row?.payload_version === 2
+    return row?.payload_version === 1 || row?.payload_version === 2 || row?.payload_version === 3
       ? row.payload_version
       : null;
   }
-  setRemotePayloadVersion(targetId: string, version: 1 | 2): void {
+  setRemotePayloadVersion(targetId: string, version: 1 | 2 | 3): void {
     validateRemoteTargetId(targetId);
     this.database
       .transaction(() => {
@@ -348,6 +368,8 @@ export class SQLiteLocalStore implements LocalStore {
       workspace,
       conflictCount: projection?.conflicts.length ?? 0,
       budgetHeadIds: document === null ? [] : budgetHeadIds(document, month),
+      categories: projection?.categories ?? [],
+      categoryHeadIds: document === null ? [] : categoryHeadIds(document),
       transactions,
       summary:
         workspace === null
@@ -624,7 +646,7 @@ export class SQLiteLocalStore implements LocalStore {
 
   async restoreFullBackup(archive: FullBackupArchive): Promise<void> {
     const incoming = decodeLedgerDocument(archive.graph);
-    if (incoming.schemaVersion !== 2)
+    if (incoming.schemaVersion !== 2 && incoming.schemaVersion !== 3)
       throw new FullBackupError("backup-invalid-container");
     const inventory = attachmentInventory(incoming);
     if (inventory.size !== archive.attachments.length)
@@ -744,7 +766,7 @@ export class SQLiteLocalStore implements LocalStore {
   }
 
   beginFullBackupRestore(
-    _graph: import("../shared/ledger-sync").LedgerDocumentV2,
+    _graph: import("../shared/ledger-sync").LedgerDocument,
   ): FullBackupRestoreSink {
     const sessionId = `backup-${randomUUID()}`;
     return {
@@ -790,7 +812,7 @@ export class SQLiteLocalStore implements LocalStore {
 
   private commitStagedFullBackup(
     sessionId: string,
-    incoming: import("../shared/ledger-sync").LedgerDocumentV2,
+    incoming: import("../shared/ledger-sync").LedgerDocument,
   ): void {
     const inventory = attachmentInventory(incoming);
     this.database
@@ -946,6 +968,7 @@ export class SQLiteLocalStore implements LocalStore {
     input: WorkspaceSetupInput,
     id: string,
     now: string,
+    locale: AppLocale = "zh-CN",
   ): Workspace {
     const normalized = normalizeWorkspaceSetup(input);
     const workspaceId = decodeId(id, "workspace id");
@@ -990,9 +1013,9 @@ export class SQLiteLocalStore implements LocalStore {
           budget_minor: normalized.monthlyBudgetMinor,
         });
       this.persistGraph(
-        seedLedgerDocument(workspace, [], {
+        seedLedgerDocumentV3(workspace, [], {
           [currentMonth]: normalized.monthlyBudgetMinor,
-        }),
+        }, defaultCategoryCatalog(locale)),
       );
     });
     write();
@@ -1020,6 +1043,7 @@ export class SQLiteLocalStore implements LocalStore {
 
     const write = this.database.transaction(() => {
       this.assertMigrationWritable();
+      this.assertTransactionCategories(transaction, true);
       this.insertTransaction(transaction);
       this.insertRevision(transaction, "create");
       this.insertPendingOperation(transaction, "create");
@@ -1057,6 +1081,7 @@ export class SQLiteLocalStore implements LocalStore {
         now,
       );
       const currentStored = this.readStoredTransaction(transactionId);
+      this.assertTransactionCategories(transaction, false);
       const resolved =
         decodedInput.attachments === undefined
           ? { descriptors: [...currentStored.attachments], tokens: [] as string[] }
@@ -1141,6 +1166,156 @@ export class SQLiteLocalStore implements LocalStore {
     return write.immediate();
   }
 
+  createCategory(
+    input: CategoryCreateInput,
+    expectedHeadIds?: string[],
+  ): CategoryDefinition {
+    const decoded = decodeCategoryCreateInput(input);
+    const write = this.database.transaction(() => {
+      this.assertMigrationWritable();
+      const document = this.requireLedgerDocument();
+      const catalog = this.readCategoryCatalog(document);
+      this.assertCategoryHeads(document, expectedHeadIds);
+      const position = catalog.categories
+        .filter((category) => category.type === decoded.type)
+        .reduce((highest, category) => Math.max(highest, category.position), -1) + 1;
+      const category: CategoryDefinition = {
+        id: randomUUID(),
+        type: decoded.type,
+        name: normalizeCategoryName(decoded.name),
+        enabled: true,
+        position,
+        deletedAt: null,
+      };
+      const next = validateCategoryCatalog({
+        categories: [...catalog.categories, category],
+      });
+      this.appendCategoryCatalog(document, next, expectedHeadIds);
+      return category;
+    });
+    return write.immediate();
+  }
+
+  updateCategory(
+    id: string,
+    input: CategoryUpdateInput,
+    expectedHeadIds?: string[],
+  ): CategoryDefinition {
+    const categoryId = decodeId(id, "category id");
+    const decoded = decodeCategoryUpdateInput(input);
+    const write = this.database.transaction(() => {
+      this.assertMigrationWritable();
+      const document = this.requireLedgerDocument();
+      const catalog = this.readCategoryCatalog(document);
+      this.assertCategoryHeads(document, expectedHeadIds);
+      const current = categoryDefinitionById(catalog, categoryId);
+      if (current === undefined || current.deletedAt !== null)
+        throw new DomainError("not-found", "Category was not found.");
+      const nextCategory: CategoryDefinition = {
+        ...current,
+        ...(decoded.name === undefined ? {} : { name: decoded.name }),
+        ...(decoded.enabled === undefined ? {} : { enabled: decoded.enabled }),
+      };
+      const next = validateCategoryCatalog({
+        categories: catalog.categories.map((category) =>
+          category.id === categoryId ? nextCategory : category,
+        ),
+      });
+      this.appendCategoryCatalog(document, next, expectedHeadIds);
+      return nextCategory;
+    });
+    return write.immediate();
+  }
+
+  deleteCategory(id: string, expectedHeadIds?: string[]): void {
+    const categoryId = decodeId(id, "category id");
+    this.database
+      .transaction(() => {
+        this.assertMigrationWritable();
+        const document = this.requireLedgerDocument();
+        const catalog = this.readCategoryCatalog(document);
+        this.assertCategoryHeads(document, expectedHeadIds);
+        const current = categoryDefinitionById(catalog, categoryId);
+        if (current === undefined || current.deletedAt !== null)
+          throw new DomainError("not-found", "Category was not found.");
+        const usage = this.categoryUsageFromDocument(document, categoryId);
+        if (usage.length > 0)
+          throw new DomainError("category-in-use", "Category is still used by transactions.");
+        const next = validateCategoryCatalog({
+          categories: catalog.categories.map((category) =>
+            category.id === categoryId
+              ? { ...category, enabled: false, deletedAt: new Date().toISOString() }
+              : category,
+          ),
+        });
+        this.appendCategoryCatalog(document, next, expectedHeadIds);
+      })
+      .immediate();
+  }
+
+  getCategoryUsage(id: string): CategoryUsage[] {
+    const categoryId = decodeId(id, "category id");
+    const document = this.requireLedgerDocument();
+    const catalog = this.readCategoryCatalog(document);
+    if (categoryDefinitionById(catalog, categoryId) === undefined)
+      throw new DomainError("not-found", "Category was not found.");
+    return this.categoryUsageFromDocument(document, categoryId);
+  }
+
+  reassignCategory(input: CategoryReassignmentInput): void {
+    const decoded = decodeCategoryReassignmentInput(input);
+    const now = new Date().toISOString();
+    this.database
+      .transaction(() => {
+        this.assertMigrationWritable();
+        const document = this.requireLedgerDocument();
+        const catalog = this.readCategoryCatalog(document);
+        this.assertCategoryHeads(document, decoded.expectedHeadIds);
+        const source = categoryDefinitionById(catalog, decoded.sourceCategoryId);
+        const target = categoryDefinitionById(catalog, decoded.targetCategoryId);
+        if (
+          source === undefined || target === undefined ||
+          source.deletedAt !== null || target.deletedAt !== null ||
+          !target.enabled || source.type !== target.type || source.id === target.id
+        )
+          throw new DomainError("invalid-category", "Category reassignment target is invalid.");
+
+        const projection = projectLedgerDocument(document);
+        const updates: Array<{ next: Transaction; stored: StoredTransaction }> = [];
+        for (const transactionId of decoded.transactionIds) {
+          const transaction = projection.transactions.find(
+            (item) => item.id === transactionId && item.deletedAt === null,
+          );
+          if (transaction === undefined)
+            throw new DomainError("not-found", "Transaction was not found.");
+          assertExpectedRevision(transaction, decoded.expectedRevisions[transactionId]);
+          if (!transaction.splits.some((split) => split.category === source.id))
+            throw new DomainError("invalid-category", "Transaction does not use the source category.");
+          const next = reassignTransactionCategory(transaction, source.id, target.id, now);
+          const currentStored = this.readStoredTransaction(transaction.id);
+          updates.push({
+            next,
+            stored: storedTransactionFromTransaction(
+              withoutAttachmentMetadata(next),
+              currentStored.attachments,
+            ),
+          });
+        }
+        for (const { next, stored } of updates) {
+          this.replaceTransaction(next);
+          this.insertRevision(next, "update");
+          this.insertPendingOperation(next, "update");
+          this.appendGraph({
+            id: randomUUID(),
+            kind: "transaction",
+            entityId: next.id,
+            value: stored,
+          });
+        }
+      })
+      .immediate();
+  }
+
   setMonthlyBudget(
     month: string,
     budgetMinor: string | null,
@@ -1173,6 +1348,163 @@ export class SQLiteLocalStore implements LocalStore {
 
   close(): void {
     this.database.close();
+  }
+
+  private requireLedgerDocument(): LedgerDocument {
+    const document = this.getLedgerDocument();
+    if (document === null)
+      throw new DomainError("invalid-workspace", "Create a workspace first.");
+    return document;
+  }
+
+  private readCategoryCatalog(document: LedgerDocument): CategoryCatalog {
+    if (document.schemaVersion < 3)
+      throw new DomainError("invalid-category", "This ledger needs a fresh category catalog.");
+    const projection = projectLedgerDocument(document);
+    if (projection.conflicts.some((conflict) => conflict.kind === "category-catalog"))
+      throw new DomainError("category-conflict", "Resolve the category catalog conflict first.");
+    return validateCategoryCatalog({
+      categories: projection.categories.map((category) => ({ ...category })),
+    });
+  }
+
+  private assertCategoryHeads(document: LedgerDocument, expected: string[] | undefined): void {
+    if (expected === undefined) return;
+    let actual: string[];
+    try {
+      actual = categoryHeadIds(document);
+      const decoded = decodeLedgerHeadIds(expected);
+      if (JSON.stringify(decoded) !== JSON.stringify(actual))
+        throw new DomainError("category-stale", "The category catalog changed. Refresh and try again.");
+    } catch (error) {
+      if (error instanceof DomainError) throw error;
+      throw new DomainError("category-stale", "The category catalog changed. Refresh and try again.");
+    }
+  }
+
+  private appendCategoryCatalog(
+    document: LedgerDocument,
+    catalog: CategoryCatalog,
+    expectedHeadIds: string[] | undefined,
+  ): void {
+    try {
+      const next = appendLedgerRevision(
+        document,
+        {
+          id: randomUUID(),
+          kind: "category-catalog",
+          entityId: document.workspace.id,
+          value: catalog,
+        },
+        expectedHeadIds,
+      );
+      this.persistGraph(next);
+    } catch (error) {
+      if (error instanceof LedgerSyncError && error.code === "ledger-stale-heads")
+        throw new DomainError("category-stale", "The category catalog changed. Refresh and try again.");
+      throw error;
+    }
+  }
+
+  private assertTransactionCategories(transaction: Transaction, isCreate: boolean): void {
+    const document = this.requireLedgerDocument();
+    const catalog = this.readCategoryCatalog(document);
+    for (const split of transaction.splits) {
+      const category = categoryDefinitionById(catalog, split.category);
+      if (category === undefined || category.type !== transaction.type ||
+          (isCreate && (!category.enabled || category.deletedAt !== null)))
+        throw new DomainError("invalid-category", "Choose an enabled category for this transaction type.");
+    }
+  }
+
+  private categoryUsageFromDocument(
+    document: LedgerDocument,
+    categoryId: string,
+  ): CategoryUsage[] {
+    const projection = projectLedgerDocument(document);
+    return projection.transactions
+      .filter((transaction) => transaction.deletedAt === null)
+      .flatMap((transaction) => {
+        const matching = transaction.splits.filter((split) => split.category === categoryId);
+        if (matching.length === 0) return [];
+        const sourceAmountMinor = matching
+          .reduce((total, split) => total + parseMinorUnits(split.amountMinor), 0n)
+          .toString();
+        return [{
+          transactionId: transaction.id,
+          revision: transaction.revision,
+          date: transaction.date,
+          type: transaction.type,
+          amountMinor: transaction.amountMinor,
+          merchant: transaction.merchant,
+          notes: transaction.notes,
+          sourceAmountMinor,
+        }];
+      })
+      .sort((left, right) =>
+        right.date.localeCompare(left.date) || left.transactionId.localeCompare(right.transactionId),
+      );
+  }
+
+  private resetLegacyLedgerIfNeeded(): void {
+    const workspace = this.readWorkspace();
+    if (workspace === null) return;
+    const current = this.getLedgerDocument();
+    if (current !== null && current.schemaVersion >= 3) return;
+    const budgets = Object.fromEntries(
+      (this.database
+        .prepare("SELECT month, budget_minor FROM monthly_budgets")
+        .all() as BudgetRow[])
+        .map((row) => [row.month, row.budget_minor]),
+    );
+    this.database
+      .transaction(() => {
+        this.assertMigrationWritable();
+        this.database.exec(`
+          DELETE FROM splits;
+          DELETE FROM transactions;
+          DELETE FROM revisions;
+          DELETE FROM tombstones;
+          DELETE FROM pending_operations;
+          DELETE FROM conflicts;
+          DELETE FROM attachment_blobs;
+          DELETE FROM monthly_budgets;
+          DELETE FROM ledger_graph;
+        `);
+        this.persistGraph(
+          seedLedgerDocumentV3(
+            workspace,
+            [],
+            budgets,
+            defaultCategoryCatalog("zh-CN"),
+          ),
+        );
+      })
+      .immediate();
+  }
+
+  private migrateTargetPayloadVersions(): void {
+    const row = this.database
+      .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'ledger_target_versions'")
+      .get() as { sql?: string } | undefined;
+    if (row?.sql === undefined || /payload_version[^)]*IN\s*\(\s*1\s*,\s*2\s*,\s*3\s*\)/i.test(row.sql)) return;
+
+    try {
+      this.database.transaction(() => {
+        this.database.exec(`
+          ALTER TABLE ledger_target_versions RENAME TO ledger_target_versions_legacy;
+          CREATE TABLE ledger_target_versions (
+            target_id TEXT PRIMARY KEY NOT NULL,
+            payload_version INTEGER NOT NULL CHECK (payload_version IN (1, 2, 3))
+          );
+          INSERT INTO ledger_target_versions(target_id, payload_version)
+            SELECT target_id, payload_version FROM ledger_target_versions_legacy;
+          DROP TABLE ledger_target_versions_legacy;
+        `);
+      }).immediate();
+    } catch (error) {
+      throw new Error(`Unable to migrate payload version checkpoints: ${errorMessage(error)}`);
+    }
   }
 
   private migrate(): void {
@@ -1287,7 +1619,7 @@ export class SQLiteLocalStore implements LocalStore {
 
           CREATE TABLE IF NOT EXISTS ledger_target_versions (
             target_id TEXT PRIMARY KEY NOT NULL,
-            payload_version INTEGER NOT NULL CHECK (payload_version IN (1, 2))
+            payload_version INTEGER NOT NULL CHECK (payload_version IN (1, 2, 3))
           );
 
           CREATE TABLE IF NOT EXISTS migration_lease (
@@ -1301,21 +1633,6 @@ export class SQLiteLocalStore implements LocalStore {
         // A process cannot resume an in-flight restore safely after a crash;
         // orphaned ciphertext staging is therefore discarded on reopen.
         this.database.prepare("DELETE FROM backup_restore_staging").run();
-        const workspace = this.readWorkspace();
-        if (workspace !== null && this.getLedgerDocument() === null) {
-          const budgets = this.database
-            .prepare("SELECT month, budget_minor FROM monthly_budgets")
-            .all() as BudgetRow[];
-          this.persistGraph(
-            seedLedgerDocument(
-              workspace,
-              this.readActiveTransactions(true),
-              Object.fromEntries(
-                budgets.map((row) => [row.month, row.budget_minor]),
-              ),
-            ),
-          );
-        }
         this.database.pragma(`user_version = ${SCHEMA_VERSION}`);
       });
       migrate();
@@ -1808,4 +2125,39 @@ function withoutAttachmentMetadata(
 ): Omit<Transaction, "attachments"> {
   const { attachments: _attachments, ...financial } = transaction;
   return financial;
+}
+
+function reassignTransactionCategory(
+  transaction: Transaction,
+  sourceCategoryId: string,
+  targetCategoryId: string,
+  now: string,
+): Transaction {
+  const sourceSplits = transaction.splits.filter((split) => split.category === sourceCategoryId);
+  if (sourceSplits.length === 0)
+    throw new DomainError("invalid-category", "Transaction does not use the source category.");
+  const target = transaction.splits.find((split) => split.category === targetCategoryId);
+  const sourceAmount = sourceSplits.reduce((total, split) => total + parseMinorUnits(split.amountMinor), 0n);
+  const splits = target === undefined
+    ? transaction.splits.reduce<Array<{ category: string; amountMinor: string }>>((result, split) => {
+        if (split.category !== sourceCategoryId) {
+          result.push({ ...split });
+        } else if (!result.some((candidate) => candidate.category === targetCategoryId)) {
+          result.push({ ...split, category: targetCategoryId, amountMinor: canonicalMinorUnits(sourceAmount.toString()) });
+        }
+        return result;
+      }, [])
+    : transaction.splits
+        .filter((split) => split.category !== sourceCategoryId)
+        .map((split) =>
+          split.category === targetCategoryId
+            ? { ...split, amountMinor: canonicalMinorUnits((parseMinorUnits(split.amountMinor) + sourceAmount).toString()) }
+            : { ...split },
+        );
+  return {
+    ...transaction,
+    revision: transaction.revision + 1,
+    updatedAt: now,
+    splits,
+  };
 }

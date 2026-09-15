@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 import { encryptLedgerDocument, decryptLedgerDocument } from '../../src/shared/ledger-crypto';
-import { appendLedgerRevision, mergeLedgerDocuments, type LedgerDocument, upgradeLedgerDocument } from '../../src/shared/ledger-sync';
+import { appendLedgerRevision, mergeLedgerDocuments, type LedgerDocument } from '../../src/shared/ledger-sync';
 import { decodeFullBackup, FULL_BACKUP_MAGIC } from '../../src/shared/full-backup';
 import { reviseTransaction } from '../../src/shared/domain';
 import { isStoredTransaction, storedTransactionToTransaction } from '../../src/shared/ledger-record';
@@ -17,7 +17,7 @@ async function seed(page: Page): Promise<LedgerDocument> {
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     await window.lunaLedger.createTransaction({ type: 'expense', amountMinor: '1250', date,
-      splits: [{ category: 'Food', amountMinor: '1250' }], merchant: 'Original market', notes: 'Original notes' });
+      splits: [{ category: 'expense:0', amountMinor: '1250' }], merchant: 'Original market', notes: 'Original notes' });
   });
   const document = await readLedgerDocument(page, password);
   expect(document).not.toBeNull();
@@ -61,7 +61,7 @@ function branch(document: LedgerDocument, id: string, notes: string): LedgerDocu
     : revision.value;
   return appendLedgerRevision(document, { id, kind: 'transaction', entityId: current.id,
     value: reviseTransaction(current, { type: current.type, amountMinor: '1250', date: current.date,
-      splits: [{ category: 'Food', amountMinor: '1250' }], merchant: current.merchant, notes },
+      splits: [{ category: 'expense:0', amountMinor: '1250' }], merchant: current.merchant, notes },
     document.workspace.precision, new Date().toISOString()) });
 }
 
@@ -80,7 +80,7 @@ test('encrypted backup downloads and restores through setup UI without storing i
   expect(raw.toString('utf8')).not.toContain(password);
   expect(raw.subarray(0, FULL_BACKUP_MAGIC.length).toString('ascii')).toBe(FULL_BACKUP_MAGIC);
   const fullGraph = (await decodeFullBackup(new Uint8Array(raw), password)).graph;
-  expect(fullGraph).toEqual(upgradeLedgerDocument(document));
+  expect(fullGraph).toEqual(document);
   await expect(page.locator('#ledger-export-password')).toHaveValue('');
   const context = await browser.newContext({ locale: 'en', viewport: page.viewportSize() });
   try {

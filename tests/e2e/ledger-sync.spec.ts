@@ -3,7 +3,8 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { createTransaction, type TransactionDraft } from '../../src/shared/domain';
 import { decryptLedgerDocument, encryptLedgerDocument } from '../../src/shared/ledger-crypto';
 import type { LedgerConflictChoice } from '../../src/shared/ledger-data';
-import { appendLedgerRevision, seedLedgerDocument } from '../../src/shared/ledger-sync';
+import { appendLedgerRevision, seedLedgerDocument, upgradeLedgerDocumentV3 } from '../../src/shared/ledger-sync';
+import { defaultCategoryCatalog } from '../../src/shared/category-catalog';
 import type { ConfigureConfigSyncInput } from '../../src/shared/settings';
 import { readLedgerDocument } from './helpers/public-ledger';
 
@@ -13,7 +14,7 @@ const SECRET_KEY = 'BROWSER_TEST_SECRET_SENTINEL';
 const OBJECT_PATH = '/ledger-browser-tests/browser/ledger-v1.enc.json';
 const draft: TransactionDraft = {
   type: 'expense', amountMinor: '1234', date: '2026-09-05',
-  splits: [{ category: 'Private browser category', amountMinor: '1234' }],
+  splits: [{ category: 'expense:0', amountMinor: '1234' }],
   merchant: 'Private browser merchant', notes: 'Private browser financial note',
 };
 
@@ -150,7 +151,7 @@ test('real browser clients sync encrypted image objects and read them after the 
       );
       return window.lunaLedger.createTransaction({
         type: 'expense', amountMinor: '1234', date: '2026-09-05',
-        splits: [{ category: 'Browser image category', amountMinor: '1234' }],
+        splits: [{ category: 'expense:0', amountMinor: '1234' }],
         merchant: 'Browser image merchant', notes: 'Browser encrypted image note',
         attachments: [{ draftToken: staged.draftToken }],
       });
@@ -236,20 +237,24 @@ test('Node-encrypted restore and browser password, tamper, and HTTP 403 failures
     expect(remote.state.puts).toBe(0);
     await page.evaluate((input) => window.lunaLedger.configureLedgerSync(input), connection(remote.endpoint));
     await sync(page);
-    expect(await readLedgerDocument(page, PASSWORD)).toEqual(document);
+    expect(await readLedgerDocument(page, PASSWORD)).toEqual(
+      upgradeLedgerDocumentV3(document, defaultCategoryCatalog('en')),
+    );
     const committed = await persistedState(page);
+    const committedRemote = remote.state.body;
     remote.state.denyReads = true;
     await expect(page.evaluate(() => window.lunaLedger.syncLedgerNow())).rejects.toThrow('ledger-remote-permission');
     expect(await persistedState(page)).toBe(committed);
-    expect(remote.state.body).toBe(originalRemote);
+    expect(remote.state.body).toBe(committedRemote);
     remote.state.denyReads = false;
-    const tampered = (originalRemote ?? '').replace(/("ciphertext":")([A-Za-z0-9+/])/, (_whole, prefix: string, first: string) => `${prefix}${first === 'A' ? 'B' : 'A'}`);
-    expect(tampered).not.toBe(originalRemote);
+    const tampered = (committedRemote ?? '').replace(/("ciphertext":")([A-Za-z0-9+/])/, (_whole, prefix: string, first: string) => `${prefix}${first === 'A' ? 'B' : 'A'}`);
+    expect(tampered).not.toBe(committedRemote);
+    const putsBeforeTamper = remote.state.puts;
     remote.replace(tampered);
     await expect(page.evaluate(() => window.lunaLedger.syncLedgerNow())).rejects.toThrow('ledger-wrong-password-or-tampered');
     expect(await persistedState(page)).toBe(committed);
     expect(remote.state.body).toBe(tampered);
-    expect(remote.state.puts).toBe(0);
+    expect(remote.state.puts).toBe(putsBeforeTamper);
     expect(remote.state.failures).toEqual([]);
   } finally {
     await remote.close();

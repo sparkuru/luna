@@ -14,6 +14,61 @@ test('evaluates decimal addition and subtraction with exact minor units', () => 
   assert.equal(evaluateAmountExpression('1.2300', 2), '123');
 });
 
+test('uses standard precedence for multiplication and division', () => {
+  assert.equal(evaluateAmountExpression('2*3+4', 2), '1000');
+  assert.equal(evaluateAmountExpression('2+3*4', 2), '1400');
+  assert.equal(evaluateAmountExpression('12/3*2', 2), '800');
+  assert.equal(evaluateAmountExpression('2×3+4', 2), '1000');
+});
+
+test('normalizes multiplication and division display glyphs', () => {
+  assert.equal(normalizeAmountExpressionInput('2×3÷.5'), '2*3/0.5');
+  assert.equal(normalizeAmountExpressionInput('12+÷2'), '12/2');
+  assert.equal(normalizeAmountExpressionInput('12*×2'), '12*2');
+});
+
+test('inspects finite and repeating results separately from ledger rounding', () => {
+  const finite = inspectAmountExpression('1/4', 2);
+  assert.equal(finite.amountMinor, '25');
+  assert.equal(finite.displayAmount, '0.250');
+  assert.equal(finite.displayPrecision, 3);
+  assert.equal(finite.roundingDigit, null);
+
+  const repeating = inspectAmountExpression('10/3', 2);
+  assert.equal(repeating.amountMinor, '333');
+  assert.equal(repeating.displayAmount, '3.333(3)');
+  assert.equal(repeating.displayPrecision, 3);
+  assert.equal(repeating.roundingDigit, '3');
+
+  const higherPrecision = inspectAmountExpression('10/3', 4);
+  assert.equal(higherPrecision.amountMinor, '33333');
+  assert.equal(higherPrecision.displayAmount, '3.3333(3)');
+  assert.equal(higherPrecision.displayPrecision, 4);
+});
+
+test('rounds rational results half-up, including signed results', () => {
+  assert.equal(evaluateAmountExpression('1/40', 2), '3');
+  assert.equal(evaluateAmountExpression('0-1/40', 2), '-3');
+  assert.equal(inspectAmountExpression('1/8', 2).displayAmount, '0.125');
+  assert.equal(inspectAmountExpression('0-10/3', 2).displayAmount, '-3.333(3)');
+});
+
+test('keeps division by zero and unsupported syntax typed and recoverable', () => {
+  assert.throws(
+    () => evaluateAmountExpression('10/0', 2),
+    (error: unknown) =>
+      error instanceof AmountExpressionError &&
+      error.code === 'amount-expression-division-by-zero',
+  );
+  assert.throws(
+    () => evaluateAmountExpression('2/', 2),
+    (error: unknown) =>
+      error instanceof AmountExpressionError &&
+      error.code === 'amount-expression-incomplete',
+  );
+  assert.throws(() => evaluateAmountExpression('2*(3)', 2), AmountExpressionError);
+});
+
 test('keeps incomplete drafts distinct from a zero result', () => {
   assert.deepEqual(inspectAmountExpression('12+', 2), {
     expression: '12+',

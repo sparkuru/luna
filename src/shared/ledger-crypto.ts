@@ -1,4 +1,10 @@
-import { decodeLedgerDocument, LedgerSyncError, MAX_LEDGER_DOCUMENT_BYTES, type LedgerDocument } from './ledger-sync';
+import {
+  decodeLedgerDocument,
+  LedgerSyncError,
+  MAX_LEDGER_DOCUMENT_BYTES,
+  type LedgerDocument,
+  type LedgerDocumentSchemaVersion,
+} from './ledger-sync';
 
 export const MAX_LEDGER_ENVELOPE_BYTES = 12 * 1024 * 1024;
 const ITERATIONS = 600_000;
@@ -18,8 +24,8 @@ export class LedgerCryptoError extends Error {
 
 interface LedgerEnvelope {
   format: 'luna-ledger-envelope';
-  version: 1 | 2;
-  payloadSchemaVersion: 1 | 2;
+  version: LedgerDocumentSchemaVersion;
+  payloadSchemaVersion: LedgerDocumentSchemaVersion;
   kdf: { name: 'PBKDF2'; hash: 'SHA-256'; iterations: 600000; salt: string };
   cipher: { name: 'AES-GCM'; iv: string; tagLength: 128 };
   ciphertext: string;
@@ -221,6 +227,6 @@ function fail(code: LedgerCryptoErrorCode): never {
   throw new LedgerCryptoError(code);
 }
 
-function isLedgerVersion(value: unknown): value is 1 | 2 {
-  return value === 1 || value === 2;
+function isLedgerVersion(value: unknown): value is LedgerDocumentSchemaVersion {
+  return value === 1 || value === 2 || value === 3;
 }

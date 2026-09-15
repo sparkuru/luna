@@ -190,7 +190,7 @@ async function verifyEncryptedSync(page: Page, device: AndroidDevice): Promise<v
   const original = document.revisions.find((item) => item.kind === 'transaction');
   assert.ok(original?.kind === 'transaction');
   const incoming = createTransaction('node-income', { type: 'income', amountMinor: '2500', date: original.value.date,
-    splits: [{ category: 'Transfer', amountMinor: '2500' }], merchant: 'Node remote income' }, document.workspace.precision, new Date().toISOString());
+    splits: [{ category: 'income:0', amountMinor: '2500' }], merchant: 'Node remote income' }, document.workspace.precision, new Date().toISOString());
   body = await encryptLedgerDocument(appendLedgerRevision(document, { id: 'node-income-revision', kind: 'transaction', entityId: incoming.id, value: incoming }), password);
   revision++;
   assert.equal((await page.evaluate(() => window.lunaLedger.syncLedgerNow())).code, 'synced');

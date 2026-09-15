@@ -281,8 +281,8 @@ export async function createApp(options: AppOptions) {
         instanceId: result.instance_id,
         apiVersion: 1,
         limits: LIMITS,
-        ledgerEnvelopeVersions: [1, 2],
-        ledgerPayloadVersions: [1, 2],
+        ledgerEnvelopeVersions: [1, 2, 3],
+        ledgerPayloadVersions: [1, 2, 3],
         attachmentProtocolVersion: 1,
       };
     },
@@ -934,7 +934,7 @@ export async function createApp(options: AppOptions) {
       async (request, reply) => {
         try {
           const body = rawBody(request);
-          let ledgerPayloadVersion: 1 | 2 | undefined;
+          let ledgerPayloadVersion: 1 | 2 | 3 | undefined;
           try {
             if (preferences) decodeConfigEnvelopeBytes(body);
             else {

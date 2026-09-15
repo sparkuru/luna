@@ -1394,8 +1394,8 @@ export type GetLedgerObjectResponses = {
             name: 'PBKDF2';
             salt: string;
         };
-        payloadSchemaVersion: 1 | 2;
-        version: 1 | 2;
+        payloadSchemaVersion: 1 | 2 | 3;
+        version: 1 | 2 | 3;
     };
 };
 
@@ -1416,8 +1416,8 @@ export type PutLedgerObjectData = {
             name: 'PBKDF2';
             salt: string;
         };
-        payloadSchemaVersion: 1 | 2;
-        version: 1 | 2;
+        payloadSchemaVersion: 1 | 2 | 3;
+        version: 1 | 2 | 3;
     };
     headers: {
         'idempotency-key': string;

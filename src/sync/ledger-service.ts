@@ -17,6 +17,7 @@ import {
   mergeLedgerDocuments,
   LedgerSyncError,
   type LedgerDocument,
+  type LedgerDocumentSchemaVersion,
 } from "../shared/ledger-sync";
 import {
   ATTACHMENT_SYNC_CONCURRENCY,
@@ -44,10 +45,10 @@ export interface LedgerDataPort extends LocalAttachmentPort {
   ): LedgerDocument | Promise<LedgerDocument>;
   getRemotePayloadVersion?(
     targetId: string,
-  ): 1 | 2 | null | Promise<1 | 2 | null>;
+  ): LedgerDocumentSchemaVersion | null | Promise<LedgerDocumentSchemaVersion | null>;
   setRemotePayloadVersion?(
     targetId: string,
-    version: 1 | 2,
+    version: LedgerDocumentSchemaVersion,
   ): void | Promise<void>;
   getMigrationLease?(): MigrationLease | null | Promise<MigrationLease | null>;
   acquireMigrationLease?(lease: MigrationLease): void | Promise<void>;
@@ -560,21 +561,21 @@ export class LedgerSyncSession {
 
   private async readRemotePayloadVersion(
     targetId: string,
-  ): Promise<1 | 2 | null> {
+  ): Promise<LedgerDocumentSchemaVersion | null> {
     const reader = this.local.getRemotePayloadVersion;
     if (reader === undefined) return null;
     const version = await reader.call(this.local, targetId);
-    return version === 1 || version === 2 ? version : null;
+    return version === 1 || version === 2 || version === 3 ? version : null;
   }
 
   private async observeRemotePayloadVersion(
     targetId: string,
-    version: 1 | 2,
+    version: LedgerDocumentSchemaVersion,
   ): Promise<void> {
     const writer = this.local.setRemotePayloadVersion;
     if (writer === undefined) return;
     const current = await this.readRemotePayloadVersion(targetId);
-    if (current === 2 || current === version) return;
+    if (current !== null && current >= version) return;
     await writer.call(this.local, targetId, version);
   }
 }
@@ -622,10 +623,10 @@ function throwIfAborted(signal: AbortSignal): void {
 }
 
 function assertRemotePayloadVersion(
-  observed: 1 | 2 | null,
-  candidate: 1 | 2,
+  observed: LedgerDocumentSchemaVersion | null,
+  candidate: LedgerDocumentSchemaVersion,
 ): void {
-  if (observed === 2 && candidate === 1)
+  if (observed !== null && candidate < observed)
     throw new LedgerSessionError("ledger-remote-downgrade");
 }
 

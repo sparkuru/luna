@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from "../components/ui/dialog";
 import { getClientSurface } from "../client-surface";
+import { labelCategories, labelCategory } from "../category-display";
 import type { Entry } from "./entry";
 
 type ImageViewerState = {
@@ -371,17 +372,15 @@ export function LedgerHome({
     return () => media.removeEventListener("change", update);
   }, []);
   const availableCategories = useMemo(
-    () =>
-      [
-        ...new Set(
-          snapshot.transactions.flatMap((tx) =>
-            tx.splits.map((split) => split.category),
-          ),
+    () => [...new Set(snapshot.transactions.flatMap((tx) => tx.splits.map((split) => split.category)))]
+      .filter(Boolean)
+      .sort((left, right) =>
+        labelCategory(snapshot.categories, left).localeCompare(
+          labelCategory(snapshot.categories, right),
+          locale,
         ),
-      ]
-        .filter(Boolean)
-        .sort((left, right) => left.localeCompare(right, locale)),
-    [locale, snapshot.transactions],
+      ),
+    [locale, snapshot.categories, snapshot.transactions],
   );
   const selectedMonthStart = `${month}-01`;
   const selectedMonthEnd = monthEnd(month);
@@ -593,7 +592,7 @@ export function LedgerHome({
       : [{ id: "type", label: `${m("type")}: ${m(type === "income" ? "income" : "spending")}`, remove: () => setType("all") }]),
     ...selectedCategories.map((value) => ({
       id: `category-${value}`,
-      label: `${m("category")}: ${value}`,
+      label: `${m("category")}: ${labelCategory(snapshot.categories, value)}`,
       remove: () => setSelectedCategories((current) => current.filter((item) => item !== value)),
     })),
     ...(category.trim()
@@ -1078,7 +1077,7 @@ export function LedgerHome({
                   </div>
                   <ul className="transaction-day-list">
                     {group.transactions.map((tx) => {
-                      const title = transactionTitle(tx);
+                      const title = transactionTitle(tx, snapshot.categories);
                       return (
                         <li className="transaction-item" key={tx.id}>
                           <button
@@ -1098,7 +1097,7 @@ export function LedgerHome({
                               </span>
                             </div>
                             <div className="transaction-bottomline">
-                              <span>{tx.splits.map((s) => s.category).join(" · ")}</span>
+                              <span>{labelCategories(snapshot.categories, tx.splits.map((s) => s.category))}</span>
                               <span className="transaction-secondary-text">
                                 {[tx.paymentMethod, tx.notes]
                                   .filter(Boolean)
@@ -1203,7 +1202,7 @@ export function LedgerHome({
                     {m("transactionDetails")}
                   </DialogTitle>
                   <DialogDescription id="transaction-detail-description">
-                    {transactionTitle(detailTransaction)}
+                    {transactionTitle(detailTransaction, snapshot.categories)}
                   </DialogDescription>
                 </div>
                 <Button
@@ -1230,7 +1229,7 @@ export function LedgerHome({
                   <dt>{m("category")}</dt>
                   <dd>
                     {detailTransaction.splits
-                      .map((split) => `${split.category} · ${money(split.amountMinor)}`)
+                      .map((split) => `${labelCategory(snapshot.categories, split.category)} · ${money(split.amountMinor)}`)
                       .join(" / ")}
                   </dd>
                 </div>
@@ -1263,7 +1262,7 @@ export function LedgerHome({
                     onClick={() =>
                       void openImageViewer(
                         detailTransaction.id,
-                        transactionTitle(detailTransaction),
+                        transactionTitle(detailTransaction, snapshot.categories),
                         [...detailTransaction.attachments!],
                         0,
                         "transaction-detail-images",
@@ -1407,10 +1406,13 @@ function monthEnd(month: string): string {
   return `${month}-${day.toString().padStart(2, "0")}`;
 }
 
-function transactionTitle(transaction: Transaction): string {
+function transactionTitle(
+  transaction: Transaction,
+  categories?: readonly import("../../shared/category-catalog").CategoryDefinition[],
+): string {
   return (
     transaction.merchant.trim() ||
     transaction.notes.trim() ||
-    transaction.splits.map((split) => split.category).join(", ")
+    labelCategories(categories, transaction.splits.map((split) => split.category), ", ")
   );
 }

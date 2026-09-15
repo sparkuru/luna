@@ -5,6 +5,11 @@ async function ready(page: Page) {
   await page.locator('#workspace-form button[type="submit"]').click();
   await expect(page.locator("#transactions-title")).toBeVisible();
 }
+
+async function chooseCategory(page: Page, name = "Food") {
+  await page.locator("#choose-category").click();
+  await page.getByRole("button", { name, exact: true }).click();
+}
 test("committed transaction is never replayed when its refresh fails", async ({
   page,
 }) => {
@@ -29,7 +34,9 @@ test("committed transaction is never replayed when its refresh fails", async ({
   });
   await page.locator("#primary-record").click();
   await page.locator("#transaction-amount").fill("12.34");
-  await page.locator("#transaction-category").fill("Saved once");
+  await chooseCategory(page);
+  await page.locator("#transaction-advanced-details summary").click();
+  await page.locator("#transaction-merchant").fill("Saved once");
   await page.locator("#save-transaction").click();
   await expect(page.locator("#live-status")).toContainText(
     "Saved locally, but refreshing failed",
@@ -58,12 +65,10 @@ test("Radix dialogs retain keyboard focus without inline stylesheet CSP exceptio
   await page.locator("#primary-record").click();
   await expect(page.locator("#transaction-amount")).toBeFocused();
   await page.locator("#choose-category").click();
-  await expect(page.locator("#category-custom")).toBeFocused();
+  await expect(page.locator("#category-search")).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.locator("#choose-category")).toBeFocused();
-  await page.locator("#choose-category").click();
-  await page.locator("#category-custom").fill("Focus category");
-  await page.locator("#use-category").click();
+  await chooseCategory(page);
   await expect(page.locator("#choose-category")).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.locator("#primary-record")).toBeFocused();
@@ -111,13 +116,15 @@ test("month navigation scopes the ledger to the selected month", async ({
       type: "expense",
       amountMinor: "1200",
       date: `${currentMonth}-05`,
-      splits: [{ category: "Current month record", amountMinor: "1200" }],
+      splits: [{ category: "expense:0", amountMinor: "1200" }],
+      merchant: "Current month record",
     });
     await window.lunaLedger.createTransaction({
       type: "expense",
       amountMinor: "3400",
       date: `${previousMonth}-15`,
-      splits: [{ category: "Previous month record", amountMinor: "3400" }],
+      splits: [{ category: "expense:0", amountMinor: "3400" }],
+      merchant: "Previous month record",
     });
   }, { currentMonth, previousMonth });
   await page.reload();
@@ -155,13 +162,15 @@ test("month loading keeps the ledger frame stable and isolates the old month", a
       type: "expense",
       amountMinor: "1200",
       date: `${currentMonth}-05`,
-      splits: [{ category: "Loading current sentinel", amountMinor: "1200" }],
+      splits: [{ category: "expense:0", amountMinor: "1200" }],
+      merchant: "Loading current sentinel",
     });
     await window.lunaLedger.createTransaction({
       type: "expense",
       amountMinor: "3400",
       date: `${previousMonth}-15`,
-      splits: [{ category: "Loading previous sentinel", amountMinor: "3400" }],
+      splits: [{ category: "expense:0", amountMinor: "3400" }],
+      merchant: "Loading previous sentinel",
     });
   }, { currentMonth, previousMonth });
   await page.reload();
@@ -260,7 +269,8 @@ test("month loading keeps its frame and retries a failed snapshot", async ({
       type: "expense",
       amountMinor: "3400",
       date,
-      splits: [{ category: "Retry target sentinel", amountMinor: "3400" }],
+      splits: [{ category: "expense:0", amountMinor: "3400" }],
+      merchant: "Retry target sentinel",
     });
   }, `${previousMonth}-15`);
   await page.reload();
@@ -312,7 +322,7 @@ test("new transactions use today from a historical month and edits keep their or
       amountMinor: "3400",
       date,
       merchant: "Historical date record",
-      splits: [{ category: "Historical date category", amountMinor: "3400" }],
+      splits: [{ category: "expense:0", amountMinor: "3400" }],
     });
   }, originalDate);
   await page.goto(`/ledger?month=${previousMonth}`);
@@ -340,12 +350,13 @@ test("empty regex mode keeps the unfiltered ledger visible", async ({ page }) =>
   await page.evaluate(async () => {
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    for (const [category, amountMinor] of [['Regex one', '100'], ['Regex two', '200']] as const) {
+    for (const [merchant, amountMinor] of [['Regex one', '100'], ['Regex two', '200']] as const) {
       await window.lunaLedger.createTransaction({
         type: 'expense',
         amountMinor,
         date,
-        splits: [{ category, amountMinor }],
+        splits: [{ category: 'expense:0', amountMinor }],
+        merchant,
       });
     }
   });
@@ -392,7 +403,7 @@ test("native back closes nested dialogs and follows menu parents before leaving 
   await page.locator("#primary-record").click();
   await page.locator("#transaction-amount").fill("45.67");
   await page.locator("#choose-category").click();
-  await expect(page.locator("#category-custom")).toBeFocused();
+  await expect(page.locator("#category-search")).toBeFocused();
   expect(await back()).toBe(false);
   await expect(page.locator("#category-dialog")).not.toBeVisible();
   await expect(page.locator("#transaction-dialog")).toBeVisible();

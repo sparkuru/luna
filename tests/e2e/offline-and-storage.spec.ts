@@ -11,7 +11,8 @@ async function record(page: Page, merchant: string): Promise<void> {
   await page.locator('#primary-record').click();
   await expect(page.locator('#transaction-dialog')).toBeVisible();
   await page.locator('#transaction-amount').fill('12.34');
-  await page.locator('#transaction-category').fill('Food');
+  await page.locator('#choose-category').click();
+  await page.getByRole('button', { name: 'Food', exact: true }).click();
   await page.locator('#transaction-advanced-details summary').click();
   await page.locator('#transaction-merchant').fill(merchant);
   await page.getByRole('button', { name: 'Save transaction' }).click();

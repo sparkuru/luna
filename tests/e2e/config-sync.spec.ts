@@ -61,7 +61,8 @@ test('actual browser v1 settings sync interoperates with Node and preserves fina
     remote.replace(new TextDecoder().decode(await encryptRemoteConfig(remotePayloadFromSettings(native), PASSWORD)));
     await page.locator('#primary-record').click();
     await page.locator('#transaction-amount').fill('25.60');
-    await page.locator('#transaction-category').fill('Unsubmitted category');
+    await page.locator('#choose-category').click();
+    await page.getByRole('button', { name: 'Food', exact: true }).click();
     await page.locator('#transaction-advanced-details > summary').click();
     await page.locator('#transaction-notes').fill('Keep this draft');
     await page.locator('#close-transaction').click();

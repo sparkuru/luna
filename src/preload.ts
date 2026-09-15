@@ -1,6 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { LunaLedgerApi } from "./shared/api";
 import type { TransactionDraft, WorkspaceSetupInput } from "./shared/domain";
+import type {
+  CategoryCreateInput,
+  CategoryReassignmentInput,
+  CategoryUpdateInput,
+} from "./shared/category-catalog";
 import { IPC_CHANNELS } from "./shared/ipc";
 import type {
   ConfigureConfigSyncInput,
@@ -116,6 +121,16 @@ const api: LunaLedgerApi = {
     }),
   deleteTransaction: (id: string, expectedRevision?: number) =>
     ipcRenderer.invoke(IPC_CHANNELS.deleteTransaction, id, expectedRevision),
+  createCategory: (input: CategoryCreateInput, expectedHeadIds?: string[]) =>
+    ipcRenderer.invoke(IPC_CHANNELS.createCategory, { input, expectedHeadIds }),
+  updateCategory: (id: string, input: CategoryUpdateInput, expectedHeadIds?: string[]) =>
+    ipcRenderer.invoke(IPC_CHANNELS.updateCategory, { id, input, expectedHeadIds }),
+  deleteCategory: (id: string, expectedHeadIds?: string[]) =>
+    ipcRenderer.invoke(IPC_CHANNELS.deleteCategory, { id, expectedHeadIds }),
+  getCategoryUsage: (id: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.getCategoryUsage, id),
+  reassignCategory: (input: CategoryReassignmentInput) =>
+    ipcRenderer.invoke(IPC_CHANNELS.reassignCategory, input),
   setMonthlyBudget: (
     month: string,
     budgetMinor: string | null,

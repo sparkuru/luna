@@ -429,6 +429,7 @@ export function SettingsOverview({
   const serverStatus = app.serverStatus;
   const sections = [
     { path: "/settings/ledgers", title: m("ledgersTitle"), help: m("ledgersHelp") },
+    { path: "/settings/categories", title: m("categoriesTitle"), help: m("categoriesHelp") },
     { path: "/settings/preferences", title: m("preferencesTitle"), help: m("preferencesHelp") },
     { path: "/settings/account", title: m("accountTitle"), help: m("accountUnavailable") },
     { path: "/settings/sync", title: m("ledgerToolsLink"), help: m("ledgerToolsSummary") },
@@ -446,17 +447,17 @@ export function SettingsOverview({
         {
           key: "workspace",
           label: m("settingsGroupWorkspace"),
-          sections: [...sections.slice(0, 2), budgetSection],
+          sections: [...sections.slice(0, 3), budgetSection],
         },
         {
           key: "access",
           label: m("settingsGroupAccess"),
-          sections: sections.slice(2, 5),
+          sections: sections.slice(3, 6),
         },
         {
           key: "data",
           label: m("settingsGroupData"),
-          sections: sections.slice(5),
+          sections: sections.slice(6),
         },
       ]
     : [];

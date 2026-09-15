@@ -3,6 +3,7 @@ import {
   type AttachmentMetadata,
   type AttachmentRef,
 } from './attachment-contract';
+import type { CategoryDefinition } from './category-catalog';
 
 /**
  * Platform-neutral domain types and invariants.
@@ -112,6 +113,10 @@ export interface AppSnapshot {
   conflictCount?: number;
   /** Heads of the effective budget for the requested month, including inherited limits. */
   budgetHeadIds?: string[];
+  /** The current ledger category directory; absent only on legacy snapshots. */
+  categories?: readonly CategoryDefinition[];
+  /** Optimistic-concurrency heads for the current category directory. */
+  categoryHeadIds?: string[];
   workspace: Workspace | null;
   transactions: readonly Transaction[];
   summary: MonthlySummary | null;
@@ -138,7 +143,11 @@ export type DomainErrorCode =
   | 'invalid-transaction'
   | 'not-found'
   | 'stale-revision'
-  | 'already-configured';
+  | 'already-configured'
+  | 'invalid-category'
+  | 'category-in-use'
+  | 'category-stale'
+  | 'category-conflict';
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

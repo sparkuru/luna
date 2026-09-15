@@ -18,6 +18,7 @@ import {
 } from "../data/local";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import { labelCategories, labelCategory } from "../category-display";
 export function BudgetEditor() {
   const app = useApp();
   const { snapshot, month, locale, message: m } = app;
@@ -203,6 +204,9 @@ export function Statistics({
   });
   const money = (value: string) =>
     formatMoney(locale, value, workspace.currency, workspace.precision);
+  const categoryName = (id: string) => labelCategory(snapshot.categories, id);
+  const categoryNames = (ids: readonly string[]) =>
+    labelCategories(snapshot.categories, ids);
   const maxBucket = statistics.buckets.reduce(
     (maximum, bucket) =>
       bucket.amountMinor === null
@@ -287,8 +291,8 @@ export function Statistics({
             title:
               transaction.merchant ||
               transaction.notes ||
-              transaction.splits.map((split) => split.category).join(" · "),
-            categories: transaction.splits.map((split) => split.category),
+              categoryNames(transaction.splits.map((split) => split.category)),
+            categories: transaction.splits.map((split) => categoryName(split.category)),
             amountMinor: amount.toString(),
           },
         ];
@@ -307,7 +311,7 @@ export function Statistics({
           left.id.localeCompare(right.id)
         );
       });
-  }, [categorySort, selectedCategory, snapshot.transactions, statistics.end, statistics.start, type]);
+  }, [categorySort, selectedCategory, snapshot.categories, snapshot.transactions, statistics.end, statistics.start, type]);
   const selectedBucketLabel = selectedBucket === null
     ? ""
     : period === "year"
@@ -516,7 +520,7 @@ export function Statistics({
                         <strong>
                           {transaction.merchant ||
                             transaction.notes ||
-                            transaction.splits.map((split) => split.category).join(" · ")}
+                            categoryNames(transaction.splits.map((split) => split.category))}
                         </strong>
                         <span>{formatDate(locale, transaction.date)}</span>
                       </span>
@@ -541,7 +545,7 @@ export function Statistics({
                 <div
                   className="statistics-donut"
                   role="img"
-                  aria-label={`${m("statCategories")}: ${donutCategories.map((category) => `${category.category} ${money(category.amountMinor)}`).join(", ")}`}
+                  aria-label={`${m("statCategories")}: ${donutCategories.map((category) => `${categoryName(category.category)} ${money(category.amountMinor)}`).join(", ")}`}
                 >
                   <svg
                     viewBox="0 0 100 100"
@@ -573,7 +577,7 @@ export function Statistics({
                       aria-pressed={selectedCategory === category.category}
                       onClick={() => setSelectedCategory(category.category)}
                     >
-                      <strong>{category.category}</strong>
+                      <strong>{categoryName(category.category)}</strong>
                       <span>{money(category.amountMinor)}</span>
                     </button>
                   </li>
@@ -599,7 +603,7 @@ export function Statistics({
                   <div className="statistics-drilldown-heading">
                     <div>
                       <h3 id="statistics-drilldown-title">{m("statDrilldown")}</h3>
-                      <p>{m("statDrilldownHelp", { category: selectedCategory })}</p>
+                      <p>{m("statDrilldownHelp", { category: categoryName(selectedCategory) })}</p>
                     </div>
                     <div className="segmented-control" role="group" aria-label={m("statDrilldown")}>
                       <button
@@ -668,8 +672,8 @@ export function Statistics({
               <li className="largest-expense-row" key={expense.id}>
                 <span className="largest-expense-rank">{index + 1}</span>
                 <span className="largest-expense-copy">
-                  <strong>{expense.merchant || expense.notes || expense.categories.join(" · ")}</strong>
-                  <span>{formatDate(locale, expense.date)} · {expense.categories.join(" · ")}</span>
+                  <strong>{expense.merchant || expense.notes || expense.categories.map((id) => categoryName(id)).join(" · ")}</strong>
+                  <span>{formatDate(locale, expense.date)} · {expense.categories.map((id) => categoryName(id)).join(" · ")}</span>
                 </span>
                 <strong>{money(expense.amountMinor)}</strong>
               </li>

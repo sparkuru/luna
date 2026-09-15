@@ -37,7 +37,7 @@ export interface FullBackupSessionSource {
   ): Promise<{ descriptor: StoredAttachmentDescriptor; ciphertext: Uint8Array } | null>;
   restoreFullBackup(archive: FullBackupArchive): Promise<void> | void;
   beginFullBackupRestore?(
-    graph: import("./ledger-sync").LedgerDocumentV2,
+    graph: import("./ledger-sync").LedgerDocument,
   ): Promise<FullBackupRestoreSink> | FullBackupRestoreSink;
 }
 

@@ -17,7 +17,7 @@ import {
 const setup = { name: 'Household', currency: 'CNY', precision: 2, monthlyBudgetMinor: '50000' };
 const draft: TransactionDraft = {
   type: 'expense', amountMinor: '1234', date: '2026-09-05',
-  splits: [{ category: 'Food', amountMinor: '1234' }], notes: 'Lunch',
+  splits: [{ category: 'expense:0', amountMinor: '1234' }], notes: 'Lunch',
 };
 
 class MemoryStorage implements Storage {
@@ -481,7 +481,7 @@ test('returned workspace, nested transactions, settings, and snapshots do not al
   assert.equal(restored.workspace?.name, 'Household');
   assert.equal(restored.workspace?.currency, 'CNY');
   assert.equal(restored.transactions[0]?.notes, 'Lunch');
-  assert.equal(restored.transactions[0]?.splits[0]?.category, 'Food');
+  assert.equal(restored.transactions[0]?.splits[0]?.category, 'expense:0');
   assert.equal(restored.transactions[0]?.amountMinor, '-1234');
   assert.notEqual((await api.getSettings()).lastSync.code, 'synced');
   const revised = await api.updateTransaction(transaction.id, { ...draft, notes: 'Revised' }, 1);
@@ -492,7 +492,7 @@ test('returned workspace, nested transactions, settings, and snapshots do not al
   assert.ok((await api.getSnapshot('2026-09')).transactions[0]?.deletedAt);
 });
 
-test('v1 migration seeds graph history and tombstones, retaining original bytes until a successful v2 mutation', async (t) => {
+test('v1 migration starts a fresh category-based ledger and retains original bytes until a successful mutation', async (t) => {
   const { api, storage, database } = fixture();
   const original = createTransaction('legacy-record', draft, 2, '2026-09-05T01:00:00.000Z');
   const deleted = tombstoneTransaction(original, '2026-09-05T02:00:00.000Z');
@@ -506,10 +506,10 @@ test('v1 migration seeds graph history and tombstones, retaining original bytes 
   const migrated = await api.getLedgerDocument();
   assert.ok(migrated);
   assert.deepEqual(migrated.revisions.map((revision) => revision.id), [
-    'seed:budget:2026-08', 'seed:budget:2026-09', 'seed:transaction:legacy-record',
+    'seed:budget:2026-08', 'seed:budget:2026-09', 'seed:category-catalog:legacy-workspace',
   ]);
   assert.equal((await api.getSnapshot('2026-09')).summary?.totalExpenseMinor, '0');
-  assert.equal((await api.getSnapshot('2026-09')).transactions[0]?.deletedAt, deleted.deletedAt);
+  assert.equal((await api.getSnapshot('2026-09')).transactions.length, 0);
   assert.equal(await rawState(database), legacy);
   const put = t.mock.method(IDBObjectStore.prototype, 'put', () => { throw new DOMException('Quota', 'QuotaExceededError'); });
   await assert.rejects(api.setMonthlyBudget('2026-09', '30000'), /web-storage-write-failed/);
@@ -522,7 +522,7 @@ test('v1 migration seeds graph history and tombstones, retaining original bytes 
   const reopened = createWebLedgerApi(storage, database);
   assert.equal((await reopened.getSnapshot('2026-09')).summary?.budgetMinor, '30000');
   assert.equal((await reopened.getLedgerDocument())?.revisions.length, 4);
-  assert.equal((await reopened.getSnapshot('2026-09')).transactions[0]?.deletedAt, deleted.deletedAt);
+  assert.equal((await reopened.getSnapshot('2026-09')).transactions.length, 0);
 });
 
 test('a remote graph restores into an empty client without replacing its local settings', async () => {
@@ -774,4 +774,63 @@ test('sync cancellation after a successful IndexedDB put rolls back before trans
   assert.equal(await rawState(first.database), before);
   await first.api.mergeLedgerDocument(remote);
   assert.notEqual(await rawState(first.database), before);
+});
+
+test('category catalog restricts new records and supports rename, batch reassignment, and safe deletion', async () => {
+  const { api } = fixture();
+  await api.createWorkspace(setup);
+  const initial = await api.getSnapshot('2026-09');
+  const sourceCategoryId = 'expense:0';
+  const targetCategoryId = 'expense:1';
+  assert.ok(initial.categories?.some((category) => category.id === sourceCategoryId));
+  assert.ok(initial.categories?.some((category) => category.id === targetCategoryId));
+
+  await assert.rejects(
+    api.createTransaction({ ...draft, splits: [{ category: 'income:0', amountMinor: '1234' }] }),
+    /LUNA_ERROR:invalid-category/,
+  );
+  const first = await api.createTransaction(draft);
+  const second = await api.createTransaction({ ...draft, notes: 'Second lunch' });
+  const renamed = await api.updateCategory(
+    sourceCategoryId,
+    { name: 'Meals' },
+    initial.categoryHeadIds,
+  );
+  assert.equal(renamed.name, 'Meals');
+  const afterRename = await api.getSnapshot('2026-09');
+  const usage = await api.getCategoryUsage(sourceCategoryId);
+  assert.equal(usage.length, 2);
+  await assert.rejects(
+    api.deleteCategory(sourceCategoryId, afterRename.categoryHeadIds),
+    /LUNA_ERROR:category-in-use/,
+  );
+
+  await api.reassignCategory({
+    sourceCategoryId,
+    targetCategoryId,
+    transactionIds: usage.map((row) => row.transactionId),
+    expectedRevisions: Object.fromEntries(usage.map((row) => [row.transactionId, row.revision])),
+    expectedHeadIds: afterRename.categoryHeadIds ?? [],
+  });
+  assert.deepEqual(await api.getCategoryUsage(sourceCategoryId), []);
+  const afterReassignment = await api.getSnapshot('2026-09');
+  await api.deleteCategory(sourceCategoryId, afterReassignment.categoryHeadIds);
+  const deleted = (await api.getSnapshot('2026-09')).categories?.find(
+    (category) => category.id === sourceCategoryId,
+  );
+  assert.equal(deleted?.enabled, false);
+  assert.notEqual(deleted?.deletedAt, null);
+  assert.deepEqual(
+    (await api.getSnapshot('2026-09')).transactions.map((transaction) => transaction.id).sort(),
+    [first.id, second.id].sort(),
+  );
+  assert.ok(
+    (await api.getSnapshot('2026-09')).transactions.every((transaction) =>
+      transaction.splits.every((split) => split.category === targetCategoryId),
+    ),
+  );
+  await assert.rejects(
+    api.createTransaction({ ...draft, splits: [{ category: sourceCategoryId, amountMinor: '1234' }] }),
+    /LUNA_ERROR:invalid-category/,
+  );
 });

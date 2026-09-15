@@ -15,7 +15,8 @@ async function createWorkspaceWithRecords(page: Page): Promise<void> {
   await page.locator('#primary-record').click();
   await page.locator('#quick-income').click();
   await page.locator('#transaction-amount').fill('100.00');
-  await page.locator('#transaction-category').fill('Salary');
+  await page.locator('#choose-category').click();
+  await page.getByRole('button', { name: 'Salary', exact: true }).click();
   await page.locator('#transaction-advanced-details summary').click();
   await page.locator('#transaction-merchant').fill('Employer');
   await page.locator('#transaction-date').fill(currentDate);
@@ -25,7 +26,8 @@ async function createWorkspaceWithRecords(page: Page): Promise<void> {
   await page.locator('#primary-record').click();
   await page.locator('#quick-expense').click();
   await page.locator('#transaction-amount').fill('12.50');
-  await page.locator('#transaction-category').fill('Groceries');
+  await page.locator('#choose-category').click();
+  await page.getByRole('button', { name: 'Shopping', exact: true }).click();
   await page.locator('#transaction-advanced-details summary').click();
   await page.locator('#transaction-merchant').fill('Market');
   await page.locator('#transaction-date').fill(currentDate);
@@ -108,7 +110,7 @@ test('keeps detail amounts visible while independently masking summary values', 
   await expect(page.locator('#save-budget')).toBeEnabled();
   await page.goto('/statistics');
   await expect(page.locator('#category-breakdown')).toContainText('12.50');
-  await page.locator('.statistics-category-button').filter({ hasText: 'Groceries' }).click();
+  await page.locator('.statistics-category-button').filter({ hasText: 'Shopping' }).click();
   await expect(page.locator('#statistics-drilldown')).toBeVisible();
   await expect(page.locator('#statistics-drilldown')).toContainText('Market');
   await expect(page.locator('.statistics-drilldown-row').first()).toContainText('12.50');

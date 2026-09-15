@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Calculator, ImagePlus, X } from "lucide-react";
+import { Calculator, ImagePlus, Search, X } from "lucide-react";
 import type { Transaction, TransactionType } from "../../shared/domain";
 import {
   currentLocalDate,
@@ -9,6 +9,7 @@ import {
 import {
   AmountExpressionError,
   evaluateAmountExpression,
+  inspectAmountExpression,
   normalizeAmountExpressionInput,
 } from "../../shared/amount-expression";
 import {
@@ -36,27 +37,13 @@ import {
   readAndroidSelectedImage,
 } from "../../web/android-image-input";
 import { secureRandomId } from "../../shared/secure-random";
-import type { AppLocale } from "../../shared/settings";
 import { getClientSurface } from "../client-surface";
+import { labelCategories } from "../category-display";
 
 export interface Entry {
   type: "income" | "expense";
   transaction?: Transaction;
   returnFocus: string;
-}
-
-function builtInCategoriesFor(
-  locale: AppLocale,
-  type: TransactionType,
-): readonly string[] {
-  if (locale === "zh-CN") {
-    return type === "expense"
-      ? ["餐饮", "交通", "购物", "住房", "日用", "娱乐", "医疗", "教育"]
-      : ["工资", "奖金", "兼职", "投资", "退款", "礼金", "补贴"];
-  }
-  return type === "expense"
-    ? ["Food", "Transport", "Shopping", "Housing", "Household", "Leisure", "Health", "Education"]
-    : ["Salary", "Bonus", "Freelance", "Investment", "Refund", "Gift", "Allowance"];
 }
 
 interface EntryAttachment {
@@ -180,10 +167,10 @@ export function TransactionDialog({
   const [draft, setDraft] = useState(initial);
   const [expression, setExpression] = useState(initial.amount);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
   const [calculatorOpen, setCalculatorOpen] = useState(false);
-  const [custom, setCustom] = useState("");
-  const [categoryError, setCategoryError] = useState(false);
   const [error, setError] = useState("");
+  const [calculationDisplay, setCalculationDisplay] = useState("");
   const [imageBusy, setImageBusy] = useState(false);
   const [attachments, setAttachments] = useState<EntryAttachment[]>(() =>
     (original?.attachments ?? []).map((metadata) => ({
@@ -226,6 +213,7 @@ export function TransactionDialog({
     if (value === "") {
       setExpression("");
       change("amount", "");
+      setCalculationDisplay("");
       setError("");
       return;
     }
@@ -233,10 +221,12 @@ export function TransactionDialog({
       const normalized = normalizeAmountExpressionInput(value);
       setExpression(normalized);
       change("amount", normalized);
+      setCalculationDisplay("");
       setError("");
     } catch (cause) {
       setExpression(value);
       change("amount", value);
+      setCalculationDisplay("");
       if (cause instanceof AmountExpressionError) setError(cause.message);
     }
   };
@@ -244,6 +234,7 @@ export function TransactionDialog({
     if (token === "clear") {
       setExpression("");
       change("amount", "");
+      setCalculationDisplay("");
       setError("");
       return;
     }
@@ -253,10 +244,16 @@ export function TransactionDialog({
     }
     if (token === "=") {
       try {
-        const result = evaluateAmountExpression(expression, workspace.precision);
-        const formatted = formatMinorUnits(result, workspace.precision).replaceAll(",", "");
+        const inspected = inspectAmountExpression(expression, workspace.precision);
+        if (!inspected.complete || inspected.amountMinor === null)
+          throw new AmountExpressionError(
+            "amount-expression-incomplete",
+            "Finish the expression before evaluating it.",
+          );
+        const formatted = formatMinorUnits(inspected.amountMinor, workspace.precision).replaceAll(",", "");
         setExpression(formatted);
         change("amount", formatted);
+        setCalculationDisplay(inspected.displayAmount ?? formatted);
         setError("");
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : app.errorMessage(cause));
@@ -267,13 +264,13 @@ export function TransactionDialog({
   };
   const calculatorControls = () => (
     <div className="calculator-grid">
-      {["7", "8", "9", "backspace", "4", "5", "6", "+", "1", "2", "3", "-", ".", "0", "clear", "="]
+      {["7", "8", "9", "backspace", "4", "5", "6", "×", "1", "2", "3", "÷", ".", "0", "clear", "=", "+", "-"]
         .map((token) => (
           <Button
             key={token}
             type="button"
             variant={token === "=" ? "default" : "outline"}
-            className={token === "=" ? "equals" : ["+", "-", "backspace"].includes(token) ? "operator" : undefined}
+            className={token === "=" ? "equals" : ["+", "-", "×", "÷", "backspace"].includes(token) ? "operator" : undefined}
             aria-label={token === "=" ? m("calculatorEquals") : token === "backspace" ? m("calculatorBackspace") : token}
             onClick={() => pressCalculator(token)}
           >
@@ -294,20 +291,23 @@ export function TransactionDialog({
     return () => window.removeEventListener("luna:back", back);
   }, [categoryOpen, close]);
   const categoriesForType = (type: TransactionType) => [
-    ...new Set([
-      ...snapshot.transactions
-        .filter((tx) => tx.deletedAt === null && tx.type === type)
-        .sort((left, right) => left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id))
-        .flatMap((tx) => tx.splits.map((split) => split.category).filter(Boolean)),
-      ...builtInCategoriesFor(app.locale, type),
-    ]),
+    ...(snapshot.categories ?? [])
+      .filter((category) =>
+        category.type === type &&
+        category.deletedAt === null &&
+        (category.enabled || category.id === draft.category),
+      )
+      .sort((left, right) => left.position - right.position || left.id.localeCompare(right.id)),
   ];
   const categories = categoriesForType(draft.type);
+  const selectedCategory = (snapshot.categories ?? []).find(
+    (category) => category.id === draft.category,
+  );
   const changeType = (type: TransactionType) => {
     if (type === draft.type) return;
     const currentCategory = draft.category.trim();
     const compatible =
-      currentCategory === "" || categoriesForType(type).includes(currentCategory);
+      currentCategory === "" || categoriesForType(type).some((category) => category.id === currentCategory);
     if (!compatible) {
       if (!window.confirm(m("changeTypeCategoryConfirm"))) return;
       setDraft((previous) => ({ ...previous, type, category: "" }));
@@ -399,6 +399,7 @@ export function TransactionDialog({
     busyRef.current = true;
     setError("");
     try {
+      if (!draft.category.trim()) throw new Error("LUNA_ERROR:invalid-category");
       const evaluated = evaluateAmountExpression(expression, workspace.precision);
       const evaluatedMinor = BigInt(evaluated);
       if (evaluatedMinor <= 0n) throw new Error("LUNA_ERROR:invalid-amount");
@@ -547,25 +548,6 @@ export function TransactionDialog({
               ))}
             </div>
             <p className="quick-entry-core-help">{m("quickEntryCoreHelp")}</p>
-            {categories.length > 0 && (
-              <div
-                id="category-grid"
-                className="category-grid"
-                aria-label={m("category")}
-              >
-                {categories.map((category) => (
-                  <Button
-                    key={category}
-                    type="button"
-                    variant={draft.category === category ? "secondary" : "outline"}
-                    aria-pressed={draft.category === category}
-                    onClick={() => change("category", category)}
-                  >
-                    {category}
-                  </Button>
-                ))}
-              </div>
-            )}
             <div className="form-grid quick-core-fields">
               <div className="field">
                 <label htmlFor="transaction-amount">{m("amount")} *</label>
@@ -581,7 +563,7 @@ export function TransactionDialog({
                     if (
                       event.key === "Enter" &&
                       !event.nativeEvent.isComposing &&
-                      /[+-]/.test(expression)
+                      /[+\-*/×÷]/.test(expression)
                     ) {
                       event.preventDefault();
                       pressCalculator("=");
@@ -606,6 +588,11 @@ export function TransactionDialog({
                       <span>{m("calculator")}</span>
                     </div>
                     <p className="helper">{m("calculatorHelp")}</p>
+                    {calculationDisplay && (
+                      <p className="calculator-result" role="status" aria-live="polite">
+                        {m("calculatorResult")}: {calculationDisplay}
+                      </p>
+                    )}
                     {calculatorControls()}
                   </div>
                 )}
@@ -616,24 +603,37 @@ export function TransactionDialog({
                   <Input
                     id="transaction-category"
                     name="category"
-                    maxLength={120}
                     required
-                    value={draft.category}
-                    onChange={(e) => change("category", e.target.value)}
+                    readOnly
+                    placeholder={m("categoryPlaceholder")}
+                    value={
+                      selectedCategory?.name ??
+                      (locked
+                        ? labelCategories(
+                            snapshot.categories,
+                            original?.splits.map((split) => split.category) ?? [],
+                          )
+                        : "")
+                    }
+                    aria-invalid={!!error && !draft.category}
+                    aria-describedby="transaction-alert category-helper"
                   />
                   <Button
                     id="choose-category"
                     type="button"
                     variant="outline"
+                    disabled={locked}
                     onClick={() => {
-                      setCustom(draft.category);
-                      setCategoryError(false);
+                      setCategorySearch("");
                       setCategoryOpen(true);
                     }}
                   >
                     {m("chooseCategory")}
                   </Button>
                 </div>
+                <span id="category-helper" className="helper">
+                  {selectedCategory?.enabled === false ? m("categoryDisabledEditing") : m("categoryPickerHelp")}
+                </span>
               </div>
               <Field
                 id="transaction-date"
@@ -657,6 +657,11 @@ export function TransactionDialog({
                   <span>{m("calculator")}</span>
                 </summary>
                 <p className="helper">{m("calculatorHelp")}</p>
+                {calculationDisplay && (
+                  <p className="calculator-result" role="status" aria-live="polite">
+                    {m("calculatorResult")}: {calculationDisplay}
+                  </p>
+                )}
                 {calculatorControls()}
               </details>
             )}
@@ -713,22 +718,29 @@ export function TransactionDialog({
               </div>
             </details>
             <div className="attachment-picker">
-              <div>
+              <div className="attachment-picker-card">
+                <span className="attachment-picker-icon" aria-hidden="true">
+                  <ImagePlus size={20} />
+                </span>
+                <div className="attachment-picker-copy">
+                  <strong>{m("addImage")}</strong>
+                  <p className="helper">{m("imageHelp")}</p>
+                </div>
                 {isAndroidImageInputAvailable() ? (
                   <Button
+                    className="attachment-picker-action"
                     type="button"
                     variant="outline"
                     onClick={() => void addImages(null)}
                     disabled={imageBusy || mutation.isPending || locked}
                   >
-                    <ImagePlus size={17} aria-hidden="true" /> {m("addImage")}
+                    {m("chooseImages")}
                   </Button>
                 ) : (
-                  <label htmlFor="transaction-images">
-                    <ImagePlus size={17} aria-hidden="true" /> {m("addImage")}
+                  <label className="attachment-picker-action" htmlFor="transaction-images">
+                    {m("chooseImages")}
                   </label>
                 )}
-                <p className="helper">{m("imageHelp")}</p>
               </div>
               <input
                 id="transaction-images"
@@ -736,14 +748,19 @@ export function TransactionDialog({
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 multiple
-                hidden={isAndroidImageInputAvailable()}
+                className="visually-hidden"
                 disabled={imageBusy || mutation.isPending || locked}
                 onChange={(event) => {
                   void addImages(event.currentTarget.files);
                   event.currentTarget.value = "";
                 }}
               />
-              {imageBusy && <p className="helper" role="status">{m("imageProcessing")}</p>}
+              {(imageBusy || attachments.length > 0) && (
+                <div className="attachment-picker-status" role={imageBusy ? "status" : undefined}>
+                  {imageBusy && <span>{m("imageProcessing")}</span>}
+                  {attachments.length > 0 && <span>{m("imageCount", { count: attachments.length })}</span>}
+                </div>
+              )}
               {attachments.length > 0 && (
                 <ul className="attachment-preview-list" aria-label={m("attachments")}>
                   {attachments.map((item, index) => (
@@ -798,7 +815,7 @@ export function TransactionDialog({
             className="luna-dialog category-dialog-panel"
             onOpenAutoFocus={(event) => {
               event.preventDefault();
-              document.getElementById("category-custom")?.focus();
+              document.getElementById("category-search")?.focus();
             }}
             onCloseAutoFocus={(event) => {
               event.preventDefault();
@@ -823,55 +840,52 @@ export function TransactionDialog({
                 {m("closeMenu")}
               </Button>
             </header>
+            <div className="category-search-field">
+              <Search size={17} aria-hidden="true" />
+              <Input
+                id="category-search"
+                value={categorySearch}
+                onChange={(event) => setCategorySearch(event.target.value)}
+                placeholder={m("categorySearchPlaceholder")}
+                autoComplete="off"
+                aria-label={m("categorySearchPlaceholder")}
+              />
+            </div>
             <div id="category-options" className="category-options" role="list">
-              {categories.length === 0 ? (
-                <p className="empty-state">{m("noSavedCategories")}</p>
+              {categories.filter((category) =>
+                category.name.toLocaleLowerCase().includes(categorySearch.trim().toLocaleLowerCase()),
+              ).length === 0 ? (
+                <p className="empty-state">
+                  {categories.length === 0 ? m("noSavedCategories") : m("categorySearchEmpty")}
+                  {categories.length === 0 && (
+                    <>
+                      {" "}
+                      <a href="/settings/categories">{m("manageCategories")}</a>
+                    </>
+                  )}
+                </p>
               ) : (
-                categories.map((category) => (
-                  <div role="listitem" key={category}>
+                categories
+                  .filter((category) =>
+                    category.name.toLocaleLowerCase().includes(categorySearch.trim().toLocaleLowerCase()),
+                  )
+                  .map((category) => (
+                  <div role="listitem" key={category.id}>
                     <Button
                       type="button"
                       variant="outline"
                       className="category-option"
                       onClick={() => {
-                        change("category", category);
+                        change("category", category.id);
                         setCategoryOpen(false);
                       }}
                     >
-                      {category}
+                      {category.name}
                     </Button>
                   </div>
                 ))
               )}
             </div>
-            <form
-              id="category-picker-form"
-              className="category-custom-form"
-              noValidate
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!custom.trim()) {
-                  setCategoryError(true);
-                  return;
-                }
-                change("category", custom.trim());
-                setCategoryOpen(false);
-              }}
-            >
-              <Field
-                id="category-custom"
-                label={m("customCategory")}
-                value={custom}
-                onChange={(e) => setCustom(e.target.value)}
-                maxLength={120}
-              />
-              <Button id="use-category" type="submit">
-                {m("useCategory")}
-              </Button>
-            </form>
-            <p id="category-alert" role="alert" className="form-alert">
-              {categoryError ? m("categoryRequired") : ""}
-            </p>
           </DialogContent>
         </Dialog>
       </DialogContent>

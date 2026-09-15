@@ -20,11 +20,16 @@ import {
   decodeSettingsUpdate,
 } from "../shared/settings";
 import { ConfigSyncService, ConfigSyncServiceError } from "./config-sync";
-import { LedgerSyncError } from "../shared/ledger-sync";
+import { decodeLedgerHeadIds, LedgerSyncError } from "../shared/ledger-sync";
 import {
   decodeBudgetUpdate,
   decodeLedgerConflictChoice,
 } from "../shared/ledger-data";
+import {
+  decodeCategoryCreateInput,
+  decodeCategoryReassignmentInput,
+  decodeCategoryUpdateInput,
+} from "../shared/category-catalog";
 import { LedgerCryptoError } from "../shared/ledger-crypto";
 import { LedgerObjectError } from "../sync/s3-ledger-store";
 import {
@@ -172,6 +177,34 @@ export function registerIpcHandlers(
       decodeId(id, "transaction id"),
       decodeExpectedRevision(expected),
     ),
+  );
+  handle(IPC_CHANNELS.createCategory, (input) => {
+    const r = record(input, ["input", "expectedHeadIds"]);
+    return api.createCategory(
+      decodeCategoryCreateInput(r.input),
+      optionalHeadIds(r.expectedHeadIds),
+    );
+  });
+  handle(IPC_CHANNELS.updateCategory, (input) => {
+    const r = record(input, ["id", "input", "expectedHeadIds"]);
+    return api.updateCategory(
+      decodeId(r.id, "category id"),
+      decodeCategoryUpdateInput(r.input),
+      optionalHeadIds(r.expectedHeadIds),
+    );
+  });
+  handle(IPC_CHANNELS.deleteCategory, (input) => {
+    const r = record(input, ["id", "expectedHeadIds"]);
+    return api.deleteCategory(
+      decodeId(r.id, "category id"),
+      optionalHeadIds(r.expectedHeadIds),
+    );
+  });
+  handle(IPC_CHANNELS.getCategoryUsage, (id) =>
+    api.getCategoryUsage(decodeId(id, "category id")),
+  );
+  handle(IPC_CHANNELS.reassignCategory, (input) =>
+    api.reassignCategory(decodeCategoryReassignmentInput(input)),
   );
   handle(IPC_CHANNELS.setMonthlyBudget, (input) => {
     const d = decodeBudgetUpdate(input);
@@ -351,6 +384,10 @@ function text(value: unknown): string {
 function optionalText(value: unknown): string | undefined {
   if (value === undefined || value === null) return undefined;
   return text(value);
+}
+function optionalHeadIds(value: unknown): string[] | undefined {
+  if (value === undefined || value === null) return undefined;
+  return decodeLedgerHeadIds(value);
 }
 function positiveInteger(value: unknown): number {
   if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1)

@@ -24,6 +24,13 @@ import type {
   BackupExportStart,
   BackupImportReceipt,
 } from "./full-backup-session";
+import type {
+  CategoryCreateInput,
+  CategoryDefinition,
+  CategoryReassignmentInput,
+  CategoryUpdateInput,
+  CategoryUsage,
+} from "./category-catalog";
 
 export interface StagedAttachment {
   draftToken: string;
@@ -110,6 +117,18 @@ export interface LunaLedgerApi {
     id: string,
     expectedRevision?: number,
   ): Promise<Transaction>;
+  createCategory(
+    input: CategoryCreateInput,
+    expectedHeadIds?: string[],
+  ): Promise<CategoryDefinition>;
+  updateCategory(
+    id: string,
+    input: CategoryUpdateInput,
+    expectedHeadIds?: string[],
+  ): Promise<CategoryDefinition>;
+  deleteCategory(id: string, expectedHeadIds?: string[]): Promise<void>;
+  getCategoryUsage(id: string): Promise<CategoryUsage[]>;
+  reassignCategory(input: CategoryReassignmentInput): Promise<void>;
   setMonthlyBudget(
     month: string,
     budgetMinor: string | null,

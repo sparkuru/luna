@@ -58,13 +58,15 @@ async function main(): Promise<void> {
       await page.locator("#server-sync-mode").selectOption("manual");
       await expect.poll(() => page.evaluate(async () => (await window.lunaLedger.server!.status()).syncMode)).toBe("manual");
     }
-    async function record(page: Page, category: string): Promise<void> {
+    async function record(page: Page, merchant: string): Promise<void> {
       await closeAccount(page);
       await page.locator("#record-expense").click();
       await page.locator("#transaction-amount").fill("12.50");
-      await page.locator("#transaction-category").fill(category);
+      await page.locator("#choose-category").click();
+      await page.getByRole("button", { name: "Food", exact: true }).click();
+      await page.locator("#transaction-merchant").fill(merchant);
       await page.locator("#save-transaction").click();
-      await expect(page.locator("#transaction-list-region")).toContainText(category);
+      await expect(page.locator("#transaction-list-region")).toContainText(merchant);
     }
     async function sync(page: Page): Promise<void> {
       await account(page);

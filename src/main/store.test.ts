@@ -23,7 +23,7 @@ test('stale edits and deletes reject without changing committed rows or pending 
     const second = new SQLiteLocalStore(filePath);
     const now = '2026-09-05T10:00:00.000Z';
     first.createWorkspace({ name: 'Household', currency: 'CNY', precision: 2, monthlyBudgetMinor: null }, 'workspace', now);
-    const draft = { type: 'expense' as const, amountMinor: '1234', date: '2026-09-05', splits: [{ category: 'Food', amountMinor: '1234' }] };
+    const draft = { type: 'expense' as const, amountMinor: '1234', date: '2026-09-05', splits: [{ category: 'expense:0', amountMinor: '1234' }] };
     const original = first.createTransaction(draft, 'transaction', now);
     second.updateTransaction(original.id, { ...draft, notes: 'Another window' }, now, original.revision);
     const committed = first.getSnapshot('2026-09');
@@ -57,7 +57,7 @@ test('SQLite migration is repeatable and local data survives reopen', () => {
         type: 'expense',
         amountMinor: '12345',
         date: '2026-08-30',
-        splits: [{ category: 'Groceries', amountMinor: '12345' }],
+        splits: [{ category: 'expense:0', amountMinor: '12345' }],
         merchant: 'Market',
         paymentMethod: 'Card',
         notes: 'Weekly shop',
@@ -178,7 +178,7 @@ test('SQLite preserves integer strings beyond JavaScript safe integers', () => {
         type: 'income',
         amountMinor: '9007199254740993',
         date: '2026-08-30',
-        splits: [{ category: 'Sale', amountMinor: '9007199254740993' }],
+        splits: [{ category: 'income:0', amountMinor: '9007199254740993' }],
       },
       'transaction-large',
       '2026-08-30T10:01:00.000Z',
@@ -208,7 +208,7 @@ test('delete writes a tombstone, removes the record from totals, and remains loc
         type: 'expense',
         amountMinor: '2500',
         date: '2026-08-30',
-        splits: [{ category: 'Travel', amountMinor: '2500' }],
+        splits: [{ category: 'expense:0', amountMinor: '2500' }],
       },
       'transaction-delete',
       '2026-08-30T10:01:00.000Z',
@@ -223,7 +223,7 @@ test('delete writes a tombstone, removes the record from totals, and remains loc
       type: 'expense',
       amountMinor: '1',
       date: '2026-08-30',
-      splits: [{ category: 'Travel', amountMinor: '1' }],
+      splits: [{ category: 'expense:0', amountMinor: '1' }],
     }, '2026-08-30T10:03:00.000Z'), DomainError);
     store.close();
   });
@@ -249,7 +249,7 @@ test('invalid transaction input is rejected before SQLite writes', () => {
             type: 'income',
             amountMinor: '100',
             date: '2026-08-30',
-            splits: [{ category: 'Work', amountMinor: '99' }],
+            splits: [{ category: 'income:0', amountMinor: '99' }],
           },
           'invalid-transaction',
           '2026-08-30T10:01:00.000Z',
@@ -325,7 +325,7 @@ test('SQLite complete backup restores ciphertext through bounded staging', async
         type: 'expense',
         amountMinor: '123',
         date: '2026-09-12',
-        splits: [{ category: 'Food', amountMinor: '123' }],
+        splits: [{ category: 'expense:0', amountMinor: '123' }],
         attachments: [{ draftToken: staged.draftToken }],
       },
       'transaction-backup-image',

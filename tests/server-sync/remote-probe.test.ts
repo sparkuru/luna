@@ -63,7 +63,7 @@ test(
       type: "expense" as const,
       amountMinor: "123",
       date: "2026-09-10",
-      splits: [{ category: "Remote probe", amountMinor: "123" }],
+      splits: [{ category: "expense:0", amountMinor: "123" }],
       notes: "from second device",
     };
     try {

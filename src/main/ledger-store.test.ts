@@ -9,7 +9,7 @@ import { LedgerSyncError, projectLedgerDocument } from '../shared/ledger-sync';
 
 const now = '2026-09-05T12:00:00.000Z';
 const draft = { type: 'expense' as const, amountMinor: '100', date: '2026-09-05',
-  splits: [{ category: 'Food', amountMinor: '100' }] };
+  splits: [{ category: 'expense:0', amountMinor: '100' }] };
 
 function createStore(): SQLiteLocalStore {
   const store = new SQLiteLocalStore(':memory:');
@@ -68,7 +68,7 @@ test('SQLite rejects workspace mismatch and revision collisions without modifyin
   } finally { store.close(); }
 });
 
-test('SQLite v1 migration retains deleted records and seeds exactly once across reopen', () => {
+test('SQLite legacy graph starts fresh with categories and seeds exactly once across reopen', () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'luna-graph-migrate-'));
   const file = path.join(directory, 'ledger.sqlite');
   try {
@@ -85,10 +85,11 @@ test('SQLite v1 migration retains deleted records and seeds exactly once across 
     const migrated = new SQLiteLocalStore(file);
     const document = migrated.getLedgerDocument();
     assert.ok(document);
-    const deleted = projectLedgerDocument(document).transactions[0];
-    assert.equal(deleted?.deletedAt, now);
+    const projection = projectLedgerDocument(document);
+    assert.equal(document.schemaVersion, 3);
+    assert.equal(projection.categories.length > 0, true);
     assert.equal(migrated.getSnapshot('2026-09').transactions.length, 0);
-    assert.equal(document.revisions.filter((item) => item.kind === 'transaction').length, 1);
+    assert.equal(document.revisions.filter((item) => item.kind === 'transaction').length, 0);
     migrated.close();
     const reopened = new SQLiteLocalStore(file);
     assert.deepEqual(reopened.getLedgerDocument(), document);

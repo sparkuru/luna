@@ -35,6 +35,11 @@ async function login(
   await page.locator("#server-login").click();
   await expect(page.locator("#server-account-name")).toHaveText(username);
 }
+
+async function chooseCategory(page: Page, name = "Food") {
+  await page.locator("#choose-category").click();
+  await page.getByRole("button", { name, exact: true }).click();
+}
 test("real server login, encrypted copy, second-device restore and offline profile recovery", async ({
   page,
   browser,
@@ -62,7 +67,9 @@ test("real server login, encrypted copy, second-device restore and offline profi
     await expect(page.locator("#transactions-title")).toBeVisible();
     await page.locator("#primary-record").click();
     await page.locator("#transaction-amount").fill("12.50");
-    await page.locator("#transaction-category").fill("Private meal");
+    await chooseCategory(page);
+    await page.locator("#transaction-advanced-details summary").click();
+    await page.locator("#transaction-merchant").fill("Private meal");
     await page.locator("#save-transaction").click();
     await expect(page.locator("#transaction-list-region")).toContainText(
       "Private meal",
@@ -79,7 +86,7 @@ test("real server login, encrypted copy, second-device restore and offline profi
         type: "expense",
         amountMinor: "980",
         date: "2026-09-05",
-        splits: [{ category: "Receipt image", amountMinor: "980" }],
+        splits: [{ category: "expense:0", amountMinor: "980" }],
         merchant: "Receipt with image",
         notes: "Encrypted HTTP attachment",
         attachments: [{ draftToken: staged.draftToken }],
@@ -110,7 +117,7 @@ test("real server login, encrypted copy, second-device restore and offline profi
     const original = await readLedgerDocument(page, ledgerPassword);
     await page.locator("#primary-record").click();
     await page.locator("#transaction-amount").fill("25.60");
-    await page.locator("#transaction-category").fill("Retained login draft");
+    await chooseCategory(page);
     await page.locator("#close-transaction").click();
     await account(page);
     await login(page, apiUrl, username, "First browser");
