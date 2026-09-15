@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 3
-- **Last Active**: 2026-09-13
+- **Total Sessions**: 4
+- **Last Active**: 2026-09-15
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~80 | Active |
+| `journal-1.md` | ~102 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 4 | 2026-09-15 | 修复账单月份切换与新增交易交互 | `531aa2c`, `a9944fc` | `paycheck-to-paycheck` |
 | 3 | 2026-09-13 | 提交 Luna 前端体验阶段进度 | `00f7955` | `paycheck-to-paycheck` |
 | 2 | 2026-09-10 | 完成 Web 远端部署与验收 | `cf80205` | `main` |
 | 1 | 2026-08-30 | Finalize product decision baseline | `ca43756`, `0014e8d` | `main` |

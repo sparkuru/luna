@@ -78,3 +78,25 @@ Resolved the remaining product decisions, rewrote the root PRD for an offline-fi
 ### Status
 
 [OK] **Completed**
+
+
+## Session 4: 修复账单月份切换与新增交易交互
+
+**Date**: 2026-09-15
+**Task**: 修复账单月份切换与新增交易交互
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+完成月份切换稳定 loading frame、Web 月份控件下方唯一记账入口与新建交易默认今天；补充 1280/1440/768/375/320、延迟加载隔离、失败重试和历史日期编辑回归。类型检查与 Web 构建通过，production Web 86/88 通过，剩余为 server-account worker SIGSEGV；共享测试 187/190 通过，3 个 SQLite/native worker SIGSEGV。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `531aa2c` | (see git log) |
+| `a9944fc` | (see git log) |
+
+### Status
+
+[OK] **Completed**
