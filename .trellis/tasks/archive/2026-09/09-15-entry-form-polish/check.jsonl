@@ -1,0 +1,15 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"检查自定义上传 surface、分类 dialog、设置表单的语义/焦点/响应式实现"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"检查分类/交易写入是否遵守 committed write、refresh 和 dirty 草稿边界"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"检查 ARIA、错误/加载/空态、隐私、reduced-motion 和回归测试"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"检查 Web/native 共享 UI、CSP、窄屏和 Playwright 验证"}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"检查 Android 选图和返回键语义没有被上传/分类 dialog 改坏"}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"检查 SQLite fresh reset、目录引用检查和批量替换原子性"}
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"检查 v3 catalog revision、merge/head/conflict、crypto 和 backup 兼容"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"检查 category-in-use、stale、冲突和失败时的错误映射与回滚"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"检查 native/Web host tests、跨层数据流和验证门禁"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"复核分类 ID、label、统计/筛选、图投影和 API 的端到端一致性"}
+{"file":".trellis/spec/guides/cross-platform-thinking-guide.md","reason":"复核 Electron/Web/Android 入口与共享录入行为的差异边界"}
+{"file":".trellis/tasks/09-15-entry-form-polish/prd.md","reason":"逐项核对用户确认的附件、乘除、目录 CRUD、引用处理和精度验收"}
+{"file":".trellis/tasks/09-15-entry-form-polish/design.md","reason":"核对 v3 图目录、批量原子替换、计算器展示和上传视觉方案"}
+{"file":".trellis/tasks/09-15-entry-form-polish/research/current-contract.md","reason":"对照实际源码影响面，避免遗漏旧自由文本、路由、备份和测试夹具"}
+{"file":".trellis/tasks/09-15-entry-form-polish/research/category-catalog-design.md","reason":"核对已选目录存储方案、旧数据边界和冲突处理约束"}

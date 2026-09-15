@@ -1,0 +1,17 @@
+{"file":".trellis/spec/frontend/index.md","reason":"共享 renderer 的 Web-first、跨 surface 与入口边界"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Dialog、表单、语义 HTML、焦点和 CSS 组件约定"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"TanStack Query、AppContext、草稿、提交后 refresh 与 source-of-truth"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"ARIA、隐私、错误/空态、低动效和 renderer 回归要求"}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"renderer 与 contextBridge/API DTO 的类型边界"}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Android 系统选图、返回键和共享 renderer 约束"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Web host、CSP、响应式和 Playwright 验证契约"}
+{"file":".trellis/spec/backend/index.md","reason":"native/Web 后端边界与跨层实现入口"}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"SQLite 事务、迁移、投影和原子批量写入"}
+{"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"账本图、head、冲突、同步与备份一致性"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"共享错误码、IPC/API 错误和失败回滚契约"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"宿主层测试、数据边界和质量门禁"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"目录 ID 从设置到图、查询、展示和同步的跨层推理"}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"复用现有附件、写入、冲突和 renderer 组件，避免重复实现"}
+{"file":".trellis/spec/guides/cross-platform-thinking-guide.md","reason":"Electron、Web、Android 的共享行为与 surface 差异"}
+{"file":".trellis/tasks/09-15-entry-form-polish/research/current-contract.md","reason":"本次任务已核实的录入、API、图、导航和测试影响面"}
+{"file":".trellis/tasks/09-15-entry-form-polish/research/category-catalog-design.md","reason":"分类目录持久化、稳定 ID、引用替换和 v3 图方案选型"}
