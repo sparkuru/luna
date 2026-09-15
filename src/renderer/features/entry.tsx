@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Calculator, ImagePlus, Search, X } from "lucide-react";
+import { Calculator, ChevronDown, ImagePlus, Search, X } from "lucide-react";
 import type { Transaction, TransactionType } from "../../shared/domain";
 import {
   currentLocalDate,
@@ -303,6 +303,14 @@ export function TransactionDialog({
   const selectedCategory = (snapshot.categories ?? []).find(
     (category) => category.id === draft.category,
   );
+  const categoryDisplay =
+    selectedCategory?.name ??
+    (locked
+      ? labelCategories(
+          snapshot.categories,
+          original?.splits.map((split) => split.category) ?? [],
+        )
+      : "");
   const changeType = (type: TransactionType) => {
     if (type === draft.type) return;
     const currentCategory = draft.category.trim();
@@ -586,49 +594,53 @@ export function TransactionDialog({
                     <div className="calculator-title">
                       <Calculator size={17} aria-hidden="true" />
                       <span>{m("calculator")}</span>
+                      {calculationDisplay && (
+                        <span className="calculator-result" role="status" aria-live="polite">
+                          {m("calculatorResult")}: {calculationDisplay}
+                        </span>
+                      )}
                     </div>
                     <p className="helper">{m("calculatorHelp")}</p>
-                    {calculationDisplay && (
-                      <p className="calculator-result" role="status" aria-live="polite">
-                        {m("calculatorResult")}: {calculationDisplay}
-                      </p>
-                    )}
                     {calculatorControls()}
                   </div>
                 )}
               </div>
               <div className="field">
-                <label htmlFor="transaction-category">{m("category")} *</label>
+                <label htmlFor="choose-category">{m("category")} *</label>
+                <input
+                  id="transaction-category"
+                  name="category"
+                  type="hidden"
+                  value={categoryDisplay}
+                  readOnly
+                />
                 <div className="category-control">
-                  <Input
-                    id="transaction-category"
-                    name="category"
-                    required
-                    readOnly
-                    placeholder={m("categoryPlaceholder")}
-                    value={
-                      selectedCategory?.name ??
-                      (locked
-                        ? labelCategories(
-                            snapshot.categories,
-                            original?.splits.map((split) => split.category) ?? [],
-                          )
-                        : "")
-                    }
-                    aria-invalid={!!error && !draft.category}
-                    aria-describedby="transaction-alert category-helper"
-                  />
                   <Button
                     id="choose-category"
                     type="button"
                     variant="outline"
+                    className="category-control-trigger"
                     disabled={locked}
+                    aria-haspopup="dialog"
+                    aria-expanded={categoryOpen}
+                    aria-controls="category-dialog"
+                    aria-invalid={!!error && !draft.category}
+                    aria-required="true"
+                    aria-describedby="transaction-alert category-helper"
                     onClick={() => {
                       setCategorySearch("");
                       setCategoryOpen(true);
                     }}
                   >
-                    {m("chooseCategory")}
+                    <span
+                      className={`category-control-value${categoryDisplay ? "" : " category-control-placeholder"}`}
+                    >
+                      {categoryDisplay || m("categoryPlaceholder")}
+                    </span>
+                    <span className="category-control-action">
+                      {m("chooseCategory")}
+                      <ChevronDown size={17} aria-hidden="true" />
+                    </span>
                   </Button>
                 </div>
                 <span id="category-helper" className="helper">
@@ -655,13 +667,13 @@ export function TransactionDialog({
                 <summary className="calculator-title">
                   <Calculator size={17} aria-hidden="true" />
                   <span>{m("calculator")}</span>
+                  {calculationDisplay && (
+                    <span className="calculator-result" role="status" aria-live="polite">
+                      {m("calculatorResult")}: {calculationDisplay}
+                    </span>
+                  )}
                 </summary>
                 <p className="helper">{m("calculatorHelp")}</p>
-                {calculationDisplay && (
-                  <p className="calculator-result" role="status" aria-live="polite">
-                    {m("calculatorResult")}: {calculationDisplay}
-                  </p>
-                )}
                 {calculatorControls()}
               </details>
             )}

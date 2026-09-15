@@ -77,8 +77,10 @@ The record action opens a modal transaction dialog. It exposes only the fields
 needed for the common path (transaction type, amount, category, and date);
 date remains visible in the core form because it controls the financial period.
 Merchant, payment method, notes, and future split controls belong behind a
-native semantic `<details>` disclosure. Category suggestions use a separate
-short modal flow and must preserve custom input. On native hosts, the
+native semantic `<details>` disclosure. Category selection uses a separate
+short modal flow and a single read-only `#choose-category` button surface; the
+transaction form must not expose a free-text category input because categories
+come from the workspace catalog. On native hosts, the
 `#open-secondary-menu` control opens the secondary modal; on Web, its stable
 counterpart is the Settings navigation item. Budget, category breakdown,
 display settings, and sync/backup tools remain reachable through those

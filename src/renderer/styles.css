@@ -860,13 +860,44 @@ label,
 }
 
 .category-control {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-2);
+  min-width: 0;
 }
 
-.category-control button {
-  min-width: 6.5rem;
+.category-control-trigger {
+  width: 100%;
+  min-width: 0;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  text-align: left;
+}
+
+.category-control-trigger:hover:not(:disabled),
+.category-control-trigger:focus-visible {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.category-control-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.category-control-placeholder {
+  color: var(--color-muted);
+}
+
+.category-control-action {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-primary-dark);
+  font-size: 0.86rem;
+  font-weight: 750;
 }
 
 .advanced-fields {
@@ -1705,7 +1736,6 @@ label,
   .summary-grid,
   .filter-grid,
   .form-grid,
-  .category-control,
   .category-custom-form,
   .category-create-form {
     grid-template-columns: 1fr;
@@ -2031,7 +2061,6 @@ label,
   }
 
   .budget-panel button,
-  .category-control button,
   .category-custom-form button {
     width: 100%;
   }
@@ -2045,8 +2074,9 @@ label,
   }
 
   .attachment-picker-action {
-    grid-column: 2;
-    justify-self: start;
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: min(100%, 18rem);
   }
 
   .category-settings-item {
@@ -2323,7 +2353,15 @@ h1, h2, h3, h4 { font-weight: 700; }
   background: var(--color-surface-muted);
   padding: var(--space-3);
 }
-.calculator-title { display: flex; align-items: center; gap: 0.45rem; color: var(--color-muted); font-size: 0.85rem; font-weight: 750; }
+.calculator-title {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, min(45%, 24rem));
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 750;
+}
 .calculator > summary {
   min-height: 44px;
   align-items: center;
@@ -2338,7 +2376,9 @@ h1, h2, h3, h4 { font-weight: 700; }
 .calculator-grid button.operator { color: var(--color-primary-dark); font-weight: 850; }
 .calculator-grid button.equals { background: var(--color-primary); color: #fff; }
 .calculator-result {
-  margin: 0.65rem 0 0;
+  grid-column: 3;
+  min-width: 0;
+  margin: 0;
   border-radius: 0.55rem;
   background: var(--color-surface);
   padding: 0.55rem 0.7rem;
@@ -2346,13 +2386,17 @@ h1, h2, h3, h4 { font-weight: 700; }
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
   font-weight: 750;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 .attachment-picker { display: grid; gap: 0.6rem; margin-top: var(--space-5); }
 .attachment-picker-card {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 34rem) auto;
   gap: 0.85rem;
   align-items: center;
+  justify-content: center;
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   background: linear-gradient(135deg, var(--color-surface-muted), var(--color-surface));
@@ -2385,6 +2429,7 @@ h1, h2, h3, h4 { font-weight: 700; }
   font-size: 0.86rem;
   font-weight: 750;
   text-decoration: none;
+  max-width: 100%;
 }
 .attachment-picker-action:hover,
 .attachment-picker-action:focus-visible {
@@ -3245,10 +3290,6 @@ h1, h2, h3, h4 { font-weight: 700; }
     grid-column: 1 / -1;
   }
 
-  .client-surface-web .transaction-dialog-panel .category-control {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
   .client-surface-web .transaction-dialog-panel .form-actions {
     justify-content: flex-end;
   }
@@ -3397,18 +3438,6 @@ h1, h2, h3, h4 { font-weight: 700; }
     align-items: start;
   }
 
-  html[data-client-surface="web"] .transaction-dialog-panel .quick-core-fields .category-control {
-    grid-template-columns: minmax(0, 1fr) 4rem;
-    gap: 0.35rem;
-  }
-
-  html[data-client-surface="web"] .transaction-dialog-panel .quick-core-fields .category-control button {
-    width: auto;
-    min-width: 0;
-    padding-inline: 0.2rem;
-    font-size: 0.75rem;
-  }
-
   html[data-client-surface="web"] .transaction-dialog-panel .quick-core-fields > .field {
     grid-column: 1 / -1;
   }
@@ -3445,13 +3474,6 @@ h1, h2, h3, h4 { font-weight: 700; }
     grid-column: 1 / -1;
   }
 
-  html[data-client-surface="web"] .transaction-dialog-panel .quick-core-fields .category-control {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  html[data-client-surface="web"] .transaction-dialog-panel .quick-core-fields .category-control button {
-    min-width: 6rem;
-  }
 }
 
 /* Keep the Web ledger actions scoped to one page-level record CTA. */

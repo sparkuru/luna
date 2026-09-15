@@ -24,8 +24,21 @@ test("calculator shows extra repeating precision before saving at ledger precisi
   await calculator.locator(".calculator-grid").getByRole("button", { name: "Evaluate" }).click();
   await expect(page.locator("#transaction-amount")).toHaveValue("3.33");
   await expect(calculator.locator(".calculator-result")).toContainText("3.333(3)");
+  await expect(calculator.locator(".calculator-title .calculator-result")).toContainText("3.333(3)");
   await page.locator("#save-transaction").click();
   await expect(page.locator("#transaction-list-region")).toContainText("3.33");
+});
+
+test("category selection uses a button-only field", async ({ page }) => {
+  await setup(page);
+  await page.locator("#primary-record").click();
+  const categoryControl = page.locator(".category-control");
+  await expect(categoryControl.locator("input")).toHaveCount(0);
+  const trigger = page.locator("#choose-category");
+  await expect(trigger).toBeVisible();
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Food", exact: true })).toBeVisible();
 });
 
 test("category settings rename and usage flow keep new entries on the saved directory", async ({ page }) => {
