@@ -163,3 +163,24 @@ Refined the shared entry dialog with a button-only category selector, calculator
 ### Status
 
 [OK] **Completed**
+
+
+## Session 8: 交易录入与账本布局优化
+
+**Date**: 2026-09-17
+**Task**: 交易录入与账本布局优化
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+完成日期选择、计算器交互与精度显示、交易列表布局和响应式对齐；通过类型检查、Web 构建及交易列表浏览器回归。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c3b9397` | (see git log) |
+
+### Status
+
+[OK] **Completed**

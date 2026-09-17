@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 7
-- **Last Active**: 2026-09-15
+- **Total Sessions**: 8
+- **Last Active**: 2026-09-17
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~165 | Active |
+| `journal-1.md` | ~186 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 8 | 2026-09-17 | 交易录入与账本布局优化 | `c3b9397` | `paycheck-to-paycheck` |
 | 7 | 2026-09-15 | Center workspace setup welcome page | `0a64817` | `paycheck-to-paycheck` |
 | 6 | 2026-09-15 | Refine entry dialog controls | `2efa0b579675be98bbb73d4171aa2fb367bb1bd3` | `paycheck-to-paycheck` |
 | 5 | 2026-09-15 | Entry form and category catalog polish | `3573e692653e81f3c8b082ba2510c8884d9be676` | `paycheck-to-paycheck` |
