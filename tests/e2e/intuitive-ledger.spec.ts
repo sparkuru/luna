@@ -100,6 +100,24 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
   await expect(page.locator('#transaction-list-region')).toContainText('18.50');
   await expect(page.locator('#live-status')).toHaveText('Transaction saved locally.');
 
+  const savedRow = page.locator('.transaction-item').filter({ hasText: 'Corner cafe' });
+  if (await page.evaluate(() => window.innerWidth <= 520)) {
+    await expect(savedRow.locator('.transaction-inline-meta')).toBeVisible();
+    await expect(savedRow.locator('.transaction-inline-meta .tag')).toContainText('Spending');
+    await expect(savedRow.locator('.transaction-inline-meta .transaction-amount')).toContainText('18.50');
+  } else {
+    const rightColumnCenters = await savedRow.evaluate((row) => {
+      const center = (element: Element): number => {
+        const box = element.getBoundingClientRect();
+        return box.y + box.height / 2;
+      };
+      const meta = row.querySelector('.transaction-meta');
+      const controls = Array.from(row.querySelectorAll('.transaction-actions-menu button'));
+      return [meta, ...controls].filter((element): element is Element => element !== null).map(center);
+    });
+    expect(Math.max(...rightColumnCenters) - Math.min(...rightColumnCenters)).toBeLessThanOrEqual(1);
+  }
+
   const editRow = page.locator('.transaction-item').filter({ hasText: 'Corner cafe' });
   await openTransactionActions(page, editRow);
   const editButton = editRow.getByRole('button', { name: 'Edit Corner cafe', exact: true });
@@ -134,7 +152,7 @@ test('income entry and advanced fields are keyboard reachable', async ({ page })
   await page.getByRole('button', { name: 'Save transaction' }).click();
 
   await expect(page.locator('#transaction-list-region')).toContainText('Employer');
-  await expect(page.locator('.tag.income')).toContainText('Income');
+  await expect(page.locator('.transaction-meta .tag.income')).toContainText('Income');
 });
 
 test('statistics show the top five expenses first and reveal the complete ranking', async ({ page }) => {

@@ -30,27 +30,37 @@ test('normalizes multiplication and division display glyphs', () => {
 test('inspects finite and repeating results separately from ledger rounding', () => {
   const finite = inspectAmountExpression('1/4', 2);
   assert.equal(finite.amountMinor, '25');
-  assert.equal(finite.displayAmount, '0.250');
-  assert.equal(finite.displayPrecision, 3);
+  assert.equal(finite.displayAmount, '0.25');
+  assert.equal(finite.displayPrecision, 2);
   assert.equal(finite.roundingDigit, null);
 
   const repeating = inspectAmountExpression('10/3', 2);
   assert.equal(repeating.amountMinor, '333');
-  assert.equal(repeating.displayAmount, '3.333(3)');
-  assert.equal(repeating.displayPrecision, 3);
+  assert.equal(repeating.displayAmount, '3.33(3)');
+  assert.equal(repeating.displayPrecision, 2);
   assert.equal(repeating.roundingDigit, '3');
 
   const higherPrecision = inspectAmountExpression('10/3', 4);
   assert.equal(higherPrecision.amountMinor, '33333');
   assert.equal(higherPrecision.displayAmount, '3.3333(3)');
   assert.equal(higherPrecision.displayPrecision, 4);
+
+  const padded = inspectAmountExpression('189', 2);
+  assert.equal(padded.amountMinor, '18900');
+  assert.equal(padded.displayAmount, '189.00');
+  assert.equal(padded.roundingDigit, null);
+
+  const zeroPrecision = inspectAmountExpression('10/3', 0);
+  assert.equal(zeroPrecision.amountMinor, '3');
+  assert.equal(zeroPrecision.displayAmount, '3(3)');
+  assert.equal(zeroPrecision.displayPrecision, 0);
 });
 
 test('rounds rational results half-up, including signed results', () => {
   assert.equal(evaluateAmountExpression('1/40', 2), '3');
   assert.equal(evaluateAmountExpression('0-1/40', 2), '-3');
-  assert.equal(inspectAmountExpression('1/8', 2).displayAmount, '0.125');
-  assert.equal(inspectAmountExpression('0-10/3', 2).displayAmount, '-3.333(3)');
+  assert.equal(inspectAmountExpression('1/8', 2).displayAmount, '0.12(5)');
+  assert.equal(inspectAmountExpression('0-10/3', 2).displayAmount, '-3.33(3)');
 });
 
 test('keeps division by zero and unsupported syntax typed and recoverable', () => {

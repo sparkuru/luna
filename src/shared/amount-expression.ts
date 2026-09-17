@@ -8,7 +8,6 @@ export const MAX_AMOUNT_EXPRESSION_OPERANDS = 32;
  * normal user-facing bounds; this limit protects the intermediate fraction.
  */
 export const MAX_AMOUNT_EXPRESSION_RATIONAL_DIGITS = 512;
-export const MIN_AMOUNT_EXPRESSION_DISPLAY_PRECISION = 3;
 
 export type AmountExpressionOperator = '+' | '-' | '*' | '/';
 
@@ -33,10 +32,8 @@ export interface AmountExpressionState {
   amountMinor: string | null;
   operandCount: number;
   complete: boolean;
-  /**
-   * A non-submittable display of the exact result. It has at least three
-   * fractional digits; a fourth digit in parentheses is the next remainder
-   * digit when the exact result does not terminate at that precision.
+  /** A non-submittable display using the workspace precision. A next digit
+   * in parentheses marks a result that continues beyond that precision.
    *
    * These fields are omitted for incomplete drafts to preserve the original
    * inspect result shape for existing callers.
@@ -165,10 +162,7 @@ function evaluateParsedExpression(
   const values = parsed.operands.map((operand) => decimalOperandToRational(operand, precision));
   const result = evaluateRationalExpression(values, parsed.operators);
   const amountMinor = roundRationalToMinorUnits(result, precision).toString();
-  const displayPrecision = Math.max(
-    MIN_AMOUNT_EXPRESSION_DISPLAY_PRECISION,
-    precision,
-  );
+  const displayPrecision = precision;
   const display = formatRational(result, displayPrecision);
 
   return {
@@ -424,8 +418,9 @@ function formatRational(
       ? null
       : ((remainder * 10n) / value.denominator).toString();
   const sign = negative ? '-' : '';
+  const decimal = displayPrecision > 0 ? `.${fraction}` : '';
   return {
-    value: `${sign}${integer.toString()}.${fraction}${roundingDigit === null ? '' : `(${roundingDigit})`}`,
+    value: `${sign}${integer.toString()}${decimal}${roundingDigit === null ? '' : `(${roundingDigit})`}`,
     roundingDigit,
   };
 }

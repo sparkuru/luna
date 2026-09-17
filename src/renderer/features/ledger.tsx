@@ -285,8 +285,10 @@ export function LedgerMonthLoading({
                       <div className="transaction-main-button">
                         <div className="transaction-topline">
                           <span className="month-loading-placeholder month-loading-title" />
-                          <span className="month-loading-placeholder month-loading-tag" />
-                          <span className="month-loading-placeholder month-loading-amount" />
+                          <span className="transaction-inline-meta" aria-hidden="true">
+                            <span className="month-loading-placeholder month-loading-tag" />
+                            <span className="month-loading-placeholder month-loading-amount" />
+                          </span>
                         </div>
                         <div className="transaction-bottomline">
                           <span className="month-loading-placeholder month-loading-category" />
@@ -294,6 +296,10 @@ export function LedgerMonthLoading({
                         </div>
                       </div>
                       <div className="transaction-actions">
+                        <div className="transaction-meta">
+                          <span className="month-loading-placeholder month-loading-tag" />
+                          <span className="month-loading-placeholder month-loading-amount" />
+                        </div>
                         <span className="month-loading-placeholder month-loading-action" />
                       </div>
                     </li>
@@ -1089,11 +1095,13 @@ export function LedgerHome({
                           >
                             <div className="transaction-topline">
                               <strong>{title}</strong>
-                              <span className={`tag ${tx.type}`}>
-                                {m(tx.type === "income" ? "income" : "spending")}
-                              </span>
-                              <span className={`transaction-amount ${tx.type}`}>
-                                {money(tx.amountMinor)}
+                              <span className="transaction-inline-meta" aria-hidden="true">
+                                <span className={`tag ${tx.type}`}>
+                                  {m(tx.type === "income" ? "income" : "spending")}
+                                </span>
+                                <span className={`transaction-amount ${tx.type}`}>
+                                  {money(tx.amountMinor)}
+                                </span>
                               </span>
                             </div>
                             <div className="transaction-bottomline">
@@ -1106,6 +1114,14 @@ export function LedgerHome({
                             </div>
                           </button>
                           <div className="transaction-actions">
+                            <div className="transaction-meta">
+                              <span className={`tag ${tx.type}`}>
+                                {m(tx.type === "income" ? "income" : "spending")}
+                              </span>
+                              <span className={`transaction-amount ${tx.type}`}>
+                                {money(tx.amountMinor)}
+                              </span>
+                            </div>
                             <details className="transaction-actions-disclosure" open={!compactActions}>
                               <summary className="transaction-actions-trigger" aria-label={m("openMenu")}>
                                 <MoreHorizontal size={20} aria-hidden="true" />

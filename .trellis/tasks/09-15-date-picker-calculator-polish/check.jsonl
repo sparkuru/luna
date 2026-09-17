@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"复核日期控件语义、计算器标题栏布局、焦点状态与共享 renderer 一致性。"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"复核键盘可达性、无障碍标签、窄屏溢出和 Web UI 检查要求。"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"复核 Web 开发服务器、Playwright 窄屏项目及宿主边界验证。"}
+{"file":".trellis/tasks/09-15-date-picker-calculator-polish/prd.md","reason":"逐条检查本任务验收条件和范围边界。"}

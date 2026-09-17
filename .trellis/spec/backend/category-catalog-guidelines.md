@@ -140,6 +140,7 @@ the selection/draft on a stale or failed mutation.
 
 The entry dialog uses a readonly category field and a searchable, scrollable
 same-type picker. Settings owns catalog CRUD and usage repair. The calculator
-may display an additional repeating-decimal digit (for example `3.333(3)`),
-but the submitted amount remains the exact integer minor-unit value rounded by
+uses workspace precision for its main fractional digits and may append the
+next repeating-decimal digit (for example `3.33(3)` at precision 2), but the
+submitted amount remains the exact integer minor-unit value rounded by
 workspace precision.

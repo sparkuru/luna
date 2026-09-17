@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"遵循交易录入对话框的日期可见核心字段、共享 renderer、无障碍焦点和 Web/native 布局约定。"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"遵循跨 Web、Electron、Android 的可访问交互、响应式和验证要求。"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"遵循 Web-first Playwright、375px 窄屏及原生/浏览器边界验证要求。"}
+{"file":".trellis/tasks/09-15-date-picker-calculator-polish/prd.md","reason":"读取本任务的日期触发、结果显示、兼容性边界和验收标准。"}

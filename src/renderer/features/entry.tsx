@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { Calculator, ChevronDown, ImagePlus, Search, X } from "lucide-react";
 import type { Transaction, TransactionType } from "../../shared/domain";
 import {
@@ -50,6 +56,64 @@ interface EntryAttachment {
   ref: AttachmentRef;
   metadata: AttachmentMetadata;
   previewUrl?: string;
+}
+
+function DateField({
+  label,
+  id,
+  ...props
+}: ComponentProps<typeof Input> & { label: string; id: string }) {
+  const pickerOpenedOnPointerDown = useRef(false);
+
+  const openPicker = (event: ReactPointerEvent<HTMLDivElement>) => {
+    pickerOpenedOnPointerDown.current = false;
+    if (event.button !== 0) return;
+    const input = event.currentTarget.querySelector<HTMLInputElement>(
+      'input[type="date"]',
+    );
+    if (input === null || input.disabled) return;
+    const showPicker = (
+      input as HTMLInputElement & { showPicker?: () => void }
+    ).showPicker;
+    if (typeof showPicker !== "function") return;
+    try {
+      showPicker.call(input);
+      pickerOpenedOnPointerDown.current = true;
+      // Native date inputs select individual segments on pointer-down. Once
+      // showPicker has opened the calendar, cancel that default editing path.
+      event.preventDefault();
+    } catch {
+      // A host may expose showPicker but reject a particular activation. Keep
+      // the input's normal focus/native picker path available as a fallback.
+      input.focus({ preventScroll: true });
+    }
+  };
+
+  return (
+    <div
+      className="field date-picker-field"
+      onPointerDownCapture={openPicker}
+      onClickCapture={(event) => {
+        if (!pickerOpenedOnPointerDown.current) return;
+        event.preventDefault();
+        pickerOpenedOnPointerDown.current = false;
+      }}
+    >
+      <label htmlFor={id}>{label}</label>
+      <Input id={id} {...props} />
+    </div>
+  );
+}
+
+function calculatorTokenForKey(key: string): string | null {
+  if (/^\d$/.test(key) || key === ".") return key;
+  if (["+", "-", "×", "÷"].includes(key)) return key;
+  if (key === "*" || key.toLowerCase() === "x") return "×";
+  if (key === "/") return "÷";
+  if (key.toLowerCase() === "c") return "clear";
+  if (key === "Backspace") return "backspace";
+  if (key === "=" || key === "Enter") return "=";
+  return null;
 }
 
 async function normalizeImageFile(file: File): Promise<{
@@ -230,16 +294,33 @@ export function TransactionDialog({
       if (cause instanceof AmountExpressionError) setError(cause.message);
     }
   };
-  const pressCalculator = (token: string) => {
-    if (token === "clear") {
+  const changeCalculatorExpression = (value: string) => {
+    if (value === "") {
       setExpression("");
-      change("amount", "");
       setCalculationDisplay("");
       setError("");
       return;
     }
+    try {
+      const normalized = normalizeAmountExpressionInput(value);
+      setExpression(normalized);
+      setCalculationDisplay("");
+      setError("");
+    } catch (cause) {
+      setExpression(value);
+      setCalculationDisplay("");
+      setError(
+        cause instanceof AmountExpressionError ? cause.message : app.errorMessage(cause),
+      );
+    }
+  };
+  const pressCalculator = (token: string) => {
+    if (token === "clear") {
+      changeCalculatorExpression("");
+      return;
+    }
     if (token === "backspace") {
-      changeAmount(expression.slice(0, -1));
+      changeCalculatorExpression(expression.slice(0, -1));
       return;
     }
     if (token === "=") {
@@ -256,22 +337,66 @@ export function TransactionDialog({
         setCalculationDisplay(inspected.displayAmount ?? formatted);
         setError("");
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : app.errorMessage(cause));
+        setError(
+          cause instanceof AmountExpressionError ? cause.message : app.errorMessage(cause),
+        );
       }
       return;
     }
-    changeAmount(`${expression}${token}`);
+    changeCalculatorExpression(`${expression}${token}`);
   };
+  const calculatorKeyboardActive = !isWebSurface || calculatorOpen;
+  useEffect(() => {
+    if (!calculatorKeyboardActive) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.isComposing ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey
+      )
+        return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const isAmountField = target.id === "transaction-amount";
+      const isCalculatorControl = target.closest(".calculator") !== null;
+      if (!isAmountField && !isCalculatorControl) return;
+      const token = calculatorTokenForKey(event.key);
+      if (token === null) return;
+
+      event.preventDefault();
+      pressCalculator(token);
+    };
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
+  }, [calculatorKeyboardActive, pressCalculator]);
+  const calculatorDisplayExpression = expression.replaceAll("*", "×").replaceAll("/", "÷");
+  const calculatorDisplayValue = calculationDisplay || calculatorDisplayExpression || "\u00a0";
   const calculatorControls = () => (
     <div className="calculator-grid">
-      {["7", "8", "9", "backspace", "4", "5", "6", "×", "1", "2", "3", "÷", ".", "0", "clear", "=", "+", "-"]
+      {["7", "8", "9", "+", "4", "5", "6", "-", "1", "2", "3", "×", ".", "0", "clear", "÷", "=", "backspace"]
         .map((token) => (
           <Button
             key={token}
             type="button"
             variant={token === "=" ? "default" : "outline"}
-            className={token === "=" ? "equals" : ["+", "-", "×", "÷", "backspace"].includes(token) ? "operator" : undefined}
-            aria-label={token === "=" ? m("calculatorEquals") : token === "backspace" ? m("calculatorBackspace") : token}
+            className={[
+              token === "=" ? "equals" : undefined,
+              ["+", "-", "×", "÷"].includes(token) ? "operator" : undefined,
+              token === "clear" ? "clear" : undefined,
+              token === "backspace" ? "backspace" : undefined,
+            ]
+              .filter(Boolean)
+              .join(" ") || undefined}
+            aria-label={
+              token === "="
+                ? m("calculatorEquals")
+                : token === "clear"
+                  ? m("calculatorClear")
+                  : token === "backspace"
+                    ? m("calculatorBackspace")
+                    : token
+            }
             onClick={() => pressCalculator(token)}
           >
             {token === "backspace" ? "⌫" : token === "clear" ? "C" : token === "=" ? "=" : token}
@@ -569,13 +694,14 @@ export function TransactionDialog({
                   onChange={(e) => changeAmount(e.target.value)}
                   onKeyDown={(event) => {
                     if (
-                      event.key === "Enter" &&
-                      !event.nativeEvent.isComposing &&
-                      /[+\-*/×÷]/.test(expression)
-                    ) {
-                      event.preventDefault();
-                      pressCalculator("=");
-                    }
+                      event.defaultPrevented ||
+                      event.key !== "Enter" ||
+                      event.nativeEvent.isComposing ||
+                      !/[+\-*/×÷]/.test(expression)
+                    )
+                      return;
+                    event.preventDefault();
+                    pressCalculator("=");
                   }}
                   aria-invalid={!!error}
                   aria-describedby="transaction-alert amount-helper"
@@ -594,11 +720,9 @@ export function TransactionDialog({
                     <div className="calculator-title">
                       <Calculator size={17} aria-hidden="true" />
                       <span>{m("calculator")}</span>
-                      {calculationDisplay && (
-                        <span className="calculator-result" role="status" aria-live="polite">
-                          {m("calculatorResult")}: {calculationDisplay}
-                        </span>
-                      )}
+                    </div>
+                    <div className="calculator-display" role="status" aria-live="polite">
+                      {calculatorDisplayValue}
                     </div>
                     <p className="helper">{m("calculatorHelp")}</p>
                     {calculatorControls()}
@@ -647,7 +771,7 @@ export function TransactionDialog({
                   {selectedCategory?.enabled === false ? m("categoryDisabledEditing") : m("categoryPickerHelp")}
                 </span>
               </div>
-              <Field
+              <DateField
                 id="transaction-date"
                 name="date"
                 label={m("date")}
@@ -667,12 +791,10 @@ export function TransactionDialog({
                 <summary className="calculator-title">
                   <Calculator size={17} aria-hidden="true" />
                   <span>{m("calculator")}</span>
-                  {calculationDisplay && (
-                    <span className="calculator-result" role="status" aria-live="polite">
-                      {m("calculatorResult")}: {calculationDisplay}
-                    </span>
-                  )}
                 </summary>
+                <div className="calculator-display" role="status" aria-live="polite">
+                  {calculatorDisplayValue}
+                </div>
                 <p className="helper">{m("calculatorHelp")}</p>
                 {calculatorControls()}
               </details>

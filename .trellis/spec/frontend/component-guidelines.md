@@ -191,6 +191,52 @@ while viewing a historical month still belongs to today unless the user edits
 the date. Editing an existing transaction preserves its stored date in the
 initial draft.
 
+### Date Picker and Calculator Presentation
+
+The transaction date remains a real, labelled `input[type="date"]` with its
+stable `#transaction-date` ID and ISO value. When the product wants every
+pointer location in the field to open the calendar, capture the field's
+pointer-down, feature-detect `showPicker()`, and invoke it with the input as
+the receiver. Only after that call succeeds should the pointer default be
+cancelled; when the API is absent or rejects activation, leave the native
+input path available as the fallback. This prevents Chromium's year/month/day
+segment selection from becoming the visible primary click behavior without
+replacing keyboard editing or native validation.
+
+The optional calculator uses the shared `displayAmount` projection for its
+result. Render that projection directly in a prominent, right-aligned display
+below the calculator title row—do not add a redundant “exact preview” label—and
+keep the ledger-precision value submitted by the existing evaluator separate
+from the display projection. The display projection uses the workspace
+precision for its main fractional digits and appends the next digit in
+parentheses only when the exact result continues, for example `3.33(3)` at
+precision 2. A dark, inset LCD treatment may establish a clear display/keypad
+hierarchy without introducing an image asset. Keep the display and four-column
+keypad usable at 375px; the equals action may span the main keypad columns
+while the backspace remains in the final column.
+
+When the Web calculator is expanded (and on native surfaces where it is always
+visible), keep the calculator expression separate from the ledger amount draft.
+Mouse keys and calculator keyboard keys (digits, decimal point, operators, and
+backspace) update the LCD expression first; `=` or Enter is the only evaluation
+boundary that writes the rounded ledger value back to the amount field. Scope
+keyboard capture to the amount field and calculator controls so merchant,
+notes, date, category, and other form controls retain their normal input paths.
+
+Calculator keys should read as pressable controls rather than flat cards: use
+consistent rounded corners, a restrained raised shadow, a small upward hover
+shift, and a pressed downward shift. Keep number keys neutral, use a soft
+primary tint for operators, and reserve the strongest primary treatment for
+the wide equals action. Give clear and backspace a quieter neutral treatment;
+do not rely on color alone for their meaning, and keep the global visible
+focus outline intact.
+
+Transaction list rows keep the right-side metadata and actions visually level on
+desktop: the income / expense tag and amount share a vertical center with the
+edit, delete, and attachment actions. Keep the title and category / note copy in
+the left two-level content block. At narrow widths, move the tag and amount back
+into the primary line so they remain visible without horizontal overflow.
+
 ## Accessibility
 
 - Use headings, `main`, `nav`, `section`, `form`, labels, and list elements for
