@@ -2,8 +2,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type ComponentProps,
-  type PointerEvent as ReactPointerEvent,
 } from "react";
 import { Calculator, ChevronDown, ImagePlus, Search, X } from "lucide-react";
 import type { Transaction, TransactionType } from "../../shared/domain";
@@ -28,7 +26,7 @@ import {
 import { useApp, useLocalWrite } from "../data/local";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Field } from "../components/form";
+import { DateField, Field } from "../components/form";
 import {
   Dialog,
   DialogContent,
@@ -56,53 +54,6 @@ interface EntryAttachment {
   ref: AttachmentRef;
   metadata: AttachmentMetadata;
   previewUrl?: string;
-}
-
-function DateField({
-  label,
-  id,
-  ...props
-}: ComponentProps<typeof Input> & { label: string; id: string }) {
-  const pickerOpenedOnPointerDown = useRef(false);
-
-  const openPicker = (event: ReactPointerEvent<HTMLDivElement>) => {
-    pickerOpenedOnPointerDown.current = false;
-    if (event.button !== 0) return;
-    const input = event.currentTarget.querySelector<HTMLInputElement>(
-      'input[type="date"]',
-    );
-    if (input === null || input.disabled) return;
-    const showPicker = (
-      input as HTMLInputElement & { showPicker?: () => void }
-    ).showPicker;
-    if (typeof showPicker !== "function") return;
-    try {
-      showPicker.call(input);
-      pickerOpenedOnPointerDown.current = true;
-      // Native date inputs select individual segments on pointer-down. Once
-      // showPicker has opened the calendar, cancel that default editing path.
-      event.preventDefault();
-    } catch {
-      // A host may expose showPicker but reject a particular activation. Keep
-      // the input's normal focus/native picker path available as a fallback.
-      input.focus({ preventScroll: true });
-    }
-  };
-
-  return (
-    <div
-      className="field date-picker-field"
-      onPointerDownCapture={openPicker}
-      onClickCapture={(event) => {
-        if (!pickerOpenedOnPointerDown.current) return;
-        event.preventDefault();
-        pickerOpenedOnPointerDown.current = false;
-      }}
-    >
-      <label htmlFor={id}>{label}</label>
-      <Input id={id} {...props} />
-    </div>
-  );
 }
 
 function calculatorTokenForKey(key: string): string | null {
@@ -588,7 +539,7 @@ export function TransactionDialog({
           else requestClose();
         }}
         aria-labelledby="transaction-form-title"
-        aria-describedby="transaction-form-description"
+        aria-describedby={locked || original ? "transaction-form-description" : undefined}
         className="luna-dialog transaction-dialog-panel"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
@@ -604,22 +555,14 @@ export function TransactionDialog({
       >
         <header className="dialog-header">
           <div>
-            <span className="kicker">{m("quickEntryKicker")}</span>
             <DialogTitle id="transaction-form-title">
               {m(original ? "editTransaction" : "quickEntryTitle")}
             </DialogTitle>
-            <DialogDescription className="quick-entry-description">
-              {m("quickEntryDescription")}
-            </DialogDescription>
-            <p id="transaction-form-description" className="helper">
-              {m(
-                locked
-                  ? "multiCategoryLocked"
-                  : original
-                    ? "transactionLocalHelp"
-                    : "quickEntryCoreHelp",
-              )}
-            </p>
+            {(locked || original) && (
+              <p id="transaction-form-description" className="helper">
+                {m(locked ? "multiCategoryLocked" : "transactionLocalHelp")}
+              </p>
+            )}
           </div>
           <Button
             id="close-transaction"
@@ -680,7 +623,6 @@ export function TransactionDialog({
                 </Button>
               ))}
             </div>
-            <p className="quick-entry-core-help">{m("quickEntryCoreHelp")}</p>
             <div className="form-grid quick-core-fields">
               <div className="field">
                 <label htmlFor="transaction-amount">{m("amount")} *</label>
@@ -762,7 +704,6 @@ export function TransactionDialog({
                       {categoryDisplay || m("categoryPlaceholder")}
                     </span>
                     <span className="category-control-action">
-                      {m("chooseCategory")}
                       <ChevronDown size={17} aria-hidden="true" />
                     </span>
                   </Button>
