@@ -130,7 +130,7 @@ test('keeps detail amounts visible while independently masking summary values', 
   await expect(page.locator('#sync-endpoint')).toBeEnabled();
   await expect(page.locator('#sync-now')).toBeDisabled();
   await expect(page.locator('#remember-secrets')).toBeDisabled();
-  await page.goto('/ledger');
+  await page.goto('/luna');
   await expect(page.locator('#transaction-list-region')).toContainText('12.50');
   await expect(page.getByRole('button', { name: /Edit Market/, includeHidden: true })).toBeEnabled();
 

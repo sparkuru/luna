@@ -225,7 +225,7 @@ test('secondary menu and subdued filters stay discoverable without taking over t
   await expect(page.locator('#settings-title')).toBeVisible();
   await expect(page.getByRole('link', { name: /Monthly spending limit|每月支出上限/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /Encrypted backup|加密备份/i })).toBeVisible();
-  await page.goto('/ledger');
+  await page.goto('/luna');
   await expect(page.locator('#open-secondary-menu')).toBeVisible();
 });
 

@@ -291,7 +291,8 @@ test('encrypted sync and presentation refresh never upgrade a budget draft preco
     .getByRole('navigation', { name: 'Primary navigation' })
     .getByRole('button', { name: 'Recent ledger', exact: true })
     .click();
-  const month = await page.locator('#month-picker').inputValue();
+  const month = await page.locator('#month-picker').getAttribute('data-month');
+  if (month === null) throw new Error('Month picker value is missing');
   await page.goto('/budget');
   await expect(page.locator('#budget-input')).toHaveValue('1000.00');
   const original = await readLedgerDocument(page, PASSWORD);

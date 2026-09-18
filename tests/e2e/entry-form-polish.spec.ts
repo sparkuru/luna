@@ -243,7 +243,7 @@ test("category settings rename and usage flow keep new entries on the saved dire
   await source().getByRole("button", { name: "Rename", exact: true }).click();
   await expect(source()).toContainText("Meals");
 
-  await page.goto("/ledger");
+  await page.goto("/luna");
   await page.locator("#primary-record").click();
   await page.locator("#transaction-amount").fill("10.00");
   await chooseCategory(page, "Meals");
@@ -264,7 +264,7 @@ test("category settings rename and usage flow keep new entries on the saved dire
   await usage.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(source()).toHaveCount(0);
 
-  await page.goto("/ledger");
+  await page.goto("/luna");
   await page.locator("#primary-record").click();
   await page.locator("#transaction-amount").fill("1.00");
   await page.locator("#choose-category").click();

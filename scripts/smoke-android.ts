@@ -61,7 +61,7 @@ async function verifyHardwareBack(page: Page, device: AndroidDevice): Promise<Pa
   await expect(page).toHaveURL(/#\/settings$/);
   await back();
   await expect(page.locator('.settings-navigation')).toHaveCount(0);
-  await expect(page).toHaveURL(/#\/ledger$/);
+  await expect(page).toHaveURL(/#\/luna$/);
   await page.locator('#record-expense').click();
   await page.locator('#transaction-amount').fill('42.00');
   await page.locator('#choose-category').click();

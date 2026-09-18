@@ -436,7 +436,7 @@ async function runPackagedStorageSmoke(): Promise<void> {
           if (currentSettings.locale === 'zh-CN' && document.documentElement.lang === 'zh-CN') break;
           await new Promise((resolve) => setTimeout(resolve, 20));
         }
-        location.hash = '/ledger';
+        location.hash = '/luna';
         const monthPicker = await waitFor('#month-picker');
         if (!(monthPicker instanceof HTMLInputElement)) throw new Error('month picker is missing');
         await setValue(monthPicker, '2026-08');
@@ -509,7 +509,7 @@ async function runPackagedStorageSmoke(): Promise<void> {
         const hasBudgetForm = document.querySelector('form#budget-form') !== null;
         const budgetEditorEnabled = document.querySelector('#budget-input:not(:disabled)') !== null
           && document.querySelector('#save-budget:not(:disabled)') !== null;
-        location.hash = '/ledger';
+        location.hash = '/luna';
         await new Promise((resolve) => setTimeout(resolve, 50));
         const originalLedgerSnapshot = await window.lunaLedger.getSnapshot('2026-08');
         const backupPassword = 'packaged ledger backup phrase';

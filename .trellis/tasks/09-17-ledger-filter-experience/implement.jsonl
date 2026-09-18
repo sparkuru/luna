@@ -1,0 +1,10 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Renderer boundary, Web-first order, and shared Web/Electron/Android constraints for the filter and route work."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Semantic form composition, labels, focus, accessible controls, and escaped user-controlled filter values."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Query source-of-truth, month boundary, refresh/loading behavior, and prohibition on a second financial state."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Required loading/empty/error states, privacy boundary, control sizes, and renderer test/build gates."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Typed DTO and renderer/API boundaries for category definitions and ledger query inputs."}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Web host, CSP/offline boundary, responsive viewport checks, and required Playwright/Web build validation."}
+{"file":".trellis/spec/backend/deployment-and-recovery.md","reason":"Nginx application entry and deployment routing constraints for the /luna migration."}
+{"file":".trellis/spec/guides/cross-platform-thinking-guide.md","reason":"Preserve shared filter semantics while isolating Web-only visual treatment and validating each host boundary."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Reuse the existing category display/catalog and filter primitives before adding new renderer abstractions."}
+{"file":".trellis/tasks/09-13-web-visual-redesign/research/ui-ux-review.md","reason":"Existing browser evidence and confirmed Luna visual rules for disclosure, density, responsive layout, and accessibility."}

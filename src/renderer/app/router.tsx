@@ -15,7 +15,7 @@ const rootRoute = createRootRoute({
 const paths = [
   "/",
   "/setup",
-  "/ledger",
+  "/luna",
   "/statistics",
   "/budget",
   "/settings",
@@ -24,16 +24,9 @@ const paths = [
   "/settings/backup",
   "/settings/conflicts",
   "/settings/ledgers",
+  "/settings/categories",
   "/settings/preferences",
   "/settings/sync/advanced",
-  "/ledger/menu",
-  "/ledger/menu/settings",
-  "/ledger/menu/budget",
-  "/ledger/menu/statistics",
-  "/ledger/menu/sync",
-  "/ledger/menu/backup",
-  "/ledger/menu/conflicts",
-  "/ledger/menu/account",
 ] as const;
 const routes = paths.map((path) =>
   createRoute({ getParentRoute: () => rootRoute, path, component: () => null }),

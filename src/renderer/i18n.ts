@@ -76,6 +76,11 @@ export const en = {
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
   selectedMonth: 'Selected month',
+  monthPickerButton: 'Selected month: {month}',
+  monthPicker: 'Choose a month',
+  previousYear: 'Previous year',
+  nextYear: 'Next year',
+  monthChoices: 'Months in {year}',
   monthlySummary: 'Monthly summary',
   income: 'Income',
   spending: 'Spending',
@@ -109,8 +114,29 @@ export const en = {
   searchPlaceholder: 'Start typing to search',
   clearFilters: 'Clear filters',
   filterHint: 'Optional',
+  filterActiveCount: '{count} active filters',
+  filterActiveSingular: '1 active filter',
+  filterCategoryExpense: 'Spending categories',
+  filterCategoryIncome: 'Income categories',
+  filterCategoryOther: 'Other categories',
+  filterCategoryEmpty: 'No categories are available in this month yet.',
+  startDate: 'Start date',
+  endDate: 'End date',
+  minimumAmount: 'Minimum amount',
+  maximumAmount: 'Maximum amount',
+  filterDateInvalid: 'Enter a valid date.',
+  filterDateOutsideMonth: 'Dates must stay within {month}.',
+  filterDateRangeInvalid: 'The start date must not be after the end date.',
+  filterAmountInvalid: 'Enter a valid non-negative amount.',
+  filterAmountRangeInvalid: 'The minimum amount must not exceed the maximum amount.',
+  filterInvalid: 'These filters are invalid. Check the fields and try again.',
+  filterWorking: 'Applying filters…',
+  filterResultsNotUpdated: 'The previous results remain visible while these filters are being checked.',
+  filterErrorHelp: 'Adjust the filter or clear all filters to return to the current month.',
   searchModeText: 'Text',
   searchModeRegex: 'Regular expression',
+  enableRegexSearch: 'Use regular expression search',
+  disableRegexSearch: 'Turn off regular expression search',
   emptyValue: 'Not provided',
   regexInvalid: 'The regular expression is invalid. Check the pattern and try again.',
   regexWorking: 'Searching in a separate worker…',
@@ -308,7 +334,7 @@ export const zhCN = {
   quickEntryType: '选择交易类型', changeTypeCategoryConfirm: '这个分类不属于所选类型。切换类型并清空分类吗？', quickEntryExpense: '支出', quickEntryIncome: '收入', quickEntryCoreHelp: '选择类型、金额和分类即可保存一笔记录。',
   moreDetails: '更多信息', moreDetailsHelp: '商户、支付方式和备注', emptyLedgerTitle: '从第一笔开始',
   emptyLedgerHelp: '记录第一笔支出或收入，它会显示在最近账单中。', recordFirstTransaction: '记录第一笔交易',
-  monthNavigation: '月份导航', previousMonth: '上个月', nextMonth: '下个月', selectedMonth: '所选月份',
+  monthNavigation: '月份导航', previousMonth: '上个月', nextMonth: '下个月', selectedMonth: '所选月份', monthPickerButton: '所选月份：{month}', monthPicker: '选择月份', previousYear: '上一年', nextYear: '下一年', monthChoices: '{year} 年月份',
   monthlySummary: '月度摘要', income: '收入', spending: '支出', netFlow: '结余',
   recordedThisMonth: '本月已记录', incomeMinusSpending: '收入减支出', budgetUsed: '已用预算', budgetNotSet: '未设置', addLimitBelow: '可在下方添加上限',
   budgetUsedOf: '已用 {used}，预算 {budget}', budgetPercentUsed: '已使用每月上限的 {percent}%', hiddenAmount: '金额已隐藏',
@@ -316,7 +342,10 @@ export const zhCN = {
   revealAmountsHelp: '点击摘要标题旁的眼睛，只显示或隐藏对应金额。本次会话的显示状态会在重启后恢复为隐私默认值。详情仍保持可见。',
   configSyncTitle: '仅同步配置', configMarker: '配置', configSyncLedgerLocal: '此独立连接只同步显示设置。交易与预算请使用下方「账本同步与备份」。', configSyncLedgerWebLocal: '显示偏好保存在当前浏览器。桌面配置同步与下方「账本同步与备份」互相独立。',
   transactions: '交易记录', filterTransactions: '筛选交易', type: '类型', allTransactions: '全部交易', category: '分类', anyCategory: '任意分类',
-  searchLabel: '搜索备注、商户或支付方式', searchPlaceholder: '输入内容开始搜索', clearFilters: '清除筛选', filterHint: '可选', searchModeText: '文本', searchModeRegex: '正则表达式', emptyValue: '未填写',
+  searchLabel: '搜索备注、商户或支付方式', searchPlaceholder: '输入内容开始搜索', clearFilters: '清除筛选', filterHint: '可选',
+  filterActiveCount: '已启用 {count} 项筛选', filterActiveSingular: '已启用 1 项筛选', filterCategoryExpense: '支出分类', filterCategoryIncome: '收入分类', filterCategoryOther: '其他分类', filterCategoryEmpty: '本月还没有可选分类。',
+  startDate: '开始日期', endDate: '结束日期', minimumAmount: '最小金额', maximumAmount: '最大金额', filterDateInvalid: '请输入有效日期。', filterDateOutsideMonth: '日期必须在 {month} 内。', filterDateRangeInvalid: '开始日期不能晚于结束日期。', filterAmountInvalid: '请输入有效的非负金额。', filterAmountRangeInvalid: '最小金额不能大于最大金额。', filterInvalid: '筛选条件无效，请检查字段后重试。', filterWorking: '正在应用筛选…', filterResultsNotUpdated: '正在检查筛选条件，列表暂时保留上一次结果。', filterErrorHelp: '修改筛选条件，或清除全部筛选以回到当前月份。',
+  searchModeText: '文本', searchModeRegex: '正则表达式', enableRegexSearch: '启用正则表达式搜索', disableRegexSearch: '关闭正则表达式搜索', emptyValue: '未填写',
   shownCount: '显示 {shown} 条 · 当前账本共 {total} 条', categoryMultiSelect: '可选择一个或多个分类', regexInvalid: '正则表达式无效，请检查内容后重试。', regexWorking: '正在独立线程中搜索…', regexTimeout: '搜索耗时过长，请简化正则表达式后重试。', regexUnavailable: '当前窗口无法使用正则搜索，普通文本搜索仍可用。', expenseCount: '{count} 条支出记录', noFilterMatches: '没有符合筛选条件的交易',
   noFilterMatchesHelp: '请清除筛选条件，或搜索其他备注、商户或分类。', nothingThisMonth: '本月还没有记录',
   nothingThisMonthHelp: '选择「记一笔支出」或「记一笔收入」保存第一笔记录，它会立即显示在这里。', addTransaction: '添加交易', editTransaction: '编辑交易',
@@ -448,6 +477,12 @@ export function formatMonth(locale: AppLocale, month: string): string {
   const [year, monthNumber] = month.split('-');
   const date = new Date(Date.UTC(Number(year), Number(monthNumber) - 1, 1));
   return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
+}
+
+export function formatMonthName(locale: AppLocale, month: string): string {
+  const [year, monthNumber] = month.split('-');
+  const date = new Date(Date.UTC(Number(year), Number(monthNumber) - 1, 1));
+  return new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' }).format(date);
 }
 
 export function formatDate(locale: AppLocale, value: string): string {

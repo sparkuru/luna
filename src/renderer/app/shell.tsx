@@ -37,6 +37,19 @@ import { Settings, LanguageSelect } from "../features/settings";
 import { Categories } from "../features/categories";
 import { LedgerTools } from "../features/tools";
 import { getClientSurface } from "../client-surface";
+
+const SETTINGS_PATHS = new Set([
+  "/settings",
+  "/settings/account",
+  "/settings/sync",
+  "/settings/backup",
+  "/settings/conflicts",
+  "/settings/ledgers",
+  "/settings/categories",
+  "/settings/preferences",
+  "/settings/sync/advanced",
+]);
+
 export function App() {
   const isWebSurface = getClientSurface() === "web";
   const navigate = useNavigate();
@@ -132,19 +145,18 @@ export function App() {
           transactions: [],
           summary: null,
         });
-  const legacyTarget = path === "/" && snapshot !== undefined && snapshot.workspace !== null
-    ? "/ledger"
-    : path === "/"
-      ? null
-      : legacyRouteTarget(path);
+  const rootTarget =
+    path === "/" && snapshot !== undefined && snapshot.workspace !== null
+      ? "/luna"
+      : null;
   useEffect(() => {
-    if (legacyTarget === null) return;
+    if (rootTarget === null) return;
     void navigate({
-      to: legacyTarget,
+      to: rootTarget,
       search,
       replace: true,
     });
-  }, [legacyTarget, navigate, search.anchor, search.month, search.period, search.type]);
+  }, [navigate, rootTarget, search.anchor, search.month, search.period, search.type]);
   const locale = settings?.locale ?? "zh-CN";
   const m = (
     key: MessageKey,
@@ -382,13 +394,17 @@ export function App() {
     ? path.split("/")[2] ?? ""
     : "";
   const primarySection =
-    path === "/statistics"
-      ? "statistics"
-      : path === "/budget"
-        ? "budget"
-        : path.startsWith("/settings")
-          ? "settings"
-          : "ledger";
+    path === "/luna"
+      ? "ledger"
+      : path === "/statistics"
+        ? "statistics"
+        : path === "/budget"
+          ? "budget"
+          : SETTINGS_PATHS.has(path)
+            ? "settings"
+            : path === "/" || path === "/setup"
+              ? "setup"
+              : "unknown";
   const goto = (to: string) => void navigate({ to, search });
   const openEntry = (next: Entry) => {
     if (
@@ -416,7 +432,7 @@ export function App() {
         void navigate({ to: "/settings", search });
       } else if (path === "/settings" || path === "/statistics" || path === "/budget") {
         event.preventDefault();
-        void navigate({ to: "/ledger", search });
+        void navigate({ to: "/luna", search });
       }
     };
     window.addEventListener("luna:navigate-back", back);
@@ -473,6 +489,7 @@ export function App() {
       </div>
     );
   }
+  if (primarySection === "unknown") return null;
   if (server && showStartupPicker === true && profilesQuery.data) {
     return (
       <StartupLedgerPicker
@@ -538,37 +555,28 @@ export function App() {
       </a>
       <div className={`app-shell${isWebSurface ? " client-surface-web" : ""}`}>
         {workspace && isWebSurface ? (
-          <>
-            <WebSidebar
-              active={
-                isWebSurface && primarySection === "budget"
-                  ? "settings"
-                  : primarySection
-              }
-              locale={locale}
-              message={m}
-              navigate={goto}
-              announcement={announcement}
-              web
-            />
-            <WebPageTopbar
-              active={primarySection}
-              settingsSubpage={settingsSubpage}
-              month={month}
-              locale={locale}
-              message={m}
-            />
-          </>
+          <WebSidebar
+            active={
+              isWebSurface && primarySection === "budget"
+                ? "settings"
+                : primarySection
+            }
+            locale={locale}
+            message={m}
+            navigate={goto}
+            announcement={announcement}
+            web
+          />
         ) : (
           <>
             <header className={`topbar${isWebSurface ? " web-setup-topbar" : ""}`}>
               <a
                 className="brand"
-                href="/ledger"
+                href="/luna"
                 aria-label={m("homeLabel")}
                 onClick={(e) => {
                   e.preventDefault();
-                  goto("/ledger");
+                  goto("/luna");
                 }}
               >
                 <span className="brand-mark" aria-hidden="true">
@@ -665,7 +673,7 @@ export function App() {
           </>
         )}
         <main id="main-content" tabIndex={-1}>
-          {isWebSurface && workspace && path === "/ledger" && announcement && (
+          {isWebSurface && workspace && path === "/luna" && announcement && (
             <div className="web-action-toast" aria-hidden="true">
               {announcement}
             </div>
@@ -769,7 +777,17 @@ export function App() {
                 changeMonth={setMonth}
                 type={search.type ?? "all"}
                 changeType={(type) => {
-                  void navigate({ to: path, search: { ...search, type } });
+                  void navigate({
+                    to: path,
+                    search: { ...search, type },
+                    resetScroll: false,
+                  }).then(() => {
+                    requestAnimationFrame(() =>
+                      document
+                        .getElementById("filter-type")
+                        ?.focus({ preventScroll: true }),
+                    );
+                  });
                 }}
                 visibility={visibility}
                 web={isWebSurface}
@@ -817,21 +835,6 @@ export function App() {
   );
 }
 
-function legacyRouteTarget(pathname: string): string | null {
-  if (pathname === "/") return "/ledger";
-  const target: Record<string, string> = {
-    "/ledger/menu": "/settings",
-    "/ledger/menu/settings": "/settings/preferences",
-    "/ledger/menu/budget": "/budget",
-    "/ledger/menu/statistics": "/statistics",
-    "/ledger/menu/sync": "/settings/sync",
-    "/ledger/menu/backup": "/settings/backup",
-    "/ledger/menu/conflicts": "/settings/conflicts",
-    "/ledger/menu/account": "/settings/account",
-  };
-  return target[pathname] ?? null;
-}
-
 function WebSidebar({
   active,
   locale,
@@ -855,11 +858,11 @@ function WebSidebar({
       <div className="web-sidebar-header">
         <a
           className="brand"
-          href="/ledger"
+          href="/luna"
           aria-label={message("homeLabel")}
           onClick={(event) => {
             event.preventDefault();
-            navigate("/ledger");
+            navigate("/luna");
           }}
         >
           <span className="brand-mark" aria-hidden="true">
@@ -880,56 +883,6 @@ function WebSidebar({
         {announcement}
       </span>
     </aside>
-  );
-}
-
-function WebPageTopbar({
-  active,
-  settingsSubpage,
-  month,
-  locale,
-  message,
-}: {
-  active: string;
-  settingsSubpage: string;
-  month: string;
-  locale: import("../../shared/settings").AppLocale;
-  message: (
-    key: MessageKey,
-    params?: Readonly<Record<string, string | number>>,
-  ) => string;
-}) {
-  const label =
-    active === "statistics"
-      ? message("categoryBreakdown")
-      : active === "budget"
-        ? message("monthlyLimit")
-        : active === "settings"
-            ? settingsSubpage === "ledgers"
-              ? message("ledgersTitle")
-            : settingsSubpage === "categories"
-              ? message("categoriesTitle")
-            : settingsSubpage === "preferences"
-              ? message("preferencesTitle")
-              : settingsSubpage === "account"
-                ? message("accountTitle")
-                : settingsSubpage === "sync"
-                  ? message("ledgerToolsLink")
-                  : settingsSubpage === "backup"
-                    ? message("backupNav")
-                    : settingsSubpage === "conflicts"
-                      ? message("conflictsNav")
-                      : message("settingsTitle")
-          : message("recentLedger");
-  return (
-    <header className="topbar web-page-topbar">
-      <div className="web-page-context">
-        <span className="web-page-context-kicker">{label}</span>
-        <span className="web-page-context-workspace">
-          <span>{formatMonth(locale, month)}</span>
-        </span>
-      </div>
-    </header>
   );
 }
 
@@ -956,7 +909,7 @@ function PrimaryNavigation({
   const items = [
     {
       key: "ledger",
-      path: "/ledger",
+      path: "/luna",
       label: message("recentLedger"),
       icon: BookOpen,
     },

@@ -333,7 +333,7 @@ may add cross-tab invalidation but is not required for the probe to run.
 - After any successful sync or committed local mutation, the renderer refreshes
   its current profile snapshot/settings/status. Refreshing must not replay a
   committed write or replace an active form draft.
-- The sync status and an action that opens `/ledger/menu/sync` are visible from
+- The sync status and an action that opens `/settings/sync` are visible from
   the main shell. Mobile layout must keep these controls within the viewport,
   with touch targets of at least 44 CSS pixels and accessible labels.
 - WebSocket is optional, not a correctness dependency. The server marker poll

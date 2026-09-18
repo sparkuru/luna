@@ -204,6 +204,76 @@ npm run smoke:electron
   the installed Chrome channel plus a `375x800` narrow project. Screenshots and
   traces are failure diagnostics, not pixel-snapshot contracts.
 
+## 3a. Scenario: Browser SPA route entry contract
+
+### 1. Scope / Trigger
+
+- Trigger: Add, rename, or remove a user-visible browser route, including its
+  production static-server fallback or precache entry.
+
+### 2. Signatures
+
+- Renderer route registry: `src/renderer/app/router.tsx` `paths` list.
+- Shell section mapping: `src/renderer/app/shell.tsx` `primarySection`.
+- Production entry rule: `deploy/nginx.conf` SPA `try_files` location.
+- Service Worker route set: `scripts/web-offline-plugin.ts` `APP_ROUTES`.
+
+### 3. Contracts
+
+- `/luna` is the canonical ledger route; `/` may replace-navigate to it after
+  workspace readiness.
+- Every registered direct Web route must be present in both the Nginx SPA
+  entry rule and the Service Worker app-route set.
+- `/ledger` and `/ledger/menu/*` are not registered, redirected, cached, or
+  rendered as compatibility pages. `/api/v1/ledgers` remains an API/domain
+  path and is not part of the UI route rename.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+|---|---|
+| Direct `/luna` request | App shell loads and shows the ledger |
+| Direct registered settings/statistics/budget request | Nginx serves `index.html`; shell selects the matching section |
+| Direct `/ledger` request | Production server returns not-found; dev/router does not render a ledger compatibility page |
+| Offline registered route | Service Worker serves the cached shell without caching API requests |
+| API `/api/v1/ledgers` request | API proxy behavior remains unchanged |
+
+### 5. Good / Base / Bad Cases
+
+- Good: one canonical route list is reflected in router, shell, Nginx, and
+  Service Worker tests.
+- Base: an unknown route reaches the router's not-found surface and does not
+  fall through to the ledger home.
+- Bad: removing a route from the renderer while leaving its Nginx or precache
+  alias active, or replacing the domain API path along with the UI path.
+
+### 6. Tests Required
+
+- Browser direct-entry test for `/luna` and the registered deep links.
+- Regression test asserting old ledger URLs do not expose ledger/settings pages.
+- Production offline test for an app route and an assertion that `/api/` is not
+  added to the cache.
+- Static review that the route registry, Nginx rule, and `APP_ROUTES` contain
+  the same supported paths.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```text
+router: /luna
+nginx:  /setup and /ledger/menu/*
+sw:     /ledger plus /luna
+```
+
+#### Correct
+
+```text
+router: /luna, /statistics, /budget, /settings/*
+nginx:  the same supported app paths -> /index.html
+sw:     the same supported app paths, never /api/*
+```
+
 ## 4. Validation / Error Matrix
 
 | Condition | Required result |

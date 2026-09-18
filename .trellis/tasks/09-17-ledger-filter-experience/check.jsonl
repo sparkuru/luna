@@ -1,0 +1,11 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Check semantic HTML, accessible names, focus order, field grouping, and user-controlled text rendering."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check ready/working/error/empty behavior, privacy visibility, keyboard targets, and regression coverage."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Check result/count/summary consistency, month-scoped loading, and no duplicated financial state."}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"Check Web route reachability, CSP-safe styling, viewport matrix, Playwright evidence, and offline host boundaries."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Check typed category/query data flow and absence of unsafe renderer/API shortcuts."}
+{"file":".trellis/spec/backend/deployment-and-recovery.md","reason":"Check Nginx /luna entry behavior and ensure old UI paths are not accidentally retained while API paths remain unchanged."}
+{"file":".trellis/spec/guides/cross-platform-thinking-guide.md","reason":"Check that shared query behavior remains compatible with Electron/Android and Web visual changes stay scoped."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check reuse of existing category label/catalog logic and avoid duplicate query semantics."}
+{"file":".trellis/tasks/09-17-ledger-filter-experience/prd.md","reason":"Check implementation against the user-confirmed category, filter, responsive, and no-compatibility route requirements."}
+{"file":".trellis/tasks/09-17-ledger-filter-experience/design.md","reason":"Check state machine, category fallback, Web surface, route migration, and rollback contracts."}
+{"file":".trellis/tasks/09-13-web-visual-redesign/research/ui-ux-review.md","reason":"Compare the final filter surface with the existing measured viewport evidence and approved Luna visual direction."}

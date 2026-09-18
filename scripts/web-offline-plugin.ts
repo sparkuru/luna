@@ -21,7 +21,7 @@ export function webOfflinePlugin(): Plugin {
         .filter((name) => !name.endsWith('.map')).sort();
       const body = `
 const ASSETS = ${JSON.stringify(assets.map((name) => `/${name}`))};
-const APP_ROUTES = new Set(['/','/index.html','/setup','/ledger','/statistics','/budget','/settings','/settings/account','/settings/sync','/settings/backup','/settings/conflicts','/settings/ledgers','/settings/preferences','/settings/sync/advanced','/ledger/menu','/ledger/menu/settings','/ledger/menu/budget','/ledger/menu/statistics','/ledger/menu/sync','/ledger/menu/backup','/ledger/menu/conflicts','/ledger/menu/account']);
+const APP_ROUTES = new Set(['/','/index.html','/setup','/luna','/statistics','/budget','/settings','/settings/account','/settings/sync','/settings/backup','/settings/conflicts','/settings/ledgers','/settings/categories','/settings/preferences','/settings/sync/advanced']);
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
 });

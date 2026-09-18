@@ -173,6 +173,31 @@ context. User-entered date filters may narrow that range, but must not broaden
 it into another month. The transaction count and empty-state decision use the
 same selected-month range.
 
+For the Web ledger, `#month-picker` is a non-editable
+`button[type="button"]` with a `data-month="YYYY-MM"` value. Its month panel
+offers year navigation and twelve month buttons, marks the selected month with
+`aria-pressed`, and closes on Escape or an outside pointer while returning
+focus to the trigger without scrolling. Keep the previous/next month buttons
+as the fast path. Electron and Android retain the existing labelled
+`input[type="month"]` control; do not let the Web-only picker CSS or markup
+replace that native path.
+
+Each workspace Web page owns its own heading and any relevant period control;
+do not render the generic `WebPageTopbar` for ledger, statistics, budget, or
+settings. The ledger hero/month picker, statistics anchor, and budget month
+label provide their own context, while settings has no month context at all.
+Keep the setup topbar and native host shells unchanged. A full-row filter reset
+action must use a readable surface/ink pair from the existing tokens, retain a
+visible focus ring, and remain legible in its default, hover, and focus states;
+do not rely on a dark semantic background with dark text.
+
+On the Web ledger, the filter type select spans the filter grid's full row so
+it does not look like an orphaned half-width control. Empty filter date fields
+remain real native date inputs: mark their controlled empty state and hide only
+the browser's empty yyyy/mm/dd hint with Web-scoped CSS. Preserve the calendar
+indicator, `showPicker()` behavior, keyboard editing, and selected date display;
+native hosts keep their existing appearance.
+
 The Web statistics view may compress a dense daily/monthly bucket collection
 into an interactive plot, but it must keep a keyboard-selectable control for
 each bucket, a text-equivalent expandable detail list, and the existing
@@ -180,7 +205,7 @@ selected-bucket transaction detail. Category and largest-expense lists show a
 bounded initial ranking with an explicit “view all” control when more rows
 exist; this limits visual density without discarding data.
 
-Good: while `/ledger?month=2026-08` is loading, show the August loader and no
+Good: while `/luna?month=2026-08` is loading, show the August loader and no
 July records; after loading, show only August records. Bad: leave the old
 transaction list mounted while changing only `#month-picker`, or render thirty
 daily rows as the dominant first view without a compact visual summary.
@@ -191,17 +216,70 @@ while viewing a historical month still belongs to today unless the user edits
 the date. Editing an existing transaction preserves its stored date in the
 initial draft.
 
+### Ledger Filter Composition
+
+The ledger filter is a semantic disclosure, not a second ledger page. Its
+default query always supplies the selected month's first and last local dates;
+user date bounds may narrow that interval but may not cross the month boundary.
+Type and category criteria are combined with AND; multiple selected categories
+are OR within the category criterion; a matching split must return its parent
+transaction once. Amount bounds compare the absolute transaction amount in
+minor units, while text/regex search covers merchant, payment method, notes,
+and split category IDs.
+
+Category controls use catalog labels and stored IDs separately. Derive normal
+options from categories used in the selected month, group active definitions
+by expense/income, and retain a selected historical or deleted ID as a visible
+fallback until the user removes it. Never expose a raw `expense:0`-style ID as
+the normal label when a live catalog definition exists. Do not clear selected
+categories merely because the transaction type changes.
+
+When the selected transaction type is `income` or `expense`, render only the
+matching catalog group in the category picker; the `all` type may render both.
+If a previously selected category no longer matches the type, keep the query
+and its removable chip instead of silently deleting it or showing it as a new
+option. This makes an intentional type/category conflict evaluate to no
+matches while keeping the user's criteria recoverable.
+
+Changing the type is an in-place query-parameter update, not a page change.
+Call the router with `resetScroll: false`, preserve the disclosure and local
+filter state, and restore focus to `#filter-type` with
+`focus({ preventScroll: true })` after navigation completes. Do not duplicate
+financial state in the shell just to achieve this behavior.
+
+The free-text search uses one labelled input control. Regular-expression mode
+is an adjacent `.*` toggle inside that control, exposed as a real button with
+`aria-pressed` and a localized accessible name; it is not a detached checkbox
+or a separate filter criterion. The visible marker communicates the familiar
+Find-widget affordance while the existing text/regex query semantics remain
+unchanged.
+
+The Web month trigger displays the selected month as text without a redundant
+central dropdown chevron. The previous/next month buttons remain the explicit
+directional fast path, and the trigger still opens the accessible month panel.
+
+Filter evaluation has explicit `ready`, `working`, `invalid`, and `failed`
+states. During regex worker debounce/execution or a recoverable error, retain
+the last ready list and count rather than rendering a transient filtered-empty
+state; only a ready result updates the count and filter totals. Clear/reset
+must remove type, categories, text, date, amount, and regex mode together.
+Active criteria are represented by removable chips and never written into the
+URL or browser history. Every date/amount/search control has a visible label,
+localized error association, and keyboard-sized target.
+
 ### Date Picker and Calculator Presentation
 
-The transaction date remains a real, labelled `input[type="date"]` with its
-stable `#transaction-date` ID and ISO value. When the product wants every
-pointer location in the field to open the calendar, capture the field's
-pointer-down, feature-detect `showPicker()`, and invoke it with the input as
-the receiver. Only after that call succeeds should the pointer default be
-cancelled; when the API is absent or rejects activation, leave the native
-input path available as the fallback. This prevents Chromium's year/month/day
-segment selection from becoming the visible primary click behavior without
-replacing keyboard editing or native validation.
+The transaction and ledger-filter dates remain real, labelled
+`input[type="date"]` controls with ISO values; the transaction field keeps its
+stable `#transaction-date` ID. When the product wants every pointer location
+in the field to open the calendar, capture the field's pointer-down,
+feature-detect `showPicker()`, and invoke it with the input as the receiver.
+Only after that call succeeds should the pointer default be cancelled; when
+the API is absent or rejects activation, leave the native input path available
+as the fallback. This prevents Chromium's year/month/day segment selection
+from becoming the visible primary click behavior without replacing keyboard
+editing or native validation. Use the shared `DateField` primitive through
+`Field` so the transaction and filter forms cannot drift.
 
 The optional calculator uses the shared `displayAmount` projection for its
 result. Render that projection directly in a prominent, right-aligned display

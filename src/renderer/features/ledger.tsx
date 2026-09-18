@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,18 +13,30 @@ import {
 } from "lucide-react";
 import {
   decimalToMinorUnits,
+  isLocalDate,
   nextMonth,
+  parseMinorUnits,
   previousMonth,
   type Transaction,
 } from "../../shared/domain";
+import type { CategoryDefinition } from "../../shared/category-catalog";
+import type { AppLocale } from "../../shared/settings";
 import {
+  MAX_LEDGER_QUERY_LENGTH,
   queryLedger,
   type LedgerQueryInput,
   type LedgerQueryMode,
   type LedgerQueryRecord,
   type LedgerQueryResult,
 } from "../../shared/ledger-query";
-import { formatDate, formatMoney, formatMonth, type MessageKey } from "../i18n";
+import {
+  formatDate,
+  formatMoney,
+  formatMonth,
+  formatMonthName,
+  t,
+  type MessageKey,
+} from "../i18n";
 import { scopedRead, useApp, useLocalWrite } from "../data/local";
 import { Button } from "../components/ui/button";
 import { Field } from "../components/form";
@@ -61,8 +73,36 @@ type RegexSearchState = {
   key: string;
   result: LedgerQueryResult | null;
   error: string;
-  working: boolean;
+  status: FilterEvaluationStatus;
 };
+
+type FilterEvaluationStatus = "ready" | "working" | "invalid" | "failed";
+
+type FilterEvaluation = {
+  status: FilterEvaluationStatus;
+  result: LedgerQueryResult | null;
+  error: string;
+};
+
+type QueryInputState = {
+  input: LedgerQueryInput | null;
+  error: string;
+  field?: "date" | "amount" | "query";
+};
+
+type FilterCategoryGroup = "expense" | "income" | "other";
+
+type FilterCategoryOption = {
+  id: string;
+  label: string;
+  group: FilterCategoryGroup;
+  position: number;
+};
+
+type Message = (
+  key: MessageKey,
+  params?: Readonly<Record<string, string | number>>,
+) => string;
 
 type SearchWorkerResponse = {
   id: number;
@@ -70,22 +110,110 @@ type SearchWorkerResponse = {
   error?: { code: string };
 };
 
+function errorCode(error: unknown): string {
+  if (error && typeof error === "object" && "code" in error) {
+    const code = (error as { code: unknown }).code;
+    if (typeof code === "string") return code;
+  }
+  return error instanceof Error
+    ? /LUNA_ERROR:([a-z-]+)/.exec(error.message)?.[1] ?? ""
+    : "";
+}
+
+function filterErrorMessage(
+  cause: unknown,
+  message: Message,
+  fallback: (error: unknown) => string,
+): string {
+  switch (errorCode(cause)) {
+    case "invalid-date":
+      return message("filterDateInvalid");
+    case "ledger-query-date-range":
+      return message("filterDateRangeInvalid");
+    case "invalid-amount":
+      return message("filterAmountInvalid");
+    case "ledger-query-amount-range":
+      return message("filterAmountRangeInvalid");
+    case "ledger-query-invalid":
+      return message("filterInvalid");
+    case "ledger-query-regex-invalid":
+      return message("regexInvalid");
+    case "ledger-query-timeout":
+      return message("regexTimeout");
+    case "ledger-query-worker-unavailable":
+      return message("regexUnavailable");
+    default:
+      return fallback(cause);
+  }
+}
+
+function filterCategoryLabel(
+  categories: readonly CategoryDefinition[] | undefined,
+  id: string,
+): string {
+  const definition = categories?.find((category) => category.id === id);
+  return definition?.deletedAt === null ? labelCategory(categories, id) : id;
+}
+
+function filterCategoryGroup(
+  category: CategoryDefinition | undefined,
+): FilterCategoryGroup {
+  if (category?.deletedAt === null && category.type === "expense") return "expense";
+  if (category?.deletedAt === null && category.type === "income") return "income";
+  return "other";
+}
+
+function filterCategoryGroupLabel(
+  group: FilterCategoryGroup,
+  message: Message,
+): string {
+  switch (group) {
+    case "expense":
+      return message("filterCategoryExpense");
+    case "income":
+      return message("filterCategoryIncome");
+    case "other":
+      return message("filterCategoryOther");
+  }
+}
+
+function filterDateLabel(
+  locale: AppLocale,
+  value: string,
+): string {
+  return isLocalDate(value) ? formatDate(locale, value) : value;
+}
+
 function MonthControls({
   month,
+  locale,
   message: m,
   changeMonth,
+  web,
 }: {
   month: string;
+  locale: AppLocale;
   message: (
     key: MessageKey,
     params?: Readonly<Record<string, string | number>>,
   ) => string;
   changeMonth(month: string): void;
+  web: boolean;
 }) {
+  if (web)
+    return (
+      <WebMonthPicker
+        month={month}
+        locale={locale}
+        message={m}
+        changeMonth={changeMonth}
+      />
+    );
   return (
     <div className="month-controls month-navigator" aria-label={m("monthNavigation")}>
       <Button
         id="previous-month"
+        type="button"
         variant="outline"
         aria-label={m("previousMonth")}
         onClick={() => changeMonth(previousMonth(month))}
@@ -107,6 +235,171 @@ function MonthControls({
       />
       <Button
         id="next-month"
+        type="button"
+        variant="outline"
+        aria-label={m("nextMonth")}
+        onClick={() => changeMonth(nextMonth(month))}
+      >
+        <span className="month-control-label">{m("nextMonth")}</span>
+        <ChevronRight className="month-control-icon" aria-hidden="true" />
+      </Button>
+    </div>
+  );
+}
+
+function WebMonthPicker({
+  month,
+  locale,
+  message: m,
+  changeMonth,
+}: {
+  month: string;
+  locale: AppLocale;
+  message: Message;
+  changeMonth(month: string): void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(() => Number(month.slice(0, 4)));
+  const navigatorRef = useRef<HTMLDivElement>(null);
+  const selectedYear = Number(month.slice(0, 4));
+
+  useEffect(() => {
+    setPickerYear(selectedYear);
+  }, [selectedYear]);
+
+  const closePicker = useCallback(() => {
+    setOpen(false);
+    window.requestAnimationFrame(() => {
+      navigatorRef.current
+        ?.querySelector<HTMLButtonElement>("#month-picker")
+        ?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && navigatorRef.current?.contains(target)) return;
+      closePicker();
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closePicker();
+    };
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closePicker, open]);
+
+  const selectMonth = (next: string) => {
+    changeMonth(next);
+    closePicker();
+  };
+
+  return (
+    <div
+      ref={navigatorRef}
+      className="month-controls month-navigator"
+      aria-label={m("monthNavigation")}
+    >
+      <Button
+        id="previous-month"
+        type="button"
+        variant="outline"
+        aria-label={m("previousMonth")}
+        onClick={() => changeMonth(previousMonth(month))}
+      >
+        <ChevronLeft className="month-control-icon" aria-hidden="true" />
+        <span className="month-control-label">{m("previousMonth")}</span>
+      </Button>
+      <div className="month-picker">
+        <button
+          id="month-picker"
+          type="button"
+          className="month-picker-trigger"
+          data-month={month}
+          aria-label={m("monthPickerButton", {
+            month: formatMonth(locale, month),
+          })}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-controls="month-picker-panel"
+          onClick={() => {
+            setPickerYear(selectedYear);
+            setOpen((current) => !current);
+          }}
+        >
+          <span>{formatMonth(locale, month)}</span>
+        </button>
+        {open && (
+          <div
+            id="month-picker-panel"
+            className="month-picker-panel"
+            role="dialog"
+            aria-label={m("monthPicker")}
+          >
+            <div className="month-picker-year-navigation">
+              <Button
+                type="button"
+                variant="ghost"
+                className="month-picker-year-button"
+                aria-label={m("previousYear")}
+                disabled={pickerYear <= 1900}
+                onClick={() =>
+                  setPickerYear((year) => Math.max(1900, year - 1))
+                }
+              >
+                <ChevronLeft aria-hidden="true" />
+              </Button>
+              <span className="month-picker-year" aria-live="polite">
+                {pickerYear}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                className="month-picker-year-button"
+                aria-label={m("nextYear")}
+                disabled={pickerYear >= 9999}
+                onClick={() =>
+                  setPickerYear((year) => Math.min(9999, year + 1))
+                }
+              >
+                <ChevronRight aria-hidden="true" />
+              </Button>
+            </div>
+            <div
+              className="month-picker-options"
+              role="group"
+              aria-label={m("monthChoices", { year: pickerYear })}
+            >
+              {Array.from({ length: 12 }, (_, index) => {
+                const value = `${pickerYear}-${String(index + 1).padStart(2, "0")}`;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    className="month-picker-option"
+                    data-month={value}
+                    aria-label={formatMonth(locale, value)}
+                    aria-pressed={value === month}
+                    onClick={() => selectMonth(value)}
+                  >
+                    {formatMonthName(locale, value)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+      <Button
+        id="next-month"
+        type="button"
         variant="outline"
         aria-label={m("nextMonth")}
         onClick={() => changeMonth(nextMonth(month))}
@@ -187,7 +480,13 @@ export function LedgerMonthLoading({
               </Button>
             </div>
           )}
-          <MonthControls month={month} message={m} changeMonth={changeMonth} />
+          <MonthControls
+            month={month}
+            locale={locale}
+            message={m}
+            changeMonth={changeMonth}
+            web={web}
+          />
           {web && (
             <button
               id="primary-record"
@@ -344,7 +643,6 @@ export function LedgerHome({
   const summary = snapshot.summary!;
   const setType = changeType;
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -362,12 +660,14 @@ export function LedgerHome({
     key: "",
     result: null,
     error: "",
-    working: false,
+    status: "ready",
   });
   const imageRequest = useRef(0);
   const imageUrl = useRef<string | null>(null);
   const searchWorker = useRef<Worker | null>(null);
   const searchRequest = useRef(0);
+  const lastReadyMonth = useRef(month);
+  const lastReadyResult = useRef<LedgerQueryResult | null>(null);
   const mutation = useLocalWrite();
   const money = (v: string) =>
     formatMoney(locale, v, workspace.currency, workspace.precision);
@@ -377,46 +677,158 @@ export function LedgerHome({
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
-  const availableCategories = useMemo(
-    () => [...new Set(snapshot.transactions.flatMap((tx) => tx.splits.map((split) => split.category)))]
-      .filter(Boolean)
-      .sort((left, right) =>
-        labelCategory(snapshot.categories, left).localeCompare(
-          labelCategory(snapshot.categories, right),
-          locale,
-        ),
-      ),
-    [locale, snapshot.categories, snapshot.transactions],
-  );
   const selectedMonthStart = `${month}-01`;
   const selectedMonthEnd = monthEnd(month);
-  const effectiveDateFrom =
-    dateFrom && dateFrom > selectedMonthStart ? dateFrom : selectedMonthStart;
-  const effectiveDateTo =
-    dateTo && dateTo < selectedMonthEnd ? dateTo : selectedMonthEnd;
-  const queryInputState = useMemo((): { input: LedgerQueryInput | null; error: string } => {
+  const monthResult = useMemo(
+    () =>
+      queryLedger(snapshot.transactions, {
+        dateFrom: selectedMonthStart,
+        dateTo: selectedMonthEnd,
+        type: "all",
+        categories: [],
+        query: "",
+        mode: "text",
+      }),
+    [selectedMonthEnd, selectedMonthStart, snapshot.transactions],
+  );
+  const stableResult =
+    lastReadyMonth.current === month && lastReadyResult.current !== null
+      ? lastReadyResult.current
+      : monthResult;
+  const categoryOptions = useMemo<FilterCategoryOption[]>(() => {
+    const monthTransactionIds = new Set(monthResult.transactionIds);
+    const ids = new Set(
+      snapshot.transactions
+        .filter(
+          (transaction) =>
+            transaction.deletedAt === null && monthTransactionIds.has(transaction.id),
+        )
+        .flatMap((transaction) =>
+          transaction.splits.map((split) => split.category),
+        ),
+    );
+    for (const id of selectedCategories) ids.add(id);
+    const definitions = new Map(
+      (snapshot.categories ?? []).map((categoryDefinition) => [
+        categoryDefinition.id,
+        categoryDefinition,
+      ]),
+    );
+    const groupOrder: Record<FilterCategoryGroup, number> = {
+      expense: 0,
+      income: 1,
+      other: 2,
+    };
+    return [...ids]
+      .filter((id) => id.length > 0)
+      .map((id) => {
+        const definition = definitions.get(id);
+        return {
+          id,
+          label: filterCategoryLabel(snapshot.categories, id),
+          group: filterCategoryGroup(definition),
+          position: definition?.position ?? Number.MAX_SAFE_INTEGER,
+        };
+      })
+      .filter(
+        (option) =>
+          type === "all" ||
+          option.group === type ||
+          (option.group === "other" && selectedCategories.includes(option.id)),
+      )
+      .sort(
+        (left, right) =>
+          groupOrder[left.group] - groupOrder[right.group] ||
+          left.position - right.position ||
+          left.label.localeCompare(right.label, locale) ||
+          left.id.localeCompare(right.id),
+      );
+  }, [locale, monthResult, selectedCategories, snapshot.categories, snapshot.transactions, type]);
+  const queryInputState = useMemo((): QueryInputState => {
+    const dateError = (value: string): QueryInputState | null => {
+      if (!isLocalDate(value)) {
+        return {
+          input: null,
+          error: t(locale, "filterDateInvalid"),
+          field: "date",
+        };
+      }
+      if (value < selectedMonthStart || value > selectedMonthEnd) {
+        return {
+          input: null,
+          error: t(locale, "filterDateOutsideMonth", {
+            month: formatMonth(locale, month),
+          }),
+          field: "date",
+        };
+      }
+      return null;
+    };
+    if (dateFrom) {
+      const errorState = dateError(dateFrom);
+      if (errorState !== null) return errorState;
+    }
+    if (dateTo) {
+      const errorState = dateError(dateTo);
+      if (errorState !== null) return errorState;
+    }
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      return {
+        input: null,
+        error: t(locale, "filterDateRangeInvalid"),
+        field: "date",
+      };
+    }
+    if (query.length > MAX_LEDGER_QUERY_LENGTH) {
+      return {
+        input: null,
+        error: t(locale, "filterInvalid"),
+        field: "query",
+      };
+    }
     try {
+      const minimumMinor = minimum.trim()
+        ? decimalToMinorUnits(minimum, workspace.precision)
+        : "";
+      const maximumMinor = maximum.trim()
+        ? decimalToMinorUnits(maximum, workspace.precision)
+        : "";
+      if (
+        minimumMinor &&
+        maximumMinor &&
+        parseMinorUnits(minimumMinor) > parseMinorUnits(maximumMinor)
+      ) {
+        return {
+          input: null,
+          error: t(locale, "filterAmountRangeInvalid"),
+          field: "amount",
+        };
+      }
       return {
         input: {
-          dateFrom: effectiveDateFrom,
-          dateTo: effectiveDateTo,
+          dateFrom: dateFrom || selectedMonthStart,
+          dateTo: dateTo || selectedMonthEnd,
           type,
-          categories: [...selectedCategories, ...category.split(",")],
-          minimumMinor: minimum.trim()
-            ? decimalToMinorUnits(minimum, workspace.precision)
-            : "",
-          maximumMinor: maximum.trim()
-            ? decimalToMinorUnits(maximum, workspace.precision)
-            : "",
+          categories: selectedCategories,
+          minimumMinor,
+          maximumMinor,
           query,
           mode: queryMode,
         },
         error: "",
       };
     } catch (cause) {
-      return { input: null, error: errorMessage(cause) };
+      return {
+        input: null,
+        error: filterErrorMessage(
+          cause,
+          (key, params) => t(locale, key, params),
+          errorMessage,
+        ),
+        field: "amount",
+      };
     }
-  }, [category, effectiveDateFrom, effectiveDateTo, errorMessage, maximum, minimum, query, queryMode, selectedCategories, type, workspace.precision]);
+  }, [dateFrom, dateTo, errorMessage, locale, maximum, minimum, month, query, queryMode, selectedCategories, selectedMonthEnd, selectedMonthStart, type, workspace.precision]);
   const queryKey = useMemo(
     () =>
       queryInputState.input === null
@@ -425,18 +837,35 @@ export function LedgerHome({
     [queryInputState.input],
   );
   const regexQueryActive = queryMode === "regex" && query.trim().length > 0;
-  const localQueryState = useMemo(() => {
-    if (queryInputState.input === null || regexQueryActive)
-      return { result: null as LedgerQueryResult | null, error: "" };
+  const localQueryState = useMemo<FilterEvaluation>(() => {
+    if (queryInputState.input === null) {
+      return {
+        status: "invalid",
+        result: null,
+        error: queryInputState.error,
+      };
+    }
+    if (regexQueryActive) {
+      return { status: "working", result: null, error: "" };
+    }
     try {
       return {
+        status: "ready",
         result: queryLedger(snapshot.transactions, queryInputState.input),
         error: "",
       };
     } catch (cause) {
-      return { result: null, error: errorMessage(cause) };
+      return {
+        status: "invalid",
+        result: null,
+        error: filterErrorMessage(
+          cause,
+          (key, params) => t(locale, key, params),
+          errorMessage,
+        ),
+      };
     }
-  }, [errorMessage, queryInputState.input, regexQueryActive, snapshot.transactions]);
+  }, [errorMessage, locale, queryInputState.error, queryInputState.input, regexQueryActive, snapshot.transactions]);
   useEffect(() => {
     searchWorker.current?.terminate();
     searchWorker.current = null;
@@ -444,10 +873,15 @@ export function LedgerHome({
     const input = queryInputState.input;
     const shouldUseWorker = regexQueryActive && input !== null;
     if (!shouldUseWorker || input === null) {
-      setRegexSearch({ key: queryKey, result: null, error: "", working: false });
+      setRegexSearch({
+        key: queryKey,
+        result: null,
+        error: queryInputState.error,
+        status: input === null ? "invalid" : "ready",
+      });
       return;
     }
-    setRegexSearch({ key: queryKey, result: null, error: "", working: true });
+    setRegexSearch({ key: queryKey, result: null, error: "", status: "working" });
     let worker: Worker | null = null;
     let timeoutId: number | undefined;
     const timer = window.setTimeout(() => {
@@ -459,8 +893,12 @@ export function LedgerHome({
         setRegexSearch({
           key: queryKey,
           result: null,
-          error: errorMessage(new Error("LUNA_ERROR:ledger-query-worker-unavailable")),
-          working: false,
+          error: filterErrorMessage(
+            new Error("LUNA_ERROR:ledger-query-worker-unavailable"),
+            (key, params) => t(locale, key, params),
+            errorMessage,
+          ),
+          status: "failed",
         });
         return;
       }
@@ -488,26 +926,38 @@ export function LedgerHome({
         finish({
           key: queryKey,
           result: null,
-          error: errorMessage(new Error("LUNA_ERROR:ledger-query-timeout")),
-          working: false,
+          error: filterErrorMessage(
+            new Error("LUNA_ERROR:ledger-query-timeout"),
+            (key, params) => t(locale, key, params),
+            errorMessage,
+          ),
+          status: "failed",
         });
       }, 5000);
       worker.onmessage = (event: MessageEvent<SearchWorkerResponse>) => {
         if (event.data.id !== requestId) return;
         if (timeoutId !== undefined) window.clearTimeout(timeoutId);
         if (event.data.error) {
+          const cause = new Error(`LUNA_ERROR:${event.data.error.code}`);
           finish({
             key: queryKey,
             result: null,
-            error: errorMessage(new Error(`LUNA_ERROR:${event.data.error.code}`)),
-            working: false,
+            error: filterErrorMessage(
+              cause,
+              (key, params) => t(locale, key, params),
+              errorMessage,
+            ),
+            status:
+              event.data.error.code === "ledger-query-regex-invalid"
+                ? "invalid"
+                : "failed",
           });
         } else {
           finish({
             key: queryKey,
             result: event.data.result ?? null,
             error: "",
-            working: false,
+            status: "ready",
           });
         }
       };
@@ -516,8 +966,12 @@ export function LedgerHome({
         finish({
           key: queryKey,
           result: null,
-          error: errorMessage(new Error("LUNA_ERROR:ledger-query-worker-unavailable")),
-          working: false,
+          error: filterErrorMessage(
+            new Error("LUNA_ERROR:ledger-query-worker-unavailable"),
+            (key, params) => t(locale, key, params),
+            errorMessage,
+          ),
+          status: "failed",
         });
       };
       worker.postMessage({ id: requestId, transactions: safeTransactions, input });
@@ -528,29 +982,58 @@ export function LedgerHome({
       worker?.terminate();
       if (searchWorker.current === worker) searchWorker.current = null;
     };
-  }, [errorMessage, locale, queryInputState.input, queryKey, regexQueryActive, snapshot.transactions]);
-  const queryState = useMemo(() => {
-    const useWorker = regexQueryActive && queryInputState.input !== null;
-    const result = useWorker
-      ? regexSearch.key === queryKey
-        ? regexSearch.result
-        : null
-      : localQueryState.result;
-    const queryError = useWorker ? regexSearch.error : localQueryState.error;
-    if (result === null)
+  }, [errorMessage, locale, queryInputState.error, queryInputState.input, queryKey, regexQueryActive, snapshot.transactions]);
+  const filterEvaluation = useMemo<FilterEvaluation>(() => {
+    if (queryInputState.input === null) {
       return {
-        transactions: [] as readonly Transaction[],
-        result: null,
-        error: queryInputState.error || queryError,
+        status: "invalid",
+        result: stableResult,
+        error: queryInputState.error,
       };
-    const ids = new Set(result.transactionIds);
+    }
+    if (!regexQueryActive) {
+      if (localQueryState.status === "ready" && localQueryState.result !== null) {
+        return localQueryState;
+      }
+      return {
+        status: localQueryState.status,
+        result: stableResult,
+        error: localQueryState.error,
+      };
+    }
+    if (regexSearch.key !== queryKey || regexSearch.status === "working") {
+      return { status: "working", result: stableResult, error: "" };
+    }
+    if (regexSearch.result !== null && regexSearch.status === "ready") {
+      return {
+        status: "ready",
+        result: regexSearch.result,
+        error: "",
+      };
+    }
     return {
-      transactions: snapshot.transactions.filter((transaction) => ids.has(transaction.id)),
-      result,
-      error: queryInputState.error || queryError,
+      status: regexSearch.status,
+      result: stableResult,
+      error: regexSearch.error,
     };
-  }, [localQueryState.error, localQueryState.result, queryInputState.error, queryInputState.input, queryKey, regexQueryActive, regexSearch, snapshot.transactions]);
-  const filtered = queryState.transactions;
+  }, [localQueryState, queryInputState.error, queryInputState.input, queryKey, regexQueryActive, regexSearch, stableResult]);
+  useEffect(() => {
+    if (lastReadyMonth.current !== month) {
+      lastReadyMonth.current = month;
+      lastReadyResult.current =
+        filterEvaluation.status === "ready" && filterEvaluation.result !== null
+          ? filterEvaluation.result
+          : monthResult;
+      return;
+    }
+    if (filterEvaluation.status === "ready" && filterEvaluation.result !== null) {
+      lastReadyResult.current = filterEvaluation.result;
+    }
+  }, [filterEvaluation, month, monthResult]);
+  const filtered = useMemo(() => {
+    const ids = new Set(filterEvaluation.result?.transactionIds ?? []);
+    return snapshot.transactions.filter((transaction) => ids.has(transaction.id));
+  }, [filterEvaluation.result, snapshot.transactions]);
   const transactionGroups = useMemo(() => {
     const groups: { date: string; transactions: Transaction[] }[] = [];
     const byDate = new Map<string, { date: string; transactions: Transaction[] }>();
@@ -575,14 +1058,7 @@ export function LedgerHome({
       : snapshot.transactions.find(
           (transaction) => transaction.id === transactionDetail.transaction.id,
         ) ?? transactionDetail.transaction;
-  const monthTransactionCount = queryLedger(snapshot.transactions, {
-    dateFrom: selectedMonthStart,
-    dateTo: selectedMonthEnd,
-    type: "all",
-    categories: [],
-    query: "",
-    mode: "text",
-  }).count;
+  const monthTransactionCount = monthResult.count;
   const expenseCount = queryLedger(snapshot.transactions, {
     dateFrom: selectedMonthStart,
     dateTo: selectedMonthEnd,
@@ -595,40 +1071,71 @@ export function LedgerHome({
   const filterChips: { id: string; label: string; remove(): void }[] = [
     ...(type === "all"
       ? []
-      : [{ id: "type", label: `${m("type")}: ${m(type === "income" ? "income" : "spending")}`, remove: () => setType("all") }]),
+      : [
+          {
+            id: "type",
+            label: `${m("type")}: ${m(type === "income" ? "income" : "spending")}`,
+            remove: () => setType("all"),
+          },
+        ]),
     ...selectedCategories.map((value) => ({
       id: `category-${value}`,
-      label: `${m("category")}: ${labelCategory(snapshot.categories, value)}`,
-      remove: () => setSelectedCategories((current) => current.filter((item) => item !== value)),
+      label: `${m("category")}: ${filterCategoryLabel(snapshot.categories, value)}`,
+      remove: () =>
+        setSelectedCategories((current) =>
+          current.filter((item) => item !== value),
+        ),
     })),
-    ...(category.trim()
-      ? [{ id: "category-text", label: `${m("category")}: ${category.trim()}`, remove: () => setCategory("") }]
-      : []),
     ...(query.trim()
       ? [{ id: "query", label: `${m("searchLabel")}: ${query.trim()}`, remove: () => setQuery("") }]
       : []),
     ...(dateFrom
-      ? [{ id: "date-from", label: `${m("date")}: ${dateFrom}`, remove: () => setDateFrom("") }]
+      ? [
+          {
+            id: "date-from",
+            label: `${m("startDate")}: ${filterDateLabel(locale, dateFrom)}`,
+            remove: () => setDateFrom(""),
+          },
+        ]
       : []),
     ...(dateTo
-      ? [{ id: "date-to", label: `${m("selectedMonth")}: ${dateTo}`, remove: () => setDateTo("") }]
+      ? [
+          {
+            id: "date-to",
+            label: `${m("endDate")}: ${filterDateLabel(locale, dateTo)}`,
+            remove: () => setDateTo(""),
+          },
+        ]
       : []),
     ...(minimum.trim()
-      ? [{ id: "minimum", label: `${m("amount")}: ≥ ${minimum.trim()}`, remove: () => setMinimum("") }]
+      ? [
+          {
+            id: "minimum",
+            label: `${m("minimumAmount")}: ≥ ${minimum.trim()}`,
+            remove: () => setMinimum(""),
+          },
+        ]
       : []),
     ...(maximum.trim()
-      ? [{ id: "maximum", label: `${m("amount")}: ≤ ${maximum.trim()}`, remove: () => setMaximum("") }]
+      ? [
+          {
+            id: "maximum",
+            label: `${m("maximumAmount")}: ≤ ${maximum.trim()}`,
+            remove: () => setMaximum(""),
+          },
+        ]
       : []),
   ];
-  const hasActiveQuery =
-    type !== "all" ||
-    selectedCategories.length > 0 ||
-    category.trim().length > 0 ||
-    query.trim().length > 0 ||
-    dateFrom.length > 0 ||
-    dateTo.length > 0 ||
-    minimum.trim().length > 0 ||
-    maximum.trim().length > 0;
+  const activeFilterCount = [
+    type !== "all",
+    selectedCategories.length > 0,
+    query.trim().length > 0,
+    dateFrom.length > 0,
+    dateTo.length > 0,
+    minimum.trim().length > 0,
+    maximum.trim().length > 0,
+  ].filter(Boolean).length;
+  const hasActiveQuery = activeFilterCount > 0;
   const revokeImageUrl = () => {
     if (imageUrl.current !== null) URL.revokeObjectURL(imageUrl.current);
     imageUrl.current = null;
@@ -802,7 +1309,13 @@ export function LedgerHome({
               ))}
             </div>
           )}
-          <MonthControls month={month} message={m} changeMonth={changeMonth} />
+          <MonthControls
+            month={month}
+            locale={locale}
+            message={m}
+            changeMonth={changeMonth}
+            web={web}
+          />
           {web && (
             <button
               id="primary-record"
@@ -884,11 +1397,13 @@ export function LedgerHome({
             </h2>
             <p>{m("recentLedgerHelp")}</p>
           </div>
-          <p id="transaction-count">
-            {m("shownCount", {
-              shown: filtered.length,
-              total: monthTransactionCount,
-            })}
+          <p id="transaction-count" role="status">
+            {filterEvaluation.status === "ready"
+              ? m("shownCount", {
+                  shown: filtered.length,
+                  total: monthTransactionCount,
+                })
+              : m("filterResultsNotUpdated")}
           </p>
         </div>
         <details
@@ -901,7 +1416,16 @@ export function LedgerHome({
               <SlidersHorizontal size={17} strokeWidth={2} />
             </span>
             <span className="filter-disclosure-label">{m("filterTransactions")}</span>
-            <span className="filter-disclosure-meta">{m("filterHint")}</span>
+            <span className="filter-disclosure-meta">
+              {hasActiveQuery
+                ? m(
+                    activeFilterCount === 1
+                      ? "filterActiveSingular"
+                      : "filterActiveCount",
+                    { count: activeFilterCount },
+                  )
+                : m("filterHint")}
+            </span>
           </summary>
           <form
             id="filter-form"
@@ -911,7 +1435,6 @@ export function LedgerHome({
             onReset={() => {
               setType("all");
               setQuery("");
-              setCategory("");
               setSelectedCategories([]);
               setDateFrom("");
               setDateTo("");
@@ -920,7 +1443,7 @@ export function LedgerHome({
               setQueryMode("text");
             }}
           >
-            <div className="field">
+            <div className="field filter-type-field">
               <label htmlFor="filter-type">{m("type")}</label>
               <select
                 id="filter-type"
@@ -933,85 +1456,144 @@ export function LedgerHome({
                 <option value="expense">{m("spending")}</option>
               </select>
             </div>
-            <Field
-              id="filter-category"
-              label={m("category")}
-              name="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            />
-            {availableCategories.length > 0 && (
+            {categoryOptions.length > 0 ? (
               <fieldset className="filter-category-options full">
                 <legend>{m("categoryMultiSelect")}</legend>
-                <div id="filter-category-options" className="filter-category-list">
-                  {availableCategories.map((value) => (
-                    <label key={value} className="filter-category-option">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(value)}
-                        onChange={(event) =>
-                          setSelectedCategories((current) =>
-                            event.currentTarget.checked
-                              ? [...current, value]
-                              : current.filter((item) => item !== value),
-                          )
-                        }
-                      />
-                      <span>{value}</span>
-                    </label>
-                  ))}
+                <div
+                  id="filter-category-options"
+                  className="filter-category-groups"
+                >
+                  {(["expense", "income", "other"] as const).map((group) => {
+                    const options = categoryOptions.filter(
+                      (option) => option.group === group,
+                    );
+                    if (options.length === 0) return null;
+                    const headingId = `filter-category-group-${group}`;
+                    return (
+                      <div
+                        key={group}
+                        className="filter-category-group"
+                        role="group"
+                        aria-labelledby={headingId}
+                      >
+                        <h3 id={headingId} className="filter-category-group-title">
+                          {filterCategoryGroupLabel(group, m)}
+                        </h3>
+                        <div className="filter-category-list">
+                          {options.map((option) => (
+                            <label
+                              key={option.id}
+                              className="filter-category-option"
+                            >
+                              <input
+                                type="checkbox"
+                                value={option.id}
+                                checked={selectedCategories.includes(option.id)}
+                                onChange={(event) => {
+                                  const checked = event.currentTarget.checked;
+                                  setSelectedCategories((current) =>
+                                    checked
+                                      ? [...current, option.id]
+                                      : current.filter(
+                                          (item) => item !== option.id,
+                                        ),
+                                  );
+                                }}
+                              />
+                              <span>{option.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </fieldset>
+            ) : (
+              <p id="filter-category-empty" className="helper filter-category-empty">
+                {m("filterCategoryEmpty")}
+              </p>
             )}
-            <Field
-              id="filter-query"
-              label={m("searchLabel")}
-              name="query"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+            <div className="field filter-search-field">
+              <label htmlFor="filter-query">{m("searchLabel")}</label>
+              <div className="filter-search-control">
+                <Input
+                  id="filter-query"
+                  name="query"
+                  aria-describedby="filter-error"
+                  aria-invalid={
+                    queryInputState.field === "query" ||
+                    (regexQueryActive && filterEvaluation.status === "invalid")
+                  }
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <Button
+                  id="filter-regex"
+                  type="button"
+                  variant="ghost"
+                  className="filter-regex-toggle"
+                  aria-label={m(
+                    queryMode === "regex" ? "disableRegexSearch" : "enableRegexSearch",
+                  )}
+                  aria-pressed={queryMode === "regex"}
+                  onClick={() =>
+                    setQueryMode((mode) => (mode === "regex" ? "text" : "regex"))
+                  }
+                >
+                  <span aria-hidden="true" className="filter-regex-mark">
+                    .*
+                  </span>
+                  <span className="visually-hidden">{m("searchModeRegex")}</span>
+                </Button>
+              </div>
+            </div>
             <Field
               id="filter-date-from"
-              label={m("date")}
+              label={m("startDate")}
               name="dateFrom"
               type="date"
+              min={selectedMonthStart}
+              max={selectedMonthEnd}
+              aria-describedby="filter-error"
+              aria-invalid={queryInputState.field === "date"}
               value={dateFrom}
+              data-empty={dateFrom.length === 0}
               onChange={(e) => setDateFrom(e.target.value)}
             />
             <Field
               id="filter-date-to"
-              label={m("selectedMonth")}
+              label={m("endDate")}
               name="dateTo"
               type="date"
+              min={selectedMonthStart}
+              max={selectedMonthEnd}
+              aria-describedby="filter-error"
+              aria-invalid={queryInputState.field === "date"}
               value={dateTo}
+              data-empty={dateTo.length === 0}
               onChange={(e) => setDateTo(e.target.value)}
             />
             <Field
               id="filter-minimum"
-              label={m("amount")}
+              label={m("minimumAmount")}
               name="minimum"
               inputMode="decimal"
+              aria-describedby="filter-error"
+              aria-invalid={queryInputState.field === "amount"}
               value={minimum}
               onChange={(e) => setMinimum(e.target.value)}
             />
             <Field
               id="filter-maximum"
-              label={m("budgetUsed")}
+              label={m("maximumAmount")}
               name="maximum"
               inputMode="decimal"
+              aria-describedby="filter-error"
+              aria-invalid={queryInputState.field === "amount"}
               value={maximum}
               onChange={(e) => setMaximum(e.target.value)}
             />
-            <label className="filter-mode-toggle" htmlFor="filter-regex">
-              <input
-                id="filter-regex"
-                name="regex"
-                type="checkbox"
-                checked={queryMode === "regex"}
-                onChange={(e) => setQueryMode(e.target.checked ? "regex" : "text")}
-              />
-                <span>{queryMode === "regex" ? m("searchModeRegex") : m("searchModeText")}</span>
-            </label>
             <Button type="reset" variant="outline">
               {m("clearFilters")}
             </Button>
@@ -1033,28 +1615,46 @@ export function LedgerHome({
             ))}
           </div>
         )}
-        {regexSearch.working && (
+        {filterEvaluation.status === "working" && (
           <p id="filter-search-status" className="helper" role="status">
-            {m("regexWorking")}
+            {m("filterWorking")} {m("filterResultsNotUpdated")}
           </p>
         )}
-        <p className="form-alert" role="alert">
-          {error || queryState.error}
+        <p
+          id="filter-error"
+          className="form-alert"
+          role="alert"
+          hidden={!error && !filterEvaluation.error}
+        >
+          {error || filterEvaluation.error}
         </p>
-        {hasActiveQuery && queryState.result && (
+        {filterEvaluation.status !== "ready" && filterEvaluation.error && (
+          <p className="helper filter-error-help">{m("filterErrorHelp")}</p>
+        )}
+        {hasActiveQuery &&
+          filterEvaluation.status === "ready" &&
+          filterEvaluation.result && (
           <p id="filter-result-summary" className="filter-result-summary">
             {m("shownCount", {
-              shown: queryState.result.count,
+              shown: filterEvaluation.result.count,
               total: monthTransactionCount,
             })} {" · "}
             {m("categoryTotals", {
-              spending: money(queryState.result.totalExpenseMinor),
-              income: money(queryState.result.totalIncomeMinor),
+              spending: money(filterEvaluation.result.totalExpenseMinor),
+              income: money(filterEvaluation.result.totalIncomeMinor),
             })}
           </p>
         )}
-        <div id="transaction-list-region">
-          {filtered.length === 0 ? (
+        <div
+          id="transaction-list-region"
+          data-filter-evaluation={filterEvaluation.status}
+        >
+          {filterEvaluation.status !== "ready" && filtered.length === 0 ? (
+            <div className="empty-state filter-stable-state">
+              <h3>{m("filterResultsNotUpdated")}</h3>
+              <p>{m("filterErrorHelp")}</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="empty-state">
               <h3>{m(any ? "noFilterMatches" : "emptyLedgerTitle")}</h3>
               <p>{m(any ? "noFilterMatchesHelp" : "emptyLedgerHelp")}</p>
