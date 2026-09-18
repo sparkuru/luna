@@ -128,6 +128,66 @@ test("validated month and type deep links leave free text filters out of history
   await expect(page).toHaveURL(/\/luna$/);
 });
 
+test("Web statistics uses a month-only picker for monthly periods", async ({
+  page,
+}) => {
+  await ready(page);
+  const month = await selectedMonth(page);
+  const [year, monthNumber] = month.split("-").map(Number);
+  const targetMonth = `${year}-${String(monthNumber === 6 ? 7 : 6).padStart(2, "0")}`;
+
+  await page.goto(
+    `/statistics?month=${month}&anchor=${month}-01&period=month&type=all`,
+  );
+  await expect(page.locator("#category-title")).toHaveCount(1);
+  await expect(page.locator(".statistics-page > .section-heading > .kicker")).toHaveCount(0);
+  await expect(page.locator("#month-picker")).toHaveAttribute("type", "button");
+  await expect(page.locator("#month-picker")).toHaveAttribute("data-month", month);
+  await expect(page.locator("#statistics-anchor")).toHaveCount(0);
+
+  await page.locator("#month-picker").click();
+  await expect(page.locator("#month-picker-panel")).toBeVisible();
+  await expect(
+    page.locator(`#month-picker-panel [data-month="${month}"]`),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.locator(`#month-picker-panel [data-month="${targetMonth}"]`).click();
+  await expect(page.locator("#month-picker-panel")).not.toBeVisible();
+  await expect(page.locator("#month-picker")).toHaveAttribute(
+    "data-month",
+    targetMonth,
+  );
+  expect(
+    await page.evaluate(() => {
+      const url = new URL(window.location.href);
+      return {
+        pathname: url.pathname,
+        month: url.searchParams.get("month"),
+        anchor: url.searchParams.get("anchor"),
+        period: url.searchParams.get("period"),
+        type: url.searchParams.get("type"),
+      };
+    }),
+  ).toEqual({
+    pathname: "/statistics",
+    month: targetMonth,
+    anchor: `${targetMonth}-01`,
+    period: "month",
+    type: "all",
+  });
+
+  for (const period of ["week", "year"] as const) {
+    await page.goto(
+      `/statistics?month=${month}&anchor=${month}-01&period=${period}&type=all`,
+    );
+    await expect(page.locator("#statistics-anchor")).toHaveAttribute(
+      "type",
+      "date",
+    );
+    await expect(page.locator("#statistics-anchor")).toHaveValue(`${month}-01`);
+    await expect(page.locator("#month-picker")).toHaveCount(0);
+  }
+});
+
 test("old ledger URLs are not rendered as compatibility routes", async ({ page }) => {
   await ready(page);
   await page.goto("/ledger");

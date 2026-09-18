@@ -741,6 +741,7 @@ export function App() {
                     search: { ...search, month: anchor.slice(0, 7), anchor },
                   })
                 }
+                onMonthChange={setMonth}
                 onTypeChange={setStatisticsType}
               />
             ) : primarySection === "budget" ? (

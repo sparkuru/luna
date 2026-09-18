@@ -18,6 +18,7 @@ import {
 } from "../data/local";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import { WebMonthPicker } from "../components/month-picker";
 import { labelCategories, labelCategory } from "../category-display";
 export function BudgetEditor() {
   const app = useApp();
@@ -169,6 +170,7 @@ export function Statistics({
   web = false,
   onPeriodChange,
   onAnchorChange,
+  onMonthChange,
   onTypeChange,
 }: {
   period: StatisticsPeriod;
@@ -177,6 +179,7 @@ export function Statistics({
   web?: boolean;
   onPeriodChange(period: StatisticsPeriod): void;
   onAnchorChange(anchor: string): void;
+  onMonthChange(month: string): void;
   onTypeChange(type: "income" | "expense"): void;
 }) {
   const { snapshot, locale, message: m } = useApp();
@@ -327,21 +330,29 @@ export function Statistics({
     <section className="panel category-panel statistics-page" aria-labelledby="category-title">
       <div className="section-heading">
         <div>
-          <span className="kicker">{m("categoryBreakdown")}</span>
           <h1 id="category-title">{m("categoryBreakdown")}</h1>
           <p>{m("splitCountHelp")}</p>
         </div>
-        <label className="compact-field" htmlFor="statistics-anchor">
-          <span>{m("selectedMonth")}</span>
-          <input
-            id="statistics-anchor"
-            type="date"
-            value={anchor}
-            onChange={(event) => {
-              if (event.currentTarget.value) onAnchorChange(event.currentTarget.value);
-            }}
+        {web && period === "month" ? (
+          <WebMonthPicker
+            month={anchor.slice(0, 7)}
+            locale={locale}
+            message={m}
+            changeMonth={onMonthChange}
           />
-        </label>
+        ) : (
+          <label className="compact-field" htmlFor="statistics-anchor">
+            <span>{m("selectedMonth")}</span>
+            <input
+              id="statistics-anchor"
+              type="date"
+              value={anchor}
+              onChange={(event) => {
+                if (event.currentTarget.value) onAnchorChange(event.currentTarget.value);
+              }}
+            />
+          </label>
+        )}
       </div>
       <div className="statistics-toolbar">
         <div className="segmented-control" role="group" aria-label={m("statTrend")}>
