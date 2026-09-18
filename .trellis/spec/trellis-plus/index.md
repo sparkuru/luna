@@ -106,9 +106,14 @@ Before development or validation, check for the project-local `hako` wrapper
 and `.devhome` cache boundary. The current wrapper uses a Node 22 Bookworm
 image because Electron's native SQLite dependency needs a build toolchain; it
 mounts only the repository, runs as the invoking user, and has no persistent
-service. Use the `dev-it-in-docker` skill when changing that boundary, keep any
-wrapper allow rule scoped to `./hako`, and never broaden permissions for raw
-Docker, shell, or package-manager commands.
+service. Its default image is built from the `dev` stage in the repository-root
+`Dockerfile`, which is the only Dockerfile used by the development and test
+workflow; keep Chrome and Firefox provisioning in that stage instead of adding
+a separate development Dockerfile. Deployment-specific Dockerfiles remain
+owned by their respective Compose/release workflows. Use the `dev-it-in-docker`
+skill when changing that boundary, keep any wrapper allow rule scoped to
+`./hako`, and never broaden permissions for raw Docker, shell, or package-manager
+commands.
 
 ## Trellis Plus: ChatGPT/Codex commit completion and attribution
 

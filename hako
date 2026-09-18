@@ -1,22 +1,28 @@
 #!/usr/bin/env bash
-# hako - Run Luna development commands inside a disposable Node 22 container.
+# hako - Run Luna development commands inside a disposable Node 22 browser container.
 #
 # One-shot examples:
 #   ./hako npm install
 #   ./hako npm run typecheck
 #   ./hako npm test
 #   ./hako npm run build
+#   ./hako npm run test:web
 #
 # The repository is mounted at /app and npm's HOME/cache is kept in .devhome.
+# The first command builds the Dockerfile dev stage, which provides Google
+# Chrome and Playwright Firefox. Override HAKO_IMAGE to use another image.
 # A future web service can use the configurable port mapping below.
 set -Eeuo pipefail
 
-# The full Bookworm image includes Python and a C/C++ toolchain for Electron's
-# ABI rebuild of better-sqlite3 during packaging.
-readonly IMAGE="${HAKO_IMAGE:-node:22-bookworm}"
+# The development image retains Node 22 and adds the browsers needed by
+# Playwright. It also includes Python and a C/C++ toolchain for Electron's ABI
+# rebuild of better-sqlite3 during packaging.
+readonly DEFAULT_IMAGE="luna-dev:node22-playwright-1.63.0"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT
 readonly DEVHOME="${REPO_ROOT}/.devhome"
+readonly DEV_DOCKERFILE="${REPO_ROOT}/Dockerfile"
+readonly IMAGE="${HAKO_IMAGE:-${DEFAULT_IMAGE}}"
 STEP_INDEX=0
 
 # Editable defaults. Override temporarily when another local service uses the port.
@@ -61,6 +67,20 @@ run_step() {
 	"$@"
 }
 
+ensure_image() {
+	[[ -n "${HAKO_IMAGE:-}" ]] && return 0
+	if docker image inspect "${IMAGE}" >/dev/null 2>&1; then
+		return 0
+	fi
+
+	[[ -f "${DEV_DOCKERFILE}" ]] || {
+		printf '[hako] development Dockerfile not found: %s\n' "${DEV_DOCKERFILE}" >&2
+		return 1
+	}
+	run_step build docker build --progress=plain --target dev --tag "${IMAGE}" \
+		--file "${DEV_DOCKERFILE}" "${REPO_ROOT}"
+}
+
 main() {
 	local -a tty_flags=()
 	local -a port_flags=()
@@ -76,6 +96,7 @@ main() {
 	require_command id
 	require_command mkdir
 	run_step internal mkdir -p -- "${DEVHOME}"
+	ensure_image
 
 	[[ -t 0 ]] && tty_flags+=(-i)
 	[[ -t 0 && -t 1 ]] && tty_flags+=(-t)

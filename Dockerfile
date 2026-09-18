@@ -1,3 +1,28 @@
+FROM node:22.22.0-bookworm AS dev
+
+ARG TARGETARCH=amd64
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+RUN case "${TARGETARCH}" in \
+      amd64) ;; \
+      *) echo "Google Chrome is only provisioned for amd64 development containers" >&2; exit 1 ;; \
+    esac \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && curl --fail --location --retry 3 \
+      --output /tmp/google-chrome.deb \
+      https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get install -y --no-install-recommends /tmp/google-chrome.deb \
+    && rm -f /tmp/google-chrome.deb \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install --global --no-audit --no-fund playwright@1.63.0 \
+    && mkdir -p "${PLAYWRIGHT_BROWSERS_PATH}" \
+    && playwright install --with-deps firefox \
+    && chmod -R a+rX "${PLAYWRIGHT_BROWSERS_PATH}"
+
 FROM node:22.22.0-bookworm-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
