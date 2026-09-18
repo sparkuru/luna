@@ -1461,9 +1461,9 @@ export class SQLiteLocalStore implements LocalStore {
       .transaction(() => {
         this.assertMigrationWritable();
         this.database.exec(`
+          DELETE FROM revisions;
           DELETE FROM splits;
           DELETE FROM transactions;
-          DELETE FROM revisions;
           DELETE FROM tombstones;
           DELETE FROM pending_operations;
           DELETE FROM conflicts;

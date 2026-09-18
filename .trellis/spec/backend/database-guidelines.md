@@ -171,3 +171,14 @@ server metadata version with the Native/Web `LocalStore` schema versions above.
   supplies a local calendar date and the domain validates its shape.
 - Do not mark pending operations acknowledged without a sync protocol and a
   tested remote contract.
+- When a migration resets normalized ledger rows with `foreign_keys = ON`,
+  delete referencing rows before their parent rows, inside the same immediate
+  transaction. For example, `revisions` and `splits` must be cleared before
+  `transactions`; otherwise a valid legacy reset fails with a foreign-key
+  constraint error.
+
+```sql
+DELETE FROM revisions;
+DELETE FROM splits;
+DELETE FROM transactions;
+```
