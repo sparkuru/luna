@@ -2166,7 +2166,7 @@ label,
 }
 
 /* Radix owns modal interaction; Luna keeps the responsive surface geometry. */
-.luna-dialog { position: fixed; z-index: 50; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(680px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; background: var(--color-surface); border-radius: var(--radius-card); padding: 24px; display: block; }
+.luna-dialog { position: fixed; z-index: 50; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; background: var(--color-surface); border-radius: var(--radius-card); padding: 24px; display: block; }
 .luna-dialog.secondary-menu-panel { width: min(1000px, calc(100vw - 32px)); max-width: none; }
 .entry-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 [data-slot="dialog-overlay"] { position: fixed; inset: 0; z-index: 50; background: #17203380; }
@@ -2175,6 +2175,9 @@ label,
 @media (max-width: 500px) { .luna-dialog { padding: 16px; } }
 
 .luna-dialog { translate: none; max-width: calc(100vw - 32px); }
+@supports (height: 100dvh) {
+  .luna-dialog { max-height: calc(100dvh - 32px); }
+}
 body:has([data-slot="dialog-content"]) { overflow: hidden; overscroll-behavior: contain; }
 .luna-dialog { overscroll-behavior: contain; }
 
@@ -4594,4 +4597,12 @@ html[data-client-surface="web"] #statistics-categories-toggle {
 @media (max-width: 767px) {
   .filter-advanced-grid { grid-template-columns: minmax(0, 1fr); }
   html[data-client-surface="web"] .budget-panel > .section-heading { flex-direction: column; align-items: stretch; }
+}
+
+/* Android keeps the calculator with the amount field; stack the remaining
+   quick-entry fields below it so the dialog scrolls instead of leaving a
+   mostly empty second column beside the calculator. */
+html[data-client-surface="mobile"] .transaction-dialog-panel .quick-core-fields {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
 }

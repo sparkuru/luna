@@ -43,6 +43,14 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
   `src/shared/abort.ts` instead of calling `AbortSignal.throwIfAborted()`;
   older Android WebViews do not implement that method. The helper preserves an
   abort reason when present and throws a compatible cancellation error otherwise.
+- The Android 11 WebView on AIO-3568J reports
+  `CSS.supports("height: 100dvh") === false`. Fixed scrollable dialogs need a
+  `max-height: calc(100vh - 32px)` baseline, with
+  `max-height: calc(100dvh - 32px)` only inside a separate
+  `@supports (height: 100dvh)` rule. A lone `dvh` declaration is discarded on
+  that WebView, leaving `max-height: none` and placing editor controls outside
+  its scrollable viewport. The mobile transaction editor keeps its calculator
+  but stacks `.quick-core-fields` in one column; Web has its own layout rules.
 - Request `INTERNET` and `ACCESS_NETWORK_STATE`. The latter enables WebView's
   network-change observer, including `navigator.onLine`; do not fake this flag
   in tests. Android backup is disabled in the manifest; no storage permission
@@ -91,6 +99,7 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
 | --- | --- |
 | No network on first installed launch | embedded UI usable, secure context, offline writes commit |
 | Native WebView without OPFS | secure `https://localhost` origin uses IndexedDB compatibility storage and offline writes commit |
+| Native WebView without `100dvh` | dialog uses the `100vh` height limit and its own scrolling reaches category, date and save controls |
 | Process force-stop/relaunch | Selected SQLite-WASM/OPFS or IndexedDB records and privacy default restored |
 | `AbortSignal.throwIfAborted` missing | Cancellation checks do not raise a compatibility `TypeError` |
 | `ACCESS_NETWORK_STATE` missing | fail network-state smoke; no navigator override |
@@ -141,6 +150,11 @@ dialog dismissal. After proving native home fallback, force-stop/relaunch the
 disposable app before subsequent checks: AndroidWebView caches a closed Page
 when Activity recreation keeps the same PID. Reopened committed records must
 still be present; never clear data at this boundary.
+For dialog layout, a current Chrome check alone cannot prove the older WebView
+fallback. In a browser regression test, remove the matching `100dvh`
+`@supports` CSSOM rule, then assert the `100vh` limit remains, the dialog is
+internally scrollable, and lower controls are reachable. Confirm the result on
+the installed Android WebView separately.
 
 ## 7. Wrong vs Correct
 

@@ -1,0 +1,3 @@
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Android mobile surface、IME/返回行为、APK 隔离和实机验收契约。"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"共享 renderer 表单可达性和破坏性确认必须标明目标及效果。"}
+{"file":".trellis/tasks/archive/2026-09/09-23-manual-ux-platform-validation/validation.md","reason":"本任务要复现和复验的 AIO-3568J 横屏现象、设备限制及截图证据。"}

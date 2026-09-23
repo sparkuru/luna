@@ -121,7 +121,7 @@ export function Categories() {
     );
 
   const remove = async (category: CategoryDefinition) => {
-    if (!window.confirm(app.message("deleteCategoryConfirm"))) return;
+    if (!window.confirm(app.message("deleteCategoryConfirm", { name: category.name }))) return;
     try {
       await window.lunaLedger.deleteCategory(category.id, app.snapshot.categoryHeadIds);
       await app.refresh();
