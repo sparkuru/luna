@@ -21,6 +21,9 @@ from fresh safe projections in both Electron and Web hosts.
   `dangerouslySetInnerHTML` or interpolate them into raw HTML.
 - Do not hide validation errors, remove keyboard focus, or make a disabled
   control appear actionable.
+- Destructive confirmation copy identifies the affected category, ledger, or
+  record. Cancel leaves that target unchanged; accepting changes only the
+  named target.
 - Do not edit a multi-category transaction through the single-category form;
   the current UI must keep it read-only.
 
@@ -83,7 +86,9 @@ keyboard focus, reduced-motion, native dialogs, and assistive technology.
 - [ ] Does the form have labels, errors, disabled state, and keyboard focus?
 - [ ] Does a committed mutation remain successful if its subsequent refresh
       fails, with an honest recoverable refresh warning and no replay?
-- [ ] Are month navigation, filters, empty state, and delete state clear?
+- [ ] Are month navigation, filters, and empty state clear?
+- [ ] Does destructive confirmation identify its target and make its
+      cancel/accept effects clear?
 - [ ] Does the UI distinguish encrypted portable-settings sync from ledger
       sync and avoid provider-wide compatibility claims?
 - [ ] Were typecheck, tests, build, and packaged smoke run when applicable?
