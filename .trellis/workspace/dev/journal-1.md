@@ -221,3 +221,40 @@ Completed and committed A-D UX implementation plus E session-undo design; user a
 ### Next Steps
 
 - Perform the accepted physical keyboard, screen-reader and native-window validation; implement undo only under a separate approved task.
+
+
+## Session 10: Android 实机键盘与原生对话框验证
+
+**Date**: 2026-09-23
+**Task**: Android 实机键盘与原生对话框验证
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+完成 Android 实机验证并记录未覆盖项；已归档任务。
+
+### Main Changes
+
+- 在 T-CHIP AIO-3568J Android 11 的隔离 .lan 包验证软键盘返回、SAF 保存取消/生成和分类删除确认取消/接受。
+- 记录横屏账目编辑器空白区域阻断以及确认文案未包含分类名；未修改产品源码。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `08cf877` | (see git log) |
+
+### Testing
+
+- [OK] task.py validate 09-23-manual-ux-platform-validation：通过；git diff --check：通过。
+- [OK] ADB 实机交互均为注入事件；未验证独立解密、物理键盘、空表单焦点和受阻的账目场景。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 复现横屏账目编辑器可见性问题后再验证类别选择、草稿返回和账目类型确认。
+- 独立解密唯一命名的备份文件，补验证备份内容完整性。
+- 后续有实体键盘和桌面平台时完成对应输入、原生窗口验证。
