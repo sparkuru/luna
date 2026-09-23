@@ -19,7 +19,7 @@
   "pr_url": null,
   "subtasks": [],
   "children": [],
-  "parent": "09-23-ux-journey-improvements",
+  "parent": null,
   "relatedFiles": [
     "src/renderer/app/shell.tsx",
     "src/renderer/features/settings.tsx",
