@@ -1,0 +1,11 @@
+{"file":".trellis/spec/frontend/index.md","reason":"检查 Web-first 交付顺序和跨平台共享 renderer 约束是否满足。"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"检查设置导航/卡片/表单的语义、focus、i18n、CSS 和 native compatibility。"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"检查视觉改动没有改变 settings/snapshot/query、draft、mutation 和 refresh 的状态所有权。"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"检查键盘、ARIA、隐私、loading/disabled/error/success 和减少动效状态。"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"检查 deep link、CSP、offline Web host、viewport 和 Playwright 结果。"}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"检查 UUPM 设计系统、人工 UI review gate 和候选路径分类要求。"}
+{"file":".trellis/tasks/09-18-settings-interface/prd.md","reason":"逐项核对 Web-first 范围、入口完整性、URL/能力不变和验收标准。"}
+{"file":".trellis/tasks/09-18-settings-interface/design.md","reason":"核对单一 catalog、首页/子页导航责任、native 隔离、回滚和状态契约。"}
+{"file":".trellis/tasks/09-18-settings-interface/implement.md","reason":"核对实施顺序、focused/full validation、review gate 和风险回滚点。"}
+{"file":".trellis/tasks/09-18-settings-interface/research/uupm-design-system.md","reason":"检查最终 UI 是否误引入被拒绝的暗色 OLED、远程字体或营销页模式。"}
+{"file":".trellis/tasks/09-13-web-visual-redesign/research/ui-ux-review.md","reason":"对比最终 375px/1440px 结果，确认重复导航和后台感问题确实收敛。"}

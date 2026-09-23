@@ -1,0 +1,12 @@
+{"file":".trellis/spec/frontend/index.md","reason":"确认共享 renderer、Web-first 交付顺序和跨 Electron/Web/Android 的边界。"}
+{"file":".trellis/spec/frontend/directory-structure.md","reason":"确认 settings feature、app shell、styles 和测试的目录职责。"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"实现语义 HTML、设置导航、卡片、focus、CSS token 和 host boundary 时的组件约束。"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"保证导航/视觉整理不改变 Query source of truth、dirty draft、提交刷新和回退状态。"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"覆盖设置页的可访问性、隐私、错误/空/禁用状态和验证要求。"}
+{"file":".trellis/spec/frontend/web-host-and-validation.md","reason":"遵守 Web CSP、离线 host、深链接、响应式和 Playwright 验证契约。"}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"遵守 UI 任务的 UUPM、Web-first、人工 review gate 和项目共享策略。"}
+{"file":".trellis/tasks/09-18-settings-interface/prd.md","reason":"本任务最终范围、要求、验收标准和风险。"}
+{"file":".trellis/tasks/09-18-settings-interface/design.md","reason":"设置首页/子页信息架构、共享 catalog、兼容性和回滚设计。"}
+{"file":".trellis/tasks/09-18-settings-interface/research/uupm-design-system.md","reason":"任务专属设计系统检索原始输出及其与 Luna 现有视觉基线的取舍。"}
+{"file":".trellis/tasks/09-13-web-visual-redesign/research/ui-ux-review.md","reason":"实际 375px/1440px 设置页视觉证据和已确认的 Web 设计规则。"}
+{"file":".trellis/tasks/09-12-luna-ui-redesign/research/uupm-design-system.md","reason":"上游 Luna 视觉 token、可访问性、响应式和字体/主题取舍。"}
