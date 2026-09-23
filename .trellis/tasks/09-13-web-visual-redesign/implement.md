@@ -1,6 +1,23 @@
 # Web 端视觉重构与响应式体验：执行计划
 
-状态：in_progress；已获得实施批准并完成实现，当前记录最终验证与交付边界。
+状态：in_progress；2026-09-23 已复核旧清单并修复欢迎页残留入口，待主会话完成最终检查与任务收尾。
+
+## 2026-09-23 续接对账
+
+下方第 0–7 节是 09-13 的历史执行清单，未勾选不等于当前产品仍缺实现；
+本轮以现行 frontend 规范、源码、后续已验收任务和 `validation.md` 为准。
+
+| 旧计划事项 | 当前判定与证据 |
+| --- | --- |
+| Web shell、单一记账入口、月份隔离 | `app/shell.tsx`、`features/ledger.tsx` 和 `intuitive-ledger.spec.ts` 已覆盖；账单路由现为 `/luna`。 |
+| 桌面双栏 Setup | 被 09-15 欢迎页任务接受的居中单列取代；`.setup-shell` 和 `workspace-setup-visual-polish.spec.ts` 覆盖 1280/375px。 |
+| 录入面板与分类选择 | `features/entry.tsx` 中类型、金额、分类、日期、保存同屏可达，Web 宽屏为连续全宽表单；后续分类目录任务保留单一 picker，`intuitive-ledger` 与 `entry-form-polish` 浏览器回归覆盖草稿、图片和键盘。旧文案中的“分类先于金额”与当前金额自动聚焦和同一行字段次序不一致，尚无独立用户顺序反馈；不在旧任务中擅自重排财务表单。 |
+| 统计自然高度、紧凑趋势与设置分组 | `styles.css` 的 Web 统计卡使用 `align-items: start`/`height: max-content`；`features/budget.tsx` 保留图表、文字明细和前五/全部；`settings-interface.spec.ts` 覆盖设置概览与子页。 |
+| 无账本恢复入口 | 09-23 后续工作加入 `#setup-restore`、`#setup-connect`。本轮发现 Web 欢迎页仍显示无效的 Settings 顶栏按钮和指向它的文案，现只在无账本 Web 隐藏该按钮并将中英文说明指向可见入口。 |
+
+当前有待人工判断的是主观视觉偏好、真实辅助技术和 200% 浏览器缩放；
+这些不能由自动化通过或截图推断。旧 `/ledger` 兼容、桌面双栏 Setup 的
+清单项已由后续决定撤销，不应再按历史描述实现。
 
 ## 0. 接管与基线
 

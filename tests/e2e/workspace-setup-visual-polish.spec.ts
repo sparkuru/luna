@@ -44,6 +44,10 @@ test.describe('workspace setup visual polish', () => {
       expect(geometry.card?.width ?? geometry.viewportWidth + 1).toBeLessThanOrEqual(
         672,
       );
+      const submitBox = await page.locator('#workspace-form button[type="submit"]').boundingBox();
+      const noteBox = await page.locator('.setup-note').boundingBox();
+      expect((noteBox?.y ?? 0) - ((submitBox?.y ?? 0) + (submitBox?.height ?? 0)))
+        .toBeGreaterThanOrEqual(16);
 
       await expect(page.locator('#workspace-currency option[value="CNY"]')).toHaveCount(1);
       await expect(page.locator('.setup-note')).toContainText('saved on this device');
@@ -81,6 +85,34 @@ test.describe('workspace setup visual polish', () => {
     await page.locator('#setup-advanced summary').click();
     await expect(page.locator('#workspace-precision')).toBeVisible();
     await expect(page.locator('#workspace-budget')).toBeVisible();
+  });
+
+  test('offers recovery actions without a dead Settings control before a workspace exists', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#workspace-form')).toBeVisible();
+    await expect(page.locator('#open-secondary-menu')).toHaveCount(0);
+    await expect(page.locator('#setup-restore')).toBeVisible();
+    await expect(page.locator('#setup-connect')).toBeVisible();
+    await expect(page.locator('.setup-note')).toContainText('actions above');
+
+    await page.locator('#setup-restore').click();
+    await expect(page.locator('#setup-back')).toBeVisible();
+    await expect(page.locator('#open-secondary-menu')).toHaveCount(0);
+    await page.locator('#setup-back').click();
+    await expect(page.locator('#workspace-form')).toBeVisible();
+
+    await page.locator('#setup-connect').click();
+    await expect(page.locator('#server-login-form')).toBeVisible();
+    await expect(page.locator('#workspace-form')).toHaveCount(0);
+    await page.locator('#setup-back').click();
+    await expect(page.locator('#workspace-form')).toBeVisible();
+
+    await page.evaluate(() => window.lunaLedger.updateSettings({ locale: 'zh-CN' }));
+    await page.reload();
+    await expect(page.locator('#open-secondary-menu')).toHaveCount(0);
+    await expect(page.locator('#setup-restore')).toBeVisible();
+    await expect(page.locator('#setup-connect')).toBeVisible();
+    await expect(page.locator('.setup-note')).toContainText('上方入口');
   });
 });
 

@@ -189,6 +189,13 @@ restore attempts must leave an empty workspace empty. Verify recovery from the
 visible welcome action in a fresh browser context, including image bytes and reload,
 not merely through a direct route after precreating a local ledger.
 
+On the no-workspace Web surface, omit `#open-secondary-menu`: its `/settings`
+target resolves back to Setup and gives the user no action. Keep the host's
+native menu behavior separate. Both localized setup notes must point to the
+visible restore/connect actions rather than telling a new user to open Settings.
+The welcome browser regression checks those actions, the absent dead control,
+and the return path after opening recovery.
+
 For a new ledger, changing currency resets precision to JPY=0 or otherwise=2;
 show the current value in `#setup-precision-summary` and keep manual precision
 in `#setup-advanced`. Invalid advanced input opens its disclosure before focus.

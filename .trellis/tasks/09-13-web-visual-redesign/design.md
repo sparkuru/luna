@@ -2,6 +2,11 @@
 
 版本：2026-09-13
 
+2026-09-23 续接决定：本设计的 Web `/ledger` 入口、旧路由兼容和桌面双栏 Setup
+已被后续验收取代。当前注册账单入口为 `/luna`；欢迎页在所有视口采用品牌说明位于
+表单上方的居中单列；新用户从欢迎页直接进入恢复或连接。具体证据见本任务
+`validation.md` 与现行 frontend 规范。以下各节已按此更新。
+
 ## 1. Design Intent
 
 Web 是本轮唯一的产品设计目标，面向桌面浏览器和较宽的 Web 窗口。它使用与其他客户端相同的后端、账号、账本、同步、权限、金额和状态逻辑，但允许拥有独立的页面壳、一级导航和信息密度。Android/iOS/mobile 保留现有 presentation surface，后续另行设计。
@@ -51,7 +56,7 @@ Web 是本轮唯一的产品设计目标，面向桌面浏览器和较宽的 Web
 
 ### 3.3 Setup / recovery
 
-没有 workspace 时使用简化 Web masthead（品牌、语言和必要的恢复入口），不显示空账本选择器和占据首屏的同步状态卡。Setup 表单保留现有字段、默认 CNY、错误和恢复语义，桌面采用内容+表单双栏，收缩窗口自然单栏。
+没有 workspace 时使用简化 Web masthead（品牌和语言），恢复与连接入口位于欢迎说明区；不显示无效的设置入口、空账本选择器或占据首屏的同步状态卡。Setup 表单保留现有字段、默认 CNY、错误和恢复语义，在所有视口采用说明在上、表单在下的居中单列。
 
 ## 4. Page Composition
 
@@ -89,8 +94,8 @@ Web 是本轮唯一的产品设计目标，面向桌面浏览器和较宽的 Web
 
 ## 6. Routing and Compatibility
 
-- 继续复用现有 TanStack Router 路由和 search 校验；Web 一级入口映射到 `/ledger`、`/statistics`、`/settings`，预算保留 `/budget` 路由并由设置工作区分组进入。
-- 旧 `/ledger/menu/*` deep links 继续由既有映射 replace 到新页面；Web 侧栏按钮使用同一 `goto`，不直接改 `window.location`。
+- 继续复用现有 TanStack Router 路由和 search 校验；Web 一级入口映射到 `/luna`、`/statistics`、`/settings`，预算保留 `/budget` 路由并由设置工作区分组进入。
+- `/ledger` 与 `/ledger/menu/*` 已不在注册路由中，不能作为兼容路由渲染；Web 侧栏按钮使用同一 `goto`，不直接改 `window.location`。
 - 进入/离开设置、月份、统计期间或打开录入面板时保留 blocker、dirty 草稿、焦点返回和浏览器 back 行为。
 - `client-surface` 只影响 chrome；如果 Web feature 需要新 DOM id，保留稳定语义标记并同步中英文 catalog 与 E2E locator。
 

@@ -632,19 +632,21 @@ export function App() {
                 {serverStatus?.profile.binding && (
                   <span className="helper">{serverStatus.profile.displayName}</span>
                 )}
-                <Button
-                  id="open-secondary-menu"
-                  className="menu-button"
-                  variant="outline"
-                  aria-label={m("openSettingsSection")}
-                  onClick={() => goto("/settings")}
-                >
-                  <span className="menu-icon" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                  </span>
-                </Button>
+                {(!isWebSurface || workspace) && (
+                  <Button
+                    id="open-secondary-menu"
+                    className="menu-button"
+                    variant="outline"
+                    aria-label={m("openSettingsSection")}
+                    onClick={() => goto("/settings")}
+                  >
+                    <span className="menu-icon" aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                  </Button>
+                )}
                 {!workspace && <LanguageSelect id="setup-language" />}
                 <span
                   className="visually-hidden"

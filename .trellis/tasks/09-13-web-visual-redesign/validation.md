@@ -1,6 +1,7 @@
 # Web 端视觉重构：最终验证（含反馈修订）
 
-更新时间：2026-09-13
+原始验证日期：2026-09-13。以下原始截图名称和测试结果仅记录当时的执行，
+`/tmp` 文件可能随环境清理；2026-09-23 的当前证据见文末续接复核。
 
 ## 验证范围
 
@@ -46,10 +47,44 @@ service worker 的 offline/update 场景在开发服务器上不适用，另有�
 - 月份隔离回归使用当前月与上月各一笔交易：切换期间显示 loading，加载完成后列表和计数仅包含所选月份。
 - `768` 月统计趋势卡约 `518px` 高；`375` 约 `799px`；`320` 约 `1119px`，分类与最大支出不再被异常等高布局推到无意义空白之后。
 - `812×375` 横屏下 Web 紧凑顶栏、一级导航、主内容和设置入口均保持在页面宽度内；无固定元素遮挡正文。
-- 页面保留摘要独立隐私遮罩、交易详情/编辑/删除/图片、筛选、预算、统计钻取/排序、设置子页、同步/备份/冲突和旧 deep link；375px 两条交易在固定底部导航上方完整可见。
+- 页面保留摘要独立隐私遮罩、交易详情/编辑/删除/图片、筛选、预算、统计钻取/排序、设置子页、同步/备份/冲突和当时的 deep link；375px 两条交易在固定底部导航上方完整可见。旧 `/ledger` 路由的当前决定见下文。
 
 ## 未运行 / 人工待验
 
 - Electron/Android 打包级运行、真实 Android/iOS 专属交互和真实设备文件选择未作为本轮 Web 视觉交付条件运行。
 - 真实屏幕阅读器、辅助技术、浏览器 200% 缩放和用户主观视觉认可仍需人工验收；不能用截图替代这些边界。
 - SQLite worker 的 `SIGSEGV` 需在项目要求的 Node 版本或修复 native 运行环境后单独复测。
+
+## 2026-09-23 续接复核
+
+### 决定与源码对账
+
+- 当前 `app/router.tsx` 注册 `/luna`、`/statistics`、`/budget`、`/settings/*`，未注册旧 `/ledger` 路由；`react-state.spec.ts` 明确断言旧地址不渲染账本。09-13 的 `/ledger` 入口与旧路由 replace 设计已被后续决定取代。
+- `styles.css` 的 `.setup-shell` 为居中单列，`workspace-setup-visual-polish.spec.ts` 覆盖 1280px 欢迎说明在表单上方与 375px 无横向溢出。09-13 桌面双栏 Setup 设计已被后续已接受的单列欢迎页取代。
+- `styles.css` 的 Web 统计网格 `align-items: start`、卡片 `height: max-content`；`budget.tsx` 仍保留紧凑趋势、可展开逐桶文字、分类钻取及前五/全部切换。`settings-interface.spec.ts` 覆盖设置首页分组与子页导航；录入、图片与宽窄屏核心路径由 `intuitive-ledger.spec.ts`、`entry-form-polish.spec.ts` 覆盖。
+- 本轮截图复核发现无账本 Web 欢迎页的 `#open-secondary-menu` 仍能进入只显示 Setup 的 `/settings`，构成无效入口。现仅在该 Web 状态隐藏按钮，保留原生宿主路径；中英文 Setup 说明改为指向实际可见的恢复/连接按钮。新增回归覆盖英文和中文欢迎页、恢复页返回，以及无效按钮缺席。
+- 复核中英文欢迎截图时发现 `setup-note` 的上间距被 `.setup-card > p` 覆盖，说明文字紧贴创建按钮；已提高该规则的选择器优先级，并以浏览器几何断言保证至少 16px 间距。
+- 录入第一行当前是金额、分类、日期，打开弹层会聚焦金额；与 09-13 设计的箭头示意次序有文字差异。后续分类目录任务要求单一 picker 及键盘可达，未明确要求改变字段顺序。本轮保留已测试的当前交互，主观顺序偏好留给用户视觉评审，不把现有自动化视为该偏好的验收。
+
+### 本轮检查
+
+| 检查 | 结果 |
+| --- | --- |
+| `npm run typecheck` | 通过；本机 Node 20.19.2。 |
+| `npm run web:build` | 通过；仅有依赖 `use client` 与大 chunk 既有提示。 |
+| 宿主机 Node 20.19.2 `npm test` | 本轮复跑 `201` 项：`198 passed`、`3 failed`；三个 native SQLite worker（`ledger-store`、`profile-host`、`store`）发生 `SIGSEGV`。此为宿主机运行时结果。 |
+| 主会话 Docker `./hako npm test` | `214/214 passed`；在项目开发容器内运行，作为本轮完整单元测试的通过结果。 |
+| 主会话 Docker `./hako npm run test:web` | 198 项中 `190 passed`、`6 skipped`、`2 failed`。失败为账本同步用例初始化时浏览器导航销毁执行上下文，以及账户/同步用例在 8 worker 并行下超时；两条均在下方低并行复测中通过。 |
+| `./hako npm run test:web -- tests/e2e/ledger-sync.spec.ts tests/e2e/server-account.spec.ts --project=chrome --workers=2` | `6/6 passed`，包含上述两条失败用例。其余 190 条在完整套件中通过。 |
+| 五个受影响浏览器文件，Chrome 开发服务 | 修复前 26/26 通过，覆盖欢迎页、设置、账单响应式、录入和 reduced motion。 |
+| `npm run test:web -- tests/e2e/workspace-setup-visual-polish.spec.ts --project=chrome` | 修复后 4/4 通过，含新中英文无效入口回归。 |
+| `LUNA_TEST_PRODUCTION=1 npm run test:web -- tests/e2e/workspace-setup-visual-polish.spec.ts --project=chrome` | 间距修复后的生产预览 4/4 通过。 |
+| `git diff --check`、`task.py validate 09-13-web-visual-redesign` | 均通过。 |
+
+本轮重跑了开发服务的完整 Chrome 浏览器套件；生产浏览器套件未重跑。完整套件的两条失败在低并行条件下通过，属于本轮并行执行时的偶发/负载相关表现；这不把原始完整运行记作全绿。上表 `./hako npm test` 是主会话本轮复跑；09-23 后续集成任务先前记录的生产浏览器 180/180、单元 214/214 则是其当时的历史证据，不能当作本轮修改后的测试结果。
+
+### 新截图与人工边界
+
+`/tmp/luna-web-visual-redesign/manifest.json` 记录 2026-09-23 的合成数据、语言、route、截图文件、已知视口宽度与 PNG 像素尺寸：英/中欢迎页为修复间距后重拍的 `1280×900`，另有 1440px 空账本与录入、1440/375px 两笔合成支出账单、768px 统计及 375px 设置。其余截图未记录视口高度，PNG 为整页截图，不能把图片高度当作视口高度。桌面账单在临时保存 toast 消失后重拍。所有记录的视口 `scrollWidth` 等于窗口宽度；截图仅供视觉复核，不代表真实财务数据。
+
+尚未验证真实屏幕阅读器、真实设备和浏览器 200% 缩放；用户对视觉与字段次序的主观认可也未获得，需单独人工判断。此次没有执行 Electron/Android 打包或真实部署。

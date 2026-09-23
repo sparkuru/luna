@@ -1498,7 +1498,7 @@ label,
   margin-top: var(--space-5);
 }
 
-.setup-note {
+.setup-card > .setup-note {
   margin: var(--space-5) 0 0;
   border-left: 3px solid var(--color-accent);
   padding-left: var(--space-3);
