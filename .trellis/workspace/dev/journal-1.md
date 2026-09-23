@@ -293,3 +293,34 @@ Completed and committed A-D UX implementation plus E session-undo design; user a
 ### Next Steps
 
 - 备份独立解密、实体键盘和读屏器验收仍需另行处理。
+
+
+## Session 12: 完成设置界面任务
+
+**Date**: 2026-09-23
+**Task**: 完成设置界面任务
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+续接设置界面任务，修复设置卡片修饰键点击，记录验证并归档。
+
+### Main Changes
+
+- 设置首页卡片保留浏览器原生修饰键打开新标签页行为，并新增回归测试。
+- 补充前端设置导航规范、任务文档与最终验证记录。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5c0eda9` | (see git log) |
+| `58a77da` | (see git log) |
+
+### Testing
+
+- [OK] typecheck、214项单测、Web构建、设置专项4项及相关浏览器回归通过；2项本机Node崩溃后于项目容器重跑通过。
+
+### Status
+
+[OK] **Completed**
