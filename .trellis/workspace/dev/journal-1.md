@@ -258,3 +258,38 @@ Completed and committed A-D UX implementation plus E session-undo design; user a
 - 复现横屏账目编辑器可见性问题后再验证类别选择、草稿返回和账目类型确认。
 - 独立解密唯一命名的备份文件，补验证备份内容完整性。
 - 后续有实体键盘和桌面平台时完成对应输入、原生窗口验证。
+
+
+## Session 11: Android 横屏记账与分类确认修复
+
+**Date**: 2026-09-23
+**Task**: Android 横屏记账与分类确认修复
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+修复旧 WebView 横屏编辑器控件不可达和分类删除目标不明，并完成双语自动化与 AIO-3568J 实机复验。
+
+### Main Changes
+
+- 为弹层提供 100vh 回退，并将 Android 记账核心字段设为单列。
+- 分类删除确认显示实际名称；记录旧 WebView 兼容约束与实机结果。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `df0d267` | (see git log) |
+
+### Testing
+
+- [OK] Node 22 容器中 214 项单测、类型检查、Web 构建通过；完整 Web Playwright 182 passed、6 skipped，目标用例 8 passed。
+- [OK] AIO-3568J 实机验证 IME、滚动、草稿、类型切换和中英文原生删除确认；仅操作隔离包与合成数据。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 备份独立解密、实体键盘和读屏器验收仍需另行处理。
