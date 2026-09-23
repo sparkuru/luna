@@ -344,6 +344,162 @@ test("ledger filters use labeled categories, combine criteria, and expose invali
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
+test("ledger filters retain results and recover when the regex Worker is unavailable", async ({ page }) => {
+  await page.addInitScript(() => {
+    const NativeWorker = window.Worker;
+    Object.defineProperty(window, "Worker", {
+      configurable: true,
+      value: new Proxy(NativeWorker, {
+        construct(target, args) {
+          if (String(args[0]).includes("search.worker")) {
+            throw new Error("Injected search Worker construction failure");
+          }
+          return Reflect.construct(target, args);
+        },
+      }),
+    });
+  });
+  await ready(page);
+  const month = await selectedMonth(page);
+  await page.evaluate(async (date) => {
+    await window.lunaLedger.createTransaction({
+      type: "expense", amountMinor: "1200", date,
+      splits: [{ category: "expense:0", amountMinor: "1200" }], merchant: "Worker fixture",
+    });
+  }, `${month}-05`);
+  await page.reload();
+  await page.locator("#filter-details > summary").click();
+  await page.locator("#filter-query").fill("Worker fixture");
+  await expect(page.locator("#filter-result-summary")).toContainText("1 shown");
+  await page.locator("#filter-regex").click();
+  await expect(page.locator("#transaction-list-region")).toHaveAttribute("data-filter-evaluation", "failed");
+  await expect(page.locator('#filter-error[role="alert"]')).toContainText("unavailable");
+  await expect(page.locator("#transaction-list-region .transaction-item")).toHaveCount(1);
+  await expect(page.locator("#filter-result-summary")).toHaveCount(0);
+  await page.locator("#filter-regex").click();
+  await expect(page.locator("#transaction-list-region")).toHaveAttribute("data-filter-evaluation", "ready");
+  await expect(page.locator("#filter-result-summary")).toContainText("1 shown");
+});
+
+test("ledger filters retain results and recover after regex Worker timeout", async ({ page }) => {
+  await page.addInitScript(() => {
+    const NativeWorker = window.Worker;
+    Object.defineProperty(window, "Worker", {
+      configurable: true,
+      value: new Proxy(NativeWorker, {
+        construct(target, args) {
+          if (String(args[0]).includes("search.worker")) {
+            return {
+              onmessage: null,
+              onerror: null,
+              postMessage() {},
+              terminate() {},
+            };
+          }
+          return Reflect.construct(target, args);
+        },
+      }),
+    });
+  });
+  await ready(page);
+  const month = await selectedMonth(page);
+  await page.evaluate(async (date) => {
+    await window.lunaLedger.createTransaction({
+      type: "expense", amountMinor: "1200", date,
+      splits: [{ category: "expense:0", amountMinor: "1200" }], merchant: "Timeout fixture",
+    });
+  }, `${month}-05`);
+  await page.reload();
+  await page.locator("#filter-details > summary").click();
+  await page.locator("#filter-query").fill("Timeout fixture");
+  await expect(page.locator("#filter-result-summary")).toContainText("1 shown");
+  await page.locator("#filter-regex").click();
+  await expect(page.locator("#transaction-list-region")).toHaveAttribute("data-filter-evaluation", "working");
+  await expect(page.locator('#filter-search-status[role="status"]')).toContainText("Applying filters");
+  await expect(page.locator("#transaction-list-region .transaction-item")).toHaveCount(1);
+  await expect(page.locator("#transaction-list-region")).toHaveAttribute(
+    "data-filter-evaluation", "failed", { timeout: 8_000 },
+  );
+  await expect(page.locator('#filter-error[role="alert"]')).toContainText("took too long");
+  await expect(page.locator("#transaction-list-region .transaction-item")).toHaveCount(1);
+  await page.getByRole("button", { name: "Clear filters", exact: true }).click();
+  await expect(page.locator("#transaction-list-region")).toHaveAttribute("data-filter-evaluation", "ready");
+  await expect(page.locator("#filter-regex")).toHaveAttribute("aria-pressed", "false");
+});
+
+test("ledger filter controls can be operated with a keyboard and keep visible focus", async ({ page }) => {
+  await ready(page);
+  const month = await selectedMonth(page);
+  await page.evaluate(async (date) => {
+    await window.lunaLedger.createTransaction({
+      type: "expense", amountMinor: "1200", date,
+      splits: [{ category: "expense:0", amountMinor: "1200" }], merchant: "Keyboard fixture",
+    });
+  }, `${month}-05`);
+  await page.reload();
+
+  const disclosure = page.locator("#filter-details > summary");
+  await disclosure.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#filter-details")).toHaveAttribute("open", "");
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#filter-query")).toBeFocused();
+  await page.keyboard.type("Keyboard fixture");
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#filter-regex")).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(page.locator("#filter-regex")).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.press("Space");
+  await expect(page.locator("#filter-regex")).toHaveAttribute("aria-pressed", "false");
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#filter-type")).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#filter-type")).toHaveValue("income");
+  await expect(page.locator("#filter-type")).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#filter-type")).toHaveValue("expense");
+
+  const food = page.locator(".filter-category-option").filter({ hasText: "Food" }).locator("input");
+  await food.focus();
+  await page.keyboard.press("Space");
+  await expect(food).toBeChecked();
+  await expect(page.locator("#filter-chips")).toContainText("Category: Food");
+
+  const advanced = page.locator("#filter-advanced > summary");
+  await advanced.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#filter-advanced")).toHaveAttribute("open", "");
+  await page.locator("#filter-minimum").focus();
+  await page.keyboard.type("12");
+  await expect(page.locator("#filter-minimum")).toHaveValue("12");
+  await page.locator("#filter-date-from").focus();
+  await expect(page.locator("#filter-date-from")).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.locator("#filter-date-from")).toBeFocused();
+
+  const chip = page.getByRole("button", { name: "Clear filters: Category: Food" });
+  await chip.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#filter-chips")).not.toContainText("Category: Food");
+  const clear = page.getByRole("button", { name: "Clear filters", exact: true });
+  await clear.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(clear).toBeFocused();
+  const focusStyle = await clear.evaluate((button) => ({
+    outlineStyle: getComputedStyle(button).outlineStyle,
+    outlineWidth: getComputedStyle(button).outlineWidth,
+  }));
+  expect(focusStyle.outlineStyle).not.toBe("none");
+  expect(focusStyle.outlineWidth).not.toBe("0px");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#filter-query")).toHaveValue("");
+  await expect(page.locator("#filter-type")).toHaveValue("all");
+  await expect(page.locator("#filter-regex")).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#filter-chips")).toHaveCount(0);
+  await expect(page.locator("#transaction-list-region")).toHaveAttribute("data-filter-evaluation", "ready");
+});
+
 test("filter date fields use showPicker without losing the native fallback", async ({
   page,
 }) => {

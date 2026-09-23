@@ -17,7 +17,8 @@
 - 追加验证：`npm run typecheck`、`./hako npm run typecheck`、`npm run web:build`、相关 Web Playwright Chrome/Chrome-narrow 共 60 项和 `git diff --check` 通过。
 - 追加修复（工作区上下文反馈）：统计、预算、设置页面同样不再渲染重复的通用 Web 顶栏；统计/预算保留页面内已有的期间上下文，初始化页顶栏与原生壳不变。
 - 追加修复（最新截图反馈）：Web 类型筛选控件铺满整行；空日期字段隐藏浏览器 `yyyy/mm/dd` 提示但保留 native picker/键盘路径；月份触发器移除中间下拉箭头。新增 15 个现有目录 ID 的合成交易回归，确认分类标签可读、可换行且无横向溢出；未修改产品默认分类或写入真实账本数据。
-- 尚需人工确认：真实浏览器键盘/读屏/reduced-motion、打包桌面视觉，以及正则 Worker timeout/unavailable 的故障注入路径。
+- 追加审查（2026-09-23）：新增受控浏览器 Worker stub 回归，分别使搜索 Worker 构造失败和持续不响应；验证 `failed` 错误文案、`role=alert`、旧结果保留、超时前 `role=status` working 文案，以及切回文本/清除后的恢复。新增键盘回归，覆盖筛选 disclosure、搜索、正则按钮、类型、分类 checkbox、高级条件、金额、日期字段焦点、chip 移除、清除及 reset 的 focus-visible。Chrome 定向 3/3 通过；`./hako npm run typecheck`、`git diff --check` 通过。仓库未定义 lint 命令。
+- 仍需人工/平台确认：真实读屏器的宣读顺序、reduced-motion 的人工视觉检查、真实 Electron/Android 与打包桌面的视觉表现。日期字段由原生控件处理，自动化仅验证键盘可聚焦及键事件路径；完整的分段日期输入还需真实键盘操作复核。Worker 测试覆盖受控构造失败/无响应，未模拟所有浏览器级 Worker 异常。
 
 ## 0. 启动与基线门禁
 
@@ -63,8 +64,8 @@
 ## 4. 行为与视觉验收
 
 - [x] 新增/更新 focused Playwright fixture，覆盖类型、单/多分类、关键词、日期、金额、组合、结果汇总、清除、无结果和错误恢复。
-- [x] 覆盖正则：空 query 不启动搜索；working 期间不闪空；完成、非法、timeout、Worker unavailable 分别可识别并可恢复（timeout/unavailable 仅完成代码路径审查，未做故障注入）。
-- [ ] 用键盘完成 disclosure、select、分类 checkbox、日期/金额输入、chip 移除和清除；检查 `role=status`/`role=alert` 和 focus-visible。
+- [x] 覆盖正则：空 query 不启动搜索；working 期间不闪空；完成、非法、timeout、Worker unavailable 分别可识别并可恢复（timeout/unavailable 已用受控 Worker stub 故障注入验证）。
+- [x] 用键盘完成 disclosure、select、分类 checkbox、金额输入、chip 移除和清除；检查日期字段键盘焦点/键事件、`role=status`/`role=alert` 和 focus-visible。原生日期分段输入及真实辅助技术宣读仍列为人工边界。
 - [x] 检查筛选自由文本不会进入 URL/history；检查 category raw ID 不作为正常目录 label 暴露，fallback 仅在目录缺失时出现。
 - [x] 记录关键视口的浏览器证据到任务验证目录或 `/tmp`，证据只使用合成账本，不写入真实财务数据。
 
@@ -92,7 +93,7 @@ git diff --check
 
 ## 7. 完成前人工 review
 
-- [ ] 对照 PRD 每条 acceptance criterion 逐项记录证据或未验证原因。
-- [ ] 检查中英文文案、未知分类、类型/分类组合、隐私边界、空/错误/loading 状态和浏览器 back。
-- [ ] 运行 `git diff --check`，确认没有把 `/api/v1/ledgers` 等领域路径误改成 `/luna`。
+- [x] 对照 PRD 每条 acceptance criterion 逐项记录证据或未验证原因；见 `validation.md`。
+- [x] 复核中英文文案、未知分类、类型/分类组合、隐私边界、空/错误/loading 状态和浏览器 back；自动化证据及人工边界见 `validation.md`。
+- [x] 运行 `git diff --check`，确认没有把 `/api/v1/ledgers` 等领域路径误改成 `/luna`。
 - [ ] 质量检查通过后再按 Trellis finish 流程更新必要规范、提交并归档；当前规划阶段不执行这些完成步骤。
