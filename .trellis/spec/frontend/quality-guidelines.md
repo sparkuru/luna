@@ -38,6 +38,36 @@ from fresh safe projections in both Electron and Web hosts.
   keep credentials/passphrases out of every renderer-readable response. Detail
   budget/category/transaction amounts are intentionally visible.
 
+## Form and Recovery Feedback
+
+Map stable domain error codes to the field that can correct them. Transaction
+amount, category, and date failures focus their own control and expose the
+shared alert through that control's `aria-describedby` and `aria-invalid`.
+Changing that field clears its obsolete validation error; changing an unrelated
+field must not hide it. Unknown/service/stale-version errors stay form-level and
+preserve the draft and its originally observed revision/heads. Committed writes
+followed by refresh failure must not be replayed.
+
+Backup pages explain offline export/restore without account prerequisites.
+With no workspace, describe restoration; with a workspace, describe merging the
+same ledger's backup and retain confirmation. Password validation reuses the
+shared canonical validator while explaining short/long/unsupported input in
+user language; it must not relax cryptographic constraints.
+
+Conflict pages distinguish loading, query failure with retry, confirmed zero
+conflicts, and actual competing versions. Never infer an empty success from a
+failed or unfinished query, and do not show unrelated sync-login instructions
+on backup/conflict pages. Verify fresh-browser recovery and field focus through
+visible UI actions in both supported locales.
+
+Account password visibility is per-control session state, hidden by default.
+Secret clearing must target semantic secret fields (including revealed text
+inputs), not only `input[type="password"]`. Submission/session/profile changes
+reset visibility and preserve the existing host-owned credential lifecycle.
+Show the current login/connect/unlock action first; keep technical connection
+help, the complete sync guide, and local-copy management behind labelled
+disclosures without changing the host permission or persistence contract.
+
 ## Testing Requirements
 
 Run `./hako npm run typecheck` and `./hako npm test` for every renderer/API

@@ -48,11 +48,11 @@ test('updates wait for open forms and failed releases leave the working shell in
   try {
     await page.goto(url);
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
-    await page.getByLabel('Workspace name').fill('Unsaved household');
+    await page.getByLabel('Ledger name').fill('Unsaved household');
     release = 2;
     await page.evaluate(async () => { await (await navigator.serviceWorker.ready).update(); });
     await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');
-    await expect(page.getByLabel('Workspace name')).toHaveValue('Unsaved household');
+    await expect(page.getByLabel('Ledger name')).toHaveValue('Unsaved household');
     await expect(page.locator('meta[name="luna-test-release"]')).toHaveAttribute('content', '1');
     await page.close();
     const updated = await context.newPage();
@@ -70,7 +70,7 @@ test('updates wait for open forms and failed releases leave the working shell in
     await context.setOffline(true);
     await updated.reload();
     await expect(updated.locator('meta[name="luna-test-release"]')).toHaveAttribute('content', '2');
-    await expect(updated.getByLabel('Workspace name')).toBeVisible();
+    await expect(updated.getByLabel('Ledger name')).toBeVisible();
     await context.setOffline(false);
     await updated.close();
   } finally {

@@ -1,7 +1,10 @@
 import type { AppLocale } from "../../shared/settings";
 export const serverEn = {
+  showPassword: "Show password", hidePassword: "Hide password",
+  connectionHelpTitle: "Connection help", sessionHelpTitle: "Session and local data",
+  connectionHelp: "Use HTTPS for your Luna address. A trusted private-LAN HTTP address is supported for development only.",
   title: "Luna account",
-  help: "Sign in to your Luna account so this device can connect to a shared ledger. A trusted private-LAN HTTP address is supported for development; use HTTPS elsewhere. Signing in does not upload or move this local copy.",
+  help: "Sign in, then choose the ledger to connect. Signing in does not upload or move this local copy.",
   server: "Luna address",
   username: "Username",
   password: "Account password",
@@ -110,8 +113,11 @@ export const serverEn = {
     "Offline: local copies remain usable. Server actions need a connection.",
 } as const;
 export const serverZh: Record<keyof typeof serverEn, string> = {
+  showPassword: "显示密码", hidePassword: "隐藏密码",
+  connectionHelpTitle: "连接帮助", sessionHelpTitle: "会话与本地数据",
+  connectionHelp: "Luna 地址应使用 HTTPS。仅开发环境支持可信局域网 HTTP 地址。",
   title: "Luna 统一账号",
-  help: "登录 Luna 统一账号，让此设备连接共享账本。开发环境可使用可信局域网 HTTP 地址，其他场景请使用 HTTPS。登录不会上传或移动此设备上的本地副本。",
+  help: "登录后，再选择需要连接的账本。登录不会上传或移动此设备上的本地副本。",
   server: "Luna 地址",
   username: "用户名",
   password: "账号密码",

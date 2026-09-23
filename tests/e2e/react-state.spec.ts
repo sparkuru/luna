@@ -105,14 +105,14 @@ test("validated month and type deep links leave free text filters out of history
   await page.keyboard.press("Escape");
   await expect(page.locator("#month-picker-panel")).not.toBeVisible();
   await expect(page.locator("#month-picker")).toBeFocused();
-  await page.locator("#filter-details summary").click();
+  await page.locator("#filter-details > summary").click();
   await expect(page.locator("#filter-type")).toHaveValue("income");
   await page.locator("#filter-query").fill("private search sentinel");
   await expect(page.locator("#filter-category")).toHaveCount(0);
   expect(page.url()).not.toContain("sentinel");
   await page.goto("/luna?month=invalid&type=invalid");
   await expect(page.locator("#month-picker")).not.toHaveAttribute("data-month", "invalid");
-  await page.locator("#filter-details summary").click();
+  await page.locator("#filter-details > summary").click();
   await expect(page.locator("#filter-type")).toHaveValue("all");
   await page.goto("/settings/preferences");
   await expect(page).toHaveURL(/\/settings\/preferences$/);
@@ -230,7 +230,7 @@ test("ledger filters use labeled categories, combine criteria, and expose invali
   await page.reload();
   await expect(page.locator("#transaction-list-region .transaction-item")).toHaveCount(3);
 
-  await page.locator("#filter-details summary").click();
+  await page.locator("#filter-details > summary").click();
   await expect(page.locator("#filter-category")).toHaveCount(0);
   const filterFieldWidths = await page.evaluate(() => {
     const typeField = document.querySelector(".filter-type-field");
@@ -285,6 +285,7 @@ test("ledger filters use labeled categories, combine criteria, and expose invali
   await expect(page.locator("#transaction-list-region .transaction-item")).toHaveCount(1);
 
   await page.locator("#filter-query").fill("Market");
+  await page.locator("#filter-advanced > summary").click();
   await page.locator("#filter-minimum").fill("25.00");
   await page.locator("#filter-maximum").fill("25.00");
   await page.locator("#filter-date-from").fill(`${month}-06`);
@@ -359,7 +360,8 @@ test("filter date fields use showPicker without losing the native fallback", asy
     });
   });
   await ready(page);
-  await page.locator("#filter-details summary").click();
+  await page.locator("#filter-details > summary").click();
+  await page.locator("#filter-advanced > summary").click();
   await expect(page.locator("#filter-date-from")).toHaveAttribute("data-empty", "true");
   await expect(page.locator("#filter-date-to")).toHaveAttribute("data-empty", "true");
   const emptyDatePresentation = await page.locator("#filter-date-from").evaluate((input) => ({
@@ -414,7 +416,7 @@ test("filter categories remain readable and contained with a full catalog fixtur
     }
   }, { categoryIds, month });
   await page.reload();
-  await page.locator("#filter-details summary").click();
+  await page.locator("#filter-details > summary").click();
   await expect(page.locator(".filter-category-option")).toHaveCount(categoryIds.length);
   await expect(page.locator(".filter-category-group-title")).toHaveText([
     "Spending categories",
@@ -702,7 +704,7 @@ test("empty regex mode keeps the unfiltered ledger visible", async ({ page }) =>
   });
   await page.reload();
   await expect(page.locator('#transaction-list-region .transaction-item')).toHaveCount(2);
-  await page.locator('#filter-details summary').click();
+  await page.locator('#filter-details > summary').click();
   await page.locator('#filter-regex').click();
   await expect(page.locator('#transaction-list-region .transaction-item')).toHaveCount(2);
   await expect(page.locator('[role="alert"]')).toHaveText('');
@@ -754,7 +756,8 @@ test("native back closes nested dialogs and follows menu parents before leaving 
   expect(await back()).toBe(false);
   await page.locator("#open-secondary-menu").click();
   await expect(page).toHaveURL(/\/settings$/);
-  await page.getByRole("navigation", { name: "Settings" }).getByRole("button", { name: "Preferences", exact: true }).click();
+  await page.getByRole("link", { name: /Preferences|偏好设置/ }).click();
+  await expect(page).toHaveURL(/\/settings\/preferences$/);
   expect(await back()).toBe(false);
   await expect(page).toHaveURL(/\/settings$/);
   expect(await back()).toBe(false);

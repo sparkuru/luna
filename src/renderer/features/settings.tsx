@@ -9,6 +9,11 @@ import { syncStatusMessageKey, type MessageKey } from "../i18n";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Field } from "../components/form";
+import {
+  settingsAreaDefinitions,
+  settingsAreaGroups,
+  type SettingsAreaDefinition,
+} from "./settings-navigation";
 export function LanguageSelect({ id }: { id: string }) {
   const app = useApp();
   return (
@@ -170,7 +175,7 @@ export function Settings({
     <section className="panel settings-panel" aria-labelledby="settings-title">
       <div className="section-heading">
         <div>
-          <h2 id="settings-title">{m("settingsTitle")}</h2>
+          <h2 id="settings-title">{m(section === "preferences" ? "preferencesTitle" : section === "advanced" ? "advancedSettingsTitle" : "settingsTitle")}</h2>
           <p>
             {m(
               section === "preferences"
@@ -427,43 +432,12 @@ export function SettingsOverview({
   const app = useApp();
   const m = app.message;
   const serverStatus = app.serverStatus;
-  const sections = [
-    { path: "/settings/ledgers", title: m("ledgersTitle"), help: m("ledgersHelp") },
-    { path: "/settings/categories", title: m("categoriesTitle"), help: m("categoriesHelp") },
-    { path: "/settings/preferences", title: m("preferencesTitle"), help: m("preferencesHelp") },
-    { path: "/settings/account", title: m("accountTitle"), help: m("accountUnavailable") },
-    { path: "/settings/sync", title: m("ledgerToolsLink"), help: m("ledgerToolsSummary") },
-    { path: "/settings/sync/advanced", title: m("advancedSettingsTitle"), help: m("advancedSettingsHelp") },
-    { path: "/settings/backup", title: m("backupNav"), help: m("ledgerToolsSummary") },
-    { path: "/settings/conflicts", title: m("conflictsNav"), help: m("ledgerConflictNotice", { count: app.snapshot.conflictCount ?? 0 }) },
-  ];
-  const budgetSection = {
-    path: "/budget",
-    title: m("monthlyLimit"),
-    help: m("budgetSettingsHelp"),
-  };
-  const groups = web
-    ? [
-        {
-          key: "workspace",
-          label: m("settingsGroupWorkspace"),
-          sections: [...sections.slice(0, 3), budgetSection],
-        },
-        {
-          key: "access",
-          label: m("settingsGroupAccess"),
-          sections: sections.slice(3, 6),
-        },
-        {
-          key: "data",
-          label: m("settingsGroupData"),
-          sections: sections.slice(6),
-        },
-      ]
-    : [];
-  const renderCard = (item: (typeof sections)[number]) => (
+  const sections = settingsAreaDefinitions(web);
+  const groups = settingsAreaGroups(web);
+  const renderCard = (item: SettingsAreaDefinition) => (
     <a
       className="settings-overview-card"
+      data-settings-area={item.key}
       href={item.path}
       key={item.path}
       onClick={(event) => {
@@ -472,8 +446,14 @@ export function SettingsOverview({
         navigate(item.path);
       }}
     >
-      <strong>{item.title}</strong>
-      <span>{item.help}</span>
+      <strong>{m(item.titleKey)}</strong>
+      <span>
+        {item.key === "conflicts"
+          ? app.snapshot.conflictCount
+            ? m("ledgerConflictNotice", { count: app.snapshot.conflictCount })
+            : m("conflictsClear")
+          : m(item.helpKey)}
+      </span>
       <span className="settings-overview-action">{m("openSettingsSection")}</span>
     </a>
   );
@@ -525,9 +505,9 @@ export function SettingsOverview({
         <div className="settings-overview-groups">
           {groups.map((group) => (
             <section className="settings-overview-group" key={group.key} aria-labelledby={`settings-group-${group.key}`}>
-              <h2 id={`settings-group-${group.key}`}>{group.label}</h2>
+              <h2 id={`settings-group-${group.key}`}>{m(group.labelKey)}</h2>
               <div className="settings-overview-grid">
-                {group.sections.map(renderCard)}
+                {group.areas.map(renderCard)}
               </div>
             </section>
           ))}

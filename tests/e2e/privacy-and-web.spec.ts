@@ -5,11 +5,11 @@ const currentDate = `${currentMonth}-${new Date().getUTCDate().toString().padSta
 
 async function createWorkspaceWithRecords(page: Page): Promise<void> {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Set up your workspace' })).toBeVisible();
-  await page.getByLabel('Workspace name').fill('Playwright household');
+  await expect(page.getByRole('heading', { name: 'Create a ledger' })).toBeVisible();
+  await page.getByLabel('Ledger name').fill('Playwright household');
   await page.locator('#workspace-currency').selectOption('CNY');
   await page.getByLabel('Monthly spending limit').fill('1000.00');
-  await page.getByRole('button', { name: 'Create local workspace' }).click();
+  await page.getByRole('button', { name: 'Create local ledger' }).click();
   await expect(page.locator('#summary-grid')).toBeVisible();
 
   await page.locator('#primary-record').click();

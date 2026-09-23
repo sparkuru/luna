@@ -47,8 +47,8 @@ test.describe('workspace setup visual polish', () => {
 
       await expect(page.locator('#workspace-currency option[value="CNY"]')).toHaveCount(1);
       await expect(page.locator('.setup-note')).toContainText('saved on this device');
-      await page.getByLabel('Workspace name').fill('Centered welcome household');
-      await page.getByRole('button', { name: 'Create local workspace' }).click();
+      await page.getByLabel('Ledger name').fill('Centered welcome household');
+      await page.getByRole('button', { name: 'Create local ledger' }).click();
       await expect(page.locator('#transactions-title')).toHaveText('Recent ledger');
     });
   });
@@ -77,7 +77,27 @@ test.describe('workspace setup visual polish', () => {
     expect(dimensions.cardRight).toBeLessThanOrEqual(dimensions.clientWidth);
     expect(dimensions.shellWidth).toBeLessThanOrEqual(dimensions.clientWidth);
     await expect(page.locator('#workspace-currency')).toBeVisible();
+    await expect(page.locator('#workspace-precision')).toBeHidden();
+    await page.locator('#setup-advanced summary').click();
     await expect(page.locator('#workspace-precision')).toBeVisible();
     await expect(page.locator('#workspace-budget')).toBeVisible();
   });
+});
+
+test('invalid advanced precision reopens its control and a corrected custom precision is saved', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#workspace-name').fill('Custom precision');
+  await page.locator('#setup-advanced summary').click();
+  await page.locator('#workspace-precision').fill('5');
+  await page.locator('#setup-advanced summary').click();
+  await page.locator('#workspace-form button[type="submit"]').click();
+  await expect(page.locator('#setup-advanced')).toHaveAttribute('open', '');
+  await expect(page.locator('#workspace-precision')).toBeFocused();
+  await expect(page.locator('#workspace-precision')).toHaveAttribute('aria-invalid', 'true');
+  await page.locator('#workspace-precision').fill('3');
+  await expect(page.locator('#setup-alert')).toBeEmpty();
+  await page.locator('#workspace-form button[type="submit"]').click();
+  await expect(page.locator('#primary-record')).toBeVisible();
+  const workspace = await page.evaluate(async () => (await window.lunaLedger.getSnapshot(new Date().toISOString().slice(0, 7))).workspace);
+  expect(workspace?.precision).toBe(3);
 });

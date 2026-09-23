@@ -16,7 +16,7 @@ async function ready(page: Page) {
   await page.goto('/');
   await expect(page.locator('#workspace-name')).toBeVisible();
   await page.locator('#workspace-name').fill('Portable settings household');
-  await page.getByRole('button', { name: 'Create local workspace' }).click();
+  await page.getByRole('button', { name: 'Create local ledger' }).click();
   await expect(page.locator('#transaction-dialog')).not.toBeVisible();
 }
 async function configureUI(page: Page, endpoint: string, passphrase = PASSWORD) {
@@ -39,6 +39,18 @@ async function configureUI(page: Page, endpoint: string, passphrase = PASSWORD) 
   await page.locator('#save-sync-connection').click();
   await expect(page.locator('#sync-passphrase')).toHaveValue('');
   await expect(page.locator('#sync-access-key')).toHaveValue('');
+}
+async function openSettingsSection(page: Page, name: RegExp) {
+  const mobile = page.locator('.settings-navigation-mobile');
+  if (await mobile.isVisible()) {
+    const switcher = mobile.locator('#settings-section-switcher');
+    if (!(await switcher.evaluate(element => (element as HTMLDetailsElement).open))) {
+      await switcher.locator(':scope > summary').click();
+    }
+    await switcher.getByRole('button', { name, exact: true }).click();
+  } else {
+    await page.locator('.settings-navigation-desktop').getByRole('button', { name, exact: true }).click();
+  }
 }
 async function openConfigDetails(page: Page) {
   const details = page.locator('#config-sync-details');
@@ -70,12 +82,12 @@ test('actual browser v1 settings sync interoperates with Node and preserves fina
     await expect(page.locator('#transaction-notes')).toHaveValue('Keep this draft');
     await page.locator('#sync-all').check();
     await syncUI(page);
-    await page.locator('.settings-navigation').getByRole('button', { name: /Preferences|偏好设置/, exact: true }).click();
+    await openSettingsSection(page, /Preferences|偏好设置/);
     await expect(page.locator('#settings-language')).toHaveValue('zh-CN');
     await expect(page.locator('#hide-default')).not.toBeChecked();
     await expect(page.locator('#transaction-amount')).toHaveValue('25.60');
     await page.locator('#hide-default').check();
-    await page.locator('.settings-navigation').getByRole('button', { name: /Advanced sync settings|高级同步设置/, exact: true }).click();
+    await openSettingsSection(page, /Advanced sync settings|高级同步设置/);
     remote.state.conflictOnce = true;
     await syncUI(page);
     expect(remote.state.conflicts).toBe(1);
@@ -118,7 +130,7 @@ test('actual browser v1 settings sync interoperates with Node and preserves fina
     page.once('dialog', (dialog) => void dialog.accept());
     await page.locator('#clear-sync-connection').click();
     await expect.poll(async () => (await page.evaluate(() => window.lunaLedger.getSettings())).hasConfigSyncSecrets).toBe(false);
-    await page.locator('.settings-navigation').getByRole('button', { name: /Monthly spending limit|每月支出上限/, exact: true }).click();
+    await openSettingsSection(page, /Monthly spending limit|每月支出上限/);
     await page.locator('#budget-input').fill('321.45');
     await expect(page.locator('#transaction-notes')).toHaveValue('Keep this draft');
     await expect(page.locator('#budget-input')).toHaveValue('321.45');
@@ -144,11 +156,11 @@ test('settings wrong-password and permission errors preserve local settings, cip
     await expect.poll(async () => (await page.evaluate(() => window.lunaLedger.getSettings())).lastSync.code, { timeout: 30_000 }).toBe('wrong-password-or-tampered');
     await expect(page.locator('#sync-now')).toBeEnabled();
     await expect(page.locator('#transaction-notes')).toHaveValue('Draft survives sync errors');
-    await page.locator('.settings-navigation').getByRole('button', { name: /Preferences|偏好设置/, exact: true }).click();
+    await openSettingsSection(page, /Preferences|偏好设置/);
     await expect(page.locator('#settings-language')).toHaveValue('en');
     expect(remote.state.body).toBe(original); expect(remote.state.puts).toBe(0);
     remote.state.denyReads = true;
-    await page.locator('.settings-navigation').getByRole('button', { name: /Advanced sync settings|高级同步设置/, exact: true }).click();
+    await openSettingsSection(page, /Advanced sync settings|高级同步设置/);
     await openConfigDetails(page);
     await page.locator('#test-sync-connection').click();
     await expect.poll(async () => (await page.evaluate(() => window.lunaLedger.getSettings())).lastSync.code).toBe('permission');

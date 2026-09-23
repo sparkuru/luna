@@ -3,8 +3,8 @@ import { expect, test } from '@playwright/test';
 test('production menu deep links cold-open offline without caching API requests', async ({ page, context }) => {
   test.skip(process.env.LUNA_TEST_PRODUCTION !== '1', 'Requires the production service worker');
   await page.goto('/');
-  await page.getByLabel('Workspace name').fill('Offline routes');
-  await page.getByRole('button', { name: 'Create local workspace' }).click();
+  await page.getByLabel('Ledger name').fill('Offline routes');
+  await page.getByRole('button', { name: 'Create local ledger' }).click();
   await expect(page.locator('#summary-grid')).toBeVisible();
   await expect(page.locator('#offline-status')).toHaveText('Ready for offline use on this device');
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null);

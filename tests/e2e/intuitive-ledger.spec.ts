@@ -4,12 +4,13 @@ const onePixelPng = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
   'base64',
 );
+const englishLedgerPrompt = /^(See what happened first, then record the next entry\.|Notice the pattern, then record the next entry\.|One small entry at a time keeps the picture clear\.|Start with what happened today, then keep going\.)$/;
 
 async function setupWorkspace(page: Page, name = 'Intuitive household'): Promise<void> {
   await page.goto('/');
   await expect(page.locator('#workspace-form')).toBeVisible();
-  await page.getByLabel('Workspace name').fill(name);
-  await page.getByRole('button', { name: 'Create local workspace' }).click();
+  await page.getByLabel('Ledger name').fill(name);
+  await page.getByRole('button', { name: 'Create local ledger' }).click();
   await expect(page.locator('#transactions-title')).toHaveText('Recent ledger');
   await expect(page.locator('#transaction-dialog')).not.toBeVisible();
 }
@@ -55,6 +56,9 @@ async function expectRecordBelowMonth(page: Page, aligned = true): Promise<void>
 test('empty ledger makes the next record obvious and saves a focused expense', async ({ page }) => {
   await setupWorkspace(page);
 
+  await expect(page.locator('#month-label')).toHaveCount(0);
+  await expect(page.locator('.page-heading-actions #month-picker')).toBeVisible();
+  await expect(page.locator('.hero-description')).toHaveText(englishLedgerPrompt);
   await expect(page.locator('#transaction-list-region')).toContainText('Your ledger starts here');
   await expect(page.locator('#primary-record')).toBeVisible();
   await expect(page.locator('#record-expense, #record-income')).toHaveCount(0);
@@ -125,6 +129,25 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
   await expect(page.locator('#transaction-dialog')).toBeVisible();
   await page.locator('#close-transaction').click();
   await expect(editButton).toBeFocused();
+});
+
+test('ledger prompt stays stable through month loading and uses catalog copy on home re-entry', async ({ page }) => {
+  await setupWorkspace(page, 'Stable prompt household');
+
+  const prompt = page.locator('.hero-description');
+  const initialPrompt = await prompt.textContent();
+  expect(initialPrompt).not.toBeNull();
+  expect(initialPrompt ?? '').toMatch(englishLedgerPrompt);
+  const initialMonth = await page.locator('#month-picker').getAttribute('data-month');
+  await page.locator('#next-month').click();
+  await expect(page.locator('#month-picker')).not.toHaveAttribute('data-month', initialMonth ?? '');
+  await expect(prompt).toHaveText(initialPrompt ?? '');
+
+  await page.locator('#open-secondary-menu').click();
+  await expect(page).toHaveURL(/\/settings(?:\?.*)?$/);
+  await page.getByRole('link', { name: 'Luna home' }).click();
+  await expect(page).toHaveURL(/\/luna(?:\?.*)?$/);
+  await expect(prompt).toHaveText(englishLedgerPrompt);
 });
 
 test('income entry and advanced fields are keyboard reachable', async ({ page }) => {
@@ -213,9 +236,9 @@ test('secondary menu and subdued filters stay discoverable without taking over t
   await setupWorkspace(page, 'Discoverable household');
 
   await expect(page.locator('#filter-details')).not.toHaveAttribute('open', '');
-  await page.locator('#filter-details summary').click();
+  await page.locator('#filter-details > summary').click();
   await expect(page.locator('#filter-form')).toBeVisible();
-  await page.locator('#filter-details summary').click();
+  await page.locator('#filter-details > summary').click();
 
   await expect(page.locator('#open-secondary-menu .settings-navigation-icon')).toHaveCount(1);
   await expect(page.locator('#open-secondary-menu .menu-icon')).toHaveCount(0);

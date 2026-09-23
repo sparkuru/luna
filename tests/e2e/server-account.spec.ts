@@ -16,10 +16,7 @@ const PNG_1X1 = [
 ];
 async function account(page: Page) {
   await page.locator("#open-secondary-menu").click();
-  await page
-    .getByRole("navigation", { name: /Settings|设置/ })
-    .getByRole("button", { name: "Account", exact: true })
-    .click();
+  await page.locator('[data-settings-area="account"]').click();
   await expect(page.locator("#server-account-title")).toBeVisible();
 }
 async function login(
@@ -140,6 +137,15 @@ test("real server login, encrypted copy, second-device restore and offline profi
     page.once("dialog", (dialog) => void dialog.accept());
     await page.locator("#server-connect").click();
     await expect(page.locator("#server-sync-now")).toBeEnabled();
+    await page.locator("#server-disconnect").click();
+    await expect(page.locator("#server-unlock-form")).toBeVisible();
+    await expect(page.locator("#server-unlock-password")).toHaveAttribute("type", "password");
+    await page.locator("#server-unlock-password").fill(ledgerPassword);
+    await page.locator("#server-unlock-password-visibility").click();
+    await expect(page.locator("#server-unlock-password")).toHaveAttribute("type", "text");
+    await page.locator("#server-unlock").click();
+    await expect(page.locator("#server-sync-now")).toBeEnabled();
+    await expect(page.locator("#server-unlock-form")).toHaveCount(0);
     await expect(page.locator("#server-sync-status")).toContainText(
       "synchronized",
     );
@@ -203,22 +209,19 @@ test("real server login, encrypted copy, second-device restore and offline profi
     );
     const second = await secondContext.newPage();
     await second.goto("/");
-    const startupPicker = second.locator("#local-ledger-start");
-    await expect
-      .poll(async () =>
-        (await startupPicker.count()) +
-        (await second.locator("#workspace-name").count()),
-      )
-      .toBeGreaterThan(0);
-    if (await startupPicker.count())
-      await startupPicker.getByRole("button", { name: "Currently open" }).click();
-    if (await second.locator("#workspace-name").isVisible()) {
-      await second.locator("#workspace-name").fill("Second browser local copy");
-      await second.locator("#workspace-form button[type='submit']").click();
-    }
-    await expect(second.locator("#transactions-title")).toBeVisible();
-    await account(second);
+    await second.locator("#setup-connect").click();
+    await expect(second.locator("#workspace-form")).toHaveCount(0);
+    expect(await readLedgerDocument(second, ledgerPassword)).toBeNull();
+    await secondContext.setOffline(true);
+    await expect(second.locator("#server-login")).toBeDisabled();
+    expect(await readLedgerDocument(second, ledgerPassword)).toBeNull();
+    await secondContext.setOffline(false);
     await login(second, apiUrl, username, "Second browser");
+    await second.locator("#server-ledger-password").fill("incorrect ledger passphrase");
+    await second.locator("#server-connect").click();
+    await expect(second.locator("#server-alert")).not.toBeEmpty();
+    await expect(second.locator("#server-connect")).toBeEnabled();
+    expect(await readLedgerDocument(second, ledgerPassword)).toBeNull();
     await second.locator("#server-ledger-password").fill(ledgerPassword);
     await second.locator("#server-connect").click();
     await expect(second.locator("#server-sync-now")).toBeEnabled();
@@ -299,6 +302,7 @@ test("real server login, encrypted copy, second-device restore and offline profi
       "Private meal",
     );
     await account(page);
+    await page.locator("#server-local-copies > summary").click();
     const originalRow = page
       .locator("#server-profiles-title")
       .locator("..")

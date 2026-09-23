@@ -2,8 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 async function setup(page: Page): Promise<void> {
   await page.goto('/');
-  await page.getByLabel('Workspace name').fill('Offline household');
-  await page.getByRole('button', { name: 'Create local workspace' }).click();
+  await page.getByLabel('Ledger name').fill('Offline household');
+  await page.getByRole('button', { name: 'Create local ledger' }).click();
   await expect(page.locator('#summary-grid')).toBeVisible();
 }
 

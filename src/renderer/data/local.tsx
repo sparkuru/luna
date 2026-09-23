@@ -96,17 +96,17 @@ export function useApp(): AppContextValue {
   if (!value) throw new Error("Missing Luna provider");
   return value;
 }
+export function errorCode(error: unknown): string {
+  return error instanceof DomainError
+    ? error.code
+    : (/LUNA_ERROR:([a-z-]+)/.exec(error instanceof Error ? error.message : "")?.[1] ?? "");
+}
 export function errorMessage(locale: AppLocale, error: unknown): string {
   const server = serverErrorMessage(locale, error);
   if (server !== undefined) return server;
   const ledger = ledgerToolsErrorMessage(locale, error);
   if (ledger !== undefined) return ledger;
-  const code =
-    error instanceof DomainError
-      ? error.code
-      : (/LUNA_ERROR:([a-z-]+)/.exec(
-          error instanceof Error ? error.message : "",
-        )?.[1] ?? "");
+  const code = errorCode(error);
   if (CONFIG_SYNC_STATUS_CODES.includes(code as ConfigSyncStatusCode))
     return t(locale, syncStatusMessageKey(code as ConfigSyncStatusCode));
   const keys: Record<string, MessageKey> = {

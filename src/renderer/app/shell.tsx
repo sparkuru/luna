@@ -29,26 +29,22 @@ import {
   scopedRead,
 } from "../data/local";
 import { Button } from "../components/ui/button";
-import { LedgerHome, LedgerMonthLoading } from "../features/ledger";
+import { LedgerRoute } from "../features/ledger";
 import { Setup } from "../features/setup";
 import { TransactionDialog, type Entry } from "../features/entry";
 import { BudgetEditor, Statistics } from "../features/budget";
 import { Settings, LanguageSelect } from "../features/settings";
+import {
+  settingsAreaGroups,
+  settingsNavigationItems,
+} from "../features/settings-navigation";
 import { Categories } from "../features/categories";
 import { LedgerTools } from "../features/tools";
 import { getClientSurface } from "../client-surface";
 
-const SETTINGS_PATHS = new Set([
-  "/settings",
-  "/settings/account",
-  "/settings/sync",
-  "/settings/backup",
-  "/settings/conflicts",
-  "/settings/ledgers",
-  "/settings/categories",
-  "/settings/preferences",
-  "/settings/sync/advanced",
-]);
+const SETTINGS_PATHS = new Set(
+  settingsNavigationItems(false).map(({ path }) => path),
+);
 
 export function App() {
   const isWebSurface = getClientSurface() === "web";
@@ -680,7 +676,8 @@ export function App() {
           )}
           {workspace &&
             (primarySection === "settings" ||
-              (isWebSurface && primarySection === "budget")) && (
+              (isWebSurface && primarySection === "budget")) &&
+            (!isWebSurface || path !== "/settings") && (
             <SettingsNavigation
               active={
                 path === "/settings/sync/advanced"
@@ -694,21 +691,45 @@ export function App() {
               web={isWebSurface}
             />
           )}
-          {workspace && !snapshotReady ? (
-            primarySection === "ledger" ? (
-              <LedgerMonthLoading
-                month={month}
-                locale={locale}
-                message={m}
-                changeMonth={setMonth}
-                onRetry={() => void snapshotQuery.refetch()}
-                error={
-                  snapshotQuery.error
-                    ? errorMessage(locale, snapshotQuery.error)
-                    : ""
-                }
-              />
-            ) : (
+          {workspace && primarySection === "ledger" ? (
+            <LedgerRoute
+              key={scope.profileId}
+              loading={!snapshotReady || !snapshotForContext.summary}
+              month={month}
+              locale={locale}
+              message={m}
+              changeMonth={setMonth}
+              onRetry={() => void snapshotQuery.refetch()}
+              error={
+                snapshotQuery.error
+                  ? errorMessage(locale, snapshotQuery.error)
+                  : ""
+              }
+              openEntry={openEntry}
+              type={search.type ?? "all"}
+              changeType={(type) => {
+                void navigate({
+                  to: path,
+                  search: { ...search, type },
+                  resetScroll: false,
+                }).then(() => {
+                  requestAnimationFrame(() =>
+                    document
+                      .getElementById("filter-type")
+                      ?.focus({ preventScroll: true }),
+                  );
+                });
+              }}
+              visibility={visibility}
+              web={isWebSurface}
+              toggle={(index) =>
+                setVisibility((values) =>
+                  values.map((value, i) => (i === index ? !value : value)),
+                )
+              }
+            />
+          ) : workspace && !snapshotReady ? (
+            <>
               <section className="panel month-loading-state" role="status">
                 <p className="kicker">{formatMonth(locale, month)}</p>
                 <p>{m("loadingMonth")}</p>
@@ -724,7 +745,7 @@ export function App() {
                   </p>
                 )}
               </section>
-            )
+            </>
           ) : workspace && snapshotForContext.summary ? (
             primarySection === "statistics" ? (
               <Statistics
@@ -745,14 +766,14 @@ export function App() {
                 onTypeChange={setStatisticsType}
               />
             ) : primarySection === "budget" ? (
-              <BudgetEditor key={`${workspace.id}:${month}`} />
+              <BudgetEditor key={`${workspace.id}:${month}`} web={isWebSurface} changeMonth={setMonth} />
             ) : primarySection === "settings" ? (
               settingsSubpage === "ledgers" ? (
                 <LedgerDirectoryPanel />
               ) : settingsSubpage === "categories" ? (
                 <Categories />
               ) : settingsSubpage === "budget" ? (
-                <BudgetEditor key={`${workspace.id}:${month}`} />
+                <BudgetEditor key={`${workspace.id}:${month}`} web={isWebSurface} changeMonth={setMonth} />
               ) : settingsSubpage === "account" ? (
                 <AccountPanel />
               ) : settingsSubpage === "sync" ? (
@@ -772,38 +793,22 @@ export function App() {
               ) : (
                 <Settings section="overview" navigate={goto} web={isWebSurface} />
               )
-            ) : (
-              <LedgerHome
-                openEntry={openEntry}
-                changeMonth={setMonth}
-                type={search.type ?? "all"}
-                changeType={(type) => {
-                  void navigate({
-                    to: path,
-                    search: { ...search, type },
-                    resetScroll: false,
-                  }).then(() => {
-                    requestAnimationFrame(() =>
-                      document
-                        .getElementById("filter-type")
-                        ?.focus({ preventScroll: true }),
-                    );
-                  });
-                }}
-                visibility={visibility}
-                web={isWebSurface}
-                toggle={(index) =>
-                  setVisibility((values) =>
-                    values.map((value, i) => (i === index ? !value : value)),
-                  )
-                }
-              />
-            )
+            ) : null
           ) : (
             <>
-              <Setup />
-              {path === "/settings/backup" && (
-                <LedgerTools page="backup" active />
+              {path === "/settings/backup" || path === "/settings/account" ? (
+                <>
+                  <Button id="setup-back" variant="outline" onClick={() => goto("/")}>
+                    {m("setupBack")}
+                  </Button>
+                  {path === "/settings/backup" ? (
+                    <LedgerTools page="backup" active />
+                  ) : (
+                    <AccountPanel />
+                  )}
+                </>
+              ) : (
+                <Setup navigate={goto} />
               )}
             </>
           )}
@@ -1002,17 +1007,7 @@ function SettingsNavigation({
   ) => string;
   web: boolean;
 }) {
-  const items: { key: string; path: string; label: string }[] = [
-    { key: "settings", path: "/settings", label: message("settingsTitle") },
-    { key: "ledgers", path: "/settings/ledgers", label: message("ledgersTitle") },
-    { key: "categories", path: "/settings/categories", label: message("categoriesTitle") },
-    { key: "preferences", path: "/settings/preferences", label: message("preferencesTitle") },
-    { key: "account", path: "/settings/account", label: message("accountTitle") },
-    { key: "sync", path: "/settings/sync", label: message("ledgerToolsLink") },
-    { key: "advanced", path: "/settings/sync/advanced", label: message("advancedSettingsTitle") },
-    { key: "backup", path: "/settings/backup", label: message("backupNav") },
-    { key: "conflicts", path: "/settings/conflicts", label: message("conflictsNav") },
-  ];
+  const items = settingsNavigationItems(web);
   if (!web)
     return (
       <nav className="settings-navigation" aria-label={message("settingsTitle")}>
@@ -1024,60 +1019,46 @@ function SettingsNavigation({
             aria-current={active === item.key ? "page" : undefined}
             onClick={() => navigate(item.path)}
           >
-            {item.label}
+            {message(item.titleKey)}
           </button>
         ))}
       </nav>
     );
-  const groups: {
-    key: string;
-    label: MessageKey;
-    items: typeof items;
-  }[] = [
-    {
-      key: "workspace",
-      label: "settingsGroupWorkspace",
-      items: web
-        ? [
-            ...items.slice(1, 4),
-            { key: "budget", path: "/budget", label: message("monthlyLimit") },
-          ]
-        : items.slice(1, 4),
-    },
-    {
-      key: "access",
-      label: "settingsGroupAccess",
-      items: items.slice(4, 7),
-    },
-    {
-      key: "data",
-      label: "settingsGroupData",
-      items: items.slice(7),
-    },
-  ];
+  const home = items[0];
+  const groups = settingsAreaGroups(true);
+  const groupLinks = groups.map((group) => (
+    <div className="settings-navigation-group" key={group.key}>
+      <span className="settings-navigation-group-label">{message(group.labelKey)}</span>
+      <div className="settings-navigation-group-links">
+        {group.areas.map((item) => (
+          <button key={item.key} type="button"
+            className={active === item.key ? "is-active" : undefined}
+            aria-current={active === item.key ? "page" : undefined}
+            onClick={() => navigate(item.path)}>
+            {message(item.titleKey)}
+          </button>
+        ))}
+      </div>
+    </div>
+  ));
+  const homeButton = home && (
+    <button type="button" onClick={() => navigate(home.path)}>
+      {message(home.titleKey)}
+    </button>
+  );
   return (
-    <nav className="settings-navigation" aria-label={message("settingsTitle")}>
-      {groups.map((group) => (
-        <div className="settings-navigation-group" key={group.key}>
-          <span className="settings-navigation-group-label">
-            {message(group.label)}
-          </span>
-          <div className="settings-navigation-group-links">
-            {group.items.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={active === item.key ? "is-active" : undefined}
-                aria-current={active === item.key ? "page" : undefined}
-                onClick={() => navigate(item.path)}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      ))}
-    </nav>
+    <>
+      <nav className="settings-navigation settings-navigation-desktop" aria-label={message("settingsTitle")}>
+        {homeButton}{groupLinks}
+      </nav>
+      <nav className="settings-navigation-mobile" aria-label={message("settingsTitle")}>
+        {homeButton}
+        <details id="settings-section-switcher" key={active}>
+          <summary>{message("switchSettingsSection")}</summary>
+          <div className="settings-mobile-sections">{groupLinks}</div>
+        </details>
+      </nav>
+    </>
   );
 }
 

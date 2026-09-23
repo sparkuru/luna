@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApp, formString, formChecked } from "../data/local";
 import { serverMessage } from "./server-i18n";
@@ -12,6 +12,23 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Field } from "../components/form";
+function PasswordField(props: ComponentProps<typeof Field>) {
+  const { locale, serverBusy, serverStatus } = useApp();
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    setVisible(false);
+  }, [serverBusy, serverStatus?.account?.id, serverStatus?.profile.id]);
+  return (
+    <div className="account-password-field">
+      <Field {...props} data-secret="true" type={visible ? "text" : "password"} />
+      <Button type="button" id={`${props.id}-visibility`} variant="outline"
+        disabled={props.disabled} aria-controls={props.id} aria-pressed={visible}
+        onClick={() => setVisible(!visible)}>
+        {serverMessage(locale, visible ? "hidePassword" : "showPassword")}
+      </Button>
+    </div>
+  );
+}
 function useOnline() {
   const [online, setOnline] = useState(navigator.onLine);
   useEffect(() => {
@@ -270,7 +287,7 @@ export function AccountPanel() {
     );
   const clear = (form: HTMLFormElement) =>
     form
-      .querySelectorAll<HTMLInputElement>('input[type="password"]')
+      .querySelectorAll<HTMLInputElement>('input[data-secret="true"]')
       .forEach((input) => {
         input.value = "";
       });
@@ -290,6 +307,10 @@ export function AccountPanel() {
       >
         <h2 id="server-account-title">{m("title")}</h2>
         <p>{m("help")}</p>
+        <details id="server-connection-help">
+          <summary>{m("connectionHelpTitle")}</summary>
+          <p className="helper">{m("connectionHelp")}</p>
+        </details>
         <ServerFeedback />
         {!online && <p role="status">{m("offline")}</p>}
         {status?.account ? (
@@ -318,7 +339,7 @@ export function AccountPanel() {
                   baseUrl: formString(form, "baseUrl"),
                   username: formString(form, "username"),
                   password: formString(form, "password"),
-                  deviceLabel: formString(form, "deviceLabel"),
+                  deviceLabel: formString(form, "deviceLabel").trim() || "Luna",
                 };
                 clear(form);
                 void app.runServer(() => server.login(input));
@@ -345,7 +366,7 @@ export function AccountPanel() {
                   maxLength={128}
                   disabled={app.serverBusy}
                 />
-                <Field
+                <PasswordField
                   id="server-login-password"
                   name="password"
                   label={m("password")}
@@ -359,10 +380,9 @@ export function AccountPanel() {
               <Field
                 id="server-device"
                 name="deviceLabel"
-                label={m("device")}
+                label={`${m("device")} (${app.message("optional")})`}
                 defaultValue="Luna"
                 maxLength={80}
-                required
                 disabled={app.serverBusy}
               />
               <Button
@@ -375,9 +395,14 @@ export function AccountPanel() {
             </form>
           </>
         )}
-        <p className="helper">{m("localNotice")}</p>
+        <details id="server-session-help">
+          <summary>{m("sessionHelpTitle")}</summary>
+          <p className="helper">{m("localNotice")}</p>
+        </details>
       </section>
-      <ServerSyncPanel feedback={false} />
+      {status?.account && <ServerSyncPanel feedback={false} />}
+      <details id="server-local-copies" className="account-secondary-details">
+        <summary>{m("profiles")}</summary>
       <section
         className="panel space-y-4"
         aria-labelledby="server-profiles-title"
@@ -448,6 +473,7 @@ export function AccountPanel() {
           ))}
         </ul>
       </section>
+      </details>
       {status?.account && (
         <section
           className="panel space-y-4"
@@ -524,7 +550,9 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
   return (
     <section className="panel space-y-4" aria-labelledby="server-sync-title">
       <h2 id="server-sync-title">{m("syncTitle")}</h2>
-      <p>{m("syncHelp")}</p>
+      <p>{m(!status?.account ? "stepLoginHelp" : !bound ? "stepConnectHelp" : !status.connected ? "needsUnlock" : "stepActionHelp")}</p>
+      <details id="server-sync-guide">
+        <summary>{m("syncSteps")}</summary>
       <SyncOnboarding
         account={!!status?.account}
         bound={bound}
@@ -532,6 +560,7 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
         mode={status?.syncMode ?? "automatic"}
         locale={app.locale}
       />
+      </details>
       {feedback && <ServerFeedback />}
       {status?.serverCapabilities &&
         !status.serverCapabilities.supportsAttachments && (
@@ -584,7 +613,7 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
                     void app.runServer(() => server.unlock(password));
                   }}
                 >
-                  <Field
+                  <PasswordField
                     id="server-unlock-password"
                     label={m("passphrase")}
                     type="password"
@@ -653,7 +682,7 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
                   ))}
                 </select>
               </div>
-              <Field
+              <PasswordField
                 id="server-ledger-password"
                 name="passphrase"
                 label={m("passphrase")}
@@ -732,7 +761,7 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
                     );
                   }}
                 >
-                  <Field
+                  <PasswordField
                     id="server-preferences-password"
                     label={m("prefsPassword")}
                     type="password"

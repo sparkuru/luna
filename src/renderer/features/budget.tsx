@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   decimalToMinorUnits,
   formatMinorMagnitude,
@@ -20,7 +21,10 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { WebMonthPicker } from "../components/month-picker";
 import { labelCategories, labelCategory } from "../category-display";
-export function BudgetEditor() {
+export function BudgetEditor({ web = false, changeMonth }: {
+  web?: boolean;
+  changeMonth(month: string): void;
+}) {
   const app = useApp();
   const { snapshot, month, locale, message: m } = app;
   const workspace = snapshot.workspace!;
@@ -109,6 +113,12 @@ export function BudgetEditor() {
             aria-valuetext={m("budgetPercentUsed", { percent: progress })}
           />
         </div>
+        {web && (
+          <fieldset className="budget-month-control" disabled={mutation.isPending}>
+            <legend className="visually-hidden">{m("monthNavigation")}</legend>
+            <WebMonthPicker month={month} locale={locale} message={m} changeMonth={changeMonth} />
+          </fieldset>
+        )}
       </div>
       <form
         id="budget-form"
@@ -260,6 +270,7 @@ export function Statistics({
   })();
   const selectedBucket =
     statistics.buckets.find((bucket) => bucket.key === selectedBucketKey) ?? null;
+  const selectedBucketIndex = statistics.buckets.findIndex((bucket) => bucket.key === selectedBucketKey);
   const bucketTransactions = selectedBucket === null
     ? []
     : snapshot.transactions
@@ -404,6 +415,7 @@ export function Statistics({
               ? m("statNoTransactions")
               : `${m(period === "year" ? "statAverageMonth" : "statAverage")}: ${money(statistics.averageMinor)}`}
           </p>
+          <p className="helper">{m("statAverageHelp")}</p>
           {statistics.buckets.every((bucket) => bucket.amountMinor === null) ? (
             <p className="empty-state">{m("statNoTransactions")}</p>
           ) : web ? (
@@ -440,6 +452,26 @@ export function Statistics({
               <div className="statistics-chart-axis" aria-hidden="true">
                 <span>{period === "year" ? formatMonth(locale, statistics.buckets[0]?.key ?? statistics.start.slice(0, 7)) : formatDate(locale, statistics.start)}</span>
                 <span>{period === "year" ? formatMonth(locale, statistics.buckets.at(-1)?.key ?? statistics.end.slice(0, 7)) : formatDate(locale, statistics.end)}</span>
+              </div>
+              <div className="statistics-bucket-picker">
+                <Button id="statistics-bucket-previous" variant="outline" aria-label={m("statPreviousBucket")}
+                  disabled={selectedBucketIndex <= 0}
+                  onClick={() => setSelectedBucketKey(statistics.buckets[selectedBucketIndex - 1]!.key)}><ChevronLeft aria-hidden="true" /></Button>
+                <div className="field">
+                  <label htmlFor="statistics-bucket-select">{m("statSelectBucket")}</label>
+                  <select id="statistics-bucket-select" value={selectedBucketKey ?? ""}
+                    onChange={(event) => setSelectedBucketKey(event.target.value || null)}>
+                    <option value="">{m("statSelectBucket")}</option>
+                    {statistics.buckets.map(bucket => (
+                      <option key={bucket.key} value={bucket.key}>
+                        {period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} · {bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button id="statistics-bucket-next" variant="outline" aria-label={m("statNextBucket")}
+                  disabled={selectedBucketIndex >= statistics.buckets.length - 1}
+                  onClick={() => setSelectedBucketKey(statistics.buckets[selectedBucketIndex + 1]!.key)}><ChevronRight aria-hidden="true" /></Button>
               </div>
               <details id="statistics-trend-details" className="statistics-detail-disclosure">
                 <summary>{m("statViewDetails")}</summary>

@@ -9,16 +9,18 @@ import { readLedgerDocument } from './helpers/public-ledger';
 
 const password = 'synthetic household backup phrase';
 
-async function seed(page: Page): Promise<LedgerDocument> {
+async function seed(page: Page, withImage = false): Promise<LedgerDocument> {
   await page.goto('/');
   await expect(page.locator('#workspace-form')).toBeVisible();
-  await page.evaluate(async () => {
+  await page.evaluate(async (withImage) => {
     await window.lunaLedger.createWorkspace({ name: 'Backup family', currency: 'CNY', precision: 2, monthlyBudgetMinor: '100000' });
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const image = withImage ? await window.lunaLedger.stageTransactionImage('backup-image',
+      Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='), c => c.charCodeAt(0)), 'image/png', 1, 1) : null;
     await window.lunaLedger.createTransaction({ type: 'expense', amountMinor: '1250', date,
-      splits: [{ category: 'expense:0', amountMinor: '1250' }], merchant: 'Original market', notes: 'Original notes' });
-  });
+      splits: [{ category: 'expense:0', amountMinor: '1250' }], merchant: 'Original market', notes: 'Original notes', attachments: image ? [{ draftToken: image.draftToken }] : [] });
+  }, withImage);
   const document = await readLedgerDocument(page, password);
   expect(document).not.toBeNull();
   await page.reload();
@@ -53,8 +55,8 @@ async function openTransactionActions(page: Page, merchant: string): Promise<voi
   if (await trigger.isVisible()) await trigger.click();
 }
 
-function branch(document: LedgerDocument, id: string, notes: string): LedgerDocument {
-  const revision = document.revisions.find((item) => item.kind === 'transaction');
+function branch(document: LedgerDocument, id: string, notes: string, transactionId?: string): LedgerDocument {
+  const revision = document.revisions.find((item) => item.kind === 'transaction' && (!transactionId || item.entityId === transactionId));
   if (revision?.kind !== 'transaction') throw new Error('Test transaction missing');
   const current = isStoredTransaction(revision.value)
     ? storedTransactionToTransaction(revision.value)
@@ -66,9 +68,11 @@ function branch(document: LedgerDocument, id: string, notes: string): LedgerDocu
 }
 
 test('encrypted backup downloads and restores through setup UI without storing its password', async ({ page, browser }) => {
-  const document = await seed(page);
+  const document = await seed(page, true);
   await page.locator('#open-secondary-menu').click();
   await page.getByRole('link', { name: /Encrypted backup|加密备份/ }).click();
+  expect((await page.evaluate(() => window.lunaLedger.server!.status())).account).toBeNull();
+  await page.context().setOffline(true);
   await page.locator('#ledger-export-password').fill(password);
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#ledger-export-submit').click();
@@ -85,11 +89,14 @@ test('encrypted backup downloads and restores through setup UI without storing i
   const context = await browser.newContext({ locale: 'en', viewport: page.viewportSize() });
   try {
     const restored = await context.newPage();
-    await restored.goto(page.url());
-    await expect(restored.locator('#workspace-form')).toBeVisible();
+    await restored.goto(new URL("/", page.url()).href);
+    await expect(restored.locator("#setup-restore")).toBeVisible();
+    await context.setOffline(true);
+    await restored.locator("#setup-restore").click();
+    await expect(restored.locator('#workspace-form')).toHaveCount(0);
     await importBackup(restored, raw, 'this is a wrong password');
     await expect(restored.locator('#ledger-tools-alert')).toContainText(/password|damaged/i);
-    await expect(restored.locator('#workspace-form')).toBeVisible();
+    await expect(restored.locator('#workspace-form')).toHaveCount(0);
     expect(await readLedgerDocument(restored, password)).toBeNull();
     await importBackup(restored, raw);
     await expect(restored.locator('#ledger-import-password')).toHaveValue('');
@@ -97,8 +104,13 @@ test('encrypted backup downloads and restores through setup UI without storing i
     await expect(restored.locator('#transaction-list-region')).toContainText('Original market');
     await expect(restored.locator('#income-total')).toHaveText('••••');
     expect(await readLedgerDocument(restored, password)).toEqual(fullGraph);
+    await context.setOffline(false);
     await restored.reload();
     await expect(restored.locator('#transaction-list-region')).toContainText('Original market');
+    await openTransactionActions(restored, 'Original market');
+    await restored.locator('[id^="view-images-"]').click();
+    await expect(restored.locator('#transaction-image-dialog img')).toBeVisible();
+    expect(await restored.locator('#transaction-image-dialog img').evaluate(img => (img as HTMLImageElement).naturalWidth)).toBe(1);
   } finally { await context.close(); }
 });
 
@@ -153,4 +165,35 @@ test('conflict UI shows both safe candidates, excludes totals and resolves only 
   await expect(page.locator('#transaction-list-region')).toContainText('Choose this version');
   const dimensions = await page.evaluate(() => ({ width: globalThis.document.documentElement.clientWidth, scroll: globalThis.document.documentElement.scrollWidth }));
   expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width);
+});
+
+
+test('multiple real conflicts remain independent until each explicit decision is saved', async ({ page }) => {
+  await seed(page);
+  await page.evaluate(async () => {
+    const snapshot = await window.lunaLedger.getSnapshot(new Date().toISOString().slice(0, 7));
+    await window.lunaLedger.createTransaction({ type: 'expense', amountMinor: '1250', date: snapshot.transactions[0]!.date,
+      splits: [{ category: 'expense:0', amountMinor: '1250' }], merchant: 'Second market', notes: '' });
+  });
+  const document = (await readLedgerDocument(page, password))!;
+  const transactionIds = document.revisions.filter(item => item.kind === 'transaction').map(item => item.entityId);
+  expect(transactionIds).toHaveLength(2);
+  let left = document;
+  let right = document;
+  for (const [index, id] of transactionIds.entries()) {
+    left = branch(left, `left-${index}`, `Chosen version ${index}`, id);
+    right = branch(right, `right-${index}`, `Other version ${index}`, id);
+  }
+  await importBackup(page, await encryptLedgerDocument(mergeLedgerDocuments(left, right), password));
+  await page.locator('#open-secondary-menu').click();
+  await page.getByRole('link', { name: /Conflicts|冲突处理/ }).click();
+  await expect(page.locator('.ledger-conflict')).toHaveCount(2);
+  await expect(page.locator('.ledger-conflict-candidate')).toHaveCount(4);
+  await expect(page.locator('#ledger-conflicts-empty')).toHaveCount(0);
+  await page.locator('.ledger-conflict-candidate').filter({ hasText: 'Chosen version 0' }).getByRole('button').click();
+  await expect(page.locator('.ledger-conflict')).toHaveCount(1);
+  await expect(page.locator('#ledger-conflicts-empty')).toHaveCount(0);
+  await page.locator('.ledger-conflict-candidate').filter({ hasText: 'Chosen version 1' }).getByRole('button').click();
+  await expect(page.locator('#ledger-conflicts-empty')).toBeVisible();
+  await expect(page.locator('.ledger-conflict')).toHaveCount(0);
 });

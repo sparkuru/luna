@@ -8,6 +8,7 @@ import {
   MAX_ATTACHMENT_BRIDGE_CHUNK_BYTES,
   MAX_BACKUP_FILE_BYTES,
 } from "../../shared/attachment-contract";
+import { validateLedgerPassword } from "../../shared/ledger-crypto";
 import { FULL_BACKUP_MAGIC } from "../../shared/full-backup";
 import { secureRandomUuid } from "../../shared/secure-random";
 import { formatDate, formatMoney, formatMonth } from "../i18n";
@@ -22,6 +23,7 @@ import {
   queryClient,
   formString,
   formChecked,
+  errorCode,
 } from "../data/local";
 import { Field } from "../components/form";
 import { Input } from "../components/ui/input";
@@ -53,17 +55,19 @@ export function LedgerTools({
   const statusQuery = useQuery({
     queryKey: [...localKeys(app.scope).root, "sync-status"],
     queryFn: () => scopedRead(app.scope, () => api.getLedgerSyncStatus()),
+    enabled: active && (page === "all" || page === "sync"),
   });
   const conflictsQuery = useQuery({
     queryKey: [...localKeys(app.scope).root, "conflicts"],
     queryFn: () => scopedRead(app.scope, () => api.getLedgerConflicts()),
+    enabled: active && (page === "all" || page === "conflicts"),
   });
   useEffect(() => {
     if (active) {
-      void statusQuery.refetch();
-      void conflictsQuery.refetch();
+      if (page === "all" || page === "sync") void statusQuery.refetch();
+      if (page === "all" || page === "conflicts") void conflictsQuery.refetch();
     }
-  }, [active]);
+  }, [active, page]);
   const session = statusQuery.data ?? {
     enabled: false,
     configured: false,
@@ -83,6 +87,29 @@ export function LedgerTools({
   const [announcement, setAnnouncement] =
     useState<LedgerToolsMessageKey | null>(null);
   const [error, setError] = useState<unknown>();
+  const [passwordError, setPasswordError] = useState<{ field: string; message: string } | null>(null);
+  const checkPassword = (form: HTMLFormElement, field: string): boolean => {
+    const password = formString(form, "password");
+    try {
+      validateLedgerPassword(password);
+      setPasswordError(null);
+      return true;
+    } catch {
+      const message = Array.from(password).length < 12 ? m("passwordError")
+        : password.length > 1024 || new TextEncoder().encode(password).length > 1024 ? m("passwordTooLong") : m("passwordUnsupported");
+      setPasswordError({ field, message });
+      setError(undefined);
+      setAnnouncement(null);
+      document.getElementById(field)?.focus();
+      return false;
+    }
+  };
+  const clearPasswordError = (field: string) => {
+    if (passwordError?.field === field) {
+      setPasswordError(null);
+      setError(undefined);
+    }
+  };
   const generation = useRef(0);
   const running = useRef(false);
   const mounted = useRef(true);
@@ -133,6 +160,7 @@ export function LedgerTools({
     success: LedgerToolsMessageKey,
     changes = false,
     cancel = false,
+    passwordField?: string,
   ) {
     if ((running.current && (!cancel || !syncing)) || clearing) return;
     const currentGeneration = ++generation.current;
@@ -143,6 +171,7 @@ export function LedgerTools({
     setClearing(cancel);
     setSyncing(success === "synced" && !cancel);
     setError(undefined);
+    setPasswordError(null);
     setAnnouncement("working");
     let failure: unknown;
     let result: LedgerSessionStatus | void;
@@ -167,11 +196,11 @@ export function LedgerTools({
     if (!current()) return;
     try {
       const [status] = await Promise.all([
-        statusQuery.refetch({ throwOnError: true }),
-        conflictsQuery.refetch({ throwOnError: true }),
+        page === "all" || page === "sync" ? statusQuery.refetch({ throwOnError: true }) : undefined,
+        page === "all" || page === "conflicts" ? conflictsQuery.refetch({ throwOnError: true }) : undefined,
       ]);
       if (!failure && success === "synced")
-        success = status.data?.code ?? "synced";
+        success = status?.data?.code ?? "synced";
     } catch (cause) {
       failure ??= cause;
     }
@@ -182,7 +211,12 @@ export function LedgerTools({
     setSyncing(false);
     setError(failure);
     setAnnouncement(failure ? null : success);
-    if (failure) document.getElementById("ledger-tools-alert")?.focus();
+    if (failure) {
+      if (passwordField && errorCode(failure).includes("password")) {
+        setPasswordError({ field: passwordField, message: app.errorMessage(failure) });
+        requestAnimationFrame(() => { if (mounted.current) document.getElementById(passwordField)?.focus(); });
+      } else document.getElementById("ledger-tools-alert")?.focus();
+    }
   }
   useEffect(() => {
     const online = () => {
@@ -455,7 +489,7 @@ export function LedgerTools({
       type: "password",
     },
   ];
-  const lastError = error ?? statusQuery.error ?? conflictsQuery.error;
+  const lastError = error ?? (page === "all" || page === "sync" ? statusQuery.error : null) ?? (page === "all" || page === "conflicts" ? conflictsQuery.error : null);
   const workspace = app.snapshot.workspace;
   const money = (v: string) =>
     workspace
@@ -472,26 +506,26 @@ export function LedgerTools({
       aria-labelledby="ledger-tools-title"
       aria-busy={busy}
     >
-      <h2 id="ledger-tools-title">{m("title")}</h2>
+      <h2 id="ledger-tools-title">{m(page === "backup" ? "backupTitle" : page === "conflicts" ? "conflictTitle" : page === "sync" ? "syncTitle" : "title")}</h2>
       <p className="helper">
-        {serverBacked ? serverMessage(app.locale, "syncHelp") : m("help")}
+        {page === "backup" ? m("backupOfflineHelp") : page === "conflicts" ? m("conflictsHelp") : serverBacked ? serverMessage(app.locale, "syncHelp") : m("help")}
       </p>
-      <p id="ledger-session-status" className="ledger-tools-session">
+      {visible("sync") && <p id="ledger-session-status" className="ledger-tools-session">
         {m(session.code)}
         {session.lastSyncedAt &&
         Number.isFinite(new Date(session.lastSyncedAt).getTime())
           ? ` ${m("lastSync")}: ${new Intl.DateTimeFormat(app.locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(session.lastSyncedAt))}`
           : ""}
-      </p>
+      </p>}
       <p
         id="ledger-tools-alert"
         tabIndex={-1}
         className="form-alert ledger-tools-alert"
-        role={lastError ? "alert" : "status"}
-        aria-live={lastError ? "assertive" : "polite"}
+        role={lastError || passwordError ? "alert" : "status"}
+        aria-live={lastError || passwordError ? "assertive" : "polite"}
         aria-atomic="true"
       >
-        {lastError
+        {passwordError ? passwordError.message : lastError
           ? app.errorMessage(lastError)
           : announcement
             ? m(announcement)
@@ -598,8 +632,8 @@ export function LedgerTools({
           open={page === "backup" ? true : undefined}
         >
           <summary>{m("backup")}</summary>
-          <p className="helper">{m("backupHelp")}</p>
-          <form
+          <p className="helper">{m(workspace ? "mergeHelp" : "restoreHelp")}</p>
+          {workspace && <form
             ref={exportRef}
             id="ledger-export-form"
             className="form-grid ledger-tools-form"
@@ -608,14 +642,18 @@ export function LedgerTools({
             onSubmit={(e) => {
               e.preventDefault();
               const form = e.currentTarget;
+              if (!checkPassword(form, "ledger-export-password")) return;
               void perform(
                 () => exportBackup(form),
                 api.saveLedgerBackup ? "saved" : "exported",
+                false, false, "ledger-export-password",
               );
             }}
           >
             <Field
               id="ledger-export-password"
+              aria-invalid={passwordError?.field === "ledger-export-password"}
+              onChange={() => clearPasswordError("ledger-export-password")}
               name="password"
               label={m("exportPassword")}
               type="password"
@@ -635,7 +673,7 @@ export function LedgerTools({
             >
               {m(api.saveLedgerBackup ? "saveBackup" : "exportBackup")}
             </Button>
-          </form>
+          </form>}
           <form
             ref={importRef}
             id="ledger-import-form"
@@ -645,7 +683,8 @@ export function LedgerTools({
             onSubmit={(e) => {
               e.preventDefault();
               const form = e.currentTarget;
-              void perform(() => importBackup(form), "imported", true);
+              if (!checkPassword(form, "ledger-import-password")) return;
+              void perform(() => importBackup(form), workspace ? "imported" : "restored", true, false, "ledger-import-password");
             }}
           >
             <Field
@@ -659,6 +698,8 @@ export function LedgerTools({
             />
             <Field
               id="ledger-import-password"
+              aria-invalid={passwordError?.field === "ledger-import-password"}
+              onChange={() => clearPasswordError("ledger-import-password")}
               name="password"
               label={m("importPassword")}
               type="password"
@@ -673,7 +714,7 @@ export function LedgerTools({
             </p>
             <div className="field ledger-tools-check">
               <label htmlFor="ledger-import-confirm">
-                {m("confirmImport")}
+                {m(workspace ? "confirmImport" : "confirmRestore")}
               </label>
               <Input
                 id="ledger-import-confirm"
@@ -684,17 +725,27 @@ export function LedgerTools({
               />
             </div>
             <Button id="ledger-import-submit" type="submit" disabled={busy}>
-              {m("importBackup")}
+              {m(workspace ? "importBackup" : "restoreBackup")}
             </Button>
           </form>
         </details>
       )}
       {visible("conflicts") && (
+        <>
+          {conflictsQuery.isFetching ? (
+            <p id="ledger-conflicts-loading" role="status">{m("loadingConflicts")}</p>
+          ) : conflictsQuery.isError ? (
+            <Button id="ledger-conflicts-retry" variant="outline" onClick={() => void conflictsQuery.refetch()}>
+              {m("retry")}
+            </Button>
+          ) : conflictsQuery.isSuccess && conflictsQuery.data.length === 0 ? (
+            <p id="ledger-conflicts-empty" role="status">{m("noConflicts")}</p>
+          ) : null}
         <section
           id="ledger-conflict-inbox"
           className="ledger-conflict-inbox"
           aria-labelledby="ledger-conflicts-title"
-          hidden={!conflictsQuery.data?.length}
+          hidden={conflictsQuery.isFetching || conflictsQuery.isError || !conflictsQuery.data?.length}
         >
           <h3 id="ledger-conflicts-title">{m("conflictTitle")}</h3>
           <p className="ledger-conflict-warning">{m("conflictWarning")}</p>
@@ -804,6 +855,7 @@ export function LedgerTools({
               ))}
           </div>
         </section>
+        </>
       )}
     </section>
   );

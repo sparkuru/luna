@@ -3532,9 +3532,9 @@ h1, h2, h3, h4 { font-weight: 700; }
 /* The Web bottom navigation has three nav items after the record CTA moved out. */
 @media (max-width: 767px) {
   html[data-client-surface="web"] #open-secondary-menu {
-    grid-column: 4;
+    grid-column: 3;
     grid-row: 1;
-    width: auto;
+    width: 100%;
   }
 }
 
@@ -3745,7 +3745,7 @@ html[data-client-surface="web"] .summary-grid {
 
 html[data-client-surface="web"] .summary-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(5rem, 0.8fr) minmax(0, 1.2fr);
   grid-template-areas: "heading metric" "foot metric";
   min-width: 0;
   min-height: 5.75rem;
@@ -3783,7 +3783,9 @@ html[data-client-surface="web"] .summary-card .metric {
   font-size: clamp(1.2rem, 1.75vw, 1.65rem);
   line-height: 1.1;
   text-align: right;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 html[data-client-surface="web"] .summary-card .subtext {
@@ -4043,24 +4045,27 @@ html[data-client-surface="web"] .settings-navigation-icon {
   }
 
   html[data-client-surface="web"] .summary-card {
-    position: relative;
     min-height: 3.75rem;
-    height: 3.75rem;
+    height: auto;
     align-content: center;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr) 44px;
+    grid-template-areas: "heading metric toggle" "foot metric toggle";
     grid-template-rows: auto auto;
-    padding: 0 0.7rem;
+    padding: 0.35rem 0.7rem;
   }
 
   html[data-client-surface="web"] .summary-card-heading {
-    display: block;
-    padding-right: 2.75rem;
+    display: contents;
+  }
+
+  html[data-client-surface="web"] .summary-card .eyebrow {
+    grid-area: heading;
   }
 
   html[data-client-surface="web"] .summary-card .summary-visibility-toggle {
-    position: absolute;
-    top: 50%;
-    right: 0.35rem;
-    transform: translateY(-50%);
+    grid-area: toggle;
+    position: static;
+    transform: none;
     width: 44px;
     min-width: 44px;
     height: 44px;
@@ -4457,11 +4462,22 @@ html[data-client-surface="web"] #statistics-categories-toggle {
   }
 
   html[data-client-surface="web"] .settings-overview-statuses {
+    min-width: 0;
     justify-content: stretch;
+  }
+
+  html[data-client-surface="web"] .settings-overview > .section-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  html[data-client-surface="web"] .settings-overview-statuses > * {
+    min-width: 0;
   }
 
   html[data-client-surface="web"] .settings-storage-status,
   html[data-client-surface="web"] .settings-overview-statuses > .sync-status-button {
+    min-width: 0;
     width: 100%;
   }
 
@@ -4473,4 +4489,109 @@ html[data-client-surface="web"] #statistics-categories-toggle {
     top: 0.75rem;
     right: 0.75rem;
   }
+}
+
+.setup-recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.setup-recovery-actions button {
+  min-height: 44px;
+  white-space: normal;
+}
+
+.settings-navigation-mobile { display: none; }
+
+.statistics-bucket-picker {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: end;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+.statistics-bucket-picker button,
+.statistics-bucket-picker select { min-height: 44px; min-width: 0; width: 100%; }
+.statistics-bucket-picker .field { min-width: 0; }
+#setup-advanced > summary { min-height: 44px; cursor: pointer; padding-block: 0.65rem; }
+
+@media (max-width: 768px) {
+  html[data-client-surface="web"] .settings-navigation-desktop { display: none; }
+  .settings-navigation-mobile {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.75rem;
+  }
+  .settings-navigation-mobile button,
+  .settings-navigation-mobile summary {
+    min-height: 44px;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    color: var(--color-primary-dark);
+    cursor: pointer;
+  }
+  .settings-navigation-mobile details { min-width: 0; }
+  .settings-navigation-mobile details[open] { flex: 1; }
+  .settings-mobile-sections { display: grid; gap: 0.5rem; }
+  .settings-mobile-sections .settings-navigation-group-links { display: grid; }
+  .settings-mobile-sections button { text-align: left; }
+  html[data-client-surface="web"] .web-sidebar .primary-navigation-link {
+    width: 100%;
+    min-width: 44px;
+    min-height: 48px;
+    justify-self: stretch;
+  }
+}
+
+.account-password-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: end;
+  min-width: 0;
+}
+.account-password-field .field { min-width: 0; }
+.account-password-field button { min-height: 44px; }
+.account-secondary-details > summary,
+#server-connection-help > summary,
+#server-session-help > summary,
+#server-sync-guide > summary { min-height: 44px; padding-block: 0.65rem; cursor: pointer; }
+
+#settings-section-switcher > summary:focus-visible,
+#setup-advanced > summary:focus-visible,
+.account-secondary-details > summary:focus-visible,
+#server-connection-help > summary:focus-visible,
+#server-session-help > summary:focus-visible,
+#server-sync-guide > summary:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.filter-advanced { min-width: 0; }
+.filter-advanced > summary {
+  min-height: 44px;
+  padding-block: 0.65rem;
+  cursor: pointer;
+}
+.filter-advanced > summary:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.filter-advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding-block: 0.5rem;
+}
+.budget-month-control { min-width: 0; max-width: 100%; border: 0; padding: 0; margin: 0; }
+@media (max-width: 767px) {
+  .filter-advanced-grid { grid-template-columns: minmax(0, 1fr); }
+  html[data-client-surface="web"] .budget-panel > .section-heading { flex-direction: column; align-items: stretch; }
 }

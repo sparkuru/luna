@@ -91,8 +91,10 @@ The native `#open-secondary-menu` control may retain its decorative
 `.settings-navigation-icon` while keeping the stable ID and localized
 accessible name. Do not use the literal Chinese character `三` as a visible
 label or as a substitute for an icon.
-Each summary card also exposes a 44px `.summary-visibility-toggle` beside its
-label. Each control changes only its own summary amount. The renderer keeps
+Each summary card also exposes a 44px `.summary-visibility-toggle`. On narrow
+Web layouts, reserve independent grid areas for the label, amount, and toggle;
+never position the toggle over the amount. Long and negative localized amounts
+must remain readable at 320px without horizontal overflow. Each control changes only its own summary amount. The renderer keeps
 these three visibility flags in session memory, while the hide-by-default
 setting initializes all three after reload. Transaction and budget details
 remain unchanged.
@@ -115,6 +117,15 @@ discoverable, expose a real settings navigation action such as
 `#open-sync-status`; do not reintroduce its details into the ledger shell.
 This keeps the primary ledger task visually focused while preserving access to
 the same shared settings/API logic.
+
+Web settings subpages at <=768px use a compact Settings return action and
+`#settings-section-switcher` disclosure, generated from the same settings area
+registry as desktop groups. The disclosure resets closed after section changes;
+only the visible navigation participates in keyboard and current-page checks.
+At 375x800, preferences language and privacy controls must be usable without
+scrolling through the navigation directory; at 320x568, its title and first
+primary input must be visible. Bottom navigation targets occupy equal-width
+slots and remain at least 44x44px.
 
 The Web `TransactionDialog` uses a full-width desktop flow: type switcher,
 category suggestions, and quick core fields span the form; amount, category,
@@ -156,6 +167,22 @@ into the lower half of the first screen and creates a large blank upper area.
 At `<=768px`, retain the same single-column flow and verify the card has no
 horizontal overflow at a 375px viewport.
 
+A fresh browser must expose `#setup-restore` and `#setup-connect` from the welcome
+surface. With no workspace, `/settings/backup` renders the real restore tool and
+`/settings/account` renders the account flow without first creating a dummy ledger
+or leaving the setup form above them. `#setup-back` returns to welcome without
+creating data. Backup export remains unavailable until a workspace exists; failed
+restore attempts must leave an empty workspace empty. Verify recovery from the
+visible welcome action in a fresh browser context, including image bytes and reload,
+not merely through a direct route after precreating a local ledger.
+
+For a new ledger, changing currency resets precision to JPY=0 or otherwise=2;
+show the current value in `#setup-precision-summary` and keep manual precision
+in `#setup-advanced`. Invalid advanced input opens its disclosure before focus.
+The optional initial budget must say it is optional; name-only creation uses
+the displayed currency defaults. Existing ledgers are never altered by these
+setup presentation defaults.
+
 After a successful mutation, reload the host snapshot before announcing the
 result. A failed mutation keeps the draft and its recovery path visible. This
 keeps the simple entry surface from becoming a second financial source of
@@ -185,7 +212,7 @@ replace that native path.
 Each workspace Web page owns its own heading and any relevant period control;
 do not render the generic `WebPageTopbar` for ledger, statistics, budget, or
 settings. The ledger hero/month picker, statistics anchor, and budget month
-label provide their own context, while settings has no month context at all.
+picker provide their own context, while settings has no month context at all.
 Keep the setup topbar and native host shells unchanged. A full-row filter reset
 action must use a readable surface/ink pair from the existing tokens, retain a
 visible focus ring, and remain legible in its default, hover, and focus states;
@@ -201,7 +228,11 @@ native hosts keep their existing appearance.
 The Web statistics view may compress a dense daily/monthly bucket collection
 into an interactive plot, but it must keep a keyboard-selectable control for
 each bucket, a text-equivalent expandable detail list, and the existing
-selected-bucket transaction detail. Category and largest-expense lists show a
+selected-bucket transaction detail. Provide `#statistics-bucket-select` and
+44px previous/next controls alongside the chart so selecting any date does not
+require hitting a narrow bar. Keep future buckets explicitly labelled and retain
+the text detail list; never expand overlapping bar hitboxes.
+Category and largest-expense lists show a
 bounded initial ranking with an explicit “view all” control when more rows
 exist; this limits visual density without discarding data.
 
@@ -218,7 +249,11 @@ initial draft.
 
 ### Ledger Filter Composition
 
-The ledger filter is a semantic disclosure, not a second ledger page. Its
+The ledger filter is a semantic disclosure, not a second ledger page. Put text
+search first, followed by type and categories. Keep date/amount controls in
+`#filter-advanced` without recreating their state when collapsed. Active chips
+remain visible outside the disclosures; Reset stays outside the advanced
+section and clears every criterion together. Its
 default query always supplies the selected month's first and last local dates;
 user date bounds may narrow that interval but may not cross the month boundary.
 Type and category criteria are combined with AND; multiple selected categories
@@ -319,8 +354,10 @@ into the primary line so they remain visible without horizontal overflow.
 
 - Use headings, `main`, `nav`, `section`, `form`, labels, and list elements for
   their semantic roles.
-- Every control has an accessible label or visible text, a minimum 44px target,
-  keyboard focus, and a clear disabled/error state.
+- Controls have an accessible label or visible text, keyboard focus, and a clear
+  disabled/error state. Primary touch targets are at least 44px. Dense chart
+  bars may remain narrow only when the adjacent 44px bucket picker and complete
+  text list provide the same selection operation without overlapping hitboxes.
 - Keep a skip link, an `aria-live` status region, `aria-invalid`/descriptions
   for errors, and a predictable focus target after navigation or save.
 - Respect `prefers-reduced-motion` and test at narrow desktop window widths.

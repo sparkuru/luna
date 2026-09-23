@@ -48,6 +48,16 @@ sync requires a separate explicit connection and may retry on return online.
 Either sync must preserve financial form controls and original edit tokens;
 remote state is committed through host adapters, never owned by the renderer.
 
+## Budget Month Navigation
+
+Web `BudgetEditor` receives the shell month setter and uses `WebMonthPicker`;
+the Router selected month remains the single source of truth. Month changes
+pass through the existing dirty-form blocker: cancellation leaves both month
+and value untouched, confirmation enters a newly keyed month draft. Disable
+month controls while a budget write is pending. Background snapshots must not
+replace the draft's originally captured `budgetHeadIds`; a stale save still
+rejects and preserves the input. Keep the native month-control path unchanged.
+
 ## Common Mistakes
 
 - Do not duplicate totals in a mutable renderer variable.

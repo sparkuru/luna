@@ -7,6 +7,7 @@ import { Calculator, ChevronDown, ImagePlus, Search, X } from "lucide-react";
 import type { Transaction, TransactionType } from "../../shared/domain";
 import {
   currentLocalDate,
+  isLocalDate,
   formatMinorUnits,
   formatMinorMagnitude,
 } from "../../shared/domain";
@@ -23,7 +24,7 @@ import {
   type AttachmentMetadata,
   type AttachmentRef,
 } from "../../shared/attachment-contract";
-import { useApp, useLocalWrite } from "../data/local";
+import { useApp, useLocalWrite, errorCode } from "../data/local";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { DateField, Field } from "../components/form";
@@ -184,7 +185,15 @@ export function TransactionDialog({
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
   const [calculatorOpen, setCalculatorOpen] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setErrorText] = useState("");
+  const [errorField, setErrorField] = useState<"amount" | "category" | "date" | null>(null);
+  const setError = (text: string, field: typeof errorField = null) => {
+    setErrorText(text);
+    setErrorField(field);
+  };
+  const clearFieldError = (field: string) => {
+    if (errorField === field) setError("");
+  };
   const [calculationDisplay, setCalculationDisplay] = useState("");
   const [imageBusy, setImageBusy] = useState(false);
   const [attachments, setAttachments] = useState<EntryAttachment[]>(() =>
@@ -222,14 +231,16 @@ export function TransactionDialog({
     };
   }, []);
   const busyRef = useRef(false);
-  const change = (name: keyof typeof draft, value: string) =>
+  const change = (name: keyof typeof draft, value: string) => {
+    clearFieldError(name);
     setDraft((prev) => ({ ...prev, [name]: value }));
+  };
   const changeAmount = (value: string) => {
     if (value === "") {
       setExpression("");
       change("amount", "");
       setCalculationDisplay("");
-      setError("");
+      clearFieldError("amount");
       return;
     }
     try {
@@ -237,31 +248,32 @@ export function TransactionDialog({
       setExpression(normalized);
       change("amount", normalized);
       setCalculationDisplay("");
-      setError("");
+      clearFieldError("amount");
     } catch (cause) {
       setExpression(value);
       change("amount", value);
       setCalculationDisplay("");
-      if (cause instanceof AmountExpressionError) setError(cause.message);
+      if (cause instanceof AmountExpressionError) setError(m("amountExpressionInvalid"), "amount");
     }
   };
   const changeCalculatorExpression = (value: string) => {
     if (value === "") {
       setExpression("");
       setCalculationDisplay("");
-      setError("");
+      clearFieldError("amount");
       return;
     }
     try {
       const normalized = normalizeAmountExpressionInput(value);
       setExpression(normalized);
       setCalculationDisplay("");
-      setError("");
+      clearFieldError("amount");
     } catch (cause) {
       setExpression(value);
       setCalculationDisplay("");
       setError(
-        cause instanceof AmountExpressionError ? cause.message : app.errorMessage(cause),
+        cause instanceof AmountExpressionError ? m("amountExpressionInvalid") : app.errorMessage(cause),
+        "amount",
       );
     }
   };
@@ -286,10 +298,11 @@ export function TransactionDialog({
         setExpression(formatted);
         change("amount", formatted);
         setCalculationDisplay(inspected.displayAmount ?? formatted);
-        setError("");
+        clearFieldError("amount");
       } catch (cause) {
         setError(
-          cause instanceof AmountExpressionError ? cause.message : app.errorMessage(cause),
+          cause instanceof AmountExpressionError ? m("amountExpressionInvalid") : app.errorMessage(cause),
+          "amount",
         );
       }
       return;
@@ -483,10 +496,11 @@ export function TransactionDialog({
     busyRef.current = true;
     setError("");
     try {
-      if (!draft.category.trim()) throw new Error("LUNA_ERROR:invalid-category");
       const evaluated = evaluateAmountExpression(expression, workspace.precision);
       const evaluatedMinor = BigInt(evaluated);
       if (evaluatedMinor <= 0n) throw new Error("LUNA_ERROR:invalid-amount");
+      if (!draft.category.trim()) throw new Error("LUNA_ERROR:invalid-category");
+      if (!isLocalDate(draft.date)) throw new Error("LUNA_ERROR:invalid-date");
       const amountMinor = evaluatedMinor.toString();
       const value = {
         type: draft.type,
@@ -517,8 +531,11 @@ export function TransactionDialog({
       if (refreshed)
         app.announce(m(original ? "transactionUpdated" : "transactionSaved"));
     } catch (cause) {
-      setError(app.errorMessage(cause));
-      document.getElementById("transaction-amount")?.focus();
+      const code = errorCode(cause);
+      const field = cause instanceof AmountExpressionError || code === "invalid-amount"
+        ? "amount" : code === "invalid-category" ? "category" : code === "invalid-date" ? "date" : null;
+      setError(cause instanceof AmountExpressionError ? m("amountExpressionInvalid") : app.errorMessage(cause), field);
+      document.getElementById(field === "category" ? "choose-category" : field ? `transaction-${field}` : "transaction-alert")?.focus();
     } finally {
       busyRef.current = false;
     }
@@ -572,7 +589,7 @@ export function TransactionDialog({
             {m("closeMenu")}
           </Button>
         </header>
-        <div id="transaction-alert" className="form-alert" role="alert">
+        <div id="transaction-alert" className="form-alert" role="alert" tabIndex={-1}>
           {error}
         </div>
         <form
@@ -645,8 +662,8 @@ export function TransactionDialog({
                     event.preventDefault();
                     pressCalculator("=");
                   }}
-                  aria-invalid={!!error}
-                  aria-describedby="transaction-alert amount-helper"
+                  aria-invalid={errorField === "amount"}
+                  aria-describedby={errorField === "amount" ? "transaction-alert amount-helper" : "amount-helper"}
                 />
                 <span id="amount-helper" className="helper">
                   {m("amountHelp", {
@@ -690,9 +707,9 @@ export function TransactionDialog({
                     aria-haspopup="dialog"
                     aria-expanded={categoryOpen}
                     aria-controls="category-dialog"
-                    aria-invalid={!!error && !draft.category}
+                    aria-invalid={errorField === "category"}
                     aria-required="true"
-                    aria-describedby="transaction-alert category-helper"
+                    aria-describedby={errorField === "category" ? "transaction-alert category-helper" : "category-helper"}
                     onClick={() => {
                       setCategorySearch("");
                       setCategoryOpen(true);
@@ -719,6 +736,8 @@ export function TransactionDialog({
                 type="date"
                 required
                 value={draft.date}
+                aria-invalid={errorField === "date"}
+                aria-describedby={errorField === "date" ? "transaction-alert" : undefined}
                 onChange={(e) => change("date", e.target.value)}
               />
             </div>

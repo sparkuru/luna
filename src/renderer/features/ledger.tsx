@@ -49,6 +49,7 @@ import {
 import { getClientSurface } from "../client-surface";
 import { labelCategories, labelCategory } from "../category-display";
 import { WebMonthPicker } from "../components/month-picker";
+import { chooseLedgerCopyKey, type LedgerCopyKey } from "../ledger-copy";
 import type { Entry } from "./entry";
 
 type ImageViewerState = {
@@ -103,6 +104,36 @@ type Message = (
   key: MessageKey,
   params?: Readonly<Record<string, string | number>>,
 ) => string;
+
+type LedgerHomeProps = {
+  openEntry(entry: Entry): void;
+  changeMonth(month: string): void;
+  type: "all" | "income" | "expense";
+  changeType(type: "all" | "income" | "expense"): void;
+  visibility: boolean[];
+  web?: boolean;
+  toggle(index: number): void;
+  ledgerCopyKey: LedgerCopyKey;
+};
+
+type LedgerMonthLoadingProps = {
+  month: string;
+  locale: AppLocale;
+  message: Message;
+  changeMonth(month: string): void;
+  onRetry(): void;
+  error: string;
+  ledgerCopyKey: LedgerCopyKey;
+};
+
+type LedgerRouteProps = Omit<LedgerHomeProps, "ledgerCopyKey"> & {
+  month: string;
+  locale: AppLocale;
+  message: Message;
+  onRetry(): void;
+  error: string;
+  loading: boolean;
+};
 
 type SearchWorkerResponse = {
   id: number;
@@ -254,17 +285,8 @@ export function LedgerMonthLoading({
   changeMonth,
   onRetry,
   error,
-}: {
-  month: string;
-  locale: import("../../shared/settings").AppLocale;
-  message: (
-    key: MessageKey,
-    params?: Readonly<Record<string, string | number>>,
-  ) => string;
-  changeMonth(month: string): void;
-  onRetry(): void;
-  error: string;
-}) {
+  ledgerCopyKey,
+}: LedgerMonthLoadingProps) {
   const web = getClientSurface() === "web";
   const summaryPlaceholders: readonly {
     key: string;
@@ -286,10 +308,7 @@ export function LedgerMonthLoading({
         <div className="page-heading-copy">
           <span className="kicker">{m("ledgerKicker")}</span>
           <h1 id="page-title">{m("dashboardTitle")}</h1>
-          <p>
-            <span id="month-label">{formatMonth(locale, month)}</span>
-          </p>
-          <p className="hero-description">{m("ledgerIntro")}</p>
+          <p className="hero-description">{m(ledgerCopyKey)}</p>
         </div>
         <div className="page-heading-actions">
           {!web && (
@@ -449,6 +468,31 @@ export function LedgerMonthLoading({
   );
 }
 
+export function LedgerRoute({
+  loading,
+  month,
+  locale,
+  message,
+  onRetry,
+  error,
+  ...homeProps
+}: LedgerRouteProps) {
+  const [ledgerCopyKey] = useState(() => chooseLedgerCopyKey());
+  if (loading)
+    return (
+      <LedgerMonthLoading
+        month={month}
+        locale={locale}
+        message={message}
+        changeMonth={homeProps.changeMonth}
+        onRetry={onRetry}
+        error={error}
+        ledgerCopyKey={ledgerCopyKey}
+      />
+    );
+  return <LedgerHome {...homeProps} ledgerCopyKey={ledgerCopyKey} />;
+}
+
 export function LedgerHome({
   openEntry,
   changeMonth,
@@ -457,15 +501,8 @@ export function LedgerHome({
   visibility,
   web = false,
   toggle,
-}: {
-  openEntry(entry: Entry): void;
-  changeMonth(month: string): void;
-  type: "all" | "income" | "expense";
-  changeType(type: "all" | "income" | "expense"): void;
-  visibility: boolean[];
-  web?: boolean;
-  toggle(index: number): void;
-}) {
+  ledgerCopyKey,
+}: LedgerHomeProps) {
   const app = useApp();
   const {
     snapshot,
@@ -1120,11 +1157,12 @@ export function LedgerHome({
         <div className="page-heading-copy">
           <span className="kicker">{m("ledgerKicker")}</span>
           <h1 id="page-title">{m("dashboardTitle")}</h1>
-          <p>
-            {!web && <><span id="workspace-name-label">{workspace.name}</span> · </>}
-            <span id="month-label">{formatMonth(locale, month)}</span>
-          </p>
-          <p className="hero-description">{m("ledgerIntro")}</p>
+          {!web && (
+            <p>
+              <span id="workspace-name-label">{workspace.name}</span>
+            </p>
+          )}
+          <p className="hero-description">{m(ledgerCopyKey)}</p>
         </div>
         <div className="page-heading-actions">
           {!web && (
@@ -1279,6 +1317,40 @@ export function LedgerHome({
               setQueryMode("text");
             }}
           >
+            <div className="field filter-search-field">
+              <label htmlFor="filter-query">{m("searchLabel")}</label>
+              <div className="filter-search-control">
+                <Input
+                  id="filter-query"
+                  name="query"
+                  aria-describedby="filter-error"
+                  aria-invalid={
+                    queryInputState.field === "query" ||
+                    (regexQueryActive && filterEvaluation.status === "invalid")
+                  }
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <Button
+                  id="filter-regex"
+                  type="button"
+                  variant="ghost"
+                  className="filter-regex-toggle"
+                  aria-label={m(
+                    queryMode === "regex" ? "disableRegexSearch" : "enableRegexSearch",
+                  )}
+                  aria-pressed={queryMode === "regex"}
+                  onClick={() =>
+                    setQueryMode((mode) => (mode === "regex" ? "text" : "regex"))
+                  }
+                >
+                  <span aria-hidden="true" className="filter-regex-mark">
+                    .*
+                  </span>
+                  <span className="visually-hidden">{m("searchModeRegex")}</span>
+                </Button>
+              </div>
+            </div>
             <div className="field filter-type-field">
               <label htmlFor="filter-type">{m("type")}</label>
               <select
@@ -1350,86 +1422,57 @@ export function LedgerHome({
                 {m("filterCategoryEmpty")}
               </p>
             )}
-            <div className="field filter-search-field">
-              <label htmlFor="filter-query">{m("searchLabel")}</label>
-              <div className="filter-search-control">
-                <Input
-                  id="filter-query"
-                  name="query"
+            <details id="filter-advanced" className="filter-advanced full">
+              <summary>{m("filterAdvanced")}</summary>
+              <div className="filter-advanced-grid">
+                <Field
+                  id="filter-date-from"
+                  label={m("startDate")}
+                  name="dateFrom"
+                  type="date"
+                  min={selectedMonthStart}
+                  max={selectedMonthEnd}
                   aria-describedby="filter-error"
-                  aria-invalid={
-                    queryInputState.field === "query" ||
-                    (regexQueryActive && filterEvaluation.status === "invalid")
-                  }
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  aria-invalid={queryInputState.field === "date"}
+                  value={dateFrom}
+                  data-empty={dateFrom.length === 0}
+                  onChange={(e) => setDateFrom(e.target.value)}
                 />
-                <Button
-                  id="filter-regex"
-                  type="button"
-                  variant="ghost"
-                  className="filter-regex-toggle"
-                  aria-label={m(
-                    queryMode === "regex" ? "disableRegexSearch" : "enableRegexSearch",
-                  )}
-                  aria-pressed={queryMode === "regex"}
-                  onClick={() =>
-                    setQueryMode((mode) => (mode === "regex" ? "text" : "regex"))
-                  }
-                >
-                  <span aria-hidden="true" className="filter-regex-mark">
-                    .*
-                  </span>
-                  <span className="visually-hidden">{m("searchModeRegex")}</span>
-                </Button>
+                <Field
+                  id="filter-date-to"
+                  label={m("endDate")}
+                  name="dateTo"
+                  type="date"
+                  min={selectedMonthStart}
+                  max={selectedMonthEnd}
+                  aria-describedby="filter-error"
+                  aria-invalid={queryInputState.field === "date"}
+                  value={dateTo}
+                  data-empty={dateTo.length === 0}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
+                <Field
+                  id="filter-minimum"
+                  label={m("minimumAmount")}
+                  name="minimum"
+                  inputMode="decimal"
+                  aria-describedby="filter-error"
+                  aria-invalid={queryInputState.field === "amount"}
+                  value={minimum}
+                  onChange={(e) => setMinimum(e.target.value)}
+                />
+                <Field
+                  id="filter-maximum"
+                  label={m("maximumAmount")}
+                  name="maximum"
+                  inputMode="decimal"
+                  aria-describedby="filter-error"
+                  aria-invalid={queryInputState.field === "amount"}
+                  value={maximum}
+                  onChange={(e) => setMaximum(e.target.value)}
+                />
               </div>
-            </div>
-            <Field
-              id="filter-date-from"
-              label={m("startDate")}
-              name="dateFrom"
-              type="date"
-              min={selectedMonthStart}
-              max={selectedMonthEnd}
-              aria-describedby="filter-error"
-              aria-invalid={queryInputState.field === "date"}
-              value={dateFrom}
-              data-empty={dateFrom.length === 0}
-              onChange={(e) => setDateFrom(e.target.value)}
-            />
-            <Field
-              id="filter-date-to"
-              label={m("endDate")}
-              name="dateTo"
-              type="date"
-              min={selectedMonthStart}
-              max={selectedMonthEnd}
-              aria-describedby="filter-error"
-              aria-invalid={queryInputState.field === "date"}
-              value={dateTo}
-              data-empty={dateTo.length === 0}
-              onChange={(e) => setDateTo(e.target.value)}
-            />
-            <Field
-              id="filter-minimum"
-              label={m("minimumAmount")}
-              name="minimum"
-              inputMode="decimal"
-              aria-describedby="filter-error"
-              aria-invalid={queryInputState.field === "amount"}
-              value={minimum}
-              onChange={(e) => setMinimum(e.target.value)}
-            />
-            <Field
-              id="filter-maximum"
-              label={m("maximumAmount")}
-              name="maximum"
-              inputMode="decimal"
-              aria-describedby="filter-error"
-              aria-invalid={queryInputState.field === "amount"}
-              value={maximum}
-              onChange={(e) => setMaximum(e.target.value)}
-            />
+            </details>
             <Button type="reset" variant="outline">
               {m("clearFilters")}
             </Button>
