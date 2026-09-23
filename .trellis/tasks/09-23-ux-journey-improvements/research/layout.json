@@ -1,0 +1,1466 @@
+[
+  {
+    "name": "prod-mobile-masked",
+    "url": "http://127.0.0.1:4188/luna",
+    "width": 375,
+    "height": 800,
+    "scrollWidth": 375,
+    "boxes": {
+      "#income-total": {
+        "x": 316.375,
+        "y": 251.203125,
+        "w": 31.4375,
+        "h": 21.109375,
+        "font": "19.2px",
+        "text": "••••"
+      },
+      "#expense-total": {
+        "x": 316.375,
+        "y": 311.703125,
+        "w": 31.4375,
+        "h": 21.109375,
+        "font": "19.2px",
+        "text": "••••"
+      },
+      "#net-total": {
+        "x": 316.375,
+        "y": 371.703125,
+        "w": 31.4375,
+        "h": 21.109375,
+        "font": "19.2px",
+        "text": "••••"
+      },
+      "#toggle-income-amounts": {
+        "x": 309.40625,
+        "y": 239.765625,
+        "w": 44,
+        "h": 44,
+        "font": "16px",
+        "text": ""
+      },
+      "#toggle-expense-amounts": {
+        "x": 309.40625,
+        "y": 300.265625,
+        "w": 44,
+        "h": 44,
+        "font": "16px",
+        "text": ""
+      },
+      "#toggle-net-amounts": {
+        "x": 309.40625,
+        "y": 360.265625,
+        "w": 44,
+        "h": 44,
+        "font": "16px",
+        "text": ""
+      },
+      "#open-secondary-menu": {
+        "x": 326.015625,
+        "y": 733.40625,
+        "w": 30.390625,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": null
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-mobile-revealed",
+    "url": "http://127.0.0.1:4188/luna",
+    "width": 375,
+    "height": 800,
+    "scrollWidth": 375,
+    "boxes": {
+      "#income-total": {
+        "x": 316.375,
+        "y": 251.203125,
+        "w": 31.4375,
+        "h": 21.109375,
+        "font": "19.2px",
+        "text": "••••"
+      },
+      "#expense-total": {
+        "x": 286.609375,
+        "y": 311.703125,
+        "w": 61.203125,
+        "h": 21.109375,
+        "font": "19.2px",
+        "text": "¥28.50"
+      },
+      "#net-total": {
+        "x": 316.375,
+        "y": 371.703125,
+        "w": 31.4375,
+        "h": 21.109375,
+        "font": "19.2px",
+        "text": "••••"
+      },
+      "#toggle-income-amounts": {
+        "x": 309.40625,
+        "y": 239.765625,
+        "w": 44,
+        "h": 44,
+        "font": "16px",
+        "text": ""
+      },
+      "#toggle-expense-amounts": {
+        "x": 309.40625,
+        "y": 300.265625,
+        "w": 44,
+        "h": 44,
+        "font": "16px",
+        "text": ""
+      },
+      "#toggle-net-amounts": {
+        "x": 309.40625,
+        "y": 360.265625,
+        "w": 44,
+        "h": 44,
+        "font": "16px",
+        "text": ""
+      },
+      "#open-secondary-menu": {
+        "x": 326.015625,
+        "y": 733.40625,
+        "w": 30.390625,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": null
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-320-statistics",
+    "url": "http://127.0.0.1:4188/statistics",
+    "width": 320,
+    "height": 800,
+    "scrollWidth": 320,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 271.03125,
+        "y": 733.40625,
+        "w": 30.375,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": null
+    },
+    "bars": [
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月1日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月2日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月3日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月4日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月5日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月6日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月7日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月8日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月9日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月10日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月11日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月12日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月13日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月14日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月15日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月16日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月17日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月18日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月19日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月20日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月21日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月22日 · ¥0.00"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月23日 · ¥28.50"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月24日 · 未来"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月25日 · 未来"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月26日 · 未来"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月27日 · 未来"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月28日 · 未来"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月29日 · 未来"
+      },
+      {
+        "w": 3.8125,
+        "h": 142,
+        "label": "2026年9月30日 · 未来"
+      }
+    ]
+  },
+  {
+    "name": "prod-320-settings-preferences",
+    "url": "http://127.0.0.1:4188/settings/preferences",
+    "width": 320,
+    "height": 800,
+    "scrollWidth": 320,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 271.03125,
+        "y": 733.40625,
+        "w": 30.375,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": {
+        "x": 33,
+        "y": 506.328125,
+        "w": 215.859375,
+        "h": 27.84375,
+        "font": "23.2px",
+        "text": "设置"
+      },
+      "#settings-language": {
+        "x": 50,
+        "y": 647.46875,
+        "w": 220,
+        "h": 40,
+        "font": "14.08px",
+        "text": "简体中文English"
+      },
+      "#ledger-tools-title": null
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-320-settings-backup",
+    "url": "http://127.0.0.1:4188/settings/backup",
+    "width": 320,
+    "height": 800,
+    "scrollWidth": 320,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 271.03125,
+        "y": 733.40625,
+        "w": 30.375,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": {
+        "x": 33,
+        "y": 502.328125,
+        "w": 254,
+        "h": 24,
+        "font": "16px",
+        "text": "账本同步与备份"
+      }
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-320-settings-conflicts",
+    "url": "http://127.0.0.1:4188/settings/conflicts",
+    "width": 320,
+    "height": 800,
+    "scrollWidth": 320,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 271.03125,
+        "y": 733.40625,
+        "w": 30.375,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": {
+        "x": 33,
+        "y": 502.328125,
+        "w": 254,
+        "h": 24,
+        "font": "16px",
+        "text": "账本同步与备份"
+      }
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-375-statistics",
+    "url": "http://127.0.0.1:4188/statistics",
+    "width": 375,
+    "height": 800,
+    "scrollWidth": 375,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 326.015625,
+        "y": 733.40625,
+        "w": 30.390625,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": null
+    },
+    "bars": [
+      {
+        "w": 4.875,
+        "h": 142,
+        "label": "2026年9月1日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月2日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月3日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月4日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月5日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月6日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月7日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月8日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月9日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月10日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月11日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月12日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月13日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月14日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月15日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月16日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月17日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月18日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月19日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月20日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月21日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月22日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月23日 · ¥28.50"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月24日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月25日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月26日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月27日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月28日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月29日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月30日 · 未来"
+      }
+    ]
+  },
+  {
+    "name": "prod-375-settings-preferences",
+    "url": "http://127.0.0.1:4188/settings/preferences",
+    "width": 375,
+    "height": 800,
+    "scrollWidth": 375,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 326.015625,
+        "y": 733.40625,
+        "w": 30.390625,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": {
+        "x": 33,
+        "y": 462.328125,
+        "w": 215.859375,
+        "h": 27.84375,
+        "font": "23.2px",
+        "text": "设置"
+      },
+      "#settings-language": {
+        "x": 50,
+        "y": 603.46875,
+        "w": 275,
+        "h": 40,
+        "font": "14.08px",
+        "text": "简体中文English"
+      },
+      "#ledger-tools-title": null
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-375-settings-backup",
+    "url": "http://127.0.0.1:4188/settings/backup",
+    "width": 375,
+    "height": 800,
+    "scrollWidth": 375,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 326.015625,
+        "y": 733.40625,
+        "w": 30.390625,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": {
+        "x": 33,
+        "y": 458.328125,
+        "w": 309,
+        "h": 24,
+        "font": "16px",
+        "text": "账本同步与备份"
+      }
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-375-settings-conflicts",
+    "url": "http://127.0.0.1:4188/settings/conflicts",
+    "width": 375,
+    "height": 800,
+    "scrollWidth": 375,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 326.015625,
+        "y": 733.40625,
+        "w": 30.390625,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": {
+        "x": 33,
+        "y": 458.328125,
+        "w": 309,
+        "h": 24,
+        "font": "16px",
+        "text": "账本同步与备份"
+      }
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-768-statistics",
+    "url": "http://127.0.0.1:4188/statistics",
+    "width": 768,
+    "height": 800,
+    "scrollWidth": 768,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 505.53125,
+        "y": 56.984375,
+        "w": 235.078125,
+        "h": 48,
+        "font": "14.72px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": null
+    },
+    "bars": [
+      {
+        "w": 16.109375,
+        "h": 182,
+        "label": "2026年9月1日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月2日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月3日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月4日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月5日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月6日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月7日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月8日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月9日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月10日 · ¥0.00"
+      },
+      {
+        "w": 16.109375,
+        "h": 182,
+        "label": "2026年9月11日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月12日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月13日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月14日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月15日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月16日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月17日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月18日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月19日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月20日 · ¥0.00"
+      },
+      {
+        "w": 16.109375,
+        "h": 182,
+        "label": "2026年9月21日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月22日 · ¥0.00"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月23日 · ¥28.50"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月24日 · 未来"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月25日 · 未来"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月26日 · 未来"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月27日 · 未来"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月28日 · 未来"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月29日 · 未来"
+      },
+      {
+        "w": 16.125,
+        "h": 182,
+        "label": "2026年9月30日 · 未来"
+      }
+    ]
+  },
+  {
+    "name": "prod-768-settings-preferences",
+    "url": "http://127.0.0.1:4188/settings/preferences",
+    "width": 768,
+    "height": 800,
+    "scrollWidth": 768,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 505.53125,
+        "y": 56.984375,
+        "w": 235.078125,
+        "h": 48,
+        "font": "14.72px",
+        "text": "设置"
+      },
+      "#settings-title": {
+        "x": 45,
+        "y": 371.375,
+        "w": 215.859375,
+        "h": 27.84375,
+        "font": "23.2px",
+        "text": "设置"
+      },
+      "#settings-language": {
+        "x": 546,
+        "y": 484.828125,
+        "w": 160,
+        "h": 40,
+        "font": "14.08px",
+        "text": "简体中文English"
+      },
+      "#ledger-tools-title": null
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-768-settings-backup",
+    "url": "http://127.0.0.1:4188/settings/backup",
+    "width": 768,
+    "height": 800,
+    "scrollWidth": 768,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 505.53125,
+        "y": 56.984375,
+        "w": 235.078125,
+        "h": 48,
+        "font": "14.72px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": {
+        "x": 45,
+        "y": 367.375,
+        "w": 678,
+        "h": 24,
+        "font": "16px",
+        "text": "账本同步与备份"
+      }
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-768-settings-conflicts",
+    "url": "http://127.0.0.1:4188/settings/conflicts",
+    "width": 768,
+    "height": 800,
+    "scrollWidth": 768,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 505.53125,
+        "y": 56.984375,
+        "w": 235.078125,
+        "h": 48,
+        "font": "14.72px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": {
+        "x": 45,
+        "y": 367.375,
+        "w": 678,
+        "h": 24,
+        "font": "16px",
+        "text": "账本同步与备份"
+      }
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-1440-statistics",
+    "url": "http://127.0.0.1:4188/statistics",
+    "width": 1440,
+    "height": 800,
+    "scrollWidth": 1440,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 20,
+        "y": 187.1875,
+        "w": 211,
+        "h": 48,
+        "font": "14.72px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": null
+    },
+    "bars": [
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月1日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月2日 · ¥0.00"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月3日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月4日 · ¥0.00"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月5日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月6日 · ¥0.00"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月7日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月8日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月9日 · ¥0.00"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月10日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月11日 · ¥0.00"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月12日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月13日 · ¥0.00"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月14日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月15日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月16日 · ¥0.00"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月17日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月18日 · ¥0.00"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月19日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月20日 · ¥0.00"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月21日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月22日 · ¥0.00"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月23日 · ¥28.50"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月24日 · 未来"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月25日 · 未来"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月26日 · 未来"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月27日 · 未来"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月28日 · 未来"
+      },
+      {
+        "w": 15.640625,
+        "h": 182,
+        "label": "2026年9月29日 · 未来"
+      },
+      {
+        "w": 15.65625,
+        "h": 182,
+        "label": "2026年9月30日 · 未来"
+      }
+    ]
+  },
+  {
+    "name": "prod-1440-settings-preferences",
+    "url": "http://127.0.0.1:4188/settings/preferences",
+    "width": 1440,
+    "height": 800,
+    "scrollWidth": 1440,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 20,
+        "y": 187.1875,
+        "w": 211,
+        "h": 48,
+        "font": "14.72px",
+        "text": "设置"
+      },
+      "#settings-title": {
+        "x": 334.59375,
+        "y": 164.390625,
+        "w": 215.859375,
+        "h": 27.84375,
+        "font": "23.2px",
+        "text": "设置"
+      },
+      "#settings-language": {
+        "x": 487.859375,
+        "y": 277.84375,
+        "w": 160,
+        "h": 40,
+        "font": "14.08px",
+        "text": "简体中文English"
+      },
+      "#ledger-tools-title": null
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-1440-settings-backup",
+    "url": "http://127.0.0.1:4188/settings/backup",
+    "width": 1440,
+    "height": 800,
+    "scrollWidth": 1440,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 20,
+        "y": 187.1875,
+        "w": 211,
+        "h": 48,
+        "font": "14.72px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": {
+        "x": 334.59375,
+        "y": 164.390625,
+        "w": 1022.8125,
+        "h": 24,
+        "font": "16px",
+        "text": "账本同步与备份"
+      }
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-1440-settings-conflicts",
+    "url": "http://127.0.0.1:4188/settings/conflicts",
+    "width": 1440,
+    "height": 800,
+    "scrollWidth": 1440,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 20,
+        "y": 187.1875,
+        "w": 211,
+        "h": 48,
+        "font": "14.72px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": {
+        "x": 334.59375,
+        "y": 164.390625,
+        "w": 1022.8125,
+        "h": 24,
+        "font": "16px",
+        "text": "账本同步与备份"
+      }
+    },
+    "bars": []
+  },
+  {
+    "name": "prod-statistics-accessible-alternative",
+    "url": "http://127.0.0.1:4188/statistics",
+    "width": 375,
+    "height": 800,
+    "scrollWidth": 375,
+    "boxes": {
+      "#income-total": null,
+      "#expense-total": null,
+      "#net-total": null,
+      "#toggle-income-amounts": null,
+      "#toggle-expense-amounts": null,
+      "#toggle-net-amounts": null,
+      "#open-secondary-menu": {
+        "x": 326.015625,
+        "y": 733.40625,
+        "w": 30.390625,
+        "h": 48,
+        "font": "11.2px",
+        "text": "设置"
+      },
+      "#settings-title": null,
+      "#settings-language": null,
+      "#ledger-tools-title": null
+    },
+    "bars": [
+      {
+        "w": 4.875,
+        "h": 142,
+        "label": "2026年9月1日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月2日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月3日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月4日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月5日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月6日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月7日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月8日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月9日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月10日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月11日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月12日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月13日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月14日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月15日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月16日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月17日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月18日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月19日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月20日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月21日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月22日 · ¥0.00"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月23日 · ¥28.50"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月24日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月25日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月26日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月27日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月28日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月29日 · 未来"
+      },
+      {
+        "w": 4.890625,
+        "h": 142,
+        "label": "2026年9月30日 · 未来"
+      }
+    ]
+  }
+]

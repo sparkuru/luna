@@ -1,0 +1,135 @@
+{
+  "checks": [
+    {
+      "name": "probe-welcome-mobile",
+      "url": "http://127.0.0.1:4188/",
+      "text": "跳到主要内容\nL\nLuna\n语言\n简体中文\nEnglish\n安静、清楚地记录每一笔\n让收支一目了然。\n\n为家庭的重要收入和支出建立离线工作区。账本保存在这台电脑上，无需网络也能使用。\n\n设置工作区\n\n选择该工作区固定使用的币种和小数位数。\n\n工作区名称\n币种\nCNY — 人民币（RMB）\nUSD — 美元\nSGD — 新加坡元\nEUR — 欧元\nGBP — 英镑\nJPY — 日元\nAUD — 澳大利亚元\nCAD — 加拿大元\n小数位数\n每月支出上限\n\n这是规划上限，不是账户余额。\n\n创建本地工作区\n\n交易和预算保存在本机。可在「设置」中恢复已有账本，或连接你的加密远端副本。\n\n此设备已可离线使用"
+    },
+    {
+      "name": "probe-setup-settings-dead-end",
+      "url": "http://127.0.0.1:4188/settings",
+      "text": "跳到主要内容\nL\nLuna\n语言\n简体中文\nEnglish\n安静、清楚地记录每一笔\n让收支一目了然。\n\n为家庭的重要收入和支出建立离线工作区。账本保存在这台电脑上，无需网络也能使用。\n\n设置工作区\n\n选择该工作区固定使用的币种和小数位数。\n\n工作区名称\n币种\nCNY — 人民币（RMB）\nUSD — 美元\nSGD — 新加坡元\nEUR — 欧元\nGBP — 英镑\nJPY — 日元\nAUD — 澳大利亚元\nCAD — 加拿大元\n小数位数\n每月支出上限\n\n这是规划上限，不是账户余额。\n\n创建本地工作区\n\n交易和预算保存在本机。可在「设置」中恢复已有账本，或连接你的加密远端副本。\n\n此设备已可离线使用"
+    },
+    {
+      "name": "fresh-user-restore-entry",
+      "cards": 0,
+      "accountFields": 0,
+      "setupStillVisible": true
+    },
+    {
+      "name": "probe-empty-restore-reachable",
+      "url": "http://127.0.0.1:4188/settings/backup",
+      "text": "跳到主要内容\nL\nLuna\n语言\n简体中文\nEnglish\n安静、清楚地记录每一笔\n让收支一目了然。\n\n为家庭的重要收入和支出建立离线工作区。账本保存在这台电脑上，无需网络也能使用。\n\n设置工作区\n\n选择该工作区固定使用的币种和小数位数。\n\n工作区名称\n币种\nCNY — 人民币（RMB）\nUSD — 美元\nSGD — 新加坡元\nEUR — 欧元\nGBP — 英镑\nJPY — 日元\nAUD — 澳大利亚元\nCAD — 加拿大元\n小数位数\n每月支出上限\n\n这是规划上限，不是账户余额。\n\n创建本地工作区\n\n交易和预算保存在本机。可在「设置」中恢复已有账本，或连接你的加密远端副本。\n\n账本同步与备份\n\n按四步操作：登录 Luna 统一账号，连接或解锁此账本，选择自动或手动同步，然后立即同步或查看状态。\n\n同步未连接。\n\n加密备份与恢复\n\n请妥善保存加密文件和密码。在空应用中导入可恢复工作区；在已有工作区中导入会合并历史。\n\n备份加密密码\n\n至少 12 个字符，UTF-8 编码不超过 1,024 字节。每台设备使用相同密码；遗失后无法找回。\n\n下载加密备份\n加密备份文件（.luna-backup 最大 544 MiB；旧 JSON 最大 12 MiB）\n备份解密密码\n\n至少 12 个字符，UTF-8 编码不超过 1,024 字节。每台设备使用相同密码；遗失后无法找回。\n\n我确认合并此备份。已有历史会保留；不同工作区的备份将被拒绝。\n合并加密备份\n\n此设备已可离线使用"
+    },
+    {
+      "name": "draft-close-reopen",
+      "amount": "15"
+    },
+    {
+      "name": "draft-confirmed-reload",
+      "amount": ""
+    },
+    {
+      "name": "category-required-focus",
+      "message": "请选择与交易类型匹配且已启用的分类。",
+      "focus": "transaction-amount"
+    },
+    {
+      "name": "probe-short-viewport-entry",
+      "url": "http://127.0.0.1:4188/luna",
+      "text": "跳到主要内容\nL\nLuna\n最近账单\n分类统计\n设置\n先看最近账单\n聚焦你的每月收支。\n上个月\n2026年9月\n下个月\n添加交易\n收入\n••••\n本月已记录\n支出\n••••\n0 条支出记录\n结余\n••••\n收入减支出\n最近账单\n筛选交易\n可选\n从第一笔开始\n\n记录第一笔支出或收入，它会显示在最近账单中。\n\n此设备已可离线使用\n\n记一笔\n关闭\n请选择与交易类型匹配且已启用的分类。\n类型\n支出\n收入\n支出\n收入\n金额 *\n输入 CNY — 人民币（RMB） 金额，最多 2 位小数。\n分类 *\n餐饮\n请从设置中启用的分类里选择。分类较多时可以搜索。\n日期\n金额计算器\n保存交易\n更多信息\n添加图片\n\nJPEG、PNG 或 WebP · 最多 9 张\n\n选择文件"
+    },
+    {
+      "name": "probe-no-results",
+      "url": "http://127.0.0.1:4188/luna",
+      "text": "跳到主要内容\nL\nLuna\n最近账单\n分类统计\n设置\n交易已保存到本机。\n交易已保存到本机。\n先看最近账单\n聚焦你的每月收支。\n上个月\n2026年9月\n下个月\n添加交易\n收入\n••••\n本月已记录\n支出\n••••\n1 条支出记录\n结余\n••••\n收入减支出\n最近账单\n筛选交易\n已启用 1 项筛选\n类型\n全部交易\n收入\n支出\n可选择一个或多个分类\n支出分类\n餐饮\n搜索备注、商户或支付方式\n.*\n正则表达式\n开始日期\n结束日期\n最小金额\n最大金额\n清除筛选\n搜索备注、商户或支付方式: 不会找到的店铺\n×\n\n显示 0 条 · 当前账本共 1 条 · 支出 ¥0.00 · 收入 ¥0.00\n\n没有符合筛选条件的交易\n\n请清除筛选条件，或搜索其他备注、商户或分类。\n\n此设备已可离线使用"
+    },
+    {
+      "name": "probe-invalid-filter",
+      "url": "http://127.0.0.1:4188/luna",
+      "text": "跳到主要内容\nL\nLuna\n最近账单\n分类统计\n设置\n交易已保存到本机。\n交易已保存到本机。\n先看最近账单\n聚焦你的每月收支。\n上个月\n2026年9月\n下个月\n添加交易\n收入\n••••\n本月已记录\n支出\n••••\n1 条支出记录\n结余\n••••\n收入减支出\n最近账单\n筛选交易\n已启用 2 项筛选\n类型\n全部交易\n收入\n支出\n可选择一个或多个分类\n支出分类\n餐饮\n搜索备注、商户或支付方式\n.*\n正则表达式\n开始日期\n结束日期\n最小金额\n最大金额\n清除筛选\n最小金额: ≥ 100\n×\n最大金额: ≤ 1\n×\n\n最小金额不能大于最大金额。\n\n修改筛选条件，或清除全部筛选以回到当前月份。\n\n正在检查筛选条件，列表暂时保留上一次结果。\n\n修改筛选条件，或清除全部筛选以回到当前月份。\n\n此设备已可离线使用"
+    },
+    {
+      "name": "delete-cancel",
+      "rows": 1
+    },
+    {
+      "name": "probe-deleted",
+      "url": "http://127.0.0.1:4188/luna",
+      "text": "跳到主要内容\nL\nLuna\n最近账单\n分类统计\n设置\n交易已从本月统计中删除。\n交易已从本月统计中删除。\n先看最近账单\n聚焦你的每月收支。\n上个月\n2026年9月\n下个月\n添加交易\n收入\n••••\n本月已记录\n支出\n••••\n0 条支出记录\n结余\n••••\n收入减支出\n最近账单\n筛选交易\n可选\n从第一笔开始\n\n记录第一笔支出或收入，它会显示在最近账单中。\n\n正在准备离线访问…"
+    },
+    {
+      "name": "probe-budget-saved",
+      "url": "http://127.0.0.1:4188/budget",
+      "text": "跳到主要内容\nL\nLuna\n最近账单\n分类统计\n设置\n本月支出上限已保存。\n设置\n工作区\n本地账本分类管理偏好设置每月支出上限\n账号与同步\n账号账本同步与备份高级同步设置\n数据与恢复\n加密备份冲突处理\n每月支出上限\n\n2026年9月\n\n已用 ¥0.00，预算 ¥1,000.00\n\n每月支出上限\n保存上限\n留空可移除本月上限。\n\n正在准备离线访问…"
+    },
+    {
+      "name": "probe-account-invalid",
+      "url": "http://127.0.0.1:4188/settings/account",
+      "text": "跳到主要内容\nL\nLuna\n最近账单\n分类统计\n设置\n设置\n工作区\n本地账本分类管理偏好设置每月支出上限\n账号与同步\n账号账本同步与备份高级同步设置\n数据与恢复\n加密备份冲突处理\nLuna 统一账号\n\n登录 Luna 统一账号，让此设备连接共享账本。开发环境可使用可信局域网 HTTP 地址，其他场景请使用 HTTPS。登录不会上传或移动此设备上的本地副本。\n\n尚未登录，本地账本仍可离线使用。\n\nLuna 地址\n用户名\n账号密码\n设备名称\n登录\n\n本地副本保存在此设备上，离线时仍可使用。普通刷新会保留当前标签页的登录和解锁状态；关闭标签页或浏览器后需要重新登录并解锁。账号密码不是账本口令，请妥善保存账本口令。\n\n同步此账本\n\n按四步操作：登录 Luna 统一账号，连接或解锁此账本，选择自动或手动同步，然后立即同步或查看状态。\n\n同步设置步骤\n1\n登录 Luna 统一账号\n\n每台需要保持同步的设备都使用同一个账号。\n\n前往登录\n2\n连接或解锁此账本\n\n选择一个本地副本或从账号恢复副本，然后输入账本口令。\n\n连接或解锁同步前请先登录。\n\n3\n选择自动或手动同步\n\n自动模式会在 Luna 活跃时检查；手动模式要等你主动开始同步。\n\n应用活跃时自动同步\n\n4\n立即同步或查看状态\n\n点击“立即同步”收发修改；上方状态会说明是否需要处理。\n\n同步未连接。\n\n同步模式\n应用活跃时自动同步\n仅手动同步\n\n自动模式会在 Luna 活跃时检查变化；手动模式会一直保留本地修改，直到你点击“立即同步”。\n\n连接或解锁同步前请先登录。\n\n本地账本副本\n\n只会从此设备删除该副本及其本地设置，不会删除共享账本或其他设备上的副本。\n\n体验复核账本\n\n原始本地副本\n\n当前打开\n\n原始本地副本作为安全副本保留，不能在此删除。\n\n正在准备离线访问…"
+    },
+    {
+      "name": "password-controls",
+      "fields": 1,
+      "buttons": [
+        "最近账单",
+        "分类统计",
+        "设置",
+        "设置",
+        "本地账本",
+        "分类管理",
+        "偏好设置",
+        "每月支出上限",
+        "账号",
+        "账本同步与备份",
+        "高级同步设置",
+        "加密备份",
+        "冲突处理",
+        "登录",
+        "当前打开"
+      ]
+    },
+    {
+      "name": "probe-backup-short-password",
+      "url": "http://127.0.0.1:4188/settings/backup",
+      "text": "跳到主要内容\nL\nLuna\n最近账单\n分类统计\n设置\n设置\n工作区\n本地账本分类管理偏好设置每月支出上限\n账号与同步\n账号账本同步与备份高级同步设置\n数据与恢复\n加密备份冲突处理\n账本同步与备份\n\n按四步操作：登录 Luna 统一账号，连接或解锁此账本，选择自动或手动同步，然后立即同步或查看状态。\n\n同步未连接。\n\n请输入至少 12 个 Unicode 字符、UTF-8 编码不超过 1,024 字节的密码。\n\n加密备份与恢复\n\n请妥善保存加密文件和密码。在空应用中导入可恢复工作区；在已有工作区中导入会合并历史。\n\n备份加密密码\n\n至少 12 个字符，UTF-8 编码不超过 1,024 字节。每台设备使用相同密码；遗失后无法找回。\n\n下载加密备份\n加密备份文件（.luna-backup 最大 544 MiB；旧 JSON 最大 12 MiB）\n备份解密密码\n\n至少 12 个字符，UTF-8 编码不超过 1,024 字节。每台设备使用相同密码；遗失后无法找回。\n\n我确认合并此备份。已有历史会保留；不同工作区的备份将被拒绝。\n合并加密备份\n\n正在准备离线访问…"
+    },
+    {
+      "name": "probe-english-preferences",
+      "url": "http://127.0.0.1:4188/settings/preferences",
+      "text": "Skip to main content\nL\nLuna\nRecent ledger\nCategory breakdown\nSettings\nSettings\nWorkspace\nLocal ledgersCategoriesPreferencesMonthly spending limit\nAccount & sync\nAccountLedger sync & backupAdvanced sync settings\nData & recovery\nEncrypted backupConflicts\nSettings\n\nLanguage and privacy choices for this device.\n\nLanguage\nLanguage\n简体中文\nEnglish\nAmount privacy\nHide top summary amounts by default\n\nFirst install defaults to hidden. Only income, spending, and net flow in the top summary are masked; budget details, categories, and transactions remain visible. This preference persists; a temporary reveal never does.\n\nUse the eye beside a summary label to show or hide only that amount. This session-only choice resets to your privacy default after restart. Details remain visible.\n\nPreparing offline access…"
+    },
+    {
+      "name": "probe-320-preferences",
+      "url": "http://127.0.0.1:4188/settings/preferences",
+      "text": "Skip to main content\nL\nLuna\nRecent ledger\nCategory breakdown\nSettings\nSettings\nWorkspace\nLocal ledgersCategoriesPreferencesMonthly spending limit\nAccount & sync\nAccountLedger sync & backupAdvanced sync settings\nData & recovery\nEncrypted backupConflicts\nSettings\n\nLanguage and privacy choices for this device.\n\nLanguage\nLanguage\n简体中文\nEnglish\nAmount privacy\nHide top summary amounts by default\n\nFirst install defaults to hidden. Only income, spending, and net flow in the top summary are masked; budget details, categories, and transactions remain visible. This preference persists; a temporary reveal never does.\n\nUse the eye beside a summary label to show or hide only that amount. This session-only choice resets to your privacy default after restart. Details remain visible.\n\nPreparing offline access…"
+    },
+    {
+      "name": "probe-landscape-preferences",
+      "url": "http://127.0.0.1:4188/settings/preferences",
+      "text": "Skip to main content\nL\nLuna\nRecent ledger\nCategory breakdown\nSettings\nSettings\nWorkspace\nLocal ledgersCategoriesPreferencesMonthly spending limit\nAccount & sync\nAccountLedger sync & backupAdvanced sync settings\nData & recovery\nEncrypted backupConflicts\nSettings\n\nLanguage and privacy choices for this device.\n\nLanguage\nLanguage\n简体中文\nEnglish\nAmount privacy\nHide top summary amounts by default\n\nFirst install defaults to hidden. Only income, spending, and net flow in the top summary are masked; budget details, categories, and transactions remain visible. This preference persists; a temporary reveal never does.\n\nUse the eye beside a summary label to show or hide only that amount. This session-only choice resets to your privacy default after restart. Details remain visible.\n\nPreparing offline access…"
+    }
+  ],
+  "dialogs": [
+    {
+      "type": "beforeunload",
+      "message": "",
+      "accept": true
+    },
+    {
+      "type": "confirm",
+      "message": "删除这笔交易？它将不再计入月度统计，但会保留在本地历史中。",
+      "accept": false
+    },
+    {
+      "type": "confirm",
+      "message": "删除这笔交易？它将不再计入月度统计，但会保留在本地历史中。",
+      "accept": true
+    },
+    {
+      "type": "beforeunload",
+      "message": "",
+      "accept": true
+    }
+  ]
+}

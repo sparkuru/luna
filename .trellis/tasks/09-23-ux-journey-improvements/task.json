@@ -1,0 +1,32 @@
+{
+  "id": "ux-journey-improvements",
+  "name": "ux-journey-improvements",
+  "title": "Luna 全流程体验改进：入口、反馈与移动可用性",
+  "description": "基于生产 Playwright 全流程审计，规划 F01–F09 的入口、反馈、移动可用性、查询预算改进与安全撤销设计；保留离线及数据保护。",
+  "status": "review",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "dev",
+  "assignee": "dev",
+  "createdAt": "2026-09-23",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "paycheck-to-paycheck",
+  "worktree_path": null,
+  "commit": "f40f0dd",
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-23-ux-entry-and-summary",
+    "09-23-ux-feedback-and-recovery",
+    "09-23-ux-mobile-navigation",
+    "09-23-ux-query-and-budget",
+    "09-23-ux-delete-recovery-design"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "2026-09-23 用户明确授权创建任务与设计。五个子任务，全部 planning；未批准产品实施。\n2026-09-23 用户在完整规划摘要后明确批准“开始实现吧”。授权 A–D 实施、E 删除恢复设计，保留原范围和分批顺序。\n2026-09-23 A 实现及针对性验证完成，B 开始实施；用户确认 E 采用当前会话内30秒撤销、暂不建历史回收站，当前仍为设计交付。\n2026-09-23 A–D实现/E设计完成；集成typecheck、214单测、production build、180生产浏览器用例、独立review和最终视觉复核通过。待提交计划及人工残余确认，未提交/归档。\n2026-09-23 用户明确批准按提交计划执行，包含列明的原有改动，并接受真机键盘、读屏、原生窗口后续验证安排。产品工作提交 f40f0dd；下一步文档提交后按计划归档本轮六任务。",
+  "meta": {}
+}

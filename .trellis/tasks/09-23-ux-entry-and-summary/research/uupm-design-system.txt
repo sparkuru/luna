@@ -1,0 +1,52 @@
+╔═════════════════════════════════════════════════════════════════════════════════════════╗
+║  TARGET: Luna UX journey improvements - RECOMMENDED DESIGN SYSTEM                       ║
+╚═════════════════════════════════════════════════════════════════════════════════════════╝
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+├─── PATTERN ──────────────────────────────────────────────────────────────────────────────┤
+│  Name: Trust & Authority + Conversion                                                   │
+│     Conversion: Security badges. Case studies. Transparent pricing. Low-friction form.  │
+│     CTA: Contact Sales / Get Quote (primary) + Nav                                      │
+│     Sections:                                                                           │
+│       1. 1. Hero (mission/credibility), 2. Proof (logos, certs, stats), 3. Solution overview, 4. Clear CTA path│
+├─── STYLE ────────────────────────────────────────────────────────────────────────────────┤
+│  Name: Vibrant & Block-based                                                            │
+│     Mode Support: Light ✓ Full  Dark ✓ Full                                             │
+│     Keywords: Bold, energetic, playful, block layout, geometric shapes, high color      │
+│     contrast, duotone, modern, energetic                                                │
+│     Best For: Startups, creative agencies, gaming, social media, youth-focused,         │
+│     entertainment, consumer                                                             │
+│     Performance: ⚡ Good | Accessibility: ◐ Ensure WCAG                                  │
+├─── COLORS ───────────────────────────────────────────────────────────────────────────────┤
+│     [38;2;67;56;202m██[0m Primary:       #4338CA    (--color-primary)                                      │
+│     [38;2;255;255;255m██[0m On Primary:    #FFFFFF    (--color-on-primary)                                   │
+│     [38;2;99;102;241m██[0m Secondary:     #6366F1    (--color-secondary)                                    │
+│     [38;2;124;58;237m██[0m Accent/CTA:    #7C3AED    (--color-accent)                                       │
+│     [38;2;15;23;42m██[0m Background:    #0F172A    (--color-background)                                   │
+│     [38;2;255;255;255m██[0m Foreground:    #FFFFFF    (--color-foreground)                                   │
+│     [38;2;19;25;54m██[0m Muted:         #131936    (--color-muted)                                        │
+│     Border:        rgba(255,255,255,0.08) (--color-border)                              │
+│     [38;2;220;38;38m██[0m Destructive:   #DC2626    (--color-destructive)                                  │
+│     [38;2;67;56;202m██[0m Ring:          #4338CA    (--color-ring)                                         │
+│     Notes: Night indigo + dream violet on dark                                          │
+├─── TYPOGRAPHY ───────────────────────────────────────────────────────────────────────────┤
+│  Plus Jakarta Sans / Plus Jakarta Sans                                                  │
+│     Mood: enterprise, saas, b2b, professional, indigo, modern, approachable, legible,   │
+│     ios dynamic type, android scaling                                                   │
+│     Best For: B2B SaaS apps, productivity tools, government and finance mobile apps,    │
+│     admin dashboards, enterprise onboarding                                             │
+│     Google Fonts: https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400│
+│     CSS Import: @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+San...│
+├─── KEY EFFECTS ──────────────────────────────────────────────────────────────────────────┤
+│     Large sections (48px+ gaps), animated patterns, bold hover (color shift),           │
+│     scroll-snap, large type (32px+), 200-300ms                                          │
+├─── AVOID ────────────────────────────────────────────────────────────────────────────────┤
+│     Flat design without depth + Text-heavy pages                                        │
+├─── PRE-DELIVERY CHECKLIST ───────────────────────────────────────────────────────────────┤
+│     [ ] No emojis as icons (use SVG: Heroicons/Lucide)                                  │
+│     [ ] cursor-pointer on all clickable elements                                        │
+│     [ ] Hover states with smooth transitions (150-300ms)                                │
+│     [ ] Light mode: text contrast 4.5:1 minimum                                         │
+│     [ ] Focus states visible for keyboard nav                                           │
+│     [ ] prefers-reduced-motion respected                                                │
+│     [ ] Responsive: 375px, 768px, 1024px, 1440px                                        │
+└─────────────────────────────────────────────────────────────────────────────────────────┘

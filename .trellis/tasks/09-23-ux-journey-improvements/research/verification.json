@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-09-22T16:04:59.240Z",
+  "commit": "d22eff0491b99b47df1df49ee95d20c583bc6fd3",
+  "worktreeStatus": " M src/renderer/app/shell.tsx\n M src/renderer/features/ledger.tsx\n M src/renderer/features/settings.tsx\n M src/renderer/i18n.ts\n M src/renderer/styles.css\n M tests/e2e/intuitive-ledger.spec.ts\n M tests/e2e/react-state.spec.ts\n M tests/e2e/server-account.spec.ts\n?? .trellis/tasks/09-18-settings-interface/\n?? src/renderer/features/settings-navigation.ts\n?? src/renderer/ledger-copy.test.ts\n?? src/renderer/ledger-copy.ts\n?? src/renderer/settings-navigation.test.ts\n?? tests/e2e/settings-interface.spec.ts\n",
+  "production": {
+    "startTime": "2026-09-22T15:56:30.655Z",
+    "duration": 69529.396,
+    "expected": 122,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "probeCount": 19,
+  "probeError": null,
+  "layoutCount": 19,
+  "screenshots": 64,
+  "missingReportLinks": []
+}

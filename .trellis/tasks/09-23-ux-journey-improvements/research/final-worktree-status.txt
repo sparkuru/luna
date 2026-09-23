@@ -1,0 +1,14 @@
+ M src/renderer/app/shell.tsx
+ M src/renderer/features/ledger.tsx
+ M src/renderer/features/settings.tsx
+ M src/renderer/i18n.ts
+ M src/renderer/styles.css
+ M tests/e2e/intuitive-ledger.spec.ts
+ M tests/e2e/react-state.spec.ts
+ M tests/e2e/server-account.spec.ts
+?? .trellis/tasks/09-18-settings-interface/
+?? src/renderer/features/settings-navigation.ts
+?? src/renderer/ledger-copy.test.ts
+?? src/renderer/ledger-copy.ts
+?? src/renderer/settings-navigation.test.ts
+?? tests/e2e/settings-interface.spec.ts

@@ -1,0 +1,1418 @@
+[
+  {
+    "name": "en-320-luna",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "Your money, in focus.",
+        "y": 78.390625
+      },
+      {
+        "text": "Recent ledger",
+        "y": 441.765625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 494.3125
+      },
+      {
+        "id": "toggle-income-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 239.765625
+      },
+      {
+        "id": "toggle-expense-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 300.265625
+      },
+      {
+        "id": "toggle-net-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 360.265625
+      }
+    ]
+  },
+  {
+    "name": "en-320-settings-preferences",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "Preferences",
+        "y": 166.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 494.3125
+      },
+      {
+        "id": "settings-language",
+        "w": 220,
+        "h": 40,
+        "y": 328.921875
+      }
+    ]
+  },
+  {
+    "name": "en-320-settings-backup",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "Encrypted backup",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 494.3125
+      }
+    ]
+  },
+  {
+    "name": "en-320-settings-conflicts",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "Resolve ledger conflicts",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 494.3125
+      }
+    ]
+  },
+  {
+    "name": "en-320-settings-account",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "Luna account",
+        "y": 154.171875
+      },
+      {
+        "text": "Local ledger copies",
+        "y": 988.0625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 494.3125
+      }
+    ]
+  },
+  {
+    "name": "en-320-statistics",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "Category breakdown",
+        "y": 79.390625
+      },
+      {
+        "text": "Trend",
+        "y": 468.328125
+      },
+      {
+        "text": "Categories",
+        "y": 1154.390625
+      },
+      {
+        "text": "Largest spending",
+        "y": 1500.375
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 494.3125
+      }
+    ]
+  },
+  {
+    "name": "en-320-budget",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "Monthly spending limit",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 494.3125
+      }
+    ]
+  },
+  {
+    "name": "en-375-luna",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "Your money, in focus.",
+        "y": 78.390625
+      },
+      {
+        "text": "Recent ledger",
+        "y": 441.765625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 726.3125
+      },
+      {
+        "id": "toggle-income-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 239.765625
+      },
+      {
+        "id": "toggle-expense-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 300.265625
+      },
+      {
+        "id": "toggle-net-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 360.265625
+      }
+    ]
+  },
+  {
+    "name": "en-375-settings-preferences",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "Preferences",
+        "y": 166.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 726.3125
+      },
+      {
+        "id": "settings-language",
+        "w": 275,
+        "h": 40,
+        "y": 328.921875
+      }
+    ]
+  },
+  {
+    "name": "en-375-settings-backup",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "Encrypted backup",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 726.3125
+      }
+    ]
+  },
+  {
+    "name": "en-375-settings-conflicts",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "Resolve ledger conflicts",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 726.3125
+      }
+    ]
+  },
+  {
+    "name": "en-375-settings-account",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "Luna account",
+        "y": 154.171875
+      },
+      {
+        "text": "Local ledger copies",
+        "y": 966.953125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 726.3125
+      }
+    ]
+  },
+  {
+    "name": "en-375-statistics",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "Category breakdown",
+        "y": 79.390625
+      },
+      {
+        "text": "Trend",
+        "y": 468.328125
+      },
+      {
+        "text": "Categories",
+        "y": 1113.125
+      },
+      {
+        "text": "Largest spending",
+        "y": 1468.71875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 726.3125
+      }
+    ]
+  },
+  {
+    "name": "en-375-budget",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "Monthly spending limit",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 726.3125
+      }
+    ]
+  },
+  {
+    "name": "en-768-luna",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "Your money, in focus.",
+        "y": 216.09375
+      },
+      {
+        "text": "Recent ledger",
+        "y": 586.015625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      },
+      {
+        "id": "toggle-income-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 455.984375
+      },
+      {
+        "id": "toggle-expense-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 455.984375
+      },
+      {
+        "id": "toggle-net-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 455.984375
+      }
+    ]
+  },
+  {
+    "name": "en-768-settings-preferences",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "Preferences",
+        "y": 277.15625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      },
+      {
+        "id": "settings-language",
+        "w": 160,
+        "h": 40,
+        "y": 390.609375
+      }
+    ]
+  },
+  {
+    "name": "en-768-settings-backup",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "Encrypted backup",
+        "y": 265.15625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "en-768-settings-conflicts",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "Resolve ledger conflicts",
+        "y": 265.15625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "en-768-settings-account",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "Luna account",
+        "y": 265.15625
+      },
+      {
+        "text": "Local ledger copies",
+        "y": 952.828125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "en-768-statistics",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "Category breakdown",
+        "y": 206.375
+      },
+      {
+        "text": "Trend",
+        "y": 393.375
+      },
+      {
+        "text": "Categories",
+        "y": 1041.21875
+      },
+      {
+        "text": "Largest spending",
+        "y": 1396.8125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "en-768-budget",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "Monthly spending limit",
+        "y": 265.15625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "en-1440-luna",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "Your money, in focus.",
+        "y": 66.71875
+      },
+      {
+        "text": "Recent ledger",
+        "y": 327.375
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 206.125
+      },
+      {
+        "id": "toggle-income-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 189.34375
+      },
+      {
+        "id": "toggle-expense-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 189.34375
+      },
+      {
+        "id": "toggle-net-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 189.34375
+      }
+    ]
+  },
+  {
+    "name": "en-1440-settings-preferences",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "Preferences",
+        "y": 250.78125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 206.125
+      },
+      {
+        "id": "settings-language",
+        "w": 160,
+        "h": 40,
+        "y": 364.234375
+      }
+    ]
+  },
+  {
+    "name": "en-1440-settings-backup",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "Encrypted backup",
+        "y": 250.78125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 206.125
+      }
+    ]
+  },
+  {
+    "name": "en-1440-settings-conflicts",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "Resolve ledger conflicts",
+        "y": 250.78125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 206.125
+      }
+    ]
+  },
+  {
+    "name": "en-1440-settings-account",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "Luna account",
+        "y": 250.78125
+      },
+      {
+        "text": "Local ledger copies",
+        "y": 914.453125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 206.125
+      }
+    ]
+  },
+  {
+    "name": "en-1440-statistics",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "Category breakdown",
+        "y": 32
+      },
+      {
+        "text": "Trend",
+        "y": 218.15625
+      },
+      {
+        "text": "Categories",
+        "y": 218.15625
+      },
+      {
+        "text": "Largest spending",
+        "y": 863.53125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 206.125
+      }
+    ]
+  },
+  {
+    "name": "en-1440-budget",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "Monthly spending limit",
+        "y": 250.78125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 206.125
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-320-luna",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "聚焦你的每月收支。",
+        "y": 78.390625
+      },
+      {
+        "text": "最近账单",
+        "y": 441.765625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 501.40625
+      },
+      {
+        "id": "toggle-income-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 239.765625
+      },
+      {
+        "id": "toggle-expense-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 300.265625
+      },
+      {
+        "id": "toggle-net-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 360.265625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-320-settings-preferences",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "偏好设置",
+        "y": 166.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 501.40625
+      },
+      {
+        "id": "settings-language",
+        "w": 220,
+        "h": 40,
+        "y": 307.3125
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-320-settings-backup",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "加密备份",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 501.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-320-settings-conflicts",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "处理账本冲突",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 501.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-320-settings-account",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "Luna 统一账号",
+        "y": 154.171875
+      },
+      {
+        "text": "本地账本副本",
+        "y": 966.953125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 501.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-320-statistics",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "分类统计",
+        "y": 79.390625
+      },
+      {
+        "text": "趋势",
+        "y": 446.71875
+      },
+      {
+        "text": "分类",
+        "y": 1091.515625
+      },
+      {
+        "text": "大额支出",
+        "y": 1437.5
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 501.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-320-budget",
+    "width": 320,
+    "scrollWidth": 320,
+    "headings": [
+      {
+        "text": "每月支出上限",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 94.28125,
+        "h": 48,
+        "y": 501.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-375-luna",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "聚焦你的每月收支。",
+        "y": 78.390625
+      },
+      {
+        "text": "最近账单",
+        "y": 441.765625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 733.40625
+      },
+      {
+        "id": "toggle-income-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 239.765625
+      },
+      {
+        "id": "toggle-expense-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 300.265625
+      },
+      {
+        "id": "toggle-net-amounts",
+        "w": 44,
+        "h": 44,
+        "y": 360.265625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-375-settings-preferences",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "偏好设置",
+        "y": 166.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 733.40625
+      },
+      {
+        "id": "settings-language",
+        "w": 275,
+        "h": 40,
+        "y": 307.3125
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-375-settings-backup",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "加密备份",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 733.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-375-settings-conflicts",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "处理账本冲突",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 733.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-375-settings-account",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "Luna 统一账号",
+        "y": 154.171875
+      },
+      {
+        "text": "本地账本副本",
+        "y": 918.953125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 733.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-375-statistics",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "分类统计",
+        "y": 79.390625
+      },
+      {
+        "text": "趋势",
+        "y": 379.9375
+      },
+      {
+        "text": "分类",
+        "y": 1005.046875
+      },
+      {
+        "text": "大额支出",
+        "y": 1360.640625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 733.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-375-budget",
+    "width": 375,
+    "scrollWidth": 375,
+    "headings": [
+      {
+        "text": "每月支出上限",
+        "y": 154.171875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 112.59375,
+        "h": 48,
+        "y": 733.40625
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-768-luna",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "聚焦你的每月收支。",
+        "y": 216.09375
+      },
+      {
+        "text": "最近账单",
+        "y": 586.015625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      },
+      {
+        "id": "toggle-income-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 455.984375
+      },
+      {
+        "id": "toggle-expense-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 455.984375
+      },
+      {
+        "id": "toggle-net-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 455.984375
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-768-settings-preferences",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "偏好设置",
+        "y": 277.15625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      },
+      {
+        "id": "settings-language",
+        "w": 160,
+        "h": 40,
+        "y": 390.609375
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-768-settings-backup",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "加密备份",
+        "y": 265.15625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-768-settings-conflicts",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "处理账本冲突",
+        "y": 265.15625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-768-settings-account",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "Luna 统一账号",
+        "y": 265.15625
+      },
+      {
+        "text": "本地账本副本",
+        "y": 928.828125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-768-statistics",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "分类统计",
+        "y": 206.375
+      },
+      {
+        "text": "趋势",
+        "y": 374.53125
+      },
+      {
+        "text": "分类",
+        "y": 1022.375
+      },
+      {
+        "text": "大额支出",
+        "y": 1377.96875
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-768-budget",
+    "width": 768,
+    "scrollWidth": 768,
+    "headings": [
+      {
+        "text": "每月支出上限",
+        "y": 265.15625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 235.078125,
+        "h": 48,
+        "y": 56.984375
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-1440-luna",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "聚焦你的每月收支。",
+        "y": 66.71875
+      },
+      {
+        "text": "最近账单",
+        "y": 327.375
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 187.1875
+      },
+      {
+        "id": "toggle-income-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 189.34375
+      },
+      {
+        "id": "toggle-expense-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 189.34375
+      },
+      {
+        "id": "toggle-net-amounts",
+        "w": 44,
+        "h": 48,
+        "y": 189.34375
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-1440-settings-preferences",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "偏好设置",
+        "y": 164.390625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 187.1875
+      },
+      {
+        "id": "settings-language",
+        "w": 160,
+        "h": 40,
+        "y": 277.84375
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-1440-settings-backup",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "加密备份",
+        "y": 164.390625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 187.1875
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-1440-settings-conflicts",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "处理账本冲突",
+        "y": 164.390625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 187.1875
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-1440-settings-account",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "Luna 统一账号",
+        "y": 164.390625
+      },
+      {
+        "text": "本地账本副本",
+        "y": 828.0625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 187.1875
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-1440-statistics",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "分类统计",
+        "y": 32
+      },
+      {
+        "text": "趋势",
+        "y": 218.15625
+      },
+      {
+        "text": "分类",
+        "y": 218.15625
+      },
+      {
+        "text": "大额支出",
+        "y": 863.53125
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 187.1875
+      }
+    ]
+  },
+  {
+    "name": "zh-CN-1440-budget",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "headings": [
+      {
+        "text": "每月支出上限",
+        "y": 164.390625
+      }
+    ],
+    "controls": [
+      {
+        "id": "open-secondary-menu",
+        "w": 211,
+        "h": 48,
+        "y": 187.1875
+      }
+    ]
+  }
+]

@@ -1,0 +1,50 @@
+╔═════════════════════════════════════════════════════════════════════════════════════════╗
+║  TARGET: Luna feedback recovery - RECOMMENDED DESIGN SYSTEM                             ║
+╚═════════════════════════════════════════════════════════════════════════════════════════╝
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+├─── PATTERN ──────────────────────────────────────────────────────────────────────────────┤
+│  Name: Trust & Authority + Conversion                                                   │
+│     Conversion: Security badges. Case studies. Transparent pricing. Low-friction form.  │
+│     CTA: Contact Sales / Get Quote (primary) + Nav                                      │
+│     Sections:                                                                           │
+│       1. 1. Hero (mission/credibility), 2. Proof (logos, certs, stats), 3. Solution overview, 4. Clear CTA path│
+├─── STYLE ────────────────────────────────────────────────────────────────────────────────┤
+│  Name: Vibrant & Block-based                                                            │
+│     Mode Support: Light ✓ Full  Dark ✓ Full                                             │
+│     Keywords: Bold, energetic, playful, block layout, geometric shapes, high color      │
+│     contrast, duotone, modern, energetic                                                │
+│     Best For: Startups, creative agencies, gaming, social media, youth-focused,         │
+│     entertainment, consumer                                                             │
+│     Performance: ⚡ Good | Accessibility: ◐ Ensure WCAG                                  │
+├─── COLORS ───────────────────────────────────────────────────────────────────────────────┤
+│     [38;2;13;148;136m██[0m Primary:       #0D9488    (--color-primary)                                      │
+│     [38;2;255;255;255m██[0m On Primary:    #FFFFFF    (--color-on-primary)                                   │
+│     [38;2;45;212;191m██[0m Secondary:     #2DD4BF    (--color-secondary)                                    │
+│     [38;2;217;119;6m██[0m Accent/CTA:    #D97706    (--color-accent)                                       │
+│     [38;2;240;253;250m██[0m Background:    #F0FDFA    (--color-background)                                   │
+│     [38;2;19;78;74m██[0m Foreground:    #134E4A    (--color-foreground)                                   │
+│     [38;2;232;241;244m██[0m Muted:         #E8F1F4    (--color-muted)                                        │
+│     [38;2;94;234;212m██[0m Border:        #5EEAD4    (--color-border)                                       │
+│     [38;2;220;38;38m██[0m Destructive:   #DC2626    (--color-destructive)                                  │
+│     [38;2;13;148;136m██[0m Ring:          #0D9488    (--color-ring)                                         │
+│     Notes: Question teal + progress green + submit blue                                 │
+├─── TYPOGRAPHY ───────────────────────────────────────────────────────────────────────────┤
+│  Inter / Inter                                                                          │
+│     Mood: spatial, legible, glass, system, clean, neutral                               │
+│     Best For: Spatial computing, AR/VR, glassmorphism interfaces                        │
+│     Google Fonts: https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap│
+│     CSS Import: @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;4...│
+├─── KEY EFFECTS ──────────────────────────────────────────────────────────────────────────┤
+│     Large sections (48px+ gaps), animated patterns, bold hover (color shift),           │
+│     scroll-snap, large type (32px+), 200-300ms                                          │
+├─── AVOID ────────────────────────────────────────────────────────────────────────────────┤
+│     Muted colors + Low energy                                                           │
+├─── PRE-DELIVERY CHECKLIST ───────────────────────────────────────────────────────────────┤
+│     [ ] No emojis as icons (use SVG: Heroicons/Lucide)                                  │
+│     [ ] cursor-pointer on all clickable elements                                        │
+│     [ ] Hover states with smooth transitions (150-300ms)                                │
+│     [ ] Light mode: text contrast 4.5:1 minimum                                         │
+│     [ ] Focus states visible for keyboard nav                                           │
+│     [ ] prefers-reduced-motion respected                                                │
+│     [ ] Responsive: 375px, 768px, 1024px, 1440px                                        │
+└─────────────────────────────────────────────────────────────────────────────────────────┘

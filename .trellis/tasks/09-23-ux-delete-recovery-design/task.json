@@ -1,0 +1,32 @@
+{
+  "id": "ux-delete-recovery-design",
+  "name": "ux-delete-recovery-design",
+  "title": "设计删除确认与安全撤销契约",
+  "description": "F08：明确删除对象，研究符合 revision、墓碑与同步收敛规则的撤销方案；撤销实现另行评审。",
+  "status": "review",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P3",
+  "creator": "dev",
+  "assignee": "dev",
+  "createdAt": "2026-09-23",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "paycheck-to-paycheck",
+  "worktree_path": null,
+  "commit": "f40f0dd",
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-23-ux-journey-improvements",
+  "relatedFiles": [
+    "src/renderer/features/ledger.tsx",
+    "src/shared/api.ts",
+    "src/shared/domain.ts",
+    "src/shared/ledger-sync.ts",
+    "src/shared/ledger-record.ts"
+  ],
+  "notes": "2026-09-23 创建于用户明确授权；仅规划，未启动。来源 F08，父任务保存审计证据。\n2026-09-23 用户在完整规划摘要后明确批准“开始实现吧”。授权 A–D 实施、E 删除恢复设计，保留原范围和分批顺序。\n2026-09-23 A–D实现/E设计完成；集成typecheck、214单测、production build、180生产浏览器用例、独立review和最终视觉复核通过。待提交计划及人工残余确认，未提交/归档。\n2026-09-23 用户明确批准按提交计划执行，包含列明的原有改动，并接受真机键盘、读屏、原生窗口后续验证安排。产品工作提交 f40f0dd；下一步文档提交后按计划归档本轮六任务。",
+  "meta": {}
+}
