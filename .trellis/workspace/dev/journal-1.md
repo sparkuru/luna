@@ -184,3 +184,40 @@ Refined the shared entry dialog with a button-only category selector, calculator
 ### Status
 
 [OK] **Completed**
+
+
+## Session 9: UX recovery, feedback and mobile workflow completion
+
+**Date**: 2026-09-23
+**Task**: UX recovery, feedback and mobile workflow completion
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+Completed and committed A-D UX implementation plus E session-undo design; user approved inclusion of listed existing changes and deferred physical-device/assistive/native validation. Archived all six current tasks; retained prior settings task.
+
+### Main Changes
+
+- Fresh welcome restore/account entry, non-overlapping summary controls, field-specific errors and conflict states.
+- Mobile settings/statistics/setup improvements, progressive filters and budget month navigation preserve offline drafts and revision guards.
+- Undo design confirmed: host-session 30 seconds, no historical recycle bin; no undo implementation.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f40f0dd` | (see git log) |
+| `6ee0da3` | (see git log) |
+
+### Testing
+
+- [OK] Typecheck, 214 unit tests, Web production build and 180 production Playwright cases passed with zero skips/failures/flaky.
+- [OK] Independent review and 56 responsive layout measurements/62 screenshots completed; corrected two legacy mobile test navigation selectors before final full pass.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Perform the accepted physical keyboard, screen-reader and native-window validation; implement undo only under a separate approved task.
