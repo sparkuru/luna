@@ -324,3 +324,36 @@ Completed and committed A-D UX implementation plus E session-undo design; user a
 ### Status
 
 [OK] **Completed**
+
+
+## Session 13: Close ledger filters and Web visual redesign
+
+**Date**: 2026-09-23
+**Task**: Close ledger filters and Web visual redesign
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+Completed final verification for the ledger filter task and reconciled the Web visual redesign with current routes and welcome UI; user accepted visual and assistive-technology review, then approved both commits and archives.
+
+### Main Changes
+
+- Added Worker failure, timeout recovery, and keyboard-focus browser coverage for ledger filters.
+- Removed the dead no-workspace Web Settings entry, corrected bilingual recovery copy and setup-note spacing, and updated task/spec evidence.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8dd15d9` | (see git log) |
+| `b86fcc6` | (see git log) |
+
+### Testing
+
+- [OK] Docker unit tests: 214/214 passed; focused filter browser tests: 38/38 passed; welcome Chrome dev and preview: 4/4 each.
+- [OK] Full Web run: 190 passed, 6 skipped, 2 parallel failures; both affected files reran 6/6 passed with 2 workers.
+- [OK] Typecheck, Web build, Trellis task validation, and git diff --check passed.
+
+### Status
+
+[OK] **Completed**
