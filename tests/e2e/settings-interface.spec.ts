@@ -54,3 +54,15 @@ test("settings overview owns the Web entry cards and subpages own secondary navi
   await settingsNavigation.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page).toHaveURL(/\/settings$/);
 });
+
+test("settings overview cards preserve modified link clicks", async ({ page }) => {
+  await createWorkspace(page);
+  await page.goto("/settings");
+
+  const openedPage = page.context().waitForEvent("page");
+  await page.locator('[data-settings-area="preferences"]').click({ modifiers: ["Control"] });
+  const newPage = await openedPage;
+
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect(newPage).toHaveURL(/\/settings\/preferences$/);
+});

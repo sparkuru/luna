@@ -127,6 +127,19 @@ scrolling through the navigation directory; at 320x568, its title and first
 primary input must be visible. Bottom navigation targets occupy equal-width
 slots and remain at least 44x44px.
 
+The Web `/settings` index uses grouped overview cards as its primary entry
+points and omits `SettingsNavigation`; `/settings/**` subpages show the
+navigation with a Settings return action and `aria-current="page"`. Generate
+both surfaces from `src/renderer/features/settings-navigation.ts`, keeping
+paths, groups, and localized title keys in one presentation-only registry.
+The router still registers deep links separately. Native settings navigation
+keeps its existing flat layout, and `/budget` remains a Web-only workspace
+entry with its own route. This prevents duplicate navigation on the index and
+keeps every settings area reachable when its layout changes.
+Overview cards are real anchors. Intercept only an unmodified primary click for
+client routing; let Ctrl/Meta/Shift/Alt clicks and other native link actions
+retain browser behavior, including opening a new tab.
+
 The Web `TransactionDialog` uses a full-width desktop flow: type switcher,
 category suggestions, and quick core fields span the form; amount, category,
 and date are one balanced row; the optional calculator also spans the form;
