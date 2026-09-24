@@ -137,6 +137,9 @@ test("real server login, encrypted copy, second-device restore and offline profi
     page.once("dialog", (dialog) => void dialog.accept());
     await page.locator("#server-connect").click();
     await expect(page.locator("#server-sync-now")).toBeEnabled();
+    const linkedProfileId = (
+      await page.evaluate(() => window.lunaLedger.server!.status())
+    ).profile.id;
     await page.locator("#server-disconnect").click();
     await expect(page.locator("#server-unlock-form")).toBeVisible();
     await expect(page.locator("#server-unlock-password")).toHaveAttribute("type", "password");
@@ -195,6 +198,14 @@ test("real server login, encrypted copy, second-device restore and offline profi
     // same-origin SharedWorker, so a normal reload should not ask the user to
     // log in or unlock the ledger again.
     await page.reload();
+    await expect(page.locator("#local-ledger-start")).toBeVisible();
+    await expect(page.locator("#local-ledger-start li")).toHaveCount(2);
+    await expect(
+      page.locator('#local-ledger-start button[aria-current="true"]'),
+    ).toHaveText("Currently open");
+    await page
+      .locator('#local-ledger-start button[aria-current="true"]')
+      .click();
     await expect(page.locator("#server-account-name")).toHaveText(username);
     await expect(page.locator("#server-sync-now")).toBeEnabled();
     await expect(page.locator("#server-sync-status")).toContainText(
@@ -248,6 +259,10 @@ test("real server login, encrypted copy, second-device restore and offline profi
     );
     expect(secondImage).toEqual(firstImage);
     await second.reload();
+    await expect(second.locator("#local-ledger-start")).toBeVisible();
+    await second
+      .locator('#local-ledger-start button[aria-current="true"]')
+      .click();
     await second.waitForFunction(
       () => typeof window.lunaLedger?.readTransactionImage === "function",
     );
@@ -332,6 +347,53 @@ test("real server login, encrypted copy, second-device restore and offline profi
       expect(local).not.toContain(secret);
     await page.context().setOffline(false);
     await page.reload();
+    const startupPicker = page.locator("#local-ledger-start");
+    await expect(startupPicker).toBeVisible();
+    await expect(startupPicker.locator('button[aria-current="true"]')).toHaveText(
+      "Currently open",
+    );
+    await startupPicker.getByRole("button", { name: "Open local copy" }).click();
+    await expect
+      .poll(async () => {
+        try {
+          return (
+            await page.evaluate(() => window.lunaLedger.server!.status())
+          ).profile.id;
+        } catch {
+          return null;
+        }
+      })
+      .toBe(linkedProfileId);
+    await page.evaluate(() =>
+      window.lunaLedger.createTransaction({
+        type: "expense",
+        amountMinor: "321",
+        date: "2026-09-05",
+        splits: [{ category: "expense:0", amountMinor: "321" }],
+        merchant: "Linked copy only",
+      }),
+    );
+    expect(await readLedgerDocument(page, ledgerPassword)).not.toEqual(original);
+    await page.locator("#server-local-copies > summary").click();
+    await page
+      .locator("#server-profiles-title")
+      .locator("..")
+      .locator("li")
+      .filter({ hasText: "Original local ledger" })
+      .getByRole("button", { name: "Open local copy" })
+      .click();
+    await expect
+      .poll(async () => {
+        try {
+          return (
+            await page.evaluate(() => window.lunaLedger.server!.status())
+          ).profile.id;
+        } catch {
+          return null;
+        }
+      })
+      .toBe("legacy-local");
+    expect(await readLedgerDocument(page, ledgerPassword)).toEqual(original);
     await page.locator(".brand").click();
     await expect(page.locator("#transaction-list-region")).toContainText(
       "Private meal",

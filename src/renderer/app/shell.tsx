@@ -216,17 +216,10 @@ export function App() {
       return;
     }
     if (profilesQuery.data === undefined || snapshot === undefined) return;
-    const activeProfileKnown = profilesQuery.data.some(
-      (profile) => profile.id === scope.profileId,
-    );
-    const needsChoice =
-      profilesQuery.data.length > 1 &&
-      (!activeProfileKnown || snapshot.workspace === null);
-    setShowStartupPicker(needsChoice);
+    setShowStartupPicker(profilesQuery.data.length > 1);
   }, [
     profilesQuery.data,
     profilesQuery.error,
-    scope.profileId,
     showStartupPicker,
     snapshot,
   ]);
