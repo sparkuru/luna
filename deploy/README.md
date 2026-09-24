@@ -130,7 +130,7 @@ server {
 
 实际配置还必须保留 Compose Web 已提供的 `Cross-Origin-Opener-Policy: same-origin`、
 `Cross-Origin-Embedder-Policy: require-corp`、严格 CSP，以及 `/api/` 的
-`Cache-Control: no-store`；代理不得把未知 API 或缺失资源改写成应用 shell。浏览器和
+`Cache-Control: no-store, no-transform`；代理不得把未知 API 或缺失资源改写成应用 shell。浏览器和
 Android WebView 必须能通过系统信任链校验证书，且证书 SAN 覆盖 `luna.majo.im`。证书
 私钥只留在 TLS 终止层，不进入仓库、容器镜像或 APK；不要用 `ignoreHTTPSErrors`、自定义
 测试 CA 或其他证书绕过参数作为正式验收条件。

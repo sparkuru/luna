@@ -119,3 +119,70 @@ Runtime tests check response size with misleading/missing Content-Length, abort 
 Wrong: retry by PUT without If-Match, or set Query retry=true around a sync loop that already retries.
 
 Correct: the sync coordinator owns bounded retry, uses the original condition/idempotency key for response uncertainty, and re-downloads/merges on 412 before encrypting a new candidate. Local SQLite-WASM/native SQLite Query operations use `networkMode: always`; remote HTTP queries have separate online/error rules.
+
+## Scenario: strong ETags through a public TLS edge
+
+### 1. Scope / Trigger
+
+This applies when `/api/v1/ledgers/{id}/object` or
+`/api/v1/preferences/object` is served through a reverse proxy or CDN.
+Both APIs use an opaque, quoted, **strong** ETag as the compare-and-swap
+validator. A physical Android WebView once received a weak ETag after edge
+gzip compression; every update then failed with 412 despite successful GETs.
+
+### 2. Signatures
+
+- Object GET: `ETag: "<opaque-version>"` and `Cache-Control: no-store, no-transform`.
+- First object PUT: `If-None-Match: *` plus `Idempotency-Key`.
+- Update PUT: `If-Match: "<exact-GET-version>"` plus `Idempotency-Key`.
+- Both direct Fastify API and `deploy/nginx.conf` Web gateway emit
+  `Cache-Control: no-store, no-transform` for API responses.
+
+### 3. Contracts
+
+The edge must not compress or otherwise transform an encrypted object response
+in a way that weakens its ETag. Preserve `ETag`, `Cache-Control` and the API's
+`Access-Control-Expose-Headers` through TLS termination. The Web gateway
+forwards the exact API path and does not cache API data. Android's WebView
+origin is `https://localhost`; include it as an exact `LUNA_ALLOWED_ORIGINS`
+entry when that package is expected to use the public API. `no-store` still
+forbids caching; `no-transform` prevents representation changes at compliant
+intermediaries. The two directives serve different purposes.
+
+### 4. Validation & Error Matrix
+
+| Observed condition | Expected result |
+| --- | --- |
+| GET strong ETag and unchanged representation | Update with that exact `If-Match` may succeed. |
+| GET `W/"..."` or missing ETag | Deployment acceptance fails; never strip `W/` or issue unconditional PUT. |
+| Genuine concurrent update | 412, then bounded re-download, merge and retry. |
+| Repeated 412 caused by a weak ETag | Stop after bounded attempts with pending local state; repair the edge before declaring sync healthy. |
+
+### 5. Good / Base / Bad Cases
+
+- Good: an Android WebView GET through the public domain returns an uncompressed
+  ciphertext body and strong ETag; its conditional PUT succeeds, and another
+  device restores the new transaction.
+- Base: a direct loopback API check also returns the same strong ETag; this
+  does not by itself validate the public edge.
+- Bad: a gzip response carries `W/"..."`, which the client copies into
+  `If-Match` and the server rejects with 412 on every retry.
+
+### 6. Tests Required
+
+Assert direct API and packaged Web gateway `Cache-Control` headers. For a
+public-route release, inspect the same encrypted-object GET from the actual
+browser and Android WebView, including `ETag` and `Content-Encoding`, then
+create a local edit, observe conditional PUT success, and restore it on a
+second device. Exercise preferences object CAS over that route when its sync
+is in scope. Do not log bearer tokens, passwords, or encrypted bodies.
+
+### 7. Wrong vs Correct
+
+Wrong: remove the `W/` prefix, send `If-Match: *`, or accept a Node request
+with `Accept-Encoding: identity` as proof that the WebView path works.
+
+Correct: prevent edge transformation with `no-store, no-transform`, verify
+the strong validator in the actual client, and keep the server's strict
+conditional write. Cloudflare documents this `no-transform` behavior in its
+[compression reference](https://developers.cloudflare.com/speed/optimization/content/compression/).

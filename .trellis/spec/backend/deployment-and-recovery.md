@@ -72,7 +72,7 @@ HTTP exception; HTTPS remains required for production or untrusted networks.
 - The API runtime contains only compiled server code and the runtime roots
   `fastify`, `@fastify/swagger`, `better-sqlite3`, and `@aws-sdk/client-s3`.
   Web/Android clients receive authenticated API access, never S3 credentials.
-- Nginx applies `no-store` to `/api`, streams requests, preserves Authorization,
+- Nginx applies `no-store, no-transform` to `/api`, streams requests, preserves Authorization,
   ETag, conditional and idempotency headers, and uses bounded Docker DNS
   re-resolution for API replacement. Unknown API paths and missing assets do
   not receive the application shell.
@@ -106,7 +106,7 @@ HTTP exception; HTTPS remains required for production or untrusted networks.
 | MinIO read-only rootfs cannot start | Provide only bounded `/tmp` tmpfs and persistent `/data` write access |
 | SQLite stopped/corrupt | Liveness/readiness and sanitized API errors are distinct |
 | Missing JS or unknown API | 404, no application shell |
-| API success/error/proxy error | `Cache-Control: no-store` |
+| API success/error/proxy error | `Cache-Control: no-store, no-transform` |
 | Oversized route request | 413 before application state changes |
 | Restored object and stale CAS | 412; client re-downloads, merges and retries conditionally |
 | Backup while writes are active | Not accepted as a plain file copy; use a stop window or consistent snapshot |

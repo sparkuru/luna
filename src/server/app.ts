@@ -127,7 +127,7 @@ export async function createApp(options: AppOptions) {
     },
   });
   app.addHook("onRequest", async (request, reply) => {
-    reply.header("Cache-Control", "no-store");
+    reply.header("Cache-Control", "no-store, no-transform");
     reply.header("X-Request-Id", request.id);
     if (request.method === "PUT") {
       if (uploads >= 4) throw new ApiError(429, "rate-limited", true);
@@ -135,8 +135,6 @@ export async function createApp(options: AppOptions) {
       activeUploads.add(request);
       request.raw.once("aborted", () => releaseUpload(request));
     }
-    reply.header("Cache-Control", "no-store");
-    reply.header("X-Request-Id", request.id);
     if (request.headers["content-encoding"])
       throw new ApiError(415, "unsupported-content-type");
     const origin = request.headers.origin;

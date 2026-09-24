@@ -467,7 +467,7 @@ test("SQLite authentication, account isolation, CAS, replay, quotas and revocati
         );
       },
     );
-    await t.test("precise CORS and no-store headers", async () => {
+    await t.test("precise CORS and no-store, no-transform headers", async () => {
       assert.equal(
         (
           await app.inject({
@@ -485,7 +485,7 @@ test("SQLite authentication, account isolation, CAS, replay, quotas and revocati
         allowed.headers["access-control-allow-origin"],
         "http://localhost",
       );
-      assert.equal(allowed.headers["cache-control"], "no-store");
+      assert.equal(allowed.headers["cache-control"], "no-store, no-transform");
     });
   } finally {
     await app.close();

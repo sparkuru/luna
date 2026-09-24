@@ -35,7 +35,10 @@ test("upload admission rejects overflow and releases aborted and invalid request
     });
     assert.equal(overflow.status, 429);
     assert.equal(overflow.headers.get("retry-after"), "60");
-    assert.equal(overflow.headers.get("cache-control"), "no-store");
+    assert.equal(
+      overflow.headers.get("cache-control"),
+      "no-store, no-transform",
+    );
     await overflow.arrayBuffer();
     for (const req of open) req.destroy();
     await new Promise((resolve) => setTimeout(resolve, 30));
