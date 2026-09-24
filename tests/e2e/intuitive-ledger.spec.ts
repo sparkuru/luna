@@ -25,6 +25,8 @@ async function openEntry(page: Page, type: 'expense' | 'income'): Promise<void> 
 async function chooseCategory(page: Page, name: string): Promise<void> {
   await page.locator('#choose-category').click();
   await page.getByRole('button', { name, exact: true }).click();
+  await expect(page.locator('#category-dialog')).not.toBeVisible();
+  await expect(page.locator('#choose-category')).toBeFocused();
 }
 
 async function openTransactionActions(page: Page, row: Locator): Promise<void> {
