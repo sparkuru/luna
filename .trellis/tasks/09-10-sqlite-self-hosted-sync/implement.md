@@ -4,6 +4,11 @@
 协议，把 S3 访问收敛到认证 API。工作区中原有的 PostgreSQL、HTTP API、跨端和 UI 改动
 均被保留，没有使用 reset/checkout 覆盖。
 
+2026-09-24 继续实施：Phase 1 补齐 `bucket-init` 两阶段引导、独立受限 API 凭据、
+API 容器遮蔽 root 文件/MinIO 对象目录，以及旧 root runtime 升级和备份恢复回归；
+Phase 2 补齐已有两账本时正常重载的启动选择。两阶段引导与选择流程仍需目标环境
+验收，完整 catalog 结构与创建/导入入口尚未实现。详见 `validation.md`。
+
 同步策略需要同时支持 `manual` 和 `automatic`；默认是应用活跃期间的 `automatic`，
 用户可以按账本切换为 `manual`。应用关闭后的后台唤醒只作为尽力而为的增强。
 

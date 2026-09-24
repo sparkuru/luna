@@ -31,8 +31,8 @@ MinIO 镜像 ID 为
 WebView 上保留安全内置 origin 的 IndexedDB 兼容存储。任务 PRD、设计和实施记录已
 据此修订；两条 Android 存储路径仍需分别取得安装包运行证据。
 
-用户于 2026-09-24 确认继续暂停 VPS 和物理 Android 操作；本轮只保留本地验证
-进度，任务维持 `in_progress`。
+以上为本任务较早的本地复验记录。用户随后恢复 VPS 和物理 Android 验收权限；
+后续跨设备合成数据证据记录在 `../09-08-fullstack-release-validation/validation.md`。
 
 PRD 验收项继续保持未勾选，因为本轮没有证明完整条件。特别缺少当前源码的真实
 HTTPS 同源账号/同步、物理 Android 的兼容存储与断网重启、第二台实际设备接入，
@@ -41,3 +41,28 @@ HTTPS 同源账号/同步、物理 Android 的兼容存储与断网重启、第�
 
 `.trellis/spec/frontend/android-runtime.md` 和 Web host 规范已经准确记录上述兼容
 路径，HTTP API 规范也已要求 `api:check` 校验生成契约；本轮没有新增代码规范。
+
+## 2026-09-24 继续验收：受限 S3 凭据与启动选择
+
+本轮只使用 `/tmp` 下独立合成数据 Compose project；没有改动 VPS、生产目录或实体
+Android。`instance-init` 只创建 MinIO root 凭据，`bucket-init` 在 MinIO 可用后创建
+`luna-sync` bucket 和仅能操作 `luna/*` 对象的 API key。MinIO 从受保护文件读取 root
+配置；API 的 root 文件和对象目录被容器内挂载遮蔽。旧版 API=root 的 `runtime.json`
+会原地升级为受限 key；重复启动校验策略并复用原 key。
+
+| 检查 | 结果 | 边界 |
+| --- | --- | --- |
+| `docker compose config --quiet`、`docker-compose config --quiet` | 通过 | 本机 Compose v2.26.1；没有 Compose v1 运行证据。 |
+| 独立 Compose 首启、重启 | root 与 API key 不同；runtime SHA-256 未变；API healthy | 数据目录 `/tmp/luna-cred-smoke.Oz9jDz/data` 已于验收后删除，未连接现有栈。 |
+| 容器权限/策略负例 | API 读 `minio.env` 得空文件，列 `/data/minio` 得 EACCES；受限 key 建桶及前缀外 PutObject 均为 403 | 只检查了上述权限，不代表完整渗透测试。 |
+| 旧版 root runtime 升级 | 原 root 文件不变，API runtime 更换为受限 key | 用 `HEAD` 旧版 `instance-init.mjs` 在独立目录生成旧格式；测试项目已删除。 |
+| `node scripts/smoke-server-restore.mjs` | 8/8 检查组通过 | 最终报告 `/tmp/luna-server-restore-Xf20fh/report.json`；包括停机全量复制、原密文/ETag、CAS、API 重启、旧 root runtime 升级、中断后孤儿 key 撤销、缺桶拒绝空仓库替换。 |
+| `node tests/deploy/instance-init.test.mjs` | 5/5 通过 | 首启/复启、完成标记缺 runtime、非空数据缺初始化状态、错误文件权限、现有 SQLite 缺 runtime；负例保留原文件。 |
+| `./hako npm run typecheck`、`server:typecheck`、`server:test`、`web:build` | 通过；server:test 26/26 | 当前源码类型、服务端回归和生产 Web 构建。 |
+| 生产 Web `server-account.spec.ts` Chrome | 1/1 通过 | 两本地账本正常重载显示选择器，选中另一本地账本后数据隔离；其余 catalog 元数据和创建/导入未覆盖。 |
+| 本轮 14 个改动文件的私钥头、常见 access token 格式扫描 | 0 命中 | 格式扫描，不替代人工秘密审查；初始化日志和 smoke 未打印生成凭据。 |
+
+AC1 的受限凭据缺口已修复，AC7 的正常重载选择缺口已修复。AC1 仍需目标部署的
+完整重启/权限负例，AC7 仍缺结构化 catalog 元数据、创建/导入入口和选择前不开账本。
+PRD 十项验收继续保持未勾选；本任务维持 `in_progress`。09-08 的 HTTPS/实体设备证据
+可按其真实范围复用，但那条公网临时路由已回滚，不等于可用的正式 VPS 部署。
