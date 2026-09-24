@@ -66,6 +66,8 @@ async function verifyFileInput(page: Page): Promise<void> {
   const month = await page.locator('#month-picker').inputValue();
   await page.locator('#record-expense').click();
   await page.locator('#transaction-dialog').waitFor({ state: 'visible' });
+  await page.locator('#choose-category').click();
+  await page.locator('#category-options .category-option').first().click();
   await page.evaluate(() => {
     const setter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
@@ -74,7 +76,6 @@ async function verifyFileInput(page: Page): Promise<void> {
     if (setter === undefined) throw new Error('Missing native input setter');
     const fields = [
       [document.querySelector('#transaction-amount'), '12.34'],
-      [document.querySelector('#transaction-category'), 'Electron'],
       [document.querySelector('#transaction-merchant'), 'Packaged file input'],
     ] as const;
     for (const [field, value] of fields) {

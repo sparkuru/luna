@@ -444,7 +444,7 @@ async function runPackagedStorageSmoke(): Promise<void> {
         type: 'expense',
         amountMinor: '375',
         date: '2026-08-30',
-        splits: [{ category: 'IPC smoke', amountMinor: '375' }],
+        splits: [{ category: 'expense:0', amountMinor: '375' }],
         merchant: 'Bridge check',
         paymentMethod: 'Test',
         notes: 'Packaged IPC verification'
