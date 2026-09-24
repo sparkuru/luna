@@ -29,8 +29,10 @@ Service Worker 和 SQLite-WASM/OPFS 不能依赖它。浏览器若以普通 LAN 
 客户端，会显示需要 HTTPS 或 localhost 的可操作错误，且不会静默回退到 IndexedDB 或
 localStorage。Compose 不会替你配置 DNS、防火墙或证书信任。
 
-启动顺序由 Compose 管理：`instance-init` 先创建安装状态，MinIO 使用同一份
-内部凭据启动，API 等待 MinIO 可用后才监听，Web 等 API healthy 后才提供服务。
+启动顺序由 Compose 管理：`instance-init` 先创建安装状态和 MinIO root 凭据，MinIO
+从受保护文件读取它们；`bucket-init` 建立 bucket 和仅能操作 `luna/` 对象的 API 凭据，
+API 在这一步成功后才启动，Web 等 API healthy 后才提供服务。已有旧版 `data/` 中若
+API 仍使用 root 凭据，首次按新版本启动会原地换成受限凭据；root 凭据和对象保留。
 初始化失败、权限错误、半初始化和未来版本配置都会让容器失败，不会伪装成空安装。
 API 的启动重试有界；修复原因后重新运行 `docker compose up -d` 即可。
 
@@ -144,6 +146,10 @@ DNS 记录、TLS 终止层到 Web upstream 的连通性和证书有效期属于�
 当前应用还保留一个独立的、可选的 portable display-settings S3 兼容同步入口；它
 不属于服务端账本同步，也不影响 `data/` 内置仓库。
 
+API 容器中的 `data/.luna/minio.env` 被空文件遮蔽，`data/minio/` 被不可读的临时挂载
+遮蔽；API 只能通过受限 S3 凭据访问目标对象。自定义 Compose 应保留这两项挂载，
+并让 `bucket-init` 保持一次性初始化作业。
+
 ## `data/` 是唯一服务端备份边界
 
 Compose 会自动创建并保护这个目录，典型内容如下：
@@ -152,8 +158,9 @@ Compose 会自动创建并保护这个目录，典型内容如下：
 data/
 ├── .luna/
 │   ├── initialized       # 初始化完成标记
-│   ├── runtime.json      # MinIO 地址、bucket 和内部凭据（0600）
-│   └── minio.env         # MinIO 启动凭据（0600）
+│   ├── bucket-initialized # 受限凭据与 bucket 初始化完成标记
+│   ├── runtime.json      # API 专用受限 S3 凭据（0600）
+│   └── minio.env         # MinIO root 启动凭据（0600）
 ├── server.sqlite         # 账号、会话、账本授权、远端对象元数据
 ├── server.sqlite-wal     # SQLite 运行时 sidecar（可能存在）
 ├── server.sqlite-shm     # SQLite 运行时 sidecar（可能存在）
@@ -196,11 +203,12 @@ MinIO 对象目录；普通 `cp -r` 不算一致性备份。
 ```sh
 mkdir -p luna-recovery/data
 rsync -a --numeric-ids backups/luna-data-2026-09-10/ luna-recovery/data/
-cp compose.yaml Dockerfile Dockerfile.server package.json package-lock.json tsconfig.json \
+cp compose.yaml .dockerignore Dockerfile Dockerfile.server package.json package-lock.json tsconfig.json \
   vite.web.config.ts luna-recovery/
+cp Dockerfile.bucket-init luna-recovery/
 mkdir -p luna-recovery/deploy luna-recovery/scripts luna-recovery/src
 cp deploy/instance-init.mjs deploy/nginx.conf deploy/.env.example \
-  deploy/server-runtime-package.mjs luna-recovery/deploy/
+  deploy/server-runtime-package.mjs deploy/bucket-init.mjs luna-recovery/deploy/
 cp scripts/web-offline-plugin.ts luna-recovery/scripts/
 cp -r src/server src/shared src/sync src/api-client src/renderer src/web luna-recovery/src/
 cp deploy/.env.example luna-recovery/.env
@@ -240,12 +248,16 @@ docker compose exec api node dist/server/server/cli/admin.js cleanup
 升级前先备份 `data/`，记录镜像 digest，然后在维护窗口运行：
 
 ```sh
+docker compose stop web api
 docker compose build
 docker compose up -d
 docker compose ps
 ```
 
-若迁移失败，保留原目录，查看 `api` 和 `instance-init` 的状态并恢复备份到新的
+从旧版 root runtime 升级时，这个停机顺序确保旧 API 不会在 `bucket-init` 更换
+runtime 文件期间继续用 root key 处理请求。确认新 API healthy 后再恢复流量。
+
+若迁移失败，保留原目录，查看 `api`、`instance-init` 和 `bucket-init` 的状态并恢复备份到新的
 project 验证。不要手工编辑 SQLite、删除 `.luna/initialized` 或删除 MinIO 对象来
 “重置”安装；这可能使元数据和对象版本不一致。
 

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -7,7 +7,7 @@ import { join, resolve } from "node:path";
 
 if (process.argv.includes("--help")) {
   console.log(
-    "Usage: node scripts/smoke-server-restore.mjs\nRequires Docker and a built luna-api:local image. Creates disposable labeled MinIO/API containers and a copied data/ boundary.",
+    "Usage: node scripts/smoke-server-restore.mjs\nRequires Docker and built luna-api:local and luna-bucket-init:local images. Creates disposable labeled MinIO/API containers and a copied data/ boundary.",
   );
   process.exit(0);
 }
@@ -70,16 +70,17 @@ function initData(directory) {
   ]);
 }
 
-function startMinio(name, network, directory, runtime) {
+function startMinio(name, network, directory) {
+  const dataStat = statSync(directory);
   runContainer(name, network, [
     "--network-alias",
     "minio",
+    "--user", `${dataStat.uid}:${dataStat.gid}`,
     "--mount",
     `type=bind,source=${directory},target=/data`,
-    "-e",
-    `MINIO_ROOT_USER=${runtime.s3AccessKeyId}`,
-    "-e",
-    `MINIO_ROOT_PASSWORD=${runtime.s3SecretAccessKey}`,
+    "-e", "MINIO_CONFIG_ENV_FILE=/data/.luna/minio.env",
+    "--read-only", "--tmpfs", "/tmp:size=16m,mode=1777",
+    "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
     minioImage,
     "server",
     "/data/minio",
@@ -90,15 +91,33 @@ function startMinio(name, network, directory, runtime) {
   ]);
 }
 
+function initBucket(network, directory) {
+  const dataStat = statSync(directory);
+  docker([
+    "run", "--rm", "--label", label, "--network", network,
+    "--user", `${dataStat.uid}:${dataStat.gid}`,
+    "--read-only", "--tmpfs", "/tmp:size=16m,mode=1777",
+    "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+    "--mount", `type=bind,source=${directory},target=/data`,
+    "luna-bucket-init:local", "/data",
+  ]);
+}
+
 function startApi(name, network, directory) {
+  const dataStat = statSync(directory);
   runContainer(name, network, [
     "--network-alias",
     "api",
+    "--user", `${dataStat.uid}:${dataStat.gid}`,
     "--mount",
     `type=bind,source=${directory},target=/data`,
+    "--mount",
+    "type=bind,source=/dev/null,target=/data/.luna/minio.env,readonly",
     "--read-only",
     "--tmpfs",
     "/tmp:size=16m,mode=1777",
+    "--tmpfs",
+    "/data/minio:size=1m,mode=000",
     "--cap-drop",
     "ALL",
     "--security-opt",
@@ -175,16 +194,25 @@ function runFixture(container, input) {
 async function main() {
   const sourceData = join(root, "source-data");
   const restoredData = join(root, "restored-data");
+  const legacyData = join(root, "legacy-data");
+  const interruptedData = join(root, "interrupted-data");
   const sourceNetwork = `${runId}-source`;
   const restoredNetwork = `${runId}-restored`;
+  const legacyNetwork = `${runId}-legacy`;
+  const interruptedNetwork = `${runId}-interrupted`;
   createNetwork(sourceNetwork);
   createNetwork(restoredNetwork);
+  createNetwork(legacyNetwork);
+  createNetwork(interruptedNetwork);
   mkdirSync(sourceData, { recursive: true, mode: 0o700 });
   initData(sourceData);
-  const runtime = JSON.parse(readFileSync(join(sourceData, ".luna", "runtime.json"), "utf8"));
   const sourceMinio = `${runId}-source-minio`;
   const sourceApi = `${runId}-source-api`;
-  startMinio(sourceMinio, sourceNetwork, sourceData, runtime);
+  startMinio(sourceMinio, sourceNetwork, sourceData);
+  initBucket(sourceNetwork, sourceData);
+  const runtime = JSON.parse(readFileSync(join(sourceData, ".luna", "runtime.json"), "utf8"));
+  const rootEnv = readFileSync(join(sourceData, ".luna", "minio.env"), "utf8");
+  assert.ok(!rootEnv.includes(runtime.s3AccessKeyId));
   const sourceBase = startApi(sourceApi, sourceNetwork, sourceData);
   await until(async () => (await fetch(`${sourceBase}/readyz`)).ok, "source API readiness");
   runFixture(sourceApi, { action: "account" });
@@ -255,7 +283,9 @@ async function main() {
 
   const restoredMinio = `${runId}-restored-minio`;
   const restoredApi = `${runId}-restored-api`;
-  startMinio(restoredMinio, restoredNetwork, restoredData, runtime);
+  startMinio(restoredMinio, restoredNetwork, restoredData);
+  initBucket(restoredNetwork, restoredData);
+  assert.deepEqual(JSON.parse(readFileSync(join(restoredData, ".luna", "runtime.json"), "utf8")), runtime);
   const restoredBase = startApi(restoredApi, restoredNetwork, restoredData);
   await until(async () => (await fetch(`${restoredBase}/readyz`)).ok, "restored API readiness");
   const restoredMeta = await (await request(restoredBase, "/api/v1/meta")).json();
@@ -385,6 +415,74 @@ async function main() {
   assert.equal(finalUsage.reservedBytes, 0);
   assert.equal(finalUsage.count, 1);
   checks.push("API restart retains instance identity, both sessions, exact merged ciphertext/ETag and decoded revision graph");
+
+  cpSync(sourceData, legacyData, { recursive: true, errorOnExist: true });
+  const legacyRoot = Object.fromEntries(
+    readFileSync(join(legacyData, ".luna", "minio.env"), "utf8")
+      .trim().split("\n").map((line) => {
+        const separator = line.indexOf("=");
+        return [line.slice(0, separator), line.slice(separator + 1)];
+      }),
+  );
+  writeFileSync(join(legacyData, ".luna", "runtime.json"), JSON.stringify({
+    ...runtime,
+    s3AccessKeyId: legacyRoot.MINIO_ROOT_USER,
+    s3SecretAccessKey: legacyRoot.MINIO_ROOT_PASSWORD,
+  }) + "\n");
+  const legacyMinio = `${runId}-legacy-minio`;
+  const legacyApi = `${runId}-legacy-api`;
+  startMinio(legacyMinio, legacyNetwork, legacyData);
+  initBucket(legacyNetwork, legacyData);
+  assert.equal(readFileSync(join(legacyData, ".luna", "minio.env"), "utf8"), rootEnv);
+  const upgraded = JSON.parse(readFileSync(join(legacyData, ".luna", "runtime.json"), "utf8"));
+  assert.notEqual(upgraded.s3AccessKeyId, legacyRoot.MINIO_ROOT_USER);
+  assert.notEqual(upgraded.s3SecretAccessKey, legacyRoot.MINIO_ROOT_PASSWORD);
+  const legacyBase = startApi(legacyApi, legacyNetwork, legacyData);
+  await until(async () => (await fetch(`${legacyBase}/readyz`)).ok, "legacy upgrade API readiness");
+  const legacyObject = await request(legacyBase, objectPath, { token });
+  assert.equal(legacyObject.status, 200);
+  assert.equal(legacyObject.headers.get("etag"), originalEtag);
+  assert.equal(await legacyObject.text(), raw);
+  checks.push("legacy root-backed API runtime upgrades to a limited key without losing ciphertext or instance identity");
+
+  mkdirSync(interruptedData, { recursive: true, mode: 0o700 });
+  initData(interruptedData);
+  startMinio(`${runId}-interrupted-minio`, interruptedNetwork, interruptedData);
+  initBucket(interruptedNetwork, interruptedData);
+  const firstKey = JSON.parse(readFileSync(join(interruptedData, ".luna", "runtime.json"), "utf8"));
+  unlinkSync(join(interruptedData, ".luna", "runtime.json"));
+  unlinkSync(join(interruptedData, ".luna", "bucket-initialized"));
+  initData(interruptedData);
+  initBucket(interruptedNetwork, interruptedData);
+  const replacementKey = JSON.parse(readFileSync(join(interruptedData, ".luna", "runtime.json"), "utf8"));
+  assert.notEqual(replacementKey.s3AccessKeyId, firstKey.s3AccessKeyId);
+  const denied = docker([
+    "run", "--rm", "-i", "--network", interruptedNetwork,
+    "--entrypoint", "node", apiImage, "-e",
+    "const fs=require('node:fs');const {S3Client,HeadBucketCommand}=require('@aws-sdk/client-s3');const r=JSON.parse(fs.readFileSync(0,'utf8'));const c=new S3Client({endpoint:r.s3Endpoint,region:r.s3Region,forcePathStyle:true,credentials:{accessKeyId:r.s3AccessKeyId,secretAccessKey:r.s3SecretAccessKey}});c.send(new HeadBucketCommand({Bucket:r.s3Bucket})).then(()=>process.exit(1),e=>{if(e.$metadata?.httpStatusCode!==403)process.exit(1);console.log('old-key-denied')});",
+  ], JSON.stringify(firstKey)).toString().trim();
+  assert.equal(denied, "old-key-denied");
+  checks.push("interrupted credential publication removes the orphan key before creating a replacement");
+
+  const interruptedRoot = Object.fromEntries(
+    readFileSync(join(interruptedData, ".luna", "minio.env"), "utf8")
+      .trim().split("\n").map((line) => {
+        const separator = line.indexOf("=");
+        return [line.slice(0, separator), line.slice(separator + 1)];
+      }),
+  );
+  docker([
+    "run", "--rm", "-i", "--network", interruptedNetwork,
+    "--entrypoint", "node", apiImage, "-e",
+    "const fs=require('node:fs');const {S3Client,DeleteBucketCommand}=require('@aws-sdk/client-s3');const r=JSON.parse(fs.readFileSync(0,'utf8'));const c=new S3Client({endpoint:r.s3Endpoint,region:r.s3Region,forcePathStyle:true,credentials:{accessKeyId:r.s3AccessKeyId,secretAccessKey:r.s3SecretAccessKey}});c.send(new DeleteBucketCommand({Bucket:r.s3Bucket})).catch(()=>process.exit(1));",
+  ], JSON.stringify({
+    ...replacementKey,
+    s3AccessKeyId: interruptedRoot.MINIO_ROOT_USER,
+    s3SecretAccessKey: interruptedRoot.MINIO_ROOT_PASSWORD,
+  }));
+  assert.throws(() => initBucket(interruptedNetwork, interruptedData), /Docker run failed/);
+  assert.deepEqual(JSON.parse(readFileSync(join(interruptedData, ".luna", "runtime.json"), "utf8")), replacementKey);
+  checks.push("missing bucket on an initialized installation fails without creating an empty replacement");
   return {
     checks,
     apiImage: docker(["image", "inspect", "--format", "{{.Id}}", apiImage]).toString().trim(),

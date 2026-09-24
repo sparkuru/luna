@@ -17,7 +17,7 @@ services:
     command:
       - >-
         until [ -f /data/.luna/initialized ]; do sleep 1; done;
-        set -a; . /data/.luna/minio.env; set +a;
+        export MINIO_CONFIG_ENV_FILE=/data/.luna/minio.env;
         exec /usr/bin/minio server /data/minio --address :9000 --console-address :9001
     volumes:
       - ${LUNA_DATA_PATH:-./data}:/data
@@ -30,6 +30,27 @@ services:
       - /tmp:size=16m,mode=1777
     cap_drop: [ALL]
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+
+  bucket-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.bucket-init
+    image: luna-bucket-init:local
+    command: [/data]
+    user: "${LUNA_UID:-1000}:${LUNA_GID:-1000}"
+    volumes:
+      - ${LUNA_DATA_PATH:-./data}:/data
+    depends_on:
+      instance-init:
+        condition: service_completed_successfully
+      minio:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    restart: "no"
     security_opt: [no-new-privileges:true]
 
   api:
@@ -46,15 +67,17 @@ services:
       LUNA_PORT: 3000
     volumes:
       - ${LUNA_DATA_PATH:-./data}:/data
+      - /dev/null:/data/.luna/minio.env:ro
     user: "${LUNA_UID:-1000}:${LUNA_GID:-1000}"
     depends_on:
       instance-init:
         condition: service_completed_successfully
-      minio:
-        condition: service_started
+      bucket-init:
+        condition: service_completed_successfully
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
+      - /data/minio:size=1m,mode=000
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     mem_limit: 768m

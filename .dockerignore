@@ -3,6 +3,7 @@
 **/.luna/
 !Dockerfile
 !Dockerfile.server
+!Dockerfile.bucket-init
 !package.json
 !package-lock.json
 !tsconfig.json
@@ -13,6 +14,7 @@
 !deploy/
 !deploy/nginx.conf
 !deploy/server-runtime-package.mjs
+!deploy/bucket-init.mjs
 !src/
 !src/server/
 !src/server/**

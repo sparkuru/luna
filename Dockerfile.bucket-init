@@ -1,0 +1,7 @@
+FROM minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e AS minio
+
+FROM node:22.22.0-bookworm-slim
+COPY --from=minio /usr/bin/mc /usr/local/bin/mc
+COPY deploy/bucket-init.mjs /init/bucket-init.mjs
+USER 1000:1000
+ENTRYPOINT ["node", "/init/bucket-init.mjs"]
