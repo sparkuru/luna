@@ -1,0 +1,33 @@
+# Temporary acceptance route only. The upstream is an SSH reverse tunnel bound
+# to the VPS loopback interface; it is not a durable production connection.
+server {
+    listen 80;
+    server_name luna.majo.im;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name luna.majo.im;
+
+    ssl_certificate /home/wkyuu/.acme.sh/majo.im_ecc/fullchain.cer;
+    ssl_certificate_key /home/wkyuu/.acme.sh/majo.im_ecc/majo.im.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass http://127.0.0.1:19440;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 65s;
+        proxy_send_timeout 65s;
+        proxy_buffering off;
+        proxy_request_buffering off;
+    }
+}

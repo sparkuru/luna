@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "fresh SQLite/MinIO installation creates an account, ledger graph, attachment metadata, ciphertext object, usage and ETags",
+    "the complete data boundary is copied only after API and MinIO stop",
+    "restored data retains instance identity, account session, graph and attachment ciphertext/metadata, exact ETags, usage and idempotency replays",
+    "two authenticated clients reject stale CAS, retain both decoded revision sets and read identical merged ciphertext/ETag",
+    "API restart retains instance identity, both sessions, exact merged ciphertext/ETag and decoded revision graph"
+  ],
+  "apiImage": "sha256:8fd0b609b7f4fe3f989f5f0b87a4b0e1e3c0e8d1fefe30d3e6b23e1b14ba695c",
+  "minioImage": "sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9",
+  "boundary": "Disposable SQLite/MinIO/API resources and a copied data directory; not production or device evidence."
+}

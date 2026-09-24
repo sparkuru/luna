@@ -4,6 +4,12 @@
 
 用户已回复“明确开始实施”，批准最新最终摘要。本轮 A/B/C/D 实现与自动化验收完成：生产 Web 68/68、单元测试 150/150、真实 PostgreSQL 服务端 17/17、同步集成 5/5、SDK 契约 4/4、隔离恢复 7/7、最终 Nginx 浏览器 8/8、Electron 打包及解压后自检、Android 16 模拟器 18 项均通过。最终产物、哈希、实测范围和人工残余审核见 research/delivery.md 及 D 证据。保留未提交状态，不归档；真机、读屏和私有 HTTPS 部署未执行。
 
+上段是 2026-09-08 PostgreSQL 方案的历史记录。2026-09-24 当前 SQLite 基线已
+补充实体 Android 本地路径、独立主机隔离恢复及当前 Electron/Web 复验；临时
+公网 HTTPS 上的浏览器/Android 双向合成数据同步已通过并回滚。长期 VPS 路由、
+生产恢复、读屏和 Electron 原生首启仍未完成，见
+[D 子任务当前验证](../09-08-fullstack-release-validation/validation.md)。
+
 一次性设计覆盖全局，实施采用可验证步骤，不能理解为一个不可回滚的大补丁。
 
 ## Task tree and dependencies

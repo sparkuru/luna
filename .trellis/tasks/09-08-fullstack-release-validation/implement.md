@@ -12,6 +12,12 @@
 - [x] D5 备份恢复演练，更新实际规范与证据。
 - [ ] D6 人工实机/辅助技术审核：静态截图已由主会话审核；未运行边界见最终证据。
 
+2026-09-24 当前 SQLite 基线新增实体 Android 本地持久化、返回键及 SAF 加密备份
+证据，并在独立主机完成当前源码的隔离恢复；临时公网 HTTPS 路由上的浏览器与
+实体 Android 双向合成数据同步也已通过，验收后已回滚临时站点。详见
+[validation.md](validation.md)。D6 仍未完成：长期 VPS 业务路由、生产数据恢复、
+Electron 原生首启目录选择和读屏/辅助技术未取得相应证据。
+
 ## Validation
 
 既有 web:build、LUNA_TEST_PRODUCTION=1 test:web、build、make、smoke:electron、android:sync、smoke:android；新增 smoke:server-restore。命令运行环境按父 implement.md 核对。
