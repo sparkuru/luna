@@ -9,16 +9,17 @@
 采用“本地 SQLite + 统一身份/同步 API + 内置 S3-compatible 对象存储”的单实例模式：
 
 ```text
-设备 A：SQLite ─┐
-设备 B：SQLite ─┼─ HTTPS/API 条件写 ─ API/身份 ─ 内置 S3 ─ data/
-设备 C：SQLite ─┘       （端侧密文）     │          （密文对象）
+设备 A：本地存储 ─┐
+设备 B：本地存储 ─┼─ HTTPS/API 条件写 ─ API/身份 ─ 内置 S3 ─ data/
+设备 C：本地存储 ─┘       （端侧密文）     │          （密文对象）
                                   server.sqlite
 ```
 
 - Electron 每台设备使用自己的原生 `better-sqlite3` 文件；Web/Android 每个设备/浏览器
   使用自己的 SQLite-WASM/OPFS database（隔离 Web 使用普通 OPFS，非隔离 Android
-  WebView 使用 `opfs-sahpool`）。三者复用同一逻辑领域模型、migration 和
-  `LocalLedgerStore` contract；物理表布局由宿主 SQLite 适配器负责。
+  WebView 使用 `opfs-sahpool`）。缺少 OPFS 的旧版 Android WebView 使用显式的
+  IndexedDB 兼容存储；所有宿主复用领域与同步契约，SQLite 宿主复用 migration 和
+  `LocalLedgerStore` contract。此边界由用户于 2026-09-24 确认。
 - Compose 运行 Web 静态站点、认证/同步 API、单实例服务端元数据 SQLite、内置
   S3-compatible 存储和一次性初始化服务；不提供服务端明文财务 CRUD。
 - 内置 S3 只保存客户端加密后的 ledger/config 对象。整个 SQLite 文件、S3 root
@@ -31,7 +32,7 @@
   `LedgerObjectStore` 放到服务端 S3 adapter 后面，由 API 暴露受认证的条件读写，
   不另造“最后写入者获胜”的 SQLite 文件同步协议。
 - 本地账本支持 `manual`/`automatic` 同步策略，默认是应用活跃期间的 `automatic`；
-  两者都先提交本地 SQLite，再决定何时访问 API。身份会话过期或网络断开不得阻止已
+  两者都先提交本地存储，再决定何时访问 API。身份会话过期或网络断开不得阻止已
   建立本地账本继续读写。
 
 ## 2. Compose 和持久化边界
@@ -101,11 +102,12 @@ access key/secret；账本密码只在客户端解锁密文时使用。浏览器
 renderer/domain
       ↓ LunaLedgerApi / LocalLedgerStore
       ├─ Electron：better-sqlite3 → 用户数据目录中的 ledger.sqlite
-      └─ Web/Android：sqlite3.wasm Worker + OPFS → origin 私有 ledger.sqlite
+      ├─ Web/具备 OPFS 的 Android：sqlite3.wasm Worker + OPFS → origin 私有 ledger.sqlite
+      └─ 旧版 Android WebView：native-only IndexedDB 兼容存储
 ```
 
-Web/Android 不再为新账本使用 JSON snapshot/IndexedDB 主存储。当前处于开发阶段，
-不提供旧 IndexedDB 数据迁移：干净启动直接建立新的 SQLite-WASM catalog/database，
+普通 Web 和具备 OPFS 的 Android 不再为新账本使用 JSON snapshot/IndexedDB 主存储。
+当前处于开发阶段，不提供旧 IndexedDB 数据迁移：干净启动直接建立新的 SQLite-WASM catalog/database，
 旧测试数据不属于交付数据。遇到旧 IndexedDB 状态时按无账本处理，不读取、不合并，
 也不能把它误报为已恢复的账本。
 
@@ -121,8 +123,9 @@ Web/Android 不再为新账本使用 JSON snapshot/IndexedDB 主存储。当前�
 - 一个 ledger 在一个 Worker 中保持单写者；Web 多标签依靠普通 OPFS VFS 的锁定语义，
   Android WebView 的 SAH-pool 则按 profile 使用独立 Worker/VFS。WAL、VFS、COOP/COEP
   和实际 Android WebView 行为必须以真实构建验证，不能仅凭桌面 Chromium 通过。
-- OPFS/WASM 不可用时返回明确的 `local-storage-unsupported`，不再偷偷降级到
-  IndexedDB；用户可使用受支持客户端导入/恢复。
+- 普通 Web 的 OPFS/WASM 不可用时返回明确的 `local-storage-unsupported`。
+  原生 Android 仅在缺少 OPFS 能力时选择 IndexedDB 兼容存储；SQLite 运行失败不得
+  静默改用另一存储并丢失现有账本视图。
 
 ### 3.3 为什么不把 SQLite 文件直接同步到 S3
 
@@ -239,10 +242,10 @@ catalog 不保存账本密码、S3 secret、root secret、明文 ledger、SQLite
 
 ### 6.2 各平台存储映射
 
-- Web/Android：catalog 和每个账本都使用 SQLite-WASM/OPFS Worker；catalog 是固定的
-  SQLite database，每个条目映射到独立的 ledger database。当前开发数据不迁移，旧
-  `BrowserStateStore`、`luna.web.state.v1` 和 IndexedDB profile 按废弃代码处理；
-  新版本从空 catalog 开始。
+- 普通 Web 和具备 OPFS 的 Android：catalog 和每个账本都使用 SQLite-WASM/OPFS
+  Worker；catalog 是固定的 SQLite database，每个条目映射到独立的 ledger database。
+  缺少 OPFS 的原生 Android 使用独立的 IndexedDB 兼容 catalog/profile；该路径不得
+  在普通 Web 上启用。当前开发数据不迁移，旧 `luna.web.state.v1` 按废弃代码处理。
 - Electron：catalog 使用应用数据目录中的私有 catalog 文件；每个条目映射到
   `ledgers/<ledgerId>/luna.sqlite`、settings 和安全存储资料。现有默认本地数据库和
   已创建的 profile 目录先登记为条目，不删除、不把多个 graph 静默合并。原生目录/
@@ -287,7 +290,7 @@ syncCurrentLedger(): Promise<SyncStatus>;
 
 ### 6.5 SQLite-WASM/OPFS 稳定性策略
 
-SQLite-WASM/OPFS 是 Web/Android 的本地工作库，但它仍是 origin 私有存储而不是用户
+SQLite-WASM/OPFS 是普通 Web 和具备 OPFS 的 Android 的本地工作库，但它仍是 origin 私有存储而不是用户
 可见文件：
 
 - 所有 graph/projection/metadata 更新在 SQLite transaction 内提交；数据库升级复用
@@ -295,7 +298,8 @@ SQLite-WASM/OPFS 是 Web/Android 的本地工作库，但它仍是 origin 私有
 - 启动和写入前检查 OPFS、Worker、WASM 和配额能力；在支持的安全上下文请求
   `navigator.storage.persist()`，但不把返回结果解释为绝对持久化。
 - 处理 Worker 崩溃、SQLite error、OPFS 异常和 quota exceeded；保留有效本地状态，
-  显示导出/恢复入口，不自动降级成 IndexedDB。
+  显示导出/恢复入口，不因运行错误自动降级成 IndexedDB。旧版 Android 的兼容路径
+  只在启动时检测到缺少 OPFS 后选择。
 - Web 多标签使用普通 OPFS VFS 的锁；Android WebView 使用 `opfs-sahpool` 的单 Worker
   profile 边界。实际 VFS、WAL、COOP/COEP 和 Android WebView 版本兼容性必须由真实
   构建验证。

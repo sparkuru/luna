@@ -46,9 +46,11 @@
   ledger ID；catalog 只存名称、类型、时间和安全状态，不存 secret。
 - 启动先展示最近账本选择；没有账本时进入创建/导入。选择后再打开对应 SQLite-WASM/
   OPFS database 或 SQLite 文件/目录；未选择账本不得触发认证 API 或打开其他账本。
-- Web/Android 采用每账本独立 SQLite-WASM/OPFS database，Electron 采用每账本独立
-  SQLite 目录；不实现当前开发数据的 IndexedDB 迁移，旧 `BrowserStateStore` 路径
-  直接移除。Electron 文件/目录选择仅为可选原生能力。
+- 普通 Web 和具备 OPFS 的 Android 采用每账本独立 SQLite-WASM/OPFS database，
+  Electron 采用每账本独立 SQLite 目录；缺少 OPFS 的旧版 Android WebView 使用
+  native-only IndexedDB 兼容存储。不实现当前开发数据的 IndexedDB 迁移；
+  `BrowserStateStore` 仅保留为旧版 Android 兼容适配器。Electron 文件/目录选择
+  仅为可选原生能力。
 - 切换账本时取消并 drain 旧请求、关闭旧 store、递增 scope/generation、清理旧会话，
   验证新账本后再发布；迟到的旧响应不能污染新账本。忘记条目默认不删除物理数据。
 - 增加 `LunaLedgerApi` 的本地账本列表/选择/创建/忘记能力，移除 renderer 对
@@ -134,9 +136,10 @@ smoke、`deploy/README.md`。
   对象隔离。
 - Compose：干净启动、重复启动、权限错误、半初始化、data 目录备份/恢复到新 project、
   对象密文/ETag/实例身份验证；禁止 `down -v` 作为测试清理现有资源。
-- Web/Android/Electron：启动选择/最近历史、多个本地 SQLite 账本隔离、WASM Worker/
-  OPFS 与原生 SQLite 离线重启、手动模式持续离线读写、自动模式前台恢复、真实认证
-  API/HTTPS 路径、冲突 UI、安装包和设备接入；保留现有生产离线证据并重新确认身份
+- Web/Android/Electron：启动选择/最近历史、多个本地账本隔离、WASM Worker/OPFS、
+  原生 SQLite 和旧版 Android IndexedDB 兼容存储的离线重启、手动模式持续离线读写、
+  自动模式前台恢复、真实认证 API/HTTPS 路径、冲突 UI、安装包和设备接入；
+  保留现有生产离线证据并重新确认身份
   与本地 profile 解耦后无回归。
 - Web/Android host 在活跃期间每 5 秒只探测服务端的安全远端版本标记；回到前台时立即
   补探测。`automatic` 发现标记变化后调度现有加密同步流程，`manual` 只显示“远端有
@@ -161,7 +164,8 @@ smoke、`deploy/README.md`。
    完全隔离，切换/损坏/权限失败不会创建空账本或串写；
 4. 两台独立设备通过统一账号、账本密码和 workspace 身份经认证 API 同步，设备不接触
    S3 credential；条件写冲突不丢数据、不重复入账，财务冲突显式解决；
-5. Web/Electron/Android 都使用统一 SQLite 领域模型/LocalLedgerStore 并保留离线能力；
+5. Web/Electron/Android 共用领域与同步契约并保留离线能力；SQLite 宿主通过
+   LocalLedgerStore，缺少 OPFS 的旧版 Android 使用已确认的 IndexedDB 兼容存储；
 6. 服务端身份/API 使用单实例 SQLite 元数据，S3 credential 只在服务端，旧数据策略有
    明确、可验证的说明；
 7. 自动化和必要人工验证证据齐全。

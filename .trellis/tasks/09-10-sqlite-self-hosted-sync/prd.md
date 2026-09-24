@@ -5,13 +5,16 @@
 将 Luna 的自托管交付简化为用户可理解的单一入口：用户只需要运行一个
 `docker compose`，首次启动自动准备运行目录，后续启动不覆盖已有状态；持久化
 数据边界明确且可备份。应用启动时从本机账本目录选择一个本地账本，多设备不共享同一个
-SQLite 文件，而是各自使用本地 SQLite，通过统一身份登录服务端，由服务端代管 S3
+SQLite 文件，而是各自使用隔离的本地存储，通过统一身份登录服务端，由服务端代管 S3
 密文对象完成同步。
 
 本任务优先解决部署和数据归属的复杂度，不改变本地优先、端侧加密、显式财务冲突、
 墓碑和可恢复失败的产品原则。
 
-## Confirmed facts
+## Confirmed facts at planning (2026-09-10)
+
+以下“当前”指规划时基线；现行实现和 2026-09-24 确认的 Android 兼容边界以
+`validation.md`、`design.md` 及本 PRD 的要求和验收条件为准。
 
 - Electron 本地已经使用 `better-sqlite3`；Web/Android 使用事务化 IndexedDB。
 - 上述是当前代码现状，不是最终目标；当前任务尚未完成全项目 SQLite 改造。
@@ -36,8 +39,8 @@ SQLite 文件，而是各自使用本地 SQLite，通过统一身份登录服务
   S3-compatible 对象存储；对象存储只保存客户端加密后的账本/配置对象，不保存
   SQLite 文件或服务端明文账本。
 - Compose 中的内置 S3 是多设备共享的加密同步仓库和恢复来源；服务端元数据 SQLite
-  保存身份、设备、账本授权和远端版本；各设备的本地账本统一由 SQLite-backed
-  `LocalLedgerStore` 提供。
+  保存身份、设备、账本授权和远端版本；支持 SQLite 的宿主通过
+  `LocalLedgerStore` 提供本地账本。
 - 当前代码已经有本地 profile 的雏形：Web 侧有 catalog 和按 profile 隔离的
   IndexedDB，Electron 侧有 `active-profile.json`、profile 目录和 SQLite；现有
   `ServerHost`/账号语义需要拆分为“统一身份会话”和“本地账本选择”两层，不能让账号
@@ -50,6 +53,9 @@ SQLite 文件，而是各自使用本地 SQLite，通过统一身份登录服务
   历史；统一目标是 SQLite schema/`LocalLedgerStore`，Electron 以原生 SQLite 文件/
   目录实现，Web/Android 以 SQLite-WASM/OPFS 实现。不会要求所有平台直接选择任意
   `.sqlite` 文件。
+- 2026-09-24 用户确认旧版 Android WebView 缺少 OPFS 时保留安全内置 origin 下的
+  IndexedDB 兼容存储。普通 Web 不启用此回退；Android 具备 OPFS 时仍使用
+  SQLite-WASM/OPFS。兼容存储复用领域与同步契约，但不能称为 SQLite 数据库。
 
 ## Requirements
 
@@ -93,8 +99,9 @@ SQLite 文件，而是各自使用本地 SQLite，通过统一身份登录服务
 - 启动时打开本机账本 catalog：显示最近使用的账本、账本名称、最近打开时间、本地
   存储类型和同步状态；默认聚焦最近使用项，但用户可以切换、创建、导入或移除本地
   账本记录。
-- 每个本地账本拥有独立的稳定 `ledgerId` 和本地数据边界。所有运行时使用独立
-  SQLite database；Electron 是文件/目录，Web/Android 是 SQLite-WASM/OPFS database。
+- 每个本地账本拥有独立的稳定 `ledgerId` 和本地数据边界。Electron 使用独立 SQLite
+  文件/目录，普通 Web 和具备 OPFS 的 Android 使用独立 SQLite-WASM/OPFS database；
+  缺少 OPFS 的旧版 Android WebView 使用独立的 IndexedDB 兼容存储。
   账本选择历史是设备本地 UI 元数据，不同步到 S3，也不包含密码、access key、secret
   或明文账本。
 - 账本目录/文件损坏、权限失效、schema 过新或迁移失败时必须显示可恢复错误并保留
@@ -108,16 +115,18 @@ SQLite 文件，而是各自使用本地 SQLite，通过统一身份登录服务
 
 ### Unified SQLite storage model
 
-- 新账本主存储统一为 SQLite：Electron 使用原生 `better-sqlite3`，Web/Android 使用
-  `sqlite3.wasm` + OPFS Worker（Web 普通 OPFS、Android WebView `opfs-sahpool`）；复用
-  同一领域 schema、migration 和 `LocalLedgerStore` contract。账本运行路径完全移除
-  IndexedDB，不实现当前开发数据迁移。
+- 新账本主存储在 Electron、普通 Web 和具备 OPFS 的 Android 上使用 SQLite：
+  Electron 使用原生 `better-sqlite3`，Web/Android 使用 `sqlite3.wasm` + OPFS Worker
+  （Web 普通 OPFS、Android WebView `opfs-sahpool`）。缺少 OPFS 的旧版 Android
+  WebView 使用显式的 native-only IndexedDB 兼容存储，复用领域和同步契约；不实现
+  当前开发数据从 IndexedDB 到 SQLite 的迁移。
 - 本地 catalog 也使用 SQLite，记录 `ledgerId`、名称、最近打开时间、存储位置和
-  非敏感同步状态；每个账本拥有独立 SQLite database。浏览器 catalog 与账本都在
-  SQLite-WASM/OPFS 中，不再使用 IndexedDB。
+  非敏感同步状态；SQLite 宿主的每个账本拥有独立 database。普通 Web 的 catalog 与
+  账本都在 SQLite-WASM/OPFS 中，不使用 IndexedDB；旧版 Android 兼容存储按账本隔离。
 - OPFS 是 origin 私有空间，不是用户可见目录；无法像 Electron 文件夹一样直接复制。
-  Web/Android 必须提供应用级 SQLite/加密账本导出，OPFS 不可用时明确报不支持，不能
-  偷偷切回第二套主存储。
+  Web/Android 必须提供应用级账本导出。普通 Web 的 OPFS 不可用时明确报不支持；
+  只有原生 Android 缺少 OPFS 时才选择已声明的 IndexedDB 兼容存储，不能在运行失败后
+  静默切换并把已有账本伪装成空账本。
 - 统一 SQLite 只统一本地数据模型，不改变同步格式：S3 仍上传加密修订图，不能上传
   或覆盖整个 SQLite 文件。
 
@@ -182,22 +191,23 @@ SQLite 文件，而是各自使用本地 SQLite，通过统一身份登录服务
 - [ ] `data/` 是明确且受权限保护的服务端持久化边界；通过一致性备份恢复到新目录后，
   身份元数据、加密远端对象、实例身份和必要凭据可验证恢复；运行中的复制、半初始化
   目录和错误权限会明确失败。
-- [ ] 两台独立设备各自使用本地 SQLite 数据库，通过统一账号和账本密码同步新增、编辑
+- [ ] 两台独立设备各自使用隔离的本地账本存储，通过统一账号和账本密码同步新增、编辑
   和删除；设备不需要 S3 配置。断网重连、响应丢失和并发写不会静默覆盖或重复入账。
 - [ ] 新设备只需输入服务端地址、登录统一账号和账本密码，即可主动同步并建立本地
-  数据库；不需要知道 PostgreSQL、MinIO、bucket 初始化或 secret mount 的细节。
+  账本；不需要知道 PostgreSQL、MinIO、bucket 初始化或 secret mount 的细节。
 - [ ] 默认自动同步模式在应用活跃期间于本地提交、启动/回前台和网络恢复时尽力同步；
   用户可以按账本切换为手动模式。
-- [ ] 手动同步模式下，设备断网或用户未点击同步时仍可持续读写本地 SQLite；本地提交
+- [ ] 手动同步模式下，设备断网或用户未点击同步时仍可持续读写本地账本；本地提交
   不因远端不可用失败。主动同步后，安全变更自动合并上传，财务冲突进入明确的待处理
   状态；未同步的本地变更不会被远端覆盖。
 - [ ] 启动时可以选择本机已有账本；最近使用历史在重启后保留，选择不同账本不会
   串读/串写数据，服务端会话、账本授权和同步状态按账本隔离。
 - [ ] 财务冲突进入可理解的显式选择流程，墓碑阻止旧记录复活；不同 workspace 或
   错误密码不会修改本地数据。
-- [ ] Web、Electron 和 Android 都使用统一 SQLite 领域模型/`LocalLedgerStore` 保持本地
-  离线行为及 `LunaLedgerApi` 边界；Web/Android 的 SQLite-WASM/OPFS 运行验证完成，
-  账本运行路径完全不依赖 IndexedDB。
+- [ ] Web、Electron 和 Android 共用领域与同步契约并保持本地离线行为及
+  `LunaLedgerApi` 边界；Electron、普通 Web 和具备 OPFS 的 Android 使用 SQLite，
+  旧版 Android WebView 缺少 OPFS 时使用明确的 IndexedDB 兼容存储。两条 Android
+  路径分别验证持久化和隔离；普通 Web 账本运行路径完全不依赖 IndexedDB。
 - [ ] 生成的部署/迁移/恢复文档与实际命令一致，自动化测试、敏感信息扫描和必要的
   人工验证证据完整。
 
@@ -227,8 +237,9 @@ S3-compatible 对象存储。账本对象继续由客户端加密，服务端不
 不接触 S3 root/access key/secret。
 
 本地账本入口建议改成 **启动账本选择器**：选择的是跨平台的本地 ledger profile，
-不是强制所有设备打开同一个物理 `.sqlite` 文件。Web/Android 将 profile 映射为
- SQLite-WASM/OPFS database，Electron 映射为 SQLite 文件/目录；历史列表只记录在本机。
+不是强制所有设备打开同一个物理 `.sqlite` 文件。普通 Web 和具备 OPFS 的 Android
+将 profile 映射为 SQLite-WASM/OPFS database，旧版 Android WebView 映射到
+IndexedDB 兼容存储，Electron 映射为 SQLite 文件/目录；历史列表只记录在本机。
 该选择器复用当前 Web catalog 和 Electron profile 目录的基础，但不让统一账号登录
 替代本地账本选择，也不让服务端账本授权静默切换本地 profile。
 
@@ -240,8 +251,9 @@ S3-compatible 对象存储。账本对象继续由客户端加密，服务端不
 ## Resolved local ledger selection
 
 用户已确认“本地账本”采用跨平台 ledger profile 模型：启动时从本地 catalog 选择
-账本，最近使用记录保存在本机；统一目标是 SQLite-backed profile：Web/Android 使用
-SQLite-WASM/OPFS，Electron 使用 SQLite 文件/目录。选择不同账本必须切换完整的本地
+账本，最近使用记录保存在本机；普通 Web 和具备 OPFS 的 Android 使用
+SQLite-WASM/OPFS，旧版 Android WebView 使用 IndexedDB 兼容存储，Electron 使用
+SQLite 文件/目录。选择不同账本必须切换完整的本地
 graph、settings、服务端会话作用域和同步状态，不能串读/串写。当前开发数据不做 IndexedDB
 迁移，旧浏览器状态按无账本处理。
 
@@ -274,3 +286,5 @@ graph、settings、服务端会话作用域和同步状态，不能串读/串写
   前必须保留可回滚检查点。
 - `design.md`/`implement.md` 已按 B 的边界更新并进入实现后验收阶段；真实跨设备网络、
   证书信任和长期离线行为仍需人工核查。
+- 2026-09-24 的当前源码本地复验和剩余验收边界见 [validation.md](validation.md)；
+  上述复验不代表真实 HTTPS 或物理 Android 验收。
