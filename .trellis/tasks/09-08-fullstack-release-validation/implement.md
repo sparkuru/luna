@@ -22,6 +22,8 @@
 
 最终稳定源产物与通过结果见 [final-validation.md](research/final-validation.md)：真实 Nginx8/8、恢复7/7、Electron 打包及 ZIP 解压 smoke、Android18项通过。人工作业边界仍明确保留，不以自动测试代替。
 
+上述最终结果属于 2026-09-08 的 PostgreSQL 方案；后来 SQLite 自托管方案的当前源码本地证据和剩余发布验收见 [validation.md](validation.md)。不要将旧产物的通过项直接计为现版本的三端完整验收。
+
 ## Dispatch and completion
 
 激活本子任务后再委派 trellis-implement/trellis-check，prompt 首行必须是 Active task: 本子任务路径；使用已整理 JSONL。质量检查后更新父进度和证据，人工残余门按父计划。严禁无证据宣称整个父任务完成。
