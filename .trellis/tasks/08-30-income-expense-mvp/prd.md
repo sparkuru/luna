@@ -15,7 +15,10 @@
 - agent 亲自运行 Playwright，覆盖正式构建、离线冷启动、重新联网同步、双端冲突和窄屏；检查 APK 的安装/启动/离线持久化。不能用桌面 Chrome 代替 Android 验收。
 
 当前可用交付验收已验证；具体环境与未覆盖保证见`research/validation-cross-platform.md`。
-提交/归档仍等待项目要求的定向人工试用和提交确认：
+2026-09-24 用户确认本任务已通过，并明确要求归档。下列历史勾选状态保留
+当时的执行证据边界；未单独留存的人工检查不补写为 agent 实测。当前版本的
+Electron 首启/目录选择和完整三端发布复验继续由
+`09-08-fullstack-release-validation` 跟踪。
 
 - [x] Compose 正式 Web 构建及跨平台可复现启动说明（Linux实测，macOS/Windows实机待用户试用）。
 - [x] Web 离线冷启动、持久化失败保护、多标签安全、备份恢复。

@@ -1,11 +1,14 @@
 # 降低首次使用认知负担的直观记账 UI
 
 > 2026-09-24 续接说明：下文记录 2026-09-07 的原始 UI 方案。后续已批准的
-> [Web 视觉重构](../archive/2026-09/09-13-web-visual-redesign/prd.md)和
-> [全流程体验改进](../archive/2026-09/09-23-ux-journey-improvements/prd.md)
+> [Web 视觉重构](../09-13-web-visual-redesign/prd.md)和
+> [全流程体验改进](../09-23-ux-journey-improvements/prd.md)
 > 已将普通 Web 的三横线弹窗改为设置路由，并保留账单页唯一主记账入口；原生宿主
 > 仍可使用二级菜单。当前验收以这些后续决定和 [续接验证](validation.md) 为准，
 > 不为满足旧截图恢复已废弃的 Web 布局。
+
+2026-09-24 用户确认本任务已通过并要求归档。验收决定与仍需跨端复验的边界
+记录在 [续接验证](validation.md)；下文未勾选的复合条件保留原始证据状态。
 
 ## Goal
 
