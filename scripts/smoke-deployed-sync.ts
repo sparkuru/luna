@@ -2,9 +2,11 @@ import { strict as assert } from "node:assert";
 import { randomUUID } from "node:crypto";
 import { readFile, stat, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { chromium, expect, type Page } from "@playwright/test";
+import { chromium, expect as baseExpect, type Page } from "@playwright/test";
 import { decryptLedgerDocument } from "../src/shared/ledger-crypto";
 import type { LedgerDocument } from "../src/shared/ledger-sync";
+
+const expect = baseExpect.configure({ timeout: 60_000 });
 
 // Deliberately separate from fixture-based Playwright tests: this writes to an
 // explicitly supplied disposable account on a real, trusted HTTPS deployment.
@@ -21,11 +23,14 @@ async function main(): Promise<void> {
   assert(credentials && typeof credentials === "object", "Invalid credential object");
   const { username, password, ledgerPassword } = credentials as Record<string, unknown>;
   assert(typeof username === "string" && username.length > 0 && typeof password === "string" && password.length > 0 && typeof ledgerPassword === "string" && ledgerPassword.length >= 12, "Invalid credential fields");
+  const canonicalUsername = username.normalize("NFKC").trim().toLowerCase();
+  assert(/^[a-z0-9][a-z0-9_.-]{2,63}$/.test(canonicalUsername), "Invalid account name");
   const output = process.env.LUNA_DEPLOYED_OUTPUT ?? `/tmp/luna-deployed-smoke-${randomUUID()}`;
-  await mkdir(output, { recursive: true, mode: 0o700 });
+  await mkdir(output, { mode: 0o700 });
   const browser = await chromium.launch({ channel: "chrome" });
   const checks: string[] = [];
   let stage = "startup";
+  let activePage: Page | undefined;
   const check = (name: string) => { checks.push(name); console.log(`PASS ${name}`); };
   try {
     const firstContext = await browser.newContext({ baseURL: url.origin, locale: "en-US" });
@@ -33,37 +38,63 @@ async function main(): Promise<void> {
     for (const context of [firstContext, secondContext]) context.setDefaultTimeout(120_000);
     const first = await firstContext.newPage();
     const second = await secondContext.newPage();
-    async function ready(page: Page): Promise<void> {
+    activePage = first;
+    for (const page of [first, second]) {
+      page.on("response", (response) => {
+        if (new URL(response.url()).pathname === "/api/v1/auth/sessions")
+          console.log(`AUTH_HTTP_STATUS ${response.status()}`);
+      });
+    }
+    async function ready(page: Page, connectExisting = false): Promise<void> {
       await page.goto("/");
+      await resume(page);
+      if (connectExisting && await page.locator("#workspace-name").isVisible()) {
+        await page.locator("#setup-connect").click();
+        await expect(page.locator("#server-account-title")).toBeVisible();
+      }
+    }
+    async function resume(page: Page): Promise<void> {
       await expect.poll(async () => (await page.locator("#local-ledger-start").count()) + (await page.locator("#workspace-name").count()) + (await page.locator("#transactions-title").count()), { timeout: 120_000 }).toBeGreaterThan(0);
       if (await page.locator("#local-ledger-start").count()) await page.locator("#local-ledger-start button[aria-current=true]").click();
     }
     async function account(page: Page): Promise<void> {
       if (!(await page.locator("#server-account-title").isVisible())) {
         await page.locator("#open-secondary-menu").click();
-        await page.locator(".settings-navigation").getByRole("button", { name: /Account|账号/, exact: true }).click();
+        await page.locator('[data-settings-area="account"]').click();
       }
     }
     async function closeAccount(page: Page): Promise<void> {
       if (await page.locator("#server-account-title").isVisible()) await page.locator(".brand").click();
     }
     async function login(page: Page, device: string): Promise<void> {
+      stage = "login:open-account";
       await account(page);
+      stage = "login:fill-server";
       await page.locator("#server-url").fill(url.origin);
       await page.locator("#server-username").fill(username as string);
       await page.locator("#server-login-password").fill(password as string);
       await page.locator("#server-device").fill(device);
+      stage = "login:submit";
       await page.locator("#server-login").click();
-      await expect(page.locator("#server-account-name")).toHaveText(username as string);
+      stage = "login:confirm-account";
+      await expect(page.locator("#server-account-name")).toHaveText(canonicalUsername);
+      await expect(page.locator("#server-alert")).toBeEmpty();
+    }
+    async function manual(page: Page): Promise<void> {
+      stage = "sync-mode:select-manual";
+      await account(page);
       await page.locator("#server-sync-mode").selectOption("manual");
-      await expect.poll(() => page.evaluate(async () => (await window.lunaLedger.server!.status()).syncMode)).toBe("manual");
+      stage = "sync-mode:confirm-manual";
+      await expect.poll(() => page.evaluate(async () => (await window.lunaLedger.server!.status()).syncMode), { timeout: 30_000 }).toBe("manual");
     }
     async function record(page: Page, merchant: string): Promise<void> {
       await closeAccount(page);
-      await page.locator("#record-expense").click();
+      await page.locator("#primary-record").click();
+      await expect(page.locator("#transaction-dialog")).toBeVisible();
       await page.locator("#transaction-amount").fill("12.50");
       await page.locator("#choose-category").click();
       await page.getByRole("button", { name: "Food", exact: true }).click();
+      await page.locator("#transaction-advanced-details summary").click();
       await page.locator("#transaction-merchant").fill(merchant);
       await page.locator("#save-transaction").click();
       await expect(page.locator("#transaction-list-region")).toContainText(merchant);
@@ -104,18 +135,22 @@ async function main(): Promise<void> {
     await login(first, "Synthetic first browser");
     await first.locator("#server-source").selectOption(sourceId);
     await first.locator("#server-ledger-password").fill(ledgerPassword as string);
+    first.once("dialog", (dialog) => void dialog.accept());
     await first.locator("#server-connect").click();
     await expect(first.locator("#server-sync-now")).toBeEnabled();
     await expect(first.locator("#server-sync-status")).toContainText("synchronized");
+    await manual(first);
     assert.deepEqual(await document(first), original);
     check("first-ui-login-bind-upload");
     stage = "second UI login and download";
-    await ready(second);
+    activePage = second;
+    await ready(second, true);
     await login(second, "Synthetic second browser");
     await second.locator("#server-ledger-password").fill(ledgerPassword as string);
     await second.locator("#server-connect").click();
     await expect(second.locator("#server-sync-now")).toBeEnabled();
     await expect.poll(() => document(second)).toEqual(original);
+    await manual(second);
     check("independent-second-ui-login-download");
     stage = "offline write and manual sync boundary";
     await firstContext.setOffline(true);
@@ -123,6 +158,7 @@ async function main(): Promise<void> {
     const offline = await document(first);
     assert.notDeepEqual(offline, original);
     await first.reload();
+    await resume(first);
     await expect(first.locator("#transaction-list-region")).toContainText("Synthetic offline meal");
     assert.deepEqual(await document(first), offline);
     await sync(second);
@@ -160,6 +196,21 @@ async function main(): Promise<void> {
   } catch {
     // Playwright errors can contain filled values. Do not print raw errors or traces.
     console.error(`LUNA_DEPLOYED_SYNC_FAILED stage=${stage}`);
+    if (activePage && !activePage.isClosed()) {
+      try {
+        const diagnostic = await activePage.evaluate(() => {
+          const alert = document.querySelector("#server-alert")?.textContent ?? "";
+          return {
+            accountCount: document.querySelectorAll("#server-account-name").length,
+            loginCount: document.querySelectorAll("#server-login").length,
+            alertKind: alert.includes("different workspace") ? "workspace-mismatch" : alert.trim() ? "present" : "none",
+          };
+        });
+        console.error(`UI_DIAGNOSTIC route=${new URL(activePage.url()).pathname} accountCount=${diagnostic.accountCount} loginCount=${diagnostic.loginCount} alertKind=${diagnostic.alertKind}`);
+      } catch {
+        console.error("UI_DIAGNOSTIC unavailable");
+      }
+    }
     process.exitCode = 1;
   } finally {
     await browser.close();
