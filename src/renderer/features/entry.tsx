@@ -184,7 +184,7 @@ export function TransactionDialog({
   const [expression, setExpression] = useState(initial.amount);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
-  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const calculatorDetailsRef = useRef<HTMLDetailsElement>(null);
   const [error, setErrorText] = useState("");
   const [errorField, setErrorField] = useState<"amount" | "category" | "date" | null>(null);
   const setError = (text: string, field: typeof errorField = null) => {
@@ -309,31 +309,27 @@ export function TransactionDialog({
     }
     changeCalculatorExpression(`${expression}${token}`);
   };
-  const calculatorKeyboardActive = !isWebSurface || calculatorOpen;
-  useEffect(() => {
-    if (!calculatorKeyboardActive) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.isComposing ||
-        event.ctrlKey ||
-        event.metaKey ||
-        event.altKey
-      )
-        return;
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const isAmountField = target.id === "transaction-amount";
-      const isCalculatorControl = target.closest(".calculator") !== null;
-      if (!isAmountField && !isCalculatorControl) return;
-      const token = calculatorTokenForKey(event.key);
-      if (token === null) return;
+  const handleCalculatorKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (
+      (isWebSurface && !calculatorDetailsRef.current?.open) ||
+      event.nativeEvent.isComposing ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey
+    )
+      return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const isAmountField = target.id === "transaction-amount";
+    const isCalculatorControl = target.closest(".calculator") !== null;
+    if (!isAmountField && !isCalculatorControl) return;
+    const token = calculatorTokenForKey(event.key);
+    if (token === null) return;
+    if (event.key === "Enter" && target.closest(".calculator button") !== null) return;
 
-      event.preventDefault();
-      pressCalculator(token);
-    };
-    document.addEventListener("keydown", handleKeyDown, true);
-    return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [calculatorKeyboardActive, pressCalculator]);
+    event.preventDefault();
+    pressCalculator(token);
+  };
   const calculatorDisplayExpression = expression.replaceAll("*", "×").replaceAll("/", "÷");
   const calculatorDisplayValue = calculationDisplay || calculatorDisplayExpression || "\u00a0";
   const calculatorControls = () => (
@@ -595,6 +591,7 @@ export function TransactionDialog({
         <form
           id="transaction-form"
           noValidate
+          onKeyDownCapture={handleCalculatorKeyDown}
           onSubmit={(event) => {
             event.preventDefault();
             void save();
@@ -743,10 +740,9 @@ export function TransactionDialog({
             </div>
             {isWebSurface && (
               <details
+                ref={calculatorDetailsRef}
                 className="calculator"
                 aria-label={m("calculator")}
-                open={calculatorOpen}
-                onToggle={(event) => setCalculatorOpen(event.currentTarget.open)}
               >
                 <summary className="calculator-title">
                   <Calculator size={17} aria-hidden="true" />

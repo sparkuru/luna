@@ -355,6 +355,13 @@ backspace) update the LCD expression first; `=` or Enter is the only evaluation
 boundary that writes the rounded ledger value back to the amount field. Scope
 keyboard capture to the amount field and calculator controls so merchant,
 notes, date, category, and other form controls retain their normal input paths.
+For the Web `<details>` calculator, read the element's `open` property during
+the form's capture-phase `keydown` handler. The native disclosure can open
+before React's `toggle` state or an effect-installed document listener updates;
+the first digit must already go to the LCD. When collapsed, amount typing must
+stay native. Let Enter activate a focused calculator button (including Evaluate)
+instead of intercepting that button's keyboard click; Enter on the amount field
+or disclosure summary may evaluate the expression.
 
 Calculator keys should read as pressable controls rather than flat cards: use
 consistent rounded corners, a restrained raised shadow, a small upward hover

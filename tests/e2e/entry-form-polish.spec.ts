@@ -36,6 +36,11 @@ test("calculator keeps keyboard input on the LCD until it is evaluated", async (
   await page.locator("#primary-record").click();
   const calculator = page.locator(".calculator");
   const amount = page.locator("#transaction-amount");
+  await amount.focus();
+  await page.keyboard.type("4");
+  await expect(amount).toHaveValue("4");
+  await page.keyboard.press("Backspace");
+  await expect(amount).toHaveValue("");
   await calculator.locator("summary").click();
   await expect(calculator).toHaveAttribute("open", "");
   await amount.focus();
@@ -65,6 +70,15 @@ test("calculator keeps keyboard input on the LCD until it is evaluated", async (
   await page.keyboard.press("Enter");
   await expect(calculator.locator(".calculator-display")).toHaveText("3.00");
   await expect(amount).toHaveValue("3.00");
+
+  await calculator.locator(".calculator-grid").getByRole("button", { name: "Clear calculator" }).click();
+  await calculator.locator(".calculator-grid").getByRole("button", { name: "7", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect(calculator.locator(".calculator-display")).toHaveText("7");
+  await expect(amount).toHaveValue("3.00");
+  await calculator.locator(".calculator-grid").getByRole("button", { name: "Evaluate" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(amount).toHaveValue("7.00");
 });
 
 test("calculator keypad keeps mouse input on the LCD until equals", async ({ page }) => {
