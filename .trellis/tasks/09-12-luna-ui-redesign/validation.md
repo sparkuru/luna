@@ -4,6 +4,13 @@
 任务：`09-12-luna-ui-redesign`
 状态：`in_progress`；本地实现和可运行 Web 验收已完成主要部分，平台与人工边界仍待验收。
 
+## 2026-09-25 当前验收增量
+
+- 兼容 Node 24.15.0、宿主 Chrome、生产 Web 构建、`chrome` 与 `chrome-narrow` 的全量 Playwright 回归为 **196 passed、2 failed**（共 198 项）。两项失败是同一计算器键盘用例在两个视口复现：展开原生 `<details>` 后立即键入，首键进入金额输入框。修复改为表单捕获阶段同步读取 `<details>.open`；收起时金额框仍直接输入，展开时计算表达式先留在 LCD。独立复核还确保焦点位于计算器按钮时 Enter 执行该按钮，保留其原生键盘行为。修复后重建 Web，`entry-form-polish.spec.ts` 生产桌面/窄屏 **16/16 passed**；`./hako npm test` **214/214 passed**，TypeScript typecheck、Web build 与 `git diff --check` 通过。未把修复前的 198 项结果写成修复后的全量通过。
+- 用户授权的 PLR110（`192.168.9.9:45797`，Android 16）使用独立 `majo.im.luna.validation` APK，SHA-256 `8b75c5139744f48d09ebc988b8ee194dbb9df53c1ed4ee716c15facdbe5d2731`。该 APK 是计算器修复前的构建；本轮真机验证的是不依赖该修复的选图与备份路径。实际 `com.android.documentsui` 选择唯一命名的 1×1 合成 PNG，附件在交易保存后经 `readTransactionImage` 读出正确 PNG 签名、尺寸与 MIME；强制停止并重启应用后读回内容一致。系统文件选择器还导出 3,352 字节完整备份，文件头为 `LUNABK02`，未含测试口令或商户明文。本轮未在真机执行备份导入，既有隔离 AVD 验证仍单列。
+- 真机合成 PNG、媒体索引、备份文件均已检查清理；隔离 APK 已卸载，`pm list packages majo.im.luna` 无结果。PLR110 未接入远端同步，不能据此宣称真实 Android/桌面跨设备图片同步通过。
+- 9.13 测试主机暂时离线，部署 URL、真实跨设备同步及前一任务隔离项目清理仍待主机恢复。Electron 原生文件对话框、真实浏览器 200% 缩放、辅助技术及用户视觉认可仍待验；本任务保持 `in_progress`。
+
 本轮范围调整（2026-09-13）：用户已授权提交当前本地进度；后续优先前端与体验，部署、跨端联动、真实同步及相关验收后置。以下未完成项继续保留，不因本地验证通过而视为产品交付。
 
 ## 已通过
