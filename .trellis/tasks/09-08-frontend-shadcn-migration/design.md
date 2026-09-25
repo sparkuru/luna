@@ -1,5 +1,7 @@
 # Luna 前后端整体设计（已批准实施）
 
+> 本文保留 2026-09-08 已批准的 PostgreSQL 原始设计及其实施依据。现行单实例服务端元数据、内置对象存储和本地账本布局以 [09-10 设计](../09-10-sqlite-self-hosted-sync/design.md)为准；现行发布验收以 [D 子任务记录](../09-08-fullstack-release-validation/validation.md)为准。下文的 PostgreSQL 图、表和恢复步骤不得直接当作当前部署说明。
+
 ## 1. Architecture and data ownership
 
 用户已认可新增后端及指定前端工具的整体方案：保留现有离线/客户端加密，新增真实的账号和同步 HTTP API。后端不能按商户检索、计算月报或代替用户选择财务冲突。未来需要这些服务端能力时属于独立的架构变更。

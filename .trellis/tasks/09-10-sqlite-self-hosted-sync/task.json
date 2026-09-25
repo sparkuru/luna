@@ -2,7 +2,7 @@
   "id": "sqlite-self-hosted-sync",
   "name": "sqlite-self-hosted-sync",
   "title": "SQLite 单实例自托管与 S3 加密同步",
-  "description": "",
+  "description": "单实例 SQLite/内置 S3 的隔离启动、受限凭据与恢复已有证据；目标部署负例、本地账本目录完整交互及完整跨设备验收仍待完成。",
   "status": "in_progress",
   "dev_type": null,
   "scope": null,

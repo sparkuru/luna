@@ -2,7 +2,7 @@
   "id": "fullstack-release-validation",
   "name": "fullstack-release-validation",
   "title": "三端集成与部署恢复验证",
-  "description": "",
+  "description": "现行 SQLite 基线的 Web/Electron、实体 Android 本地路径及临时 HTTPS 双向合成同步已有证据；D6 的原生人工审核、生产恢复与长期部署仍待验收。",
   "status": "in_progress",
   "dev_type": null,
   "scope": null,

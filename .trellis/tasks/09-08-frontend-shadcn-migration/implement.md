@@ -59,7 +59,7 @@
 - [x] D3：完整 Web 生产模式 Playwright，离线冷启动/懒路由/版本更新/断网写入。
 - [x] D4：Electron 构建/打包/隔离数据 smoke，Android sync/build/emulator、返回键和原生备份。
 - [x] D5：pg_dump 与独立恢复环境演练，验证账号/instance ID/ETag/客户端解密；记录 rollback 时新数据导出要求。
-- [ ] D6：审阅实际 diff 与范围，更新 specs，人工审阅视觉/设备/读屏残余风险。源码/spec 审阅、静态视觉与自动化部分已完成；真机、读屏及私有 HTTPS 部署明确未运行，不声称人工验收完成。
+- [ ] D6：审阅实际 diff 与范围，更新 specs，人工审阅视觉/设备/读屏残余风险。2026-09-08 的源码/spec、静态视觉与自动化审阅已完成；后续当前源码的 Android 实体本地路径及临时可信 HTTPS 的 Web/Android 双向合成数据同步已有[独立证据](../09-08-fullstack-release-validation/validation.md)。真实读屏、实体键盘、Electron 原生首启/文件对话框、生产恢复和长期部署仍缺证据，不声称人工或整体交付完成。
 
 ## Validation commands
 

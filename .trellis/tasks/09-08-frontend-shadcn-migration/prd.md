@@ -1,5 +1,11 @@
 # Luna 前后端整体迁移
 
+## Current baseline and task status (2026-09-25)
+
+用户于 2026-09-08 已明确批准实施；A 后端契约、B React 前端、C 同步迁移三个子任务已归档，D [三端发布验证](../09-08-fullstack-release-validation/validation.md)仍在进行。本父任务因此处于 `in_progress`，不能以三个子任务归档推断整体交付完成。
+
+下文是 2026-09-08 批准时的需求和设计基线。其 R10/AC8 中的 PostgreSQL 部署与恢复方案，已由用户随后确认的 [单实例 SQLite 与内置 S3 方案](../09-10-sqlite-self-hosted-sync/prd.md)替代；当前发布验收须使用现行 SQLite 产物及其恢复证据。R8 中针对当时开发用 IndexedDB 数据的迁移要求，按 09-10 的决定改为干净初始化；其他明确迁移与数据保护边界仍依各自任务验证。原先“附件不在本次交付范围”只限定 09-08 初始迁移；后续 [09-12 图片附件任务](../09-12-luna-ui-redesign/prd.md)独立实施，不能据此将附件计为本父任务已验收。历史 PostgreSQL 结果仍按原版本保留。
+
 ## Goal
 
 迁移为 React + TypeScript + Hey API + TanStack Query + TanStack Router + Tailwind CSS + shadcn/ui，并引入可部署后端。一次完成界面、接口、数据归属、账号、三端、迁移、部署及验收设计，再按明确依赖实施。
