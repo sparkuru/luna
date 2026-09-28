@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "共享记账弹窗、日期控件与移动端可访问性约束"}
+{"file": ".trellis/spec/frontend/android-runtime.md", "reason": "旧 WebView 原生日期选择器与隔离 APK 验收边界"}

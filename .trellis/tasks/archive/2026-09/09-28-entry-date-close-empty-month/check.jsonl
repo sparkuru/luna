@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "空状态、焦点、触控与验证要求"}
+{"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Web-first Playwright 与生产构建回归要求"}
