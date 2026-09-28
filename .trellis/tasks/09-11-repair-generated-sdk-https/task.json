@@ -2,7 +2,7 @@
   "id": "repair-generated-sdk-https",
   "name": "repair-generated-sdk-https",
   "title": "修复生成 SDK 与 HTTPS 部署验收阻断",
-  "description": "生成 SDK、构建与容器复现 AC1–AC3 已通过；测试主机恢复后已清理遗留隔离项目，HTTPS 账号/双客户端/Android 远端复测仍待完成。",
+  "description": "AC1–AC3、AC6 已通过；当前 HEAD 的真实 HTTPS 双客户端及 Android 运行时同步已验收并清理隔离资源。AC4 当前生产版隐私/窄屏/离线路由复测、AC5 当前 APK 物理交互与离线复测仍待完成。",
   "status": "in_progress",
   "dev_type": null,
   "scope": null,

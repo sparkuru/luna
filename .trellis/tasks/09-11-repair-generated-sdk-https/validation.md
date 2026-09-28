@@ -85,3 +85,50 @@ AC1—AC3 保持通过，AC4—AC6 保持部分完成，任务不归档。远端
 HTTPS 账号或双客户端同步，也没有连接旧 AIO-3568J 核对其 `.validation` 包。
 AC4—AC6 仍为部分完成，本任务继续 `in_progress`。后续若做远端验收，须基于当时的
 源码与独立合成项目重新建立可回滚环境；不能复用此次已清理的项目。
+
+## 2026-09-28 当前 HEAD 的真实 HTTPS 与 Android 续验
+
+验收基线为 `85c2ce9` 的已提交源码；工作树同时有另一移动端任务的未提交改动，
+没有把这些改动混入 Web/API 或 APK 产物。经用户批准，只把筛查过的 Web/API
+构建文件包传至 `192.168.9.13` 的 `/tmp/luna-sdk-resume.VTbJEA`，以唯一 Compose
+project `luna-sdk-resume-20260928` 构建 Web、API、MinIO 和初始化容器。
+Web/API 健康，Web 只绑定 `127.0.0.1:18082`；本机与 VPS 回环 SSH 隧道将它接到
+临时 `luna.majo.im` Nginx 站点。公网 `/healthz` 和 `/api/v1/meta` 均为 200，
+系统 CA 校验结果为 0。API 使用精确允许来源和禁止不安全 LAN 的验收配置；
+没有传输或读取 VPS 私钥。
+
+- 当前 Chrome 153 在真实 `https://luna.majo.im/` 上运行
+  `scripts/smoke-deployed-sync.ts`，六项全部通过：受信 HTTPS 头、安全上下文、
+  OPFS/Service Worker；首次 UI 登录绑定上传；独立第二浏览器 UI 登录下载；
+  手动模式下离线写入、刷新且不提前上传；再次手动同步后两端收敛；第二浏览器
+  离线冷启动仍能读到账本。只用了独立合成账号和合成交易。
+- 隔离 API 重启前后，实例 ID、账号会话、账本对象 ETag 与密文字节摘要一致，
+  证明该项目的 SQLite/MinIO 数据在 API 重启后仍可用。
+- 当前 `HEAD` 独立构建的 APK SHA256 为
+  `70ea34e2e934e947635a8795e9c2492c0f1471fec3c3350d5199baa1248eadff`；
+  Android 签名 v2 与清单检查通过，独立包名 `majo.im.luna.validation`。
+  经用户批准先卸载旧同名测试包及其合成数据，再把新 APK 安装到 AIO-3568J
+  （Android 11、WebView 96）。WebView 在 `https://localhost` 安全上下文
+  通过真实 CA 信任的 `https://luna.majo.im/api/v1/meta` 请求（200）；该旧
+  WebView 无 OPFS，按兼容路径使用本地存储。UI 完成账号登录；APK 内的
+  `window.lunaLedger.server.connect` 成功下载两笔浏览器合成交易。手机新增
+  第三笔合成交易并同步后，新的独立 Chrome 会话通过 UI 登录、下载并读到该交易；
+  手机进程强制结束再启动后，本地仍有三笔交易及两端的合成标记。重启后会话
+  显示未连接，符合需要重新登录/解锁的产品说明。
+- Android 自动化最初在点击 UI 的“连接”后，因等待交易列表选择器而超时；
+  账号页不会显示这个列表。随后直接调用 APK 内公开 host API 完成连接，
+  UI 也显示已同步；因此这里证明了 UI 登录和 APK 运行时双向同步，**不把
+  Android UI 的连接按钮单独记作通过**。手机上的当前 APK 也没有重新运行物理
+  返回键、草稿保留和窄屏布局检查。
+
+清理已获用户明确批准。卸载 `majo.im.luna.validation` 后设备仅剩原有
+`majo.im.luna.lan`；移除 WebView 端口转发。VPS 临时站点、配置和反向隧道
+已撤除，`nginx -t` 通过并重载，公网 `/healthz` 恢复 404 且 TLS 校验结果仍为 0。
+停止唯一 Compose project 后，精确删除 `/tmp/luna-sdk-resume.VTbJEA`；
+测试主机主栈 `luna-web-1`、`luna-api-1` 保持 healthy。另一个早已处于
+Restarting 的 `luna-web-deploy-lsf-20260911-api-1` 未改动。本地合成凭据及
+含 token 的暂存文件已删除。
+
+AC6 的当前部署、双客户端、重启持久化和清理回滚验收已完成。AC4 的当前
+生产版隐私/窄屏/离线路由套件，以及 AC5 的当前 APK 物理返回键、草稿、
+离线写入/重启和无横向溢出尚缺同一版本的完整证据，继续保持部分完成。
