@@ -357,3 +357,40 @@ Completed final verification for the ledger filter task and reconciled the Web v
 ### Status
 
 [OK] **Completed**
+
+
+## Session 14: 修正移动记账日期、关闭按钮与空月份提示
+
+**Date**: 2026-09-28
+**Task**: 修正移动记账日期、关闭按钮与空月份提示
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+为 Android 与窄屏 Web 固定 YYYY/MM/DD 日期投影并保留 ISO 原生选择器；统一弹窗关闭图标和 48×48 点击区；显示所选空月份状态并修正窄屏统计页边距。
+
+### Main Changes
+
+- 记账日期投影不改写 ISO 日期，Android 系统选择器选择结果经保存和重启校验。
+- 空月份文案本地化并包含所选月份；筛选无结果继续显示筛选空态，保留页面记账入口。
+- 窄屏 Web 统计页在 320/375/457px 下使用对齐的 24px 两侧边距。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f7da8b1` | (see git log) |
+
+### Testing
+
+- [OK] ./hako npm run typecheck passed.
+- [OK] ./hako npm test passed (214/214).
+- [OK] Android entry and intuitive ledger e2e passed (44/44); narrow statistics gutter e2e passed (4/4).
+- [OK] Entry form polish e2e passed (16/16); Web build passed.
+- [OK] Isolated Android APK build and focused native date-picker smoke passed.
+- [OK] git diff --cached --check passed before commit.
+- [OK] Broad Android smoke still reaches an unrelated settings-navigation assertion expecting Preferences.
+
+### Status
+
+[OK] **Completed**

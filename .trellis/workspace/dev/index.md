@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 13
-- **Last Active**: 2026-09-23
+- **Total Sessions**: 14
+- **Last Active**: 2026-09-28
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~359 | Active |
+| `journal-1.md` | ~396 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 14 | 2026-09-28 | 修正移动记账日期、关闭按钮与空月份提示 | `f7da8b1` | `paycheck-to-paycheck` |
 | 13 | 2026-09-23 | Close ledger filters and Web visual redesign | `8dd15d9`, `b86fcc6` | `paycheck-to-paycheck` |
 | 12 | 2026-09-23 | 完成设置界面任务 | `5c0eda9`, `58a77da` | `paycheck-to-paycheck` |
 | 11 | 2026-09-23 | Android 横屏记账与分类确认修复 | `df0d267` | `paycheck-to-paycheck` |
