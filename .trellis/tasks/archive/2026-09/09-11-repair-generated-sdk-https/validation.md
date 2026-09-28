@@ -132,3 +132,27 @@ Restarting 的 `luna-web-deploy-lsf-20260911-api-1` 未改动。本地合成凭�
 AC6 的当前部署、双客户端、重启持久化和清理回滚验收已完成。AC4 的当前
 生产版隐私/窄屏/离线路由套件，以及 AC5 的当前 APK 物理返回键、草稿、
 离线写入/重启和无横向溢出尚缺同一版本的完整证据，继续保持部分完成。
+
+## 2026-09-28 同版生产 Web 与 Android 补验
+
+上述 AC4/AC5 的同版缺口随后已补测，构建和测试均来自已提交 `HEAD`，未混入
+另一任务的未提交改动。
+
+- 当前 APK 再次安装到 AIO-3568J，WebView 断网模拟下通过 UI 创建本地账本并
+  写入合成交易。用实体 `Back` 键后，未保存交易草稿的金额 `17.25` 仍在；
+  临时设为 375px 视口时，页面与滚动宽度同为 375px，草稿仍在。进程强制
+  结束并重启后，本地合成交易仍可读取。测试包及调试端口再次移除，设备仅剩
+  原有 `majo.im.luna.lan`。结合前述真实 HTTPS 证书信任、账号 UI 登录和
+  APK 运行时双向同步，AC5 所列项目通过。Android UI 的“连接”按钮单独结果
+  仍未从首次自动化超时中分离出来，不作为本轮通过项。
+- 从已提交 `HEAD` 另建本地干净快照，生产 `web:build` 成功；使用现有锁定依赖
+  的本机安装，在本地回环预览上执行
+  `LUNA_TEST_PRODUCTION=1 npx playwright test tests/e2e/privacy-and-web.spec.ts
+  tests/e2e/offline-and-storage.spec.ts tests/e2e/router-offline.spec.ts
+  --project=chrome --project=chrome-narrow --workers=1 --timeout=120000`，
+  18/18 通过。覆盖隐私金额显示、375px 窄屏、SQLite-WASM、本地写入与双标签、
+  离线冷启动及离线路由。回环测试与前述同一源码的真实 HTTPS 六项烟测合并，
+  覆盖 AC4；本地回环测试本身不被写作公网 HTTPS 证据。
+
+AC1—AC6 的验收项现均有证据；临时资源已清理。下文历史“部分完成”段落按
+当时状态保留，当前结论以本节为准。

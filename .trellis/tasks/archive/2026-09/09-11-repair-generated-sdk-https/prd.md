@@ -5,8 +5,9 @@
 用户已恢复并批准隔离远端验收；下文 2026-09-12—24 的暂停安排为历史记录。
 当前已提交源码完成真实 HTTPS 浏览器双客户端同步、Android 运行时双向同步、
 隔离 API 重启持久化和全部临时资源清理，详见 [validation.md](validation.md)。
-AC6 已通过。AC4 仍缺当前生产版隐私/窄屏/离线路由整套复测；AC5 仍缺当前
-APK 的物理返回键、草稿、离线写入/重启和布局复测，任务保持 `in_progress`。
+AC1—AC6 均已通过；当前生产 Web 的隐私/窄屏/离线路由与当前 APK 的物理
+返回键、草稿、离线写入/重启和布局也已补验。验收结论见
+[validation.md](validation.md)，提交与归档前状态仍为 `in_progress`。
 
 ## 当前执行优先级（2026-09-12）
 
@@ -143,12 +144,12 @@ APK 的物理返回键、草稿、离线写入/重启和布局复测，任务保
   缺失而失败。
 - [x] **AC3 — Container reproducibility:** 不执行临时手工生成步骤时，独立 Docker Web/API
   构建成功并健康启动；构建上下文包含全部运行时 SDK 依赖。
-- [~] **AC4 — Supported HTTPS Web:** 真实浏览器以目标 HTTPS origin 访问当前构建时，
+- [x] **AC4 — Supported HTTPS Web:** 真实浏览器以目标 HTTPS origin 访问当前构建时，
   `https://luna.majo.im` 的 Service Worker、SQLite-WASM/OPFS、离线冷启动、隐私/窄屏/
   离线路由和服务器账号/同步场景通过；响应包含证书可信、精确 Origin、COOP/COEP 和
   API `no-store` 等必要约束。HTTP LAN 若不再支持完整 Web 离线，文档与配置明确说明
   并有可观察失败状态。
-- [~] **AC5 — Android current APK:** 当前工作树生成的 APK 安装到 `192.168.9.14` 后，
+- [x] **AC5 — Android current APK:** 当前工作树生成的 APK 安装到 `192.168.9.14` 后，
   物理返回键、草稿保留、离线写入/重启恢复、无横向溢出通过；访问远端 API 时证书信任
   `https://luna.majo.im` 的结果与系统信任策略一致，不把忽略证书错误当成产品验收。
 - [x] **AC6 — Deployment/recovery evidence:** 隔离测试主机完成健康、登录、账本条件写、
