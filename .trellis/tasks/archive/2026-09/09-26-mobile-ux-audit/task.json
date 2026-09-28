@@ -1,0 +1,33 @@
+{
+  "id": "mobile-ux-audit",
+  "name": "mobile-ux-audit",
+  "title": "Luna 移动端逐页体验审查与改进清单",
+  "description": "按用户要求在指定手机逐页实际操作、截图并评估视觉与交互，输出证据、优先级和下一轮改版范围；本任务先审查，不修改产品代码。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "dev",
+  "assignee": "dev",
+  "createdAt": "2026-09-26",
+  "completedAt": "2026-09-28",
+  "branch": null,
+  "base_branch": "paycheck-to-paycheck",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "review.md",
+    "research/page-audit.md",
+    "research/findings.md",
+    "research/page-inventory.md"
+  ],
+  "notes": "2026-09-26逐页审查交付完成：12个APK路由+2个浏览器首次创建路径，15项问题（6 P1 / 9 P2）。证据与数据/源码无变更检查见review.md。2026-09-28后续范围已由09-26-mobile-experience-redesign承接，本审查归档；不代表移动布局任务或改版任务已完成。",
+  "meta": {
+    "work_kind": "ux_review"
+  }
+}
