@@ -13,6 +13,83 @@ import { verifyAndroidSettings } from './android-settings-smoke';
 const appId = 'majo.im.luna';
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 
+/** Exercise Android's actual date dialog, then verify its ISO renderer value. */
+async function verifyEntryDatePicker(page: Page, device: AndroidDevice): Promise<string> {
+  const date = page.locator('#transaction-date');
+  await date.fill('2026-09-28');
+  await date.click();
+
+  const targetDate = '2026-09-29';
+  const targetLabel = new Intl.DateTimeFormat('en-GB', {
+    month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+  }).format(new Date(`${targetDate}T00:00:00.000Z`));
+  const dumpPath = `/data/local/tmp/luna-entry-date-${randomUUID()}.xml`;
+  let ui = '';
+  const dumpUi = async () => {
+    await device.shell(`uiautomator dump ${dumpPath}`);
+    ui = (await device.shell(`cat ${dumpPath}`)).toString();
+    return ui;
+  };
+
+  await expect.poll(async () => {
+    const hierarchy = await dumpUi();
+    return hierarchy.includes('android:id/button1') && hierarchy.includes('android:id/button2');
+  }, { message: 'Expected Android WebView to open its native date dialog.' }).toBe(true);
+
+  const nodeBounds = (matches: (node: string) => boolean) => {
+    const node = [...ui.matchAll(/<node\b[^>]*\/>/g)].map(([markup]) => markup).find(matches);
+    const bounds = /bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/.exec(node ?? '');
+    assert.ok(bounds, `Native date dialog did not expose the expected control: ${ui}`);
+    return {
+      x: Math.round((Number(bounds[1]) + Number(bounds[3])) / 2),
+      y: Math.round((Number(bounds[2]) + Number(bounds[4])) / 2),
+    };
+  };
+
+  const targetDay = nodeBounds((node) => node.includes(`content-desc="${targetLabel}"`));
+  await device.shell(`input tap ${targetDay.x} ${targetDay.y}`);
+  await expect.poll(async () => {
+    await dumpUi();
+    return [...ui.matchAll(/<node\b[^>]*\/>/g)]
+      .map(([markup]) => markup)
+      .some((node) => node.includes(`content-desc="${targetLabel}"`) && node.includes('checked="true"'));
+  }, {
+    message: 'Expected the native date dialog to select the requested day.',
+  }).toBe(true);
+  const confirm = nodeBounds((node) => node.includes('resource-id="android:id/button1"'));
+  await device.shell(`input tap ${confirm.x} ${confirm.y}`);
+  await expect(date).toHaveValue(targetDate);
+  const projection = page.locator('.date-picker-mobile-value');
+  await expect(projection).toBeVisible();
+  await expect(projection).toHaveText('2026/09/29');
+  const projectionGeometry = await projection.evaluate((element) => {
+    const input = document.getElementById('transaction-date');
+    if (!(input instanceof HTMLInputElement)) throw new Error('Transaction date input is missing.');
+    const projectionBox = element.getBoundingClientRect();
+    const inputBox = input.getBoundingClientRect();
+    return {
+      surface: document.documentElement.dataset.clientSurface,
+      display: getComputedStyle(element).display,
+      projectionZIndex: Number.parseInt(getComputedStyle(element).zIndex, 10),
+      inputZIndex: Number.parseInt(getComputedStyle(input).zIndex, 10),
+      projectionBox: { width: projectionBox.width, height: projectionBox.height },
+      inputBox: { width: inputBox.width, height: inputBox.height },
+    };
+  });
+  console.log(`ANDROID_DATE_PROJECTION_STYLE ${JSON.stringify(projectionGeometry)}`);
+  assert.equal(projectionGeometry.surface, 'mobile');
+  assert.equal(projectionGeometry.display, 'flex');
+  assert.ok(
+    projectionGeometry.projectionZIndex > projectionGeometry.inputZIndex,
+    `Expected projection to paint above the native segments: ${JSON.stringify(projectionGeometry)}`,
+  );
+  assert.ok(projectionGeometry.projectionBox.width > 0 && projectionGeometry.projectionBox.height > 0);
+  // This capture is from the Android WebView compositor, not DOM text. It
+  // catches native date segments painting over the aria-hidden projection.
+  await device.screenshot({ path: resolve(process.env['LUNA_ANDROID_ARTIFACT_DIR'] ?? '/tmp/luna-android-smoke', 'android-entry-date-projection.png') });
+  return targetDate;
+}
+
 /** Send actual Android BACK input, not a synthetic DOM keyboard event. */
 async function verifyHardwareBack(page: Page, device: AndroidDevice): Promise<Page> {
   const imeShown = async () => {
@@ -257,6 +334,7 @@ async function main(): Promise<void> {
     await page.locator('#workspace-form button[type="submit"]').click();
     await expect(page.locator('#summary-grid')).toBeVisible();
     await page.locator('#record-expense').click();
+    const nativePickerDate = await verifyEntryDatePicker(page, device);
     await page.locator('#transaction-type').selectOption('expense');
     await page.locator('#transaction-amount').fill('12.50');
     await page.locator('#transaction-category').fill('Groceries');
@@ -264,6 +342,10 @@ async function main(): Promise<void> {
     await expect(page.locator('#transaction-merchant')).toBeVisible();
     await page.locator('#transaction-merchant').fill('Android offline market');
     await page.locator('#transaction-form button[type="submit"]').click();
+    const savedDate = await page.evaluate(async (month) =>
+      (await window.lunaLedger.getSnapshot(month)).transactions.find((transaction) => transaction.merchant === 'Android offline market')?.date,
+    nativePickerDate.slice(0, 7));
+    assert.equal(savedDate, nativePickerDate, 'The selected native date must persist as its ISO value.');
     await expect(page.locator('#transaction-list-region')).toContainText('12.50');
     // Capture the disposable device surface; WebView CDP screenshots can
     // detach transiently while the IME settles after form submission.
@@ -271,6 +353,14 @@ async function main(): Promise<void> {
     await device.shell(`am force-stop ${appId}`);
     page = await openApp(device);
     await expect(page.locator('#transaction-list-region')).toContainText('Android offline market');
+    const restartedDate = await page.evaluate(async (month) =>
+      (await window.lunaLedger.getSnapshot(month)).transactions.find((transaction) => transaction.merchant === 'Android offline market')?.date,
+    nativePickerDate.slice(0, 7));
+    assert.equal(restartedDate, nativePickerDate, 'The selected native date must survive process restart.');
+    if (process.env['LUNA_ANDROID_DATE_PICKER_ONLY'] === 'true') {
+      console.log('ANDROID_SMOKE_STAGE native-entry-date-passed');
+      return;
+    }
     await expect(page.locator('#transaction-list-region')).toContainText('12.50');
     await expect(page.locator('#expense-total')).toHaveText('••••');
     assert.equal(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length), 0);

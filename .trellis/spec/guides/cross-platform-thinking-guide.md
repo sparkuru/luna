@@ -10,6 +10,13 @@
   permission/host integration; feature-detect OPFS on the actual WebView and
   verify an explicit native-only IndexedDB compatibility path when it is
   missing; do not replace a failing assertion with a mock.
+- Does a responsive shared component depend on both host marker and viewport?
+  Test native `data-client-surface="mobile"`, narrow Web, and wide Web/Electron
+  as separate combinations. For text painted over a native input, assert the
+  projection is displayed, has visible geometry and stacks above the input;
+  inspect rendered pixels because DOM text alone does not prove which layer is
+  visible. Rebuild the isolated APK from current source before using its
+  screenshot as evidence, and record the surface marker and relevant style.
 - Does “success” mean a committed transaction/closed file, or only a scheduled
   operation? Test cancellation and the final durable boundary.
 - Does a native callback retain large input in saved Activity state? Keep large

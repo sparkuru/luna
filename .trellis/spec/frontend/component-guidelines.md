@@ -56,6 +56,11 @@ Keep a short source comment and browser assertions for both Escape and category
 selection. Re-check this lifecycle when upgrading Radix; do not replace the
 contract with arbitrary sleeps or treat repeated passes as proof of ordering.
 
+An icon-only dialog close action keeps its localized accessible name on the
+button and marks the decorative icon `aria-hidden`. The mobile and narrow-Web
+transaction close target remains exactly 48×48px and shares the title row's
+vertical center.
+
 When a dialog intentionally focuses a field below the mobile first viewport,
 use `focus({ preventScroll: true })` so opening it does not hide the dialog
 heading or the first-step controls. Test the initial scroll position visually
@@ -220,6 +225,12 @@ context. User-entered date filters may narrow that range, but must not broaden
 it into another month. The transaction count and empty-state decision use the
 same selected-month range.
 
+An unfiltered month with no transactions uses one localized empty-state message
+that names the selected month, regardless of whether the ledger has records in
+other months. Do not add a second record CTA or a first-transaction tutorial to
+that state; keep the host's normal page-level record action available. When a
+filter is active and yields no matches, use the filtered-empty state instead.
+
 For the Web ledger, `#month-picker` is a non-editable
 `button[type="button"]` with a `data-month="YYYY-MM"` value. Its month panel
 offers year navigation and twelve month buttons, marks the selected month with
@@ -255,6 +266,13 @@ the text detail list; never expand overlapping bar hitboxes.
 Category and largest-expense lists show a
 bounded initial ranking with an explicit “view all” control when more rows
 exist; this limits visual density without discarding data.
+
+At Web viewport widths below 768px, `.statistics-page` content keeps at least
+24px of visible left and right gutter from the viewport edge. Apply the same
+gutter to its heading, toolbar, grid and cards, and verify no horizontal
+overflow at 320px, 375px and 457px. Place the narrow-Web rule after generic
+mobile rules so a later zero-padding `.statistics-page` selector cannot erase
+the gutter. Electron and desktop Web retain their existing layout.
 
 Good: while `/luna?month=2026-08` is loading, show the August loader and no
 July records; after loading, show only August records. Bad: leave the old
@@ -335,6 +353,18 @@ as the fallback. This prevents Chromium's year/month/day segment selection
 from becoming the visible primary click behavior without replacing keyboard
 editing or native validation. Use the shared `DateField` primitive through
 `Field` so the transaction and filter forms cannot drift.
+
+On the explicit mobile surface and narrow Web viewports below 768px, the
+transaction date paints a visible, `aria-hidden` `YYYY/MM/DD` value over the
+native input's locale-dependent date segments. Derive this text from the ISO
+value without converting through a timezone-sensitive `Date`; explicitly show
+the projection in both surface styles and keep it above the input's date text.
+Keep the input labelled, focusable, pointer-active, and at least 48px so its
+native/browser picker, keyboard editing, validation, and ISO save value remain
+authoritative. Test projection visibility and inspect rendered pixels; DOM text
+alone does not prove which date segments users see. Keep desktop Web and
+Electron's native date display unchanged, and leave the calendar indicator
+visible.
 
 The optional calculator uses the shared `displayAmount` projection for its
 result. Render that projection directly in a prominent, right-aligned display

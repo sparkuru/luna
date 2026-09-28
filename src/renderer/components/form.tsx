@@ -8,8 +8,13 @@ import { Input } from "./ui/input";
 export function DateField({
   label,
   id,
+  mobileDisplayValue,
   ...props
-}: ComponentProps<typeof Input> & { label: string; id: string }) {
+}: ComponentProps<typeof Input> & {
+  label: string;
+  id: string;
+  mobileDisplayValue?: string | undefined;
+}) {
   const pickerOpenedOnPointerDown = useRef(false);
 
   const openPicker = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -36,7 +41,11 @@ export function DateField({
 
   return (
     <div
-      className="field date-picker-field"
+      className={
+        mobileDisplayValue === undefined
+          ? "field date-picker-field"
+          : "field date-picker-field date-picker-field--mobile-value"
+      }
       onPointerDownCapture={openPicker}
       onClickCapture={(event) => {
         if (!pickerOpenedOnPointerDown.current) return;
@@ -46,6 +55,11 @@ export function DateField({
     >
       <label htmlFor={id}>{label}</label>
       <Input id={id} {...props} />
+      {mobileDisplayValue !== undefined && (
+        <span className="date-picker-mobile-value" aria-hidden="true">
+          {mobileDisplayValue}
+        </span>
+      )}
     </div>
   );
 }

@@ -165,6 +165,7 @@ export function TransactionDialog({
   const { message: m, snapshot } = app;
   const workspace = snapshot.workspace!;
   const isWebSurface = getClientSurface() === "web";
+  const isMobileSurface = getClientSurface() === "mobile";
   const original = entry.transaction;
   const initial = {
     type: original?.type ?? entry.type,
@@ -566,7 +567,7 @@ export function TransactionDialog({
           )?.focus();
         }}
       >
-        <header className="dialog-header">
+        <header className="dialog-header transaction-dialog-header">
           <div>
             <DialogTitle id="transaction-form-title">
               {m(original ? "editTransaction" : "quickEntryTitle")}
@@ -580,9 +581,10 @@ export function TransactionDialog({
           <Button
             id="close-transaction"
             variant="outline"
+            aria-label={m("closeMenu")}
             onClick={requestClose}
           >
-            {m("closeMenu")}
+            <X size={20} aria-hidden="true" />
           </Button>
         </header>
         <div id="transaction-alert" className="form-alert" role="alert" tabIndex={-1}>
@@ -733,6 +735,7 @@ export function TransactionDialog({
                 type="date"
                 required
                 value={draft.date}
+                mobileDisplayValue={isMobileSurface || isWebSurface ? draft.date.split("-").join("/") : undefined}
                 aria-invalid={errorField === "date"}
                 aria-describedby={errorField === "date" ? "transaction-alert" : undefined}
                 onChange={(e) => change("date", e.target.value)}

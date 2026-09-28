@@ -14,6 +14,13 @@ async function createLedger(page: Page): Promise<void> {
   await expect(page.locator("#transactions-title")).toBeVisible();
 }
 
+async function createLedgerInLocale(page: Page, locale: "en" | "zh-CN"): Promise<void> {
+  await createLedger(page);
+  if (locale === "en") return;
+  await page.evaluate((locale) => window.lunaLedger.updateSettings({ locale }), locale);
+  await page.reload();
+}
+
 async function expectReachableWithinDialog(
   dialog: Locator,
   control: Locator,
@@ -118,3 +125,31 @@ test("wide Web entry keeps its three-column core form", async ({ page }) => {
   await expect(page.locator("#transaction-dialog")).toBeVisible();
   await expect.poll(() => gridColumnCount(fields)).toBe(3);
 });
+
+for (const locale of ["en", "zh-CN"] as const) {
+  test(`${locale}: narrow Web entry date is year-first with an aligned square close`, async ({ page }) => {
+    await page.setViewportSize({ width: 457, height: 999 });
+    await createLedgerInLocale(page, locale);
+    await page.locator("#primary-record").click();
+
+    const dialog = page.locator("#transaction-dialog");
+    const date = dialog.locator("#transaction-date");
+    await date.fill("2026-09-28");
+    await expect(date).toHaveValue("2026-09-28");
+    const projection = dialog.locator(".date-picker-mobile-value");
+    await expect(projection).toBeVisible();
+    await expect(projection).toHaveText("2026/09/28");
+    await expect(projection).toHaveAttribute("aria-hidden", "true");
+    await date.evaluate((input) => input.blur());
+
+    const close = dialog.locator("#close-transaction");
+    await expect(close).toHaveAccessibleName(locale === "en" ? "Close" : "关闭");
+    const closeBox = (await close.boundingBox())!;
+    const titleBox = (await dialog.locator("#transaction-form-title").boundingBox())!;
+    expect(closeBox.width).toBe(48);
+    expect(closeBox.height).toBe(48);
+    expect(Math.abs((titleBox.y + titleBox.height / 2) - (closeBox.y + closeBox.height / 2))).toBeLessThanOrEqual(1);
+    await close.click();
+    await expect(dialog).toBeHidden();
+  });
+}

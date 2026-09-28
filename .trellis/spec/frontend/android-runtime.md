@@ -93,6 +93,17 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
   or consume home back without a renderer handler. Shared priority is category,
   entry draft, menu child, menu, then native home fallback.
 
+- The mobile transaction date keeps a labelled, focusable native
+  `input[type="date"]` with its ISO value and native picker. Its visible text
+  uses a separate aria-hidden `YYYY/MM/DD` projection so the order stays fixed
+  across Android WebView locale settings; the calendar indicator and native
+  pointer/keyboard path remain available. The isolated Android smoke opens the
+  system date dialog, selects a date, verifies the projected text and ISO value,
+  then checks saved and restarted data. Narrow Web viewports below 768px use the
+  same visible projection while retaining browser date input behavior. Desktop
+  Web and Electron keep their native date display. A browser `showPicker()` stub
+  verifies only activation wiring, not the system dialog.
+
 ## 4. Validation & Error Matrix
 
 | Condition | Required outcome |

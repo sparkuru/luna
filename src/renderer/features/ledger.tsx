@@ -940,7 +940,6 @@ export function LedgerHome({
     query: "",
     mode: "text",
   }).count;
-  const any = monthTransactionCount > 0;
   const filterChips: { id: string; label: string; remove(): void }[] = [
     ...(type === "all"
       ? []
@@ -1009,6 +1008,7 @@ export function LedgerHome({
     maximum.trim().length > 0,
   ].filter(Boolean).length;
   const hasActiveQuery = activeFilterCount > 0;
+  const showEmptyMonth = monthTransactionCount === 0 && !hasActiveQuery;
   const revokeImageUrl = () => {
     if (imageUrl.current !== null) URL.revokeObjectURL(imageUrl.current);
     imageUrl.current = null;
@@ -1533,24 +1533,16 @@ export function LedgerHome({
               <h3>{m("filterResultsNotUpdated")}</h3>
               <p>{m("filterErrorHelp")}</p>
             </div>
+          ) : filtered.length === 0 && showEmptyMonth ? (
+            <div className="empty-state">
+              <h3 id="empty-month-state">
+                {m("emptyMonth", { month: formatMonth(locale, month) })}
+              </h3>
+            </div>
           ) : filtered.length === 0 ? (
             <div className="empty-state">
-              <h3>{m(any ? "noFilterMatches" : "emptyLedgerTitle")}</h3>
-              <p>{m(any ? "noFilterMatchesHelp" : "emptyLedgerHelp")}</p>
-              {!any && !web && (
-                <div className="entry-actions empty-entry-actions">
-                  {(["expense", "income"] as const).map((type) => (
-                    <Button
-                      key={type}
-                      id={`empty-record-${type}`}
-                      className={`entry-button ${type}`}
-                      onClick={() => start(type, `empty-record-${type}`)}
-                    >
-                      {m(type === "expense" ? "recordExpense" : "recordIncome")}
-                    </Button>
-                  ))}
-                </div>
-              )}
+              <h3>{m("noFilterMatches")}</h3>
+              <p>{m("noFilterMatchesHelp")}</p>
             </div>
           ) : (
             <ul className="transaction-list">

@@ -61,7 +61,20 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
   await expect(page.locator('#month-label')).toHaveCount(0);
   await expect(page.locator('.page-heading-actions #month-picker')).toBeVisible();
   await expect(page.locator('.hero-description')).toHaveText(englishLedgerPrompt);
-  await expect(page.locator('#transaction-list-region')).toContainText('Your ledger starts here');
+  const selectedMonth = await page.locator('#month-picker').inputValue();
+  expect(selectedMonth).toMatch(/^\d{4}-\d{2}$/);
+  const selectedMonthLabel = await page.evaluate((month) => {
+    const year = Number(month.slice(0, 4));
+    const monthNumber = Number(month.slice(5, 7));
+    return new Intl.DateTimeFormat('en', {
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
+  }, selectedMonth);
+  await expect(page.locator('#empty-month-state')).toHaveText(`No transactions in ${selectedMonthLabel}`);
+  await expect(page.locator('#transaction-list-region .empty-state')).toHaveCount(1);
+  await expect(page.locator('#transaction-list-region #empty-record-expense, #transaction-list-region #empty-record-income')).toHaveCount(0);
   await expect(page.locator('#primary-record')).toBeVisible();
   await expect(page.locator('#record-expense, #record-income')).toHaveCount(0);
   await expect(page.locator('.quick-entry-panel')).toHaveCount(0);
@@ -124,6 +137,31 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
     expect(Math.max(...rightColumnCenters) - Math.min(...rightColumnCenters)).toBeLessThanOrEqual(1);
   }
 
+  await page.locator('#filter-details > summary').click();
+  await page.locator('#filter-type').selectOption('income');
+  await expect(page.locator('#transaction-list-region h3')).toHaveText('No transactions match these filters');
+  await page.locator('#filter-form button[type="reset"]').click();
+  await expect(savedRow).toBeVisible();
+
+  await page.locator('#next-month').click();
+  const followingMonth = await page.locator('#month-picker').inputValue();
+  expect(followingMonth).not.toBe(selectedMonth);
+  const followingMonthLabel = await page.evaluate((month) => {
+    const year = Number(month.slice(0, 4));
+    const monthNumber = Number(month.slice(5, 7));
+    return new Intl.DateTimeFormat('en', {
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
+  }, followingMonth);
+  await expect(page.locator('#empty-month-state')).toHaveText(`No transactions in ${followingMonthLabel}`);
+  await expect(page.locator('#transaction-list-region .empty-state')).toHaveCount(1);
+  await expect(page.locator('#primary-record')).toBeVisible();
+  await expect(page.locator('#transaction-list-region #empty-record-expense, #transaction-list-region #empty-record-income')).toHaveCount(0);
+  await page.locator('#previous-month').click();
+  await expect(savedRow).toBeVisible();
+
   const editRow = page.locator('.transaction-item').filter({ hasText: 'Corner cafe' });
   await openTransactionActions(page, editRow);
   const editButton = editRow.getByRole('button', { name: 'Edit Corner cafe', exact: true });
@@ -131,6 +169,17 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
   await expect(page.locator('#transaction-dialog')).toBeVisible();
   await page.locator('#close-transaction').click();
   await expect(editButton).toBeFocused();
+});
+
+test('zh-CN empty month copy names the selected month without an entry prompt', async ({ page }) => {
+  await setupWorkspace(page, 'Chinese empty ledger');
+  await page.evaluate(() => window.lunaLedger.updateSettings({ locale: 'zh-CN' }));
+  await page.reload();
+
+  await expect(page.locator('#empty-month-state')).toHaveText(/^\d{4}年\d{1,2}月暂无记录$/);
+  await expect(page.locator('#transaction-list-region .empty-state')).toHaveCount(1);
+  await expect(page.locator('#transaction-list-region #empty-record-expense, #transaction-list-region #empty-record-income')).toHaveCount(0);
+  await expect(page.locator('#primary-record')).toBeVisible();
 });
 
 test('ledger prompt stays stable through month loading and uses catalog copy on home re-entry', async ({ page }) => {

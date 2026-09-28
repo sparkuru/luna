@@ -905,6 +905,42 @@ label,
   min-width: 0;
 }
 
+.date-picker-field--mobile-value {
+  position: relative;
+  isolation: isolate;
+}
+
+.date-picker-mobile-value {
+  position: absolute;
+  right: 40px;
+  bottom: 0;
+  left: 12px;
+  z-index: 2;
+  display: none;
+  height: 48px;
+  align-items: center;
+  overflow: hidden;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+html[data-client-surface="mobile"] .date-picker-field--mobile-value > input[type="date"] {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background-color: transparent;
+}
+
+html[data-client-surface="mobile"] .date-picker-field--mobile-value > input[type="date"]:hover:not(:disabled),
+html[data-client-surface="mobile"] .date-picker-field--mobile-value > input[type="date"]:focus-visible:not(:disabled) {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background-color: transparent;
+}
+
 .advanced-fields {
   margin-top: var(--space-5);
   border-top: 1px solid var(--color-border);
@@ -4605,4 +4641,63 @@ html[data-client-surface="web"] #statistics-categories-toggle {
 html[data-client-surface="mobile"] .transaction-dialog-panel .quick-core-fields {
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
+}
+html[data-client-surface="mobile"] .date-picker-field--mobile-value > .date-picker-mobile-value { display: flex; }
+
+/* Narrow Web uses the same focused mobile controls while keeping its own host. */
+@media (max-width: 767px) {
+  html[data-client-surface="web"] .date-picker-field--mobile-value > .date-picker-mobile-value { display: flex; }
+  html[data-client-surface="web"] .date-picker-field--mobile-value > input[type="date"] {
+    position: relative;
+    z-index: 1;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    background-color: transparent;
+  }
+  html[data-client-surface="web"] .date-picker-field--mobile-value > input[type="date"]:hover:not(:disabled),
+  html[data-client-surface="web"] .date-picker-field--mobile-value > input[type="date"]:focus-visible:not(:disabled) {
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    background-color: transparent;
+  }
+  html[data-client-surface="web"] .transaction-dialog-header { align-items: center; min-height: 48px; }
+  html[data-client-surface="web"] .transaction-dialog-header > div:first-child { flex: 1 1 auto; min-width: 0; }
+  html[data-client-surface="web"] .transaction-dialog-header #close-transaction {
+    display: inline-flex;
+    flex: 0 0 48px;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    min-height: 48px;
+    max-height: 48px;
+    padding: 0;
+  }
+  html[data-client-surface="web"] #main-content > .statistics-page {
+    padding-inline: 24px;
+  }
+}
+
+html[data-client-surface="mobile"] .transaction-dialog-header {
+  align-items: center;
+  min-height: 48px;
+}
+html[data-client-surface="mobile"] .transaction-dialog-header > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+html[data-client-surface="mobile"] .transaction-dialog-header #close-transaction {
+  display: inline-flex;
+  flex: 0 0 48px;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  padding: 0;
 }
