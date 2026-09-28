@@ -177,3 +177,9 @@ LUNA_TEST_PRODUCTION=1 /home/wkyuu/.vscodium-server/bin/4c0b0c6cc561d2d3636d1ec2
 1. 如需扩大 Android 覆盖，补做真实跨设备图片同步；当前 APK 构建、隔离 AVD smoke 和系统选图已完成，不接触用户设备。
 2. 在明确授权和可复现本地部署条件下运行 Electron smoke；生产 Web offline suite 已完成，若更换产物或部署方式再复跑。
 3. 在获得平台/人工授权后，补做真实浏览器 200% 缩放、键盘焦点/对比度与辅助技术、Electron 文件对话框、Android 物理键盘及用户视觉反馈；当前合成截图和 640px CSS 等价视口结果只作为先行证据。
+
+## 2026-09-28 当前工作树跨端图片复验
+
+此前“真实跨设备图片同步尚未运行”已由本轮合成数据实测补齐：当前工作树独立 Android 11 包经受信任的 `https://ssh.majo.im:10010` 登录、上传交易；独立浏览器恢复该交易并上传 32×32 PNG；Android 再同步后在真实 WebView 内解密显示图片，VPS 隔离实例重启后新浏览器仍能恢复交易和图片。Android 缺少 OPFS，走明确的 IndexedDB 兼容路径；并非具备 OPFS 的 Android 路径证据。完整环境、哈希、截图及保留门槛见 [三端发布复验](../09-08-fullstack-release-validation/validation.md#2026-09-28-当前工作树隔离复验)。
+
+AT03 的正常公网 HTTP 传输及跨设备图片读取获得实机证据；矩阵中故障注入、容量与并发场景仍按既有自动化证据逐项认定，不因这次正常路径全部勾选。真实辅助技术、200% 缩放、Electron 原生文件对话框、Android 物理键盘及用户视觉认可仍待人工验收，任务保持 `in_progress`。

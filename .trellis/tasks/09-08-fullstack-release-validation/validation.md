@@ -87,3 +87,20 @@ Android WebView 的 IndexedDB 兼容路径也需要安装包证据，不能从�
 这些结果证实当前源码的 Web 与 Android 在临时可信 HTTPS 入口上的双向合成数据
 同步，但没有形成长期 VPS 路由或生产数据恢复证据。真实读屏/辅助技术、实体硬件
 键盘及 Electron 原生首启目录选择仍未人工审核；D6 与本任务完整交付标准保持未完成。
+
+## 2026-09-28 当前工作树隔离复验
+
+本轮按用户提供的 VPS、x86 主机和 Android 开发板资源验收当前工作树（含尚未提交的移动端改动），只使用新建合成账号、账本和图片。原有 `majo.im.luna.lan`、x86 主栈及 VPS 80/443 站点未改动。系统 SSH 配置权限错误，所有 SSH/rsync 使用 `-F /home/wkyuu/.ssh/config`；x86 的 host key 记在 `/tmp/luna-validation-known-hosts`。
+
+| 范围 | 结果与证据 |
+| --- | --- |
+| x86 独立部署 | `/opt/luna-acceptance-20260928-codex`、项目 `luna-acceptance-20260928-codex`，仅回环 `127.0.0.1:18110` 暴露 Web；Compose 初始化和三项常驻服务健康。真实 MinIO、SQLite API、Web 隔离运行。重启并再次 `up -d` 后 `.luna/runtime.json` SHA-256 前后同为 `6225768a741e6c061760ce090a3517b536d6080eb4d18993eee0a992c243e5d5`，健康接口 200，独立浏览器仍可恢复交易及图片。 |
+| x86 浏览器同步 | 原脚本 `scripts/smoke-deployed-sync.ts` 的临时副本仅放宽到回环 HTTP；两独立 Chrome 上下文的初次上传、第二端恢复、离线修改不上传、手动收敛、冷启动读取全部通过。证据 `/tmp/luna-acceptance-20260928/browser-smoke/result.json`。这是可信 loopback 安全上下文，不算公网 HTTPS。 |
+| Android 11 旧 WebView | 当前工作树独立 APK `majo.im.luna.validation`，SHA-256 `270d23de51237696d41d8a211806ed880cf39ec794f38b83fbf62fbec5c30f74`；设备不支持 `navigator.storage.getDirectory`，兼容 IndexedDB 路径创建交易，强制停止与重新启动后仍读回。经 ADB reverse 连 x86 隔离服务，Android 上传交易，独立浏览器恢复；浏览器上传 32×32 合成 PNG，Android 下载、解密并渲染。截图 `/tmp/luna-acceptance-20260928/android-local-restarted.png` 和 `android-cross-image.png`。 |
+| VPS 可信 HTTPS | VPS 独立目录 `/opt/luna-acceptance-20260928-codex`，独立 Compose 项目和 Nginx 实例只监听测试端口 10010，复用现有 `*.majo.im` 证书；系统证书校验为 0，`https://ssh.majo.im:10010/healthz` 为 200。原版 `scripts/smoke-deployed-sync.ts` 全部五组检查通过：安全上下文/OPFS/SW、双浏览器上传恢复、手动模式离线边界、收敛及冷启动。报告 `/tmp/luna-acceptance-20260928/vps-https-smoke-v2/result.json`。独立代理初版因无权写系统 proxy 临时目录导致大资源截断；在隔离代理配置中关闭 buffering 后完整资源 496204 bytes 并通过。 |
+| 真实 Android 直连 HTTPS | 第二个独立包 `majo.im.luna.validationvps`，SHA-256 `bc0b9d9c23f9b5334fe36043eb648564625b0991903e671ce9d6a2677266ae52`，未覆盖原包。VPS 测试实例精确加入 WebView 来源 `https://localhost` 后，Android 直接登录 `https://ssh.majo.im:10010`、绑定并上传本地交易；独立 Chrome 恢复该交易并上传合成 PNG；Android 再同步、解密并实际渲染 32×32 图片。截图 `/tmp/luna-acceptance-20260928/android-vps-cross-image.png`。初次 CORS 400 是隔离实例遗漏 Android 来源，已在测试实例修正。 |
+| VPS 重启持久化 | 在上述真实跨设备数据存在后重启仅隔离 Compose 项目并再次 `up -d`，`.luna/runtime.json` SHA-256 前后同为 `861e1a601c0a1fd39da12b4dd3accc51d4fb97d38ddb1df774c7a430aee872c1`，HTTPS 健康接口 200；新 Chrome 上下文从服务端再次恢复 Android 交易并解密图片。 |
+
+这补齐了当前工作树的可信 HTTPS 浏览器与真实 Android 双向图片同步、旧 WebView 本地持久化及隔离实例重启正常路径。仍未证明生产实例数据恢复、完整失败注入、Electron 原生首启目录选择、实体硬件键盘、读屏/辅助技术和用户视觉认可。现有 VPS 端口 10010 为临时合成数据验收入口，不能视为正式长期业务路由；D6 和父任务完整验收仍未勾选。
+
+验收结束时，x86 的独立 Compose 容器/网络已停止并移除，`/opt/luna-acceptance-20260928-codex/data` 留作复核；ADB reverse/forward 和本机 SSH 转发已关闭。VPS 的独立 10010 入口与合成数据暂留，供用户查看；账号文件为本机 `/tmp/luna-acceptance-20260928/credentials-vps.json` 和 `credentials-android-vps.json`（权限 0600），不写入仓库。VPS 独立代理配置和数据位于 `/opt/luna-acceptance-20260928-codex`；停止时只针对这个 Nginx 实例和 Compose 项目，不应操作现有 Nginx 主实例或业务栈。现有泛域证书有效期截至 2026-10-03，持续使用该临时入口须先确认续期状态。
