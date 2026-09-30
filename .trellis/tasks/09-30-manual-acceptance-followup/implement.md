@@ -11,6 +11,7 @@
 - [x] Run serial local browser acceptance for encrypted sync, offline storage, keyboard/focus, and mobile layout; record the browser-only scope.
 - [x] Run production Chrome OPFS local-profile isolation and missing-profile recovery; retain Android WebView scope as manual.
 - [x] Run the complete unit/integration suite under the required Node 22 runtime and record the 221/221 result.
+- [x] Rebuild the production Web/Electron artifacts and pass both packaged Electron smoke gates; record their scope.
 
 ## Manual acceptance sequence
 

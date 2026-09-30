@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-30",
+  "result": "passed",
+  "runtime": "Node 22.16.0",
+  "checks": [
+    {
+      "command": "npm run web:build",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "artifact": "Linux x64 packaged Electron application"
+    },
+    {
+      "command": "npm run smoke:electron",
+      "result": "passed",
+      "coverage": "packaged startup, bridge/settings writes, CNY/i18n/privacy, encrypted backup/import, session isolation, config crypto, and userData reopen"
+    },
+    {
+      "command": "npm run smoke:electron:file-input",
+      "result": "passed",
+      "coverage": "packaged file input, image normalization, local save, and decrypted readback"
+    }
+  ],
+  "scope": "Build and packaged smoke evidence uses disposable data and Xvfb for file input. Native dialog visual quality, screen readers, hardware keyboard, and vendor IME remain platform-human checks."
+}
