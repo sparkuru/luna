@@ -1,0 +1,40 @@
+{
+  "id": "mobile-experience-redesign",
+  "name": "mobile-experience-redesign",
+  "title": "Luna 移动端体验重做",
+  "description": "按已认可的审查方向分三轮重做Android移动体验，父任务负责跨轮一致性及最终逐页集成验收。",
+  "status": "in_progress",
+  "dev_type": "frontend",
+  "scope": "mobile",
+  "package": null,
+  "priority": "P1",
+  "creator": "dev",
+  "assignee": "dev",
+  "createdAt": "2026-09-26",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "paycheck-to-paycheck",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-26-mobile-ledger-entry",
+    "09-26-mobile-statistics-budget",
+    "09-26-mobile-settings-recovery"
+  ],
+  "parent": null,
+  "relatedFiles": [
+    "prd.md",
+    "design.md",
+    "implement.md",
+    "implement.jsonl",
+    "check.jsonl"
+  ],
+  "notes": "用户2026-09-26回复“确认”，批准最新review.md与五页草案及三轮全部实施范围；2026-09-30已在授权x86主机完成Linux x64 ZIP make和最终分发包smoke，并确认视觉通过。仍待Phase 3.4精确分组提交审查；保留原dirty，不清手机数据。详见validation.md。",
+  "meta": {
+    "work_kind": "ui_redesign_parent",
+    "integration_state": "technical_validation_passed_awaiting_subjective_visual_and_commit_review",
+    "final_apk_sha256": "dcb695feb001be78d145d00061989bb1e5856f6e80a04153f86687256a329bd4"
+  }
+}

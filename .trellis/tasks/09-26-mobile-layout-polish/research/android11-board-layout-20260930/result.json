@@ -1,0 +1,106 @@
+{
+  "serial": "192.168.9.14:5555",
+  "appId": "majo.im.luna.lan",
+  "routes": [
+    {
+      "route": "#/statistics",
+      "width": 1098,
+      "contentWidth": 1098,
+      "height": 578,
+      "title": ""
+    },
+    {
+      "route": "#/budget",
+      "width": 1098,
+      "contentWidth": 1098,
+      "height": 578,
+      "title": ""
+    },
+    {
+      "route": "#/settings",
+      "width": 1098,
+      "contentWidth": 1098,
+      "height": 578,
+      "title": ""
+    },
+    {
+      "route": "#/settings/preferences",
+      "width": 1098,
+      "contentWidth": 1098,
+      "height": 578,
+      "title": ""
+    }
+  ],
+  "screenshots": [
+    "/tmp/luna-android-board-check-20260930/home.png",
+    "/tmp/luna-android-board-check-20260930/entry.png",
+    "/tmp/luna-android-board-check-20260930/statistics.png",
+    "/tmp/luna-android-board-check-20260930/budget.png",
+    "/tmp/luna-android-board-check-20260930/settings.png",
+    "/tmp/luna-android-board-check-20260930/preferences.png",
+    "/tmp/luna-android-board-check-20260930/native-picker-open.png"
+  ],
+  "device": {
+    "model": "AIO-3568J",
+    "android": "11",
+    "resolution": "Physical size: 1920x1080",
+    "density": "Physical density: 280",
+    "userPackage": "versionName=0.1.0"
+  },
+  "homeGeometry": {
+    "#primary-record": {
+      "width": 206.85714721679688,
+      "height": 56.000003814697266,
+      "x": 445.71429443359375,
+      "y": 514.2857666015625
+    },
+    "#open-secondary-menu": {
+      "width": 206.85714721679688,
+      "height": 56.000003814697266,
+      "x": 883.4285888671875,
+      "y": 514.2857666015625
+    },
+    "#bottom-nav": null,
+    "#month-picker": {
+      "width": 954.2857666015625,
+      "height": 48.000003814697266,
+      "x": 72,
+      "y": 68
+    }
+  },
+  "entryGeometry": {
+    "#transaction-amount": {
+      "width": 1066.2857666015625,
+      "height": 64,
+      "x": 16,
+      "y": 161.11607360839844
+    },
+    "#quick-income": {
+      "width": 529.1428833007812,
+      "height": 48.000003814697266,
+      "x": 553.1428833007812,
+      "y": 72
+    },
+    "#choose-category": {
+      "width": 350.08929443359375,
+      "height": 48.000003814697266,
+      "x": 732.1785888671875,
+      "y": 322.2321472167969
+    },
+    "#save-transaction": {
+      "width": 1066.2857666015625,
+      "height": 48.000003814697266,
+      "x": 16,
+      "y": 514.2857666015625
+    },
+    "#close-transaction": {
+      "width": 48.000003814697266,
+      "height": 48.000003814697266,
+      "x": 1034.2857666015625,
+      "y": 16
+    }
+  },
+  "nativePickerOpened": true,
+  "nativePickerCancelled": true,
+  "result": "passed"
+}

@@ -1,0 +1,8 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Shared/native/Web presentation, portals, focus, privacy and stable IDs"}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Bundled APK, isolated package, vh fallback and real IME/BACK evidence"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Localization, meaningful checks, states and accessibility"}
+{"file":".trellis/tasks/09-26-mobile-layout-polish/research/mobile-baseline.md","reason":"Actual physical viewport and duplicated keyboards, scoped device permission"}
+{"file":".trellis/tasks/09-26-mobile-layout-polish/research/ui-ux-pro-max.md","reason":"Raw design recommendations adapted in design.md"}
+{"file": ".trellis/tasks/09-26-mobile-layout-polish/research/quiet-sync-evidence.md", "reason": "User-added quiet copy and existing host-owned automatic sync"}
+{"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Production offline readiness despite hidden normal status"}
+{"file": ".trellis/spec/backend/ledger-sync-guidelines.md", "reason": "Regression-discovered account/profile transition scheduler repair"}

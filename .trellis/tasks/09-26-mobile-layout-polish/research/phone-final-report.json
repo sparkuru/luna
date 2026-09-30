@@ -1,0 +1,121 @@
+{
+  "serial": "192.168.9.11:34971",
+  "runtime": {
+    "surface": "mobile",
+    "width": 457,
+    "height": 999,
+    "ratio": 2.362499952316284,
+    "date": "2026-09-26"
+  },
+  "checks": [
+    "amount uses one keypad; core controls precede calculator",
+    "native BACK dismisses category IME before nested category dialog",
+    "app calculator 12+23=35.00; notes real IME; BACK retains draft; save commits",
+    "home two records and privacy controls fit above navigation, no overflow",
+    "sync status and automatic/manual mode reachable in settings",
+    "English home and entry share compact layout without duplicate IME",
+    "force-stop/relaunch retains saved transactions and locale without data reset"
+  ],
+  "screenshots": "/tmp/luna-mobile-qa-20260926",
+  "homeBefore": [
+    {
+      "selector": ".topbar",
+      "x": 15.998677253723145,
+      "y": 15.998677253723145,
+      "width": 425.1455078125,
+      "height": 47.99603271484375
+    },
+    {
+      "selector": ".dashboard-hero",
+      "x": 15.998677253723145,
+      "y": 75.9920654296875,
+      "width": 425.1455078125,
+      "height": 47.99603271484375
+    },
+    {
+      "selector": ".summary-grid",
+      "x": 15.998677253723145,
+      "y": 131.984130859375,
+      "width": 425.1455078125,
+      "height": 189.02777099609375
+    },
+    {
+      "selector": "#transactions-title",
+      "x": 24.841270446777344,
+      "y": 337.85052490234375,
+      "width": 76.79894256591797,
+      "height": 23.03571319580078
+    },
+    {
+      "selector": ".primary-navigation",
+      "x": 11.997354507446289,
+      "y": 911.8981323242188,
+      "width": 433.14813232421875,
+      "height": 75.04629516601562
+    }
+  ],
+  "entry": [
+    {
+      "selector": "#transaction-amount",
+      "x": 32.84722137451172,
+      "y": 193.94509887695312,
+      "width": 391.4483947753906,
+      "height": 47.99603271484375
+    },
+    {
+      "selector": "#choose-category",
+      "x": 32.84722137451172,
+      "y": 310.7308044433594,
+      "width": 391.4483947753906,
+      "height": 47.99603271484375
+    },
+    {
+      "selector": "#transaction-date",
+      "x": 32.84722137451172,
+      "y": 427.51654052734375,
+      "width": 391.4483947753906,
+      "height": 47.99603271484375
+    },
+    {
+      "selector": "#transaction-dialog .calculator",
+      "x": 32.84722137451172,
+      "y": 487.5099182128906,
+      "width": 391.4483947753906,
+      "height": 381.5013122558594
+    },
+    {
+      "selector": "#save-transaction",
+      "x": 32.84722137451172,
+      "y": 881.0086059570312,
+      "width": 391.4483947753906,
+      "height": 47.99603271484375
+    }
+  ],
+  "result": "passed",
+  "restart": {
+    "workspace": "移动布局测试",
+    "transactions": [
+      {
+        "id": "transaction-049cc53c-012d-404a-b5d8-7191ee50ebd3",
+        "amountMinor": "-600",
+        "merchant": "通勤 ML26",
+        "notes": ""
+      },
+      {
+        "id": "transaction-b06e5fcd-64fa-46e5-abf5-be3b6a62f596",
+        "amountMinor": "-3500",
+        "merchant": "",
+        "notes": "午餐录入 ML26"
+      },
+      {
+        "id": "transaction-d19da63e-6b32-4074-b8cf-ff8962c62c57",
+        "amountMinor": "-3500",
+        "merchant": "",
+        "notes": "午餐录入 ML26"
+      }
+    ],
+    "locale": "zh-CN",
+    "storage": "ready",
+    "overflow": false
+  }
+}

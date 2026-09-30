@@ -1,0 +1,42 @@
+{
+  "id": "mobile-settings-recovery",
+  "name": "mobile-settings-recovery",
+  "title": "移动设置、同步备份与欢迎重做",
+  "description": "第三轮：设置及八子路由、同步高级入口、分类与首次恢复；依赖前两轮验收，完成15项审查闭环。",
+  "status": "in_progress",
+  "dev_type": "frontend",
+  "scope": "mobile",
+  "package": null,
+  "priority": "P1",
+  "creator": "dev",
+  "assignee": "dev",
+  "createdAt": "2026-09-26",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "paycheck-to-paycheck",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-26-mobile-experience-redesign",
+  "relatedFiles": [
+    "prd.md",
+    "design.md",
+    "implement.md",
+    "implement.jsonl",
+    "check.jsonl"
+  ],
+  "notes": "用户2026-09-26回复“确认”，批准最新review.md与五页草案及三轮全部实施范围；本轮技术实现与独立检查通过，最终Linux x64 ZIP make/解包smoke已通过。用户于2026-09-30确认视觉通过，仍待父任务 Phase 3.4 exact-hunk 分组提交审查；保留原dirty，不清手机数据。",
+  "meta": {
+    "work_kind": "ui_redesign_child",
+    "implementation_handoff": "verified_for_parent_integration",
+    "integration_pending": "parent target-phone subjective visual and Phase 3.4 commit review; current Linux x64 ZIP and extracted-artifact Electron smoke passed",
+    "final_renderer_sha256": "3fff5ee3b4ce6d0f67181a34c74bb0fd556d64dae7b98bbb801c14e3e77a9e7c",
+    "final_apk_sha256": "dcb695feb001be78d145d00061989bb1e5856f6e80a04153f86687256a329bd4",
+    "depends_on": [
+      "09-26-mobile-ledger-entry",
+      "09-26-mobile-statistics-budget"
+    ]
+  }
+}

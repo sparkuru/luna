@@ -1,0 +1,36 @@
+{
+  "id": "mobile-ledger-entry",
+  "name": "mobile-ledger-entry",
+  "title": "移动账单、记账与导航重做",
+  "description": "第一轮：账单摘要/列表/筛选、专用记账面板、短导航和详情/图片返回；通过验收后交第二轮。",
+  "status": "in_progress",
+  "dev_type": "frontend",
+  "scope": "mobile",
+  "package": null,
+  "priority": "P1",
+  "creator": "dev",
+  "assignee": "dev",
+  "createdAt": "2026-09-26",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "paycheck-to-paycheck",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-26-mobile-experience-redesign",
+  "relatedFiles": [
+    "prd.md",
+    "design.md",
+    "implement.md",
+    "implement.jsonl",
+    "check.jsonl"
+  ],
+  "notes": "用户2026-09-26回复“确认”批准三轮；本轮实现、check及USB实机交接通过，第二轮已start。最终type/unit214/fullWeb220pass8productionSkip，APK0404e9fed9e09e26c1da184cf2db63f03073472c20b6ab0a96e24e56c8514c2c；详情/图片/分类真实BACK和IME、重启数据读回通过，原3tx不变另添明确合成0.01元图片fixture。最终Linux x64 ZIP make及从归档解包后的x86 Electron smoke已通过；用户于2026-09-30确认视觉通过，仍待父任务 Phase 3.4 exact-hunk commit gate。详见device-validation/check-review及父validation。保留原dirty，不清手机数据。",
+  "meta": {
+    "work_kind": "ui_redesign_child",
+    "implementation_handoff": "verified_for_round2",
+    "integration_pending": "parent target-phone subjective visual and Phase 3.4 commit review; current Linux x64 ZIP and extracted-artifact Electron smoke passed"
+  }
+}

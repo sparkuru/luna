@@ -1,0 +1,11 @@
+# Copy and automatic-sync evidence
+
+User addition2026-09-26: reduce demo-like remarks (example 此设备已可离线使用); make synchronization default background behavior and view status in the settings module.
+
+Default `ledgerSyncMode: automatic` is already in `src/shared/settings.ts:142`; `src/sync/server-host.ts:111` initializes the same mode then restores per-profile settings. Its local-write wrapper schedules after successful ledger mutations; `scheduleSync()` at1369 debounces500ms and rejects manual/unconnected/transitioning states. Remote marker polling runs every5s and automatically schedules pull when changed, while manual mode marks a remote change instead. `src/web/main.ts:26` schedules/checks on online and visible foreground transition. Thus removing the header/settings UI must leave this independent host lifecycle intact. No claim of synchronization after Android process termination.
+
+Settings `/settings/sync` already contains `#server-sync-status`, mode selector, automatic/manual options, prerequisites, unlock and sync actions (`src/renderer/features/account.tsx:530`). Native topbar duplicates account prerequisites and sync UI (`src/renderer/app/shell.tsx:576`), which causes the user's prominence complaint. Existing Web overview uses an additional status button; authoritative status belongs to the corresponding sync module.
+
+`src/web/main.ts:45` forces `#offline-status` visible in production, then sets offlineReady for native bundled assets and Web service-worker ready. `src/web/index.html` always includes the app-shell footer. Rendering success prose causes the demo-like persistent footer; hide/remove normal success presentation and empty footer spacing while retaining readiness semantics and failure evidence. `tests/e2e/offline-and-storage.spec.ts:33` and `router-offline.spec.ts:9` currently assert literal success text and must validate actual readiness/offline functionality instead of forcing that presentation.
+
+Copy trimming covers redundant capability assertions and slogans, not field labels, actual errors, recovery instructions, or actionable empty states. Keep Chinese/English parity. Test synthetic automatic synchronization with settings unmounted; preserve saved manual mode rather than resetting it to automatic.

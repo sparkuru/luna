@@ -1,0 +1,8 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Shared presentation, draft/focus and Web separation contracts"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Browser regressions, localization and UI state verification"}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Real device evidence, vh fallback, IME/BACK and artifact hash"}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Submit-ready UI gate and verification evidence boundaries"}
+{"file":".trellis/tasks/09-26-mobile-layout-polish/research/mobile-baseline.md","reason":"Exact device baseline and acceptance comparison"}
+{"file": ".trellis/tasks/09-26-mobile-layout-polish/research/quiet-sync-evidence.md", "reason": "Verify no persistent home sync copy and no scheduling/manual-mode regression"}
+{"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Real production offline persistence and readiness checks"}
+{"file": ".trellis/spec/backend/ledger-sync-guidelines.md", "reason": "Review active-host automatic probe restoration and manual/dispose boundaries"}

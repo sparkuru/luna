@@ -1,0 +1,13 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Shared React/host boundary and package conventions"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Existing semantics, stable draft portals, privacy and presentation invariants; approved mobile exceptions in design"}
+{"file":".trellis/spec/frontend/android-runtime.md","reason":"Verified device, isolated APK, IME/BACK, vh fallback and native evidence boundary"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Router month, Query snapshots, original draft revision/heads and no replay"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Errors, focus, host restrictions, privacy and required verification"}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Playwright, Docker, subjective UI review and commit policy"}
+{"file":".trellis/tasks/archive/2026-09/09-26-mobile-ux-audit/research/findings.md","reason":"Audit A01–A15 accepted direction, priorities and behavioral limits"}
+{"file":".trellis/tasks/archive/2026-09/09-26-mobile-ux-audit/research/page-audit.md","reason":"Actual route evidence, native failures, excluded captures and untested state matrix"}
+{"file":".trellis/tasks/09-26-mobile-experience-redesign/research/layout-contract.md","reason":"Selected design constraints, child ordering and UUPM adaptations"}
+{"file":".trellis/spec/backend/category-catalog-guidelines.md","reason":"Category stable IDs, in-use repair and edit-head invariants"}
+{"file":".trellis/tasks/09-26-mobile-settings-recovery/header-addendum.md","reason":"User explicitly added centered period controls across ledger/statistics/budget and no mobile visible statistics/budget title during implementation"}
+{"file":".trellis/tasks/09-26-mobile-settings-recovery/device-validation.md","reason":"Actual WebView ignored datetime text alignment; final native projection, picker and data-preservation evidence"}
+{"file":".trellis/tasks/09-26-mobile-settings-recovery/check-review.md","reason":"Final integration checks and native-period shared component boundary"}

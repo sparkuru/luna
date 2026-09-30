@@ -1,0 +1,39 @@
+{
+  "id": "mobile-statistics-budget",
+  "name": "mobile-statistics-budget",
+  "title": "移动统计与预算重做",
+  "description": "第二轮：原生紧凑统计和页内预算切月；显式依赖第一轮完成检查及实机验收。",
+  "status": "in_progress",
+  "dev_type": "frontend",
+  "scope": "mobile",
+  "package": null,
+  "priority": "P1",
+  "creator": "dev",
+  "assignee": "dev",
+  "createdAt": "2026-09-26",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "paycheck-to-paycheck",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-26-mobile-experience-redesign",
+  "relatedFiles": [
+    "prd.md",
+    "design.md",
+    "implement.md",
+    "implement.jsonl",
+    "check.jsonl"
+  ],
+  "notes": "用户2026-09-26回复“确认”，批准最新review.md与五页草案及三轮全部实施范围；本轮技术实现与独立检查通过，最终Linux x64 ZIP make/解包smoke已通过。用户于2026-09-30确认视觉通过，仍待父任务 Phase 3.4 exact-hunk 分组提交审查；保留原dirty，不清手机数据。",
+  "meta": {
+    "work_kind": "ui_redesign_child",
+    "implementation_handoff": "verified_for_round3",
+    "integration_pending": "parent target-phone subjective visual and Phase 3.4 commit review; current Linux x64 ZIP and extracted-artifact Electron smoke passed",
+    "depends_on": [
+      "09-26-mobile-ledger-entry"
+    ]
+  }
+}
