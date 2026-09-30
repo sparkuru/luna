@@ -1,0 +1,17 @@
+{
+  "date": "2026-09-30",
+  "result": "passed",
+  "command": "tsx --test src/shared/*.test.ts src/main/*.test.ts src/renderer/*.test.ts src/web/*.test.ts src/sync/*.test.ts",
+  "runtime": {
+    "node": "22.16.0",
+    "locale": "en_US.UTF-8",
+    "reason": "project and better-sqlite3 require Node >=22; profile-host fixture expects English defaults"
+  },
+  "summary": {
+    "tests": 221,
+    "passed": 221,
+    "failed": 0,
+    "skipped": 0
+  },
+  "scope": "Covers native SQLite/profile persistence, browser IndexedDB, backup encryption, sync/conflict/attachment behavior, Android bridge contracts, settings, and domain invariants. It is process-level evidence and does not replace physical Android accessibility or target-deployment acceptance."
+}

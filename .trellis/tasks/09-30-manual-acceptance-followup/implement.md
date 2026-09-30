@@ -9,6 +9,7 @@
 - [x] Run the physical Android A03 SAF/DocumentsUI export, cancellation, wrong-password, and fresh-profile restore harness; record sanitized evidence.
 - [x] Preserve the physical Android A04 route geometry, touch-target, and DocumentsUI/BACK baseline; keep TalkBack and hardware keyboard claims manual.
 - [x] Run serial local browser acceptance for encrypted sync, offline storage, keyboard/focus, and mobile layout; record the browser-only scope.
+- [x] Run the complete unit/integration suite under the required Node 22 runtime and record the 221/221 result.
 
 ## Manual acceptance sequence
 
