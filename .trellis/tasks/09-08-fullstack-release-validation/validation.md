@@ -104,3 +104,43 @@ Android WebView 的 IndexedDB 兼容路径也需要安装包证据，不能从�
 这补齐了当前工作树的可信 HTTPS 浏览器与真实 Android 双向图片同步、旧 WebView 本地持久化及隔离实例重启正常路径。仍未证明生产实例数据恢复、完整失败注入、Electron 原生首启目录选择、实体硬件键盘、读屏/辅助技术和用户视觉认可。现有 VPS 端口 10010 为临时合成数据验收入口，不能视为正式长期业务路由；D6 和父任务完整验收仍未勾选。
 
 验收结束时，x86 的独立 Compose 容器/网络已停止并移除，`/opt/luna-acceptance-20260928-codex/data` 留作复核；ADB reverse/forward 和本机 SSH 转发已关闭。VPS 的独立 10010 入口与合成数据暂留，供用户查看；账号文件为本机 `/tmp/luna-acceptance-20260928/credentials-vps.json` 和 `credentials-android-vps.json`（权限 0600），不写入仓库。VPS 独立代理配置和数据位于 `/opt/luna-acceptance-20260928-codex`；停止时只针对这个 Nginx 实例和 Compose 项目，不应操作现有 Nginx 主实例或业务栈。现有泛域证书有效期截至 2026-10-03，持续使用该临时入口须先确认续期状态。
+
+2026-09-30 当前源码的本机隔离恢复新增 8/8 证据和初始化负例 5/5，详见
+[09-10 恢复记录](../09-10-sqlite-self-hosted-sync/validation.md#2026-09-30-当前源码恢复与初始化负例)
+及其脱敏报告。该演练没有操作既有 x86/VPS 部署，不能替代生产数据恢复、
+正式长期 HTTPS 入口或仍未完成的 D6 人工验收。
+
+## 2026-09-30 当前候选 Electron 分发增量
+
+本日另对当前工作树的 Linux x64 Electron 候选完成 `npm run make`，从最终
+ZIP 解包后在用户提供的 x86 Xorg 会话默认 sandbox 运行 packaged smoke，
+应用退出码 0；SQLite 读回 3 笔合成交易（含 UI 表单写入）和 3 条待同步操作，
+隐私设置/locale 也保存并读回。ZIP 完整性与 hash 见
+[移动集成复验](../09-26-mobile-experience-redesign/validation.md#2026-09-30-x86-linux-zip-与最终分发包-smoke)。
+这补齐了当前候选的 Electron 分发/本地启动路径；不替代原生首次目录选择、
+读屏/辅助技术、实体键盘、目标手机视觉，生产恢复或长期部署验收。D6 及父
+任务仍保持 `in_progress`。
+
+## 2026-09-30 当前源码 VPS HTTPS 复验
+
+将当前工作树的 Web/API 部署到独立 `/opt/luna-archivecheck-20260930`，使用
+专属 Compose project 与镜像、空 `data/`、loopback Web 端口 18111 和单独
+Nginx TLS 端口 10011。受信任系统证书校验通过，`/healthz` 返回 200。只使用
+一次性合成账号和两份独立 Chrome 上下文。没有修改 VPS 80/443 主站、既有
+10010 配置或 `luna-acceptance-20260928-codex` 的 18110 服务。
+
+项目自带 `scripts/smoke-deployed-sync.ts` 六项检查全部通过：HTTPS 安全头、
+OPFS 与 Service Worker；第一浏览器经 UI 登录、绑定并上传；第二浏览器登录
+并恢复；手动模式下离线写入刷新后仍只在本地；联网后两端手动同步收敛；第二
+浏览器冷启动离线仍读到完整账本。机器可读摘要与截图保存在
+[结果摘要](research/current-source-vps-smoke-20260930/result.json)、
+[收敛账本](research/current-source-vps-smoke-20260930/first-converged.png)
+和[冷启动离线账本](research/current-source-vps-smoke-20260930/second-offline.png)。
+
+复验后已停止独立 Nginx，按唯一 Compose project 删除容器/网络，移除该次专用
+镜像标签与整个 `/opt/luna-archivecheck-20260930` 数据/源码目录，并删除本机
+0600 凭据文件。复核确认 10011/18111 已无监听，既有 18110 三项服务仍健康。
+这证明当前源码在一次性 HTTPS 部署上的正常 Web 同步路径；不能代替长期线上
+部署、该部署的恢复/故障注入、Electron 原生目录选择、辅助技术或人工验收，
+所以 D6 与父任务验收仍未完成。09-28 的 10010 Nginx 入口在本轮开始时已不再
+监听；该历史部署的 Compose 服务仍在 18110，未被本轮操作。

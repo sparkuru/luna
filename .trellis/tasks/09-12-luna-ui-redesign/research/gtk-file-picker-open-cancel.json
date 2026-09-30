@@ -1,0 +1,15 @@
+{
+  "capturedAt": "2026-09-30",
+  "scope": "Linux x64 packaged Electron, isolated temporary userData, Xvfb with the host GTK file chooser",
+  "executable": "out/luna-linux-x64/luna",
+  "executableSha256": "180eea79cebc825a7e7291b8c5ef387760773f2b03596751bda8e6e532a8b6c8",
+  "launch": "Hako Node 22 container, --no-sandbox, private Xvfb display",
+  "trigger": "Opened the image attachment chooser from the packaged renderer.",
+  "result": "GTK chooser opened; Escape returned focus/control to the transaction form, with #save-transaction visible.",
+  "persistence": "No transaction was submitted. Only an isolated synthetic workspace was created in temporary userData and removed during cleanup.",
+  "evidence": "gtk-file-picker-open-cancel.png",
+  "limits": [
+    "The Xvfb virtual display had no window manager; the capture proves native GTK chooser rendering and cancel return, not the final desktop theme/window decorations.",
+    "Selecting a file through X11 key injection did not complete; no native-dialog selection/import success is claimed. The existing Playwright filechooser injection smoke remains separate renderer/IPC/save/readback evidence."
+  ]
+}

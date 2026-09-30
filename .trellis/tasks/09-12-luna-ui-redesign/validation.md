@@ -183,3 +183,47 @@ LUNA_TEST_PRODUCTION=1 /home/wkyuu/.vscodium-server/bin/4c0b0c6cc561d2d3636d1ec2
 此前“真实跨设备图片同步尚未运行”已由本轮合成数据实测补齐：当前工作树独立 Android 11 包经受信任的 `https://ssh.majo.im:10010` 登录、上传交易；独立浏览器恢复该交易并上传 32×32 PNG；Android 再同步后在真实 WebView 内解密显示图片，VPS 隔离实例重启后新浏览器仍能恢复交易和图片。Android 缺少 OPFS，走明确的 IndexedDB 兼容路径；并非具备 OPFS 的 Android 路径证据。完整环境、哈希、截图及保留门槛见 [三端发布复验](../09-08-fullstack-release-validation/validation.md#2026-09-28-当前工作树隔离复验)。
 
 AT03 的正常公网 HTTP 传输及跨设备图片读取获得实机证据；矩阵中故障注入、容量与并发场景仍按既有自动化证据逐项认定，不因这次正常路径全部勾选。真实辅助技术、200% 缩放、Electron 原生文件对话框、Android 物理键盘及用户视觉认可仍待人工验收，任务保持 `in_progress`。
+
+## 2026-09-30 当前候选 Electron 分发复验
+
+后续在授权 x86 主机完成当前工作树 Linux x64 ZIP `make`，并从最终 ZIP 解包后
+以默认 Electron sandbox 执行 smoke，退出码 0，设置与 UI 交易在本机数据库读回。
+它更新了上面“只有 no-sandbox smoke”的当时状态；具体命令边界与制品 hash 见
+[父级集成记录](../09-26-mobile-experience-redesign/validation.md#2026-09-30-x86-linux-zip-与最终分发包-smoke)。
+为避免首屏永久等待，OS safeStorage 异步探测现在有 2 秒上限并缓存结果；后端不可用
+时仍只将凭据留在 session，不落明文。
+
+Electron smoke 的单条 `window-missing` IPC 拒绝发生于测试主动销毁窗口时，
+应用断言和持久化仍通过。后续已单独在隔离 Xvfb 中打开打包应用的 GTK 原生图片
+选择器，并验证 Escape 取消后录入表单仍可用；截图与边界见
+`research/gtk-file-picker-open-cancel.json`。这只证明 native chooser 打开/取消，
+虚拟显示没有 window manager，实际桌面装饰主题和从原生 chooser 选中文件仍未验收。
+任务继续 `in_progress`，不能据此归档。
+
+## 2026-09-30 457px / 2x 缩放等效视口回归
+
+新增 `tests/e2e/accessibility.spec.ts` 用例，以 CSS 视口 457×999、devicePixelRatio=2
+覆盖 Chrome 浏览器 200% 缩放后相同的页面布局条件。用例验证 skip link、主内容焦点、
+账单/统计/预算/设置路由和横向溢出。命令
+`./hako npm run test:web -- tests/e2e/accessibility.spec.ts --project=chrome --project=chrome-narrow --workers=1`
+结果为 4/4 通过；`./hako npm run typecheck` 通过。
+
+这证明等效 CSS 视口的布局与键盘路径，不证明浏览器 chrome 的缩放操作。Playwright
+页面键盘事件只发送给网页内容，即使 Xvfb 下以有界面 Chrome 运行也不会触发浏览器
+自身的缩放快捷键；故真实浏览器 200% 操作仍标为未运行，不归因成产品失败。屏幕阅读器、
+Electron 原生文件选择器、真实部署/账号和用户视觉认可也仍待人工验收，任务维持
+`in_progress`。
+
+## 2026-09-30 实际 Chrome 200% 浏览器缩放
+
+用 headed Chrome 打开隔离的生产预览，先以全局 X11 `Ctrl+Shift++` 快捷键调整五档，
+浏览器缩放菜单显示 **200%**。`devicePixelRatio` 从 1 变为 2，布局视口从 1265 CSS px
+缩至 632 CSS px；账单、统计、预算、设置和偏好路由的 `scrollWidth` 均等于视口宽度
+632px。首页主记账按钮边界为 x=25.6 至 606.9px，实际 X11 屏幕截图确认其图标和文案
+完整显示，没有发生先前 Playwright CSS 像素截图造成的假裁切。
+
+原始可视浏览器截图及几何报告保存在 `research/browser-zoom-200-real.png` 和
+`research/browser-zoom-200-real.json`。真实浏览器 200% 操作及这五条路由的无横向溢出
+现已通过。隔离 Xvfb 中的 GTK 原生 chooser 随后也已确认可打开并取消回到录入表单，
+但实际从 chooser 选中文件、屏幕阅读器/辅助技术、正式部署账号和用户主观视觉认可
+仍待验收，因此本任务仍保持 `in_progress`，不能归档。

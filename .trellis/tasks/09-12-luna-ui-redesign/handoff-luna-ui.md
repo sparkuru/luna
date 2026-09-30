@@ -3,12 +3,12 @@
 - 目标：实现用户熟悉的类别优先记账、计算键盘、周/月/年图表、简单正则与金额/多分类筛选，并让图片进入本地保存、加密备份和HTTP/S3跨设备同步。
 - 历史授权：**用户已明确“根据新的主线；开始实现”。** 本次已执行任务校验和 `task.py start`；当时允许实现，不自动提交、部署或归档。
 - 当前指令（2026-09-13）：用户已明确授权提交当前本地进度；后续主动工作聚焦前端与体验，部署、跨端联动、真实同步及相关验收后置。
-- 当前状态：2026-09-12修订2规划已整合并通过规划一致性复核，任务已切换为in_progress；P1–P5 主要代码与本地验证已完成，嵌套 Escape 焦点边界也已在生产桌面回归中修复，仍有平台/人工验收未完成。
+- 当前状态（2026-09-30）：P1–P5 与本地主要验证已完成。当前工作树已取得临时可信 HTTPS 双浏览器/Android 跨设备图片同步证据，并在 x86 主机从最终 Linux ZIP 以默认 Electron sandbox 启动成功；实际 Chrome 200% 浏览器缩放与五条 Web 路由无横向溢出也已验证，见 [validation.md](validation.md#2026-09-30-实际-chrome-200-浏览器缩放)。任务仍为 `in_progress`。
 - 阅读顺序：本文→implement/check manifests→prd.md→design.md→attachment-contract.md→implement.md→acceptance.md；research是证据，历史建议冲突时以修订2契约为准。
 - 已完成：代码接口核对、鲨鱼官网/授权ADB界面观察、附件专项源码研究、完整规划；共享安全DTO、v2账本/附件、HTTP/S3对象、同步、完整备份、Web/Native存储、四页 UI、统计趋势桶/分类钻取、设置子页与兼容路由已实现；录入类型切换保护不兼容分类、分类网格原生按钮语义和图片 staging 提交锁已补齐；独立规划复核发现的四项问题均已解决，最终PASS见research/plan-review.md。
 - 已验证：`validation.md` 记录了 203 个共享单测、服务端/协议/同步门禁、按目标 checkpoint、能力协商、带续租的 durable profile migration lease、附件同步与 local-only profile 密文迁移、桌面与窄屏 Chrome 场景、真实 HTTP 图片附件双浏览器恢复、完整服务恢复烟测、Web/服务端/Electron package 构建，以及 Docker JDK21 APK 和 Android 16 `luna-smoke` 隔离 AVD 完整 smoke。
-- 未完成：标准 Electron packaged smoke 受当前容器 Chromium sandbox 权限阻断（环境等价 `--no-sandbox` 进程检查退出 0）；Electron 原生文件对话框、真实跨设备图片同步、真实部署 URL、真实浏览器200%缩放、辅助技术/用户视觉反馈仍未完成。新增的打包 Renderer file-input chooser→IPC→解密读回 smoke 已通过，但 Playwright 拦截宿主 chooser。Android 系统选图已在隔离 Android16 AVD 的真实 DocumentsUI 路径通过。宿主Node20的better-sqlite3初始化仍会段错误，但账号浏览器 E2E 已在兼容 Node24 运行时、loopback 服务和合成账号下桌面/窄屏 2/2 通过。合成截图及 320/375/768/1440/横屏与 640px CSS 等价视口的本地视觉检查已完成，证据目录见 `validation.md`。生产 Web Service Worker 离线验收已通过重建后的本地 dist-web 桌面/窄屏 Chrome 各 34/34（排除 real server login）。
-- 下一步：先继续前端与体验打磨；取得额外授权和合适环境后，再处理 Electron、真实部署账号、真实200%/辅助技术、用户视觉验收及跨设备图片同步。当前不连接 VPS、不安装/清空用户手机，不把部署或联动验收当作默认下一步。
+- 未完成：Linux GTK 原生文件选择器的实际文件选取和正常桌面装饰验收、读屏/辅助技术和实体键盘审阅、持久化正式服务入口及生产数据恢复验收、用户视觉认可。隔离 Xvfb 已确认 GTK chooser 能打开且取消后返回录入表单；它不证明 Xvfb 之外的桌面主题，也不证明已选中文件；Playwright 注入文件的 smoke 仍是独立渲染器/IPC/保存/读回证据。用户指定的 `22041216UC` 手机密度与触控舒适度也仍待用户主观确认。Node 20 的 better-sqlite3 初始化仍可能段错误；账号浏览器回归已在兼容 Node 24 下通过。所有这些证据边界及实际命令见 `validation.md`。
+- 下一步：整理原有 mixed-hunk 工作区边界并完成目标手机视觉反馈；通过最终提交组界审阅后才可提交和归档。当前产品源码仍未 stage/commit，原实施基线补丁已不在工作区，未识别的继承 hunk 不可猜测暂存。
 - 工作区：/home/wkyuu/cargo/repo/34-luna，paycheck-to-paycheck；规划开始HEAD 2b9534f。当前分支/HEAD在接管时重新验证。
 - 本轮未连接VPS、未安装/清空用户手机；ADB查看鲨鱼已结束，未修改交易。其截图含私人账单，仅/tmp/luna-shark-device，不提交或公开。
 - 最近更新：2026-09-13；实际实现与验证记录见validation.md。

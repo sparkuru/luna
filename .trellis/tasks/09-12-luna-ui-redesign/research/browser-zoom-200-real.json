@@ -1,0 +1,67 @@
+{
+  "capturedAt": "2026-09-30T07:37:55.801Z",
+  "method": "X11 global Ctrl+Plus five times in headed Chrome under Xvfb; browser zoom popup showed 200%",
+  "before": {
+    "dpr": 1,
+    "width": 1265
+  },
+  "after": {
+    "dpr": 2,
+    "width": 632,
+    "scrollWidth": 632
+  },
+  "routes": [
+    {
+      "route": "/luna",
+      "dpr": 2,
+      "width": 632,
+      "scrollWidth": 632,
+      "scrollHeight": 811
+    },
+    {
+      "route": "/statistics",
+      "dpr": 2,
+      "width": 632,
+      "scrollWidth": 632,
+      "scrollHeight": 1411
+    },
+    {
+      "route": "/budget",
+      "dpr": 2,
+      "width": 632,
+      "scrollWidth": 632,
+      "scrollHeight": 570
+    },
+    {
+      "route": "/settings",
+      "dpr": 2,
+      "width": 632,
+      "scrollWidth": 632,
+      "scrollHeight": 1790
+    },
+    {
+      "route": "/settings/preferences",
+      "dpr": 2,
+      "width": 632,
+      "scrollWidth": 632,
+      "scrollHeight": 715
+    }
+  ],
+  "dashboardHero": {
+    "x": 25.59375,
+    "right": 606.90625,
+    "width": 581.3125,
+    "scrollWidth": 581,
+    "clientWidth": 581,
+    "overflowX": "visible"
+  },
+  "primaryRecordButton": {
+    "x": 25.59375,
+    "right": 606.90625,
+    "width": 581.3125,
+    "scrollWidth": 581,
+    "clientWidth": 581,
+    "overflowX": "visible"
+  },
+  "visualReview": "X11 root capture confirms the centered Add a transaction button is fully visible; no horizontal page overflow observed."
+}
