@@ -33,6 +33,12 @@
       "result": "2 passed",
       "mode": "production web bundle with OPFS",
       "coverage": "isolated local ledgers, fresh backup restore, missing inactive ledger remains unavailable and is not recreated"
+    },
+    {
+      "suite": "npm run test:web (production, Chrome, 1 worker)",
+      "result": "159 passed",
+      "mode": "production web bundle",
+      "coverage": "complete configured Chrome production Web E2E suite"
     }
   ],
   "scope": "These are browser-context and synthetic-fixture results. They do not replace two physical devices, Android TalkBack, vendor IME, system BACK, or a durable deployment. A mixed parallel run once hit a transient page-navigation race; the affected sync suite passed in serial reruns."
