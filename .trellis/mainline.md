@@ -1,13 +1,13 @@
 # Luna 项目主线
 
-更新日期：2026-09-13。用户已明确授权将本次改版写入项目主线。
+更新日期：2026-09-30。用户已明确授权将 09-28 之前的任务全部归档，并由单一人工验收任务承接遗留项。
 
 ## 推进方式与状态
 
-- 推进方式：guided；用户已明确恢复实施，本次进入串行交付。
+- 推进方式：guided；历史实现已提交，当前进入人工验收收尾。
 - 本记录确认产品方向和计划入口；此前用户指令授权启动任务并编码，不授权提交、部署或归档。2026-09-13 用户已明确授权提交当前本地进度，并要求后续优先前端与体验；部署、跨端联动、真实同步及其验收后置。
-- 当前主线事项：Luna 记账体验、统计搜索与加密图片附件改版。
-- 状态：实施中；任务状态已切换为 `in_progress`，不代表功能已交付。
+- 当前主线事项：Luna 记账体验、统计搜索与加密图片附件改版的遗留人工验收。
+- 状态：历史实现任务已归档；唯一活动任务为人工验收清单，行状态仍以实际证据和用户满意度为准。
 - 本记录不推定其他任务的优先级、完成状态或执行顺序。
 
 ## 目标与已确认范围
@@ -22,16 +22,14 @@
 
 ## 计划入口与权威边界
 
-主任务：[luna-ui-redesign](tasks/09-12-luna-ui-redesign/task.json)。详细契约只在任务目录维护，主线不复制协议或验收正文。
+当前任务：[09-28 前遗留问题人工验收清单](tasks/09-30-manual-acceptance-followup/task.json)。历史实现任务已移入 `tasks/archive/2026-09/`；详细契约只在任务目录维护，主线不复制验收正文。
 
 | 文档 | 用途 |
 | --- | --- |
-| [接管指南](tasks/09-12-luna-ui-redesign/handoff-luna-ui.md) | 后续模型首先阅读，了解授权、工作区基线和下一步 |
-| [PRD](tasks/09-12-luna-ui-redesign/prd.md) | 范围、需求编号与设计默认值 |
-| [设计](tasks/09-12-luna-ui-redesign/design.md) | 交互、导航、路由及查询统计规则 |
-| [附件契约](tasks/09-12-luna-ui-redesign/attachment-contract.md) | 存储、加密、同步、版本迁移和完整备份 |
-| [实施计划](tasks/09-12-luna-ui-redesign/implement.md) | 文件范围、阶段依赖、出口检查和回退要求 |
-| [验收标准](tasks/09-12-luna-ui-redesign/acceptance.md) | 功能、兼容性、失败场景及视觉验证 |
+| [人工验收 PRD](tasks/09-30-manual-acceptance-followup/prd.md) | A01–A07 的问题、复现、通过标准和用户满意度 |
+| [人工验收设计](tasks/09-30-manual-acceptance-followup/design.md) | 证据边界、结果模型和隐私约束 |
+| [人工验收计划](tasks/09-30-manual-acceptance-followup/implement.md) | 逐行执行顺序、记录要求和归档门槛 |
+| [历史 UI 任务归档](tasks/archive/2026-09/09-12-luna-ui-redesign/) | 已实现范围及其自动化验证记录 |
 
 本任务以修订2为规划依据，替代此前仅 UI、仅月统计、不自建计算键盘、不涉及附件和协议升级的约束。规划不改写已实现能力的技术规范；对应功能实现并验证后，再更新 `.trellis/spec/` 中描述现状的规范。
 
@@ -43,12 +41,12 @@
 
 ## 验证与下一步
 
-已完成源码对照、附件专项研究及独立规划一致性复核；四项协议／并发问题已在书面契约中修正，上下文引用校验通过。见 [规划检查记录](tasks/09-12-luna-ui-redesign/research/planning-validation.md) 与 [独立复核](tasks/09-12-luna-ui-redesign/research/plan-review.md)。
+已完成源码对照、附件专项研究及独立规划一致性复核；四项协议／并发问题已在书面契约中修正。历史规划检查和独立复核保存在 [归档 UI 任务](tasks/archive/2026-09/09-12-luna-ui-redesign/research/) 中。
 
-产品实现已完成主要本地路径；类型检查、203项单测、服务端/协议/同步门禁、按目标版本 checkpoint、profile migration lease、完整服务恢复烟测、Web构建、Electron package 及桌面/窄屏 Chrome 验收结果见任务目录 [validation.md](tasks/09-12-luna-ui-redesign/validation.md)。账单已补齐按日流水、完整交易详情和移动端操作菜单，录入类型切换会保护不兼容分类，表达式阶段 Enter 只求值、图片 staging 未完成时不会提交；统计趋势桶已支持键盘明细，分类排行已支持金额/日期钻取，最大支出默认前五并可查看全部，统计日期按 locale 格式化且图表不依赖用户可见 inline style；空正则保持当前账本结果；嵌套分类、交易详情和图片查看器的 Escape 已在 Radix 捕获边界修复；同步单测新增两客户端加密附件上传→下载→重启读回闭环，并验证 graph 引用晚于对象上传；服务端附件 PUT/repair 已加入实际 body 摘要校验，HTTP CORS 暴露附件摘要与长度头并允许附件请求头；新增真实浏览器双 context 的 S3 图片对象同步回归，覆盖离线本地写入、对象先于 graph 引用、第二个独立 IDB 客户端下载/GCM 读回和 reload；账号浏览器 E2E 另覆盖真实 HTTP 图片上传、跨源摘要头读取、第二浏览器下载与刷新后解密读回；重建后的生产 Web 全量为桌面/窄屏合计 74/74 通过（排除 real server login），开发 Web 合计 68 passed、6 skipped；兼容 Node24 的 loopback 账号浏览器 E2E 桌面/窄屏 2/2 通过。Docker JDK21 APK build/export 与 Android 16 `luna-smoke` 隔离 AVD 完整 smoke 也已通过，包含离线重启、硬件返回、真实 DocumentsUI 选图、加密同步、SAF 备份和设置互操作；打包 Electron Renderer 文件入口的 chooser→规范化→IPC→本机保存→解密读回 smoke 也已通过。合成截图与 320/375/768/1440/横屏、640px CSS 等价视口的本地视觉检查已完成。标准 Electron packaged smoke 已在独立 x86 Linux ZIP 的默认 sandbox 产物 smoke 通过；仍未完成 Electron 原生 chooser 实际选中文件、真实部署 URL、辅助技术和用户视觉反馈。规划复核与本地测试均不等于安全审计或全平台交付；任务继续保持 `in_progress`。服务端 schema v3、代际 fencing/精确孤儿回收、同 key 并发幂等串行化、v2→v1 降级阻断和完整备份 64MiB/512MiB 有界导出/导入测量的新增证据也已记录在上述验收文件中。
+产品实现的主要本地路径、类型检查、服务端／协议／同步门禁、完整服务恢复烟测、Web 构建、Electron package 及桌面／窄屏 Chrome 验收结果见 [归档 UI 任务的 validation.md](tasks/archive/2026-09/09-12-luna-ui-redesign/validation.md)。这些记录是历史自动化基线；未覆盖的真实平台行为统一由当前人工验收任务追踪。
 
 ## 2026-09-30 任务审计与归档状态
 
 本轮对 09-28 之前仍活跃的任务完成了当前工作树复验：共享单测 221/221、服务端 26/26、server-sync 9/9、契约 6/6、root/server typecheck、Web build、API reproducibility 和 Web 回归 308 passed/8 skipped 均通过；所有 9 个 active task 的 Trellis context validation 也通过。当前源码独立 VPS HTTPS 双浏览器同步、Android 11 目录重启持久化、Linux x64 ZIP 默认 sandbox smoke、真实 Chrome 200% 五路由无横溢出和 GTK chooser 打开/取消证据已分别写入任务目录。
 
-本轮没有把未完成任务强行归档。09-08 发布验收仍缺 D6 的生产恢复/长期入口与人工设备审阅；09-10 仍缺 OPFS/原生选择器端到端及整体验收闭环；09-12 仍缺原生选择文件、辅助技术和用户视觉确认；09-26 三轮及布局任务的用户视觉门已于 2026-09-30 明确通过，仍缺混合 hunk 的精确提交审查。移动端可证明的整文件、新 E2E 与 Android smoke helper 已在 `f51da40` 提交；未识别的混合差异继续保留未暂存。
+按用户最终指令，09-28 之前的 9 个活动任务已全部移入 `tasks/archive/2026-09/`，行政归档不等于每个遗留验收项技术上通过。移动端可证明的整文件、新 E2E 与 Android smoke helper 已在 `f51da40` 提交；剩余范围集中在当前 [A01–A07 人工验收表](tasks/09-30-manual-acceptance-followup/prd.md)。用户逐行回复 `Axx：通过/不满意；备注：...`；只有所有行都有真实证据、通过结论和满意度后，才归档当前任务。
