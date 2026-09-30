@@ -30,7 +30,9 @@ test('production shell cold-opens offline and persists new records', async ({ pa
   test.skip(!process.env.LUNA_TEST_BASE_URL && process.env.LUNA_TEST_PRODUCTION !== '1', 'Production build only');
   await setup(page);
   await record(page, 'Online shop');
-  await expect(page.locator('#offline-status')).toHaveText('Ready for offline use on this device');
+  await expect(page.locator('html')).toHaveAttribute('data-offline-shell', 'ready');
+  await expect(page.locator('#offline-status')).toBeHidden();
+  await expect(page.locator('.offline-notice')).toBeHidden();
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
   await page.close();
   await context.setOffline(true);
@@ -42,9 +44,30 @@ test('production shell cold-opens offline and persists new records', async ({ pa
   await record(offlinePage, 'Offline shop');
   await offlinePage.reload();
   await expect(offlinePage.locator('#transaction-list-region')).toContainText('Offline shop');
+  await expect(offlinePage.locator('html')).toHaveAttribute('data-offline-shell', 'ready');
+  await expect(offlinePage.locator('.offline-notice')).toBeHidden();
   await expect(offlinePage.locator('#income-total')).toHaveText('••••');
   expect(errors).toEqual([]);
   await context.setOffline(false);
+});
+
+test('offline asset preparation failure retains a localized recovery message', async ({ page }) => {
+  test.skip(process.env.LUNA_TEST_PRODUCTION !== '1', 'Requires production readiness handling');
+  // Playwright cannot route the service worker's main script request. Reject
+  // its registration boundary to exercise the actual recovery presentation.
+  await page.addInitScript(() => {
+    navigator.serviceWorker.register = async () => {
+      throw new Error('Synthetic offline preparation failure');
+    };
+  });
+  await setup(page);
+  await expect(page.locator('html')).toHaveAttribute('data-offline-shell', 'unavailable');
+  await expect(page.locator('.offline-notice')).toBeVisible();
+  await expect(page.locator('#offline-status')).toContainText('Offline startup is unavailable');
+  await page.locator('#open-secondary-menu').click();
+  await page.locator('[data-settings-area="preferences"]').click();
+  await page.locator('#settings-language').selectOption('zh-CN');
+  await expect(page.locator('#offline-status')).toContainText('暂不能离线启动');
 });
 
 test('a stale financial edit is rejected and its input is retained', async ({ page, context }) => {

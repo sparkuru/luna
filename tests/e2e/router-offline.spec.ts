@@ -6,7 +6,9 @@ test('production menu deep links cold-open offline without caching API requests'
   await page.getByLabel('Ledger name').fill('Offline routes');
   await page.getByRole('button', { name: 'Create local ledger' }).click();
   await expect(page.locator('#summary-grid')).toBeVisible();
-  await expect(page.locator('#offline-status')).toHaveText('Ready for offline use on this device');
+  await expect(page.locator('html')).toHaveAttribute('data-offline-shell', 'ready');
+  await expect(page.locator('#offline-status')).toBeHidden();
+  await expect(page.locator('.offline-notice')).toBeHidden();
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
   await page.close();
   await context.setOffline(true);

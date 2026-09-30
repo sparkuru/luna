@@ -5,6 +5,7 @@ import { setAccount } from "../../src/server/auth";
 import { MemoryServerObjectStore } from "../../src/server/storage/object-store";
 import { openTestDatabase } from "../server/support";
 import { readLedgerDocument } from "./helpers/public-ledger";
+import { decryptLedgerDocument } from "../../src/shared/ledger-crypto";
 const accountPassword = "synthetic-account-password-123";
 const ledgerPassword = "synthetic-ledger-password-456";
 const preferencePassword = "synthetic-preference-password-789";
@@ -37,6 +38,90 @@ async function chooseCategory(page: Page, name = "Food") {
   await page.locator("#choose-category").click();
   await page.getByRole("button", { name, exact: true }).click();
 }
+
+test("online and controlled foreground hooks sync automatic writes with settings unmounted", async ({ page, context, baseURL }) => {
+  test.setTimeout(60_000);
+  const database = await openTestDatabase();
+  const username = `hooks_${randomUUID().slice(0, 8)}`;
+  await setAccount(database, username, accountPassword);
+  const objectStore = new MemoryServerObjectStore();
+  const app = await createApp({ database, objectStore, origins: [new URL(baseURL!).origin] });
+  const apiUrl = await app.listen({ host: "127.0.0.1", port: 0 });
+  const record = async (merchant: string) => {
+    await page.locator("#primary-record").click();
+    await page.locator("#transaction-amount").fill("9.75");
+    await chooseCategory(page);
+    await page.locator("#transaction-advanced-details summary").click();
+    await page.locator("#transaction-merchant").fill(merchant);
+    await page.locator("#save-transaction").click();
+    await expect(page.locator("#transaction-list-region")).toContainText(merchant);
+  };
+  const syncCode = () => page.evaluate(async () => (await window.lunaLedger.server!.status()).sync.code);
+  try {
+    await page.goto("/");
+    await page.locator("#workspace-name").fill("Automatic hook household");
+    await page.locator("#workspace-form button[type=submit]").click();
+    await expect(page.locator("#transactions-title")).toBeVisible();
+    await account(page);
+    await login(page, apiUrl, username, "Automatic hook browser");
+    await page.locator("#server-source").selectOption("legacy-local");
+    await page.locator("#server-ledger-password").fill(ledgerPassword);
+    await page.locator("#server-connect").click();
+    await expect(page.locator("#server-sync-now")).toBeEnabled();
+    await expect.poll(syncCode).toBe("synced");
+    const status = await page.evaluate(() => window.lunaLedger.server!.status());
+    expect(status.syncMode).toBe("automatic");
+    const objectKey = `ledger/${status.profile.binding!.ledgerId}/v1.enc.json`;
+    const objectUrl = `${apiUrl}/api/v1/ledgers/${status.profile.binding!.ledgerId}/object`;
+    const initial = (await objectStore.get(objectKey))!;
+    expect(initial).not.toBeNull();
+    await page.locator(".brand").click();
+    await expect(page).toHaveURL(/\/luna(?:\?.*)?$/);
+    await expect(page.locator("#server-sync-status, #server-sync-now")).toHaveCount(0);
+
+    await context.setOffline(true);
+    expect(await page.evaluate(() => navigator.onLine)).toBe(false);
+    await record("Recorded while offline");
+    await expect.poll(syncCode).toBe("failed");
+    expect((await objectStore.get(objectKey))!.etag).toBe(initial.etag);
+    await context.setOffline(false);
+    expect(await page.evaluate(() => navigator.onLine)).toBe(true);
+    await expect.poll(async () => (await objectStore.get(objectKey))!.etag).not.toBe(initial.etag);
+    await expect.poll(syncCode).toBe("synced");
+    const afterOnline = (await objectStore.get(objectKey))!;
+    expect(await decryptLedgerDocument(afterOnline.body.toString("utf8"), ledgerPassword))
+      .toEqual(await readLedgerDocument(page, ledgerPassword));
+    expect(afterOnline.body.toString("utf8")).not.toContain("Recorded while offline");
+
+    // A failed upload leaves local work pending while the remote marker stays
+    // unchanged, so the normal marker poll cannot cause this recovery itself.
+    await page.route(objectUrl, (route) => route.abort());
+    await record("Recovered by foreground hook");
+    await expect.poll(syncCode).toBe("failed");
+    expect((await objectStore.get(objectKey))!.etag).toBe(afterOnline.etag);
+    await page.unroute(objectUrl);
+    const markerRequest = page.waitForRequest(`${objectUrl}/status`);
+    // This is browser hook evidence, not an Android Activity transition.
+    await page.evaluate(() => {
+      if (document.visibilityState !== "visible") throw new Error("Expected a visible test document");
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await markerRequest;
+    await expect.poll(async () => (await objectStore.get(objectKey))!.etag).not.toBe(afterOnline.etag);
+    await expect.poll(syncCode).toBe("synced");
+    const afterForeground = (await objectStore.get(objectKey))!;
+    expect(await decryptLedgerDocument(afterForeground.body.toString("utf8"), ledgerPassword))
+      .toEqual(await readLedgerDocument(page, ledgerPassword));
+    await expect(page).toHaveURL(/\/luna(?:\?.*)?$/);
+    await expect(page.locator("#server-sync-status, #server-sync-now")).toHaveCount(0);
+  } finally {
+    await context.setOffline(false);
+    await page.unrouteAll({ behavior: "wait" });
+    await app.close();
+    database.close();
+  }
+});
+
 test("real server login, encrypted copy, second-device restore and offline profile recovery", async ({
   page,
   browser,

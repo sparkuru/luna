@@ -215,6 +215,7 @@ export function TransactionDialog({
   const attachmentKey = attachments.map((item) => item.metadata.id).join("|");
   const dirty =
     JSON.stringify(draft) !== JSON.stringify(initial) ||
+    expression !== initial.amount ||
     attachmentKey !== initialAttachmentKey;
   useEffect(() => {
     app.setDirty("entry", dirty);
@@ -366,16 +367,23 @@ export function TransactionDialog({
     </div>
   );
   const requestClose = () => {
-    if (!mutation.isPending) close();
+    if (!mutation.isPending && !imageBusy) close();
   };
   useEffect(() => {
-    const back = () => {
+    if (!open) return;
+    const back = (event: Event) => {
+      if (event.defaultPrevented) return;
+      if (event.type === "luna:navigate-back") event.preventDefault();
       if (categoryOpen) setCategoryOpen(false);
-      else close();
+      else requestClose();
     };
     window.addEventListener("luna:back", back);
-    return () => window.removeEventListener("luna:back", back);
-  }, [categoryOpen, close]);
+    window.addEventListener("luna:navigate-back", back, true);
+    return () => {
+      window.removeEventListener("luna:back", back);
+      window.removeEventListener("luna:navigate-back", back, true);
+    };
+  }, [open, categoryOpen, close, mutation.isPending, imageBusy]);
   const categoriesForType = (type: TransactionType) => [
     ...(snapshot.categories ?? [])
       .filter((category) =>
@@ -397,6 +405,11 @@ export function TransactionDialog({
           original?.splits.map((split) => split.category) ?? [],
         )
       : "");
+  const enabledCategories = categories.filter((category) => category.enabled);
+  const quickCategories = enabledCategories.slice(0, 5);
+  if (selectedCategory?.enabled && !quickCategories.some((category) => category.id === selectedCategory.id)) {
+    quickCategories.splice(4, 1, selectedCategory);
+  }
   const changeType = (type: TransactionType) => {
     if (type === draft.type) return;
     const currentCategory = draft.category.trim();
@@ -489,7 +502,7 @@ export function TransactionDialog({
     setAttachments((current) => current.filter((candidate) => candidate !== item));
   }
   async function save() {
-    if (busyRef.current || locked) return;
+    if (busyRef.current || imageBusy || locked) return;
     busyRef.current = true;
     setError("");
     try {
@@ -537,6 +550,83 @@ export function TransactionDialog({
       busyRef.current = false;
     }
   }
+  const attachmentPicker = (
+    <div className="attachment-picker">
+      <div className="attachment-picker-card">
+        <span className="attachment-picker-icon" aria-hidden="true">
+          <ImagePlus size={20} />
+        </span>
+        <div className="attachment-picker-copy">
+          <strong>{m("addImage")}</strong>
+          <p className="helper">{m("imageHelp")}</p>
+        </div>
+        {isAndroidImageInputAvailable() ? (
+          <Button
+            className="attachment-picker-action"
+            type="button"
+            variant="outline"
+            onClick={() => void addImages(null)}
+            disabled={imageBusy || mutation.isPending || locked}
+          >
+            {m("chooseImages")}
+          </Button>
+        ) : (
+          <label className="attachment-picker-action" htmlFor="transaction-images">
+            {m("chooseImages")}
+          </label>
+        )}
+      </div>
+      <input
+        id="transaction-images"
+        name="images"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        className="visually-hidden"
+        disabled={imageBusy || mutation.isPending || locked}
+        onChange={(event) => {
+          void addImages(event.currentTarget.files);
+          event.currentTarget.value = "";
+        }}
+      />
+      {(imageBusy || attachments.length > 0) && (
+        <div className="attachment-picker-status" role={imageBusy ? "status" : undefined}>
+          {imageBusy && <span>{m("imageProcessing")}</span>}
+          {attachments.length > 0 && <span>{m("imageCount", { count: attachments.length })}</span>}
+        </div>
+      )}
+      {attachments.length > 0 && (
+        <ul className="attachment-preview-list" aria-label={m("attachments")}>
+          {attachments.map((item, index) => (
+            <li className="attachment-preview" key={item.metadata.id}>
+              {item.previewUrl ? (
+                <img
+                  src={item.previewUrl}
+                  alt={`${m("attachments")} ${index + 1}`}
+                  width={item.metadata.width}
+                  height={item.metadata.height}
+                  loading="lazy"
+                />
+              ) : (
+                <span aria-hidden="true" className="attachment-preview-placeholder">▧</span>
+              )}
+              <span className="attachment-preview-meta">
+                {item.metadata.width}×{item.metadata.height} · {item.metadata.mime}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                aria-label={`${m("removeImage")} ${index + 1}`}
+                onClick={() => removeImage(item)}
+              >
+                <X size={17} aria-hidden="true" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
   return (
     <Dialog
       open={open}
@@ -641,14 +731,14 @@ export function TransactionDialog({
             </div>
             <div className="form-grid quick-core-fields">
               <div className="field">
-                <label htmlFor="transaction-amount">{m("amount")} *</label>
+                <label htmlFor="transaction-amount">{m("amount")}{isMobileSurface ? ` · ${workspace.currency}` : " *"}</label>
                 <Input
                   id="transaction-amount"
                   name="amount"
-                  inputMode="decimal"
+                  inputMode={isMobileSurface ? "none" : "decimal"}
                   autoComplete="off"
                   required
-                  value={draft.amount}
+                  value={isMobileSurface ? calculationDisplay || expression : draft.amount}
                   onChange={(e) => changeAmount(e.target.value)}
                   onKeyDown={(event) => {
                     if (
@@ -673,7 +763,7 @@ export function TransactionDialog({
                     precision: workspace.precision,
                     })}
                   </span>
-                {!isWebSurface && (
+                {!isWebSurface && !isMobileSurface && (
                   <div className="calculator" aria-label={m("calculator")}>
                     <div className="calculator-title">
                       <Calculator size={17} aria-hidden="true" />
@@ -697,6 +787,17 @@ export function TransactionDialog({
                   readOnly
                 />
                 <div className="category-control">
+                  {isMobileSurface && (
+                    <div className="mobile-category-grid" role="group" aria-label={m("category")}>
+                      {quickCategories.map((category) => (
+                        <Button key={category.id} type="button" variant="outline"
+                          aria-pressed={draft.category === category.id}
+                          onClick={() => change("category", category.id)}>
+                          {category.name}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                   <Button
                     id="choose-category"
                     type="button"
@@ -717,7 +818,7 @@ export function TransactionDialog({
                     <span
                       className={`category-control-value${categoryDisplay ? "" : " category-control-placeholder"}`}
                     >
-                      {categoryDisplay || m("categoryPlaceholder")}
+                      {isMobileSurface ? m("moreCategories") : categoryDisplay || m("categoryPlaceholder")}
                     </span>
                     <span className="category-control-action">
                       <ChevronDown size={17} aria-hidden="true" />
@@ -725,7 +826,9 @@ export function TransactionDialog({
                   </Button>
                 </div>
                 <span id="category-helper" className="helper">
-                  {selectedCategory?.enabled === false ? m("categoryDisabledEditing") : m("categoryPickerHelp")}
+                  {selectedCategory?.enabled === false
+                    ? `${isMobileSurface ? `${categoryDisplay} · ` : ""}${m("categoryDisabledEditing")}`
+                    : isMobileSurface ? categoryDisplay : m("categoryPickerHelp")}
                 </span>
               </div>
               <DateField
@@ -758,6 +861,7 @@ export function TransactionDialog({
                 {calculatorControls()}
               </details>
             )}
+            {!isMobileSurface && (
             <div className="form-actions">
               <Button
                 id="save-transaction"
@@ -773,6 +877,7 @@ export function TransactionDialog({
                 )}
               </Button>
             </div>
+            )}
             <details
               id="transaction-advanced-details"
               className="advanced-fields"
@@ -809,82 +914,15 @@ export function TransactionDialog({
                   />
                 </div>
               </div>
+              {isMobileSurface && attachmentPicker}
             </details>
-            <div className="attachment-picker">
-              <div className="attachment-picker-card">
-                <span className="attachment-picker-icon" aria-hidden="true">
-                  <ImagePlus size={20} />
-                </span>
-                <div className="attachment-picker-copy">
-                  <strong>{m("addImage")}</strong>
-                  <p className="helper">{m("imageHelp")}</p>
-                </div>
-                {isAndroidImageInputAvailable() ? (
-                  <Button
-                    className="attachment-picker-action"
-                    type="button"
-                    variant="outline"
-                    onClick={() => void addImages(null)}
-                    disabled={imageBusy || mutation.isPending || locked}
-                  >
-                    {m("chooseImages")}
-                  </Button>
-                ) : (
-                  <label className="attachment-picker-action" htmlFor="transaction-images">
-                    {m("chooseImages")}
-                  </label>
-                )}
+            {!isMobileSurface && attachmentPicker}
+            {isMobileSurface && (
+              <div className="calculator" aria-label={m("calculator")}>
+                {calculatorControls()}
               </div>
-              <input
-                id="transaction-images"
-                name="images"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                className="visually-hidden"
-                disabled={imageBusy || mutation.isPending || locked}
-                onChange={(event) => {
-                  void addImages(event.currentTarget.files);
-                  event.currentTarget.value = "";
-                }}
-              />
-              {(imageBusy || attachments.length > 0) && (
-                <div className="attachment-picker-status" role={imageBusy ? "status" : undefined}>
-                  {imageBusy && <span>{m("imageProcessing")}</span>}
-                  {attachments.length > 0 && <span>{m("imageCount", { count: attachments.length })}</span>}
-                </div>
-              )}
-              {attachments.length > 0 && (
-                <ul className="attachment-preview-list" aria-label={m("attachments")}>
-                  {attachments.map((item, index) => (
-                    <li className="attachment-preview" key={item.metadata.id}>
-                      {item.previewUrl ? (
-                        <img
-                          src={item.previewUrl}
-                          alt={`${m("attachments")} ${index + 1}`}
-                          width={item.metadata.width}
-                          height={item.metadata.height}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <span aria-hidden="true" className="attachment-preview-placeholder">▧</span>
-                      )}
-                      <span className="attachment-preview-meta">
-                        {item.metadata.width}×{item.metadata.height} · {item.metadata.mime}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        aria-label={`${m("removeImage")} ${index + 1}`}
-                        onClick={() => removeImage(item)}
-                      >
-                        <X size={17} aria-hidden="true" />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            )}
+
           </fieldset>
           {original && (
             <Button
@@ -897,6 +935,14 @@ export function TransactionDialog({
             </Button>
           )}
         </form>
+        {isMobileSurface && (
+          <div className="mobile-entry-footer">
+            <Button id="save-transaction" type="submit" form="transaction-form"
+              disabled={imageBusy || mutation.isPending || locked}>
+              {m(mutation.isPending ? "saving" : original ? "saveChanges" : "saveTransaction")}
+            </Button>
+          </div>
+        )}
         <Dialog open={categoryOpen} onOpenChange={setCategoryOpen}>
           <DialogContent
             id="category-dialog"
@@ -905,16 +951,17 @@ export function TransactionDialog({
               setCategoryOpen(false);
             }}
             aria-labelledby="category-dialog-title"
+            {...(isMobileSurface ? { "aria-describedby": undefined } : {})}
             className="luna-dialog category-dialog-panel"
             onOpenAutoFocus={(event) => {
               event.preventDefault();
-              document.getElementById("category-search")?.focus();
+              document.getElementById(isMobileSurface ? "close-category" : "category-search")?.focus({ preventScroll: true });
             }}
             onCloseAutoFocus={(event) => {
               event.preventDefault();
               // Radix resumes the parent focus scope after this callback returns.
               queueMicrotask(() =>
-                document.getElementById("choose-category")?.focus(),
+                document.getElementById("choose-category")?.focus({ preventScroll: true }),
               );
             }}
           >
@@ -923,7 +970,7 @@ export function TransactionDialog({
                 <DialogTitle id="category-dialog-title">
                   {m("categoryPickerTitle")}
                 </DialogTitle>
-                <DialogDescription>{m("categoryPickerHelp")}</DialogDescription>
+                {!isMobileSurface && <DialogDescription>{m("categoryPickerHelp")}</DialogDescription>}
               </div>
               <Button
                 id="close-category"

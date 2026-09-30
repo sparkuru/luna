@@ -74,7 +74,8 @@ entry is always discoverable. The home surface contains the brand/workspace
 context, page heading, three summary values (income, spending, and net flow),
 the recent ledger, and the host's record action. On Web, that action is exactly
 one page-level `#primary-record`; native hosts may retain their direct income
-and expense shortcuts. It must not render a
+and expense shortcuts; narrow Android hides those duplicate shortcuts and uses
+the central record action. It must not render a
 persistent desktop-side transaction form, budget summary, settings panel, or
 sync/backup panel.
 
@@ -83,11 +84,15 @@ needed for the common path (transaction type, amount, category, and date);
 date remains visible in the core form because it controls the financial period.
 Merchant, payment method, notes, and future split controls belong behind a
 native semantic `<details>` disclosure. Category selection uses a separate
-short modal flow and a single read-only `#choose-category` button surface; the
-transaction form must not expose a free-text category input because categories
-come from the workspace catalog. On native hosts, the
-`#open-secondary-menu` control opens the secondary modal; on Web, its stable
-counterpart is the Settings navigation item. Budget, category breakdown,
+short modal flow and a read-only `#choose-category` button surface. Mobile also
+offers an enabled-category quick grid; more categories opens the same catalog
+picker without automatically focusing its search input. Editing a disabled
+category keeps its name and disabled explanation visible and preserves its ID.
+The transaction form must not expose a free-text category input because categories
+come from the workspace catalog. On mobile, stable `#open-secondary-menu`
+belongs to the bottom Settings item; omit its duplicate topbar control.
+Electron retains its menu control, and Web uses its Settings navigation item.
+Budget, category breakdown,
 display settings, and sync/backup tools remain reachable through those
 settings surfaces. All platforms must submit the same `TransactionDraft`
 through `window.lunaLedger`.
@@ -96,8 +101,9 @@ The native `#open-secondary-menu` control may retain its decorative
 `.settings-navigation-icon` while keeping the stable ID and localized
 accessible name. Do not use the literal Chinese character `三` as a visible
 label or as a substitute for an icon.
-Each summary card also exposes a 44px `.summary-visibility-toggle`. On narrow
-Web layouts, reserve independent grid areas for the label, amount, and toggle;
+Each summary card also exposes a `.summary-visibility-toggle` (44px minimum;
+48px on Android). On narrow Web and Android layouts, reserve independent grid
+areas for the label, amount, and toggle;
 never position the toggle over the amount. Long and negative localized amounts
 must remain readable at 320px without horizontal overflow. Each control changes only its own summary amount. The renderer keeps
 these three visibility flags in session memory, while the hide-by-default
@@ -117,11 +123,26 @@ single Settings navigation item keeps the stable `#open-secondary-menu` ID and
 uses `.settings-navigation-icon` on Web.
 
 Workspace/ledger switching, account state, and sync/backup descriptions belong
-to `/settings` and its subroutes. If a Web sync capability needs to remain
-discoverable, expose a real settings navigation action such as
-`#open-sync-status`; do not reintroduce its details into the ledger shell.
+to `/settings` and its subroutes on all surfaces. The native topbar shows brand
+and current workspace (Electron additionally keeps `#open-secondary-menu`);
+it has no persistent sync status,
+login/unlock reminder, or ledger selector. Use the registered Sync settings
+card to reach `/settings/sync`; its status, mode, unlock and retry controls own
+that information. The settings overview itself has no storage capability or
+sync-status decoration. Do not reintroduce these details into the ledger shell.
 This keeps the primary ledger task visually focused while preserving access to
 the same shared settings/API logic.
+
+Use a plain localized ledger heading and avoid repeated hero slogans, recent
+ledger explanations, or capability announcements. In production Web,
+`data-offline-shell="ready"` remains the machine-readable readiness signal;
+`#offline-status` and its `.offline-notice` parent are hidden and empty on
+`offlineReady`. Preparing/unavailable states retain localized visible feedback.
+Test both successful offline reload and service-worker registration failure;
+absence of a success message must not be interpreted as readiness failure.
+Automatic sync remains host-owned for configured/unlocked active sessions,
+independent of settings visibility. Never add renderer polling to quiet the
+shell, overwrite a saved manual mode, or imply an Android background service.
 
 Web settings subpages at <=768px use a compact Settings return action and
 `#settings-section-switcher` disclosure, generated from the same settings area
@@ -137,10 +158,12 @@ points and omits `SettingsNavigation`; `/settings/**` subpages show the
 navigation with a Settings return action and `aria-current="page"`. Generate
 both surfaces from `src/renderer/features/settings-navigation.ts`, keeping
 paths, groups, and localized title keys in one presentation-only registry.
-The router still registers deep links separately. Native settings navigation
-keeps its existing flat layout, and `/budget` remains a Web-only workspace
-entry with its own route. This prevents duplicate navigation on the index and
-keeps every settings area reachable when its layout changes.
+The router still registers deep links separately. The explicit mobile surface
+uses four groups with seven direct settings entries; configuration sync remains
+reachable under the Sync page's advanced disclosure. Mobile child pages show
+only `#settings-back` and their own heading, without the complete module
+directory. `/budget` has its own route on every workspace surface. Keep every
+registered settings deep link reachable when changing this presentation.
 Overview cards are real anchors. Intercept only an unmodified primary click for
 client routing; let Ctrl/Meta/Shift/Alt clicks and other native link actions
 retain browser behavior, including opening a new tab.
@@ -244,7 +267,7 @@ Each workspace Web page owns its own heading and any relevant period control;
 do not render the generic `WebPageTopbar` for ledger, statistics, budget, or
 settings. The ledger hero/month picker, statistics anchor, and budget month
 picker provide their own context, while settings has no month context at all.
-Keep the setup topbar and native host shells unchanged. A full-row filter reset
+Keep the setup topbar and native period input behavior separate. A full-row filter reset
 action must use a readable surface/ink pair from the existing tokens, retain a
 visible focus ring, and remain legible in its default, hover, and focus states;
 do not rely on a dark semantic background with dark text.
@@ -285,9 +308,58 @@ while viewing a historical month still belongs to today unless the user edits
 the date. Editing an existing transaction preserves its stored date in the
 initial draft.
 
+### Mobile Statistics and Budget Presentation
+
+Ledger, Statistics and Budget center their period control and its displayed
+value in the same top position. Android WebView may ignore desktop datetime
+pseudo-element centering. Shared `NativePeriodInput` retains the labelled,
+focusable, 48px native input as a transparent interactive overlay and paints
+its derived UTC/localized value separately with `aria-hidden`. Keep the
+calendar affordance separate from text centering, and use `:focus-within` on
+the visible wrapper. Never replace native touch handling with a synthetic
+picker. Validate visible glyph positions, not only the input bounding box,
+then actual APK center/indicator touch and system cancellation.
+
+Mobile period navigation uses the same three-column header across Ledger,
+Statistics and Budget: 48px previous button, centered native input, 48px next
+button. `NativePeriodNavigator` supplies this contract for Statistics and
+Budget; retain Ledger's existing month handlers and the same geometry. Keep
+localized accessible labels on icon-only buttons. Statistics month arrows
+call the original `onMonthChange(previousMonth/nextMonth)` Router path; week
+arrows shift the anchor by seven UTC days and year arrows by one UTC year
+through `onAnchorChange`. Clamp February 29 to February 28 in a non-leap year.
+Do not add shadow month state or bypass Budget's dirty/pending guard. Test
+cross-year month navigation, a week crossing a month boundary, leap-day
+clamping, original draft cancellation, and glyph/button alignment in both
+locales at 320/375/457px. Web/Electron keep their existing period controls.
+Mobile Statistics and Budget retain visually hidden,
+accessible headings instead of duplicate visible page titles. Week/month/year
+controls retain their existing date semantics; Web and Electron are unchanged.
+
+The explicit mobile surface presents statistics in this order: total, compact
+real trend, categories, then largest expenses. Keep all buckets from the same
+domain calculation in `#statistics-trend-details`, initially collapsed, and
+provide `#statistics-bucket-select` with 48px previous/next targets. Future
+buckets retain their text label; zero buckets must not appear as nonzero bars.
+At 457×999 the initial category row fits above the bottom navigation. Bar/ring,
+category split drilldown, amount/date sort and top-five/view-all semantics are
+unchanged. Long category names and amounts reflow at 320px instead of reducing
+body text or touch targets.
+
+Mobile Budget owns its labelled native month input and previous/next actions,
+using the Router setter and dirty blocker described in state-management.
+An unset budget displays actual spending plus `#open-budget-editor` and no
+fictional progress. Set budgets display remaining or excess and actual use;
+excess uses the danger color. Declare WebKit and Mozilla progress pseudo-rules
+separately so one unsupported selector cannot invalidate the other's color.
+The editor retains blank-to-remove, original heads and no-replay recovery.
+Real IME hides bottom navigation and leaves `#save-budget` reachable. Web and
+Electron keep their existing budget presentation paths.
+
 ### Ledger Filter Composition
 
-The ledger filter is a semantic disclosure, not a second ledger page. Put text
+Web/Electron ledger filters use a semantic disclosure; mobile uses the dialog
+described above with the same query contract. Put text
 search first, followed by type and categories. Keep date/amount controls in
 `#filter-advanced` without recreating their state when collapsed. Active chips
 remain visible outside the disclosures; Reset stays outside the advanced
@@ -391,7 +463,66 @@ before React's `toggle` state or an effect-installed document listener updates;
 the first digit must already go to the LCD. When collapsed, amount typing must
 stay native. Let Enter activate a focused calculator button (including Evaluate)
 instead of intercepting that button's keyboard click; Enter on the amount field
-or disclosure summary may evaluate the expression.
+or disclosure summary may evaluate the expression. Mobile presents expression
+and `displayAmount` in the single `#transaction-amount` control rather than a
+second LCD. A repeating result such as `3.33(3)` is display-only; the evaluator
+still submits ledger-precision amount `3.33`. Web and Electron retain their
+separate calculator display.
+
+### Mobile Ledger and Dialog Presentation
+
+Select this layout through `html[data-client-surface="mobile"]`, not viewport
+width. Use system fonts, compact grouped summaries, day-separated transaction
+rows, and five equal bottom slots (Ledger, Statistics, Record, Budget, Settings).
+All five controls must share one row and retain 48px touch targets; stable
+`#open-secondary-menu` must override any inherited Web grid placement.
+At 457×999, a three-record fixture must show the month, all summaries and at
+least two complete rows above navigation. Do not duplicate identical title and
+notes. Long summary amounts may wrap inside a fixed-height area; reveal/hide
+must not reflow the surrounding ledger or overlap the eye.
+
+Mobile `#filter-details` opens persistent `#filter-dialog` instead of expanding
+controls into the ledger. Keep query criteria/errors, active chips, result count
+and full reset; the result action closes only the panel. A real text keyboard
+shrinks the viewport and hides bottom navigation via `data-mobile-ime`; reset
+the unobscured-height baseline when width changes so rotation alone does not
+imply a keyboard. DOM fill may focus without opening the real Android IME;
+test a pointer click and inspect actual native keyboard state.
+
+Mobile entry uses a full-height stable portal, internally scrolling
+`#transaction-form`, and a separate `form="transaction-form"` save footer.
+Category/date remain core fields; optional merchant/payment/notes/images belong
+in more information. Keep the footer inside the actual resized viewport,
+including text IME; retain `100vh` baseline and enhance `100dvh` only in a
+separate supports rule. Details use compact key/value rows and omit empty
+optional fields. Visible filter/detail/image layers consume native BACK before
+router fallback; an image closes to its parent detail without closing both.
+The event is dispatched on `window`: capture alone does not guarantee priority
+over another listener on that same target. Shell routing must defer when an
+actual visible dialog is present, then its owner handles the event. Exclude
+hidden, inert, aria-hidden, closed, visibility-hidden and zero-rect portals.
+Closed persistent portals do not count as visible modals. Validate with
+`mobile-ledger-redesign.spec.ts` and installed APK checks.
+
+### Mobile Settings and Recovery
+
+Category management separates expense/income tabs, an add disclosure and a
+single-open row menu. Usage remains a dialog whose BACK closes only that layer
+and restores the invoking control. Preserve original usage revisions/heads and
+confirmation intent as specified in state-management.
+
+Account starts with server, username and password; device naming is optional.
+Long identity values wrap at 320px. Embedded Sync controls use the router
+navigation callback, including the advanced link, so mobile hash history does
+not become a document reload. Sync status belongs to its settings module;
+opening Settings must not be required for automatic sync to run.
+
+Backup offers save/import choices while both forms remain mounted and hidden
+when inactive. Use independent dirty keys for save and import; saving one must
+not clear an unsaved draft in the other. Retain password clearing, confirmation,
+errors and existing encrypted/chunked APIs. Welcome exposes name/currency first
+and precision/budget in an advanced disclosure; restore/connect still work
+without creating a dummy workspace. Web/Electron keep their existing layout.
 
 Calculator keys should read as pressable controls rather than flat cards: use
 consistent rounded corners, a restrained raised shadow, a small upward hover

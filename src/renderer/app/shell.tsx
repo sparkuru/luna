@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, BookOpen, Plus, Settings as SettingsIcon, Wallet } from "lucide-react";
+import { ArrowLeft, BarChart3, BookOpen, Plus, Settings as SettingsIcon, Wallet } from "lucide-react";
 import {
   useBlocker,
   useNavigate,
@@ -13,8 +13,12 @@ import {
   LedgerDirectoryPanel,
   ServerSyncPanel,
 } from "../features/account";
-import { serverMessage } from "../features/server-i18n";
-import { ledgerToolsMessage } from "../ledger-tools-i18n";
+import {
+  serverLastOpenedMessage,
+  serverMessage,
+  serverStorageMessage,
+  serverSyncStateMessage,
+} from "../features/server-i18n";
 import { defaultStatisticsAnchor, validateLedgerSearch } from "./search";
 import { currentLocalMonth } from "../../shared/domain";
 import type { RendererSettings } from "../../shared/settings";
@@ -158,13 +162,6 @@ export function App() {
     key: MessageKey,
     params: Readonly<Record<string, string | number>> = {},
   ) => t(locale, key, params);
-  const syncSummary = server
-    ? !serverStatus?.account
-      ? serverMessage(locale, "needsLogin")
-      : serverStatus.sync.remoteChangeAvailable
-        ? serverMessage(locale, "remoteChangeAvailable")
-        : ledgerToolsMessage(locale, serverStatus.sync.code)
-    : m("localOnly");
   const [announcement, setAnnouncement] = useState("");
   const [visibility, setVisibility] = useState([false, false, false]);
   const [entry, setEntry] = useState<Entry | null>(null);
@@ -172,6 +169,38 @@ export function App() {
     "expense",
   );
   const [entryOpen, setEntryOpen] = useState(false);
+  useEffect(() => {
+    const root = document.documentElement;
+    let fullHeight = window.innerHeight;
+    let fullWidth = window.innerWidth;
+    const update = () => {
+      // Rotation changes the unobscured layout; IME resizing preserves its width.
+      if (fullWidth !== window.innerWidth) {
+        fullWidth = window.innerWidth;
+        fullHeight = window.innerHeight;
+      } else {
+        fullHeight = Math.max(fullHeight, window.innerHeight);
+      }
+      const focused = document.activeElement;
+      const textFocused = focused instanceof HTMLTextAreaElement ||
+        (focused instanceof HTMLInputElement && focused.inputMode !== "none" &&
+          ["text", "search", "password", "email", "number", "url", "tel"].includes(focused.type));
+      const height = window.visualViewport?.height ?? window.innerHeight;
+      root.dataset.mobileIme = String(root.dataset.clientSurface === "mobile" && textFocused && fullHeight - height > 140);
+    };
+    window.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("resize", update);
+    document.addEventListener("focusin", update);
+    document.addEventListener("focusout", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("resize", update);
+      document.removeEventListener("focusin", update);
+      document.removeEventListener("focusout", update);
+      delete root.dataset.mobileIme;
+    };
+  }, []);
+
   const [entryKey, setEntryKey] = useState(0);
   const dirty = useRef(new Set<string>());
   const [hasDirty, setHasDirty] = useState(false);
@@ -413,6 +442,11 @@ export function App() {
   };
   useEffect(() => {
     const back = (event: Event) => {
+      if (event.defaultPrevented) return;
+      // Native dispatch targets window itself; capture listeners on that same
+      // target do not reliably precede the shell listener. Visible feature
+      // dialogs own this event; closed persistent portals must not block routes.
+      if (Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"]')).some((dialog) => !dialog.closest('[hidden], [inert], [aria-hidden="true"], [data-state="closed"]') && getComputedStyle(dialog).visibility !== "hidden" && dialog.getClientRects().length > 0)) return;
       if (entryOpen) {
         event.preventDefault();
         window.dispatchEvent(new Event("luna:back"));
@@ -494,6 +528,12 @@ export function App() {
           if (await runServer(() => server.selectProfile(id), true))
             setShowStartupPicker(false);
         }}
+        onCreate={async (importBackup) => {
+          if (await runServer(() => server.createLocalProfile(), true)) {
+            setShowStartupPicker(false);
+            if (importBackup) goto("/settings/backup");
+          }
+        }}
       />
     );
   }
@@ -573,59 +613,11 @@ export function App() {
                 </span>
                 <span>{m("appTitle")}</span>
               </a>
+              {workspace && (
+                <span className="topbar-workspace">{workspace.name}</span>
+              )}
               <div className="status-row">
-                <div className="sync-summary" aria-live="polite">
-                  <span
-                    className={`status-pill sync-status-pill${serverStatus?.sync.remoteChangeAvailable ? " is-available" : ""}`}
-                  >
-                    <span className="sync-status-dot" aria-hidden="true" />
-                    <span>{server ? syncSummary : m("localOnly")}</span>
-                  </span>
-                  {server && (
-                    <Button
-                      id="open-sync-status"
-                      className="sync-status-button"
-                      variant="outline"
-                      onClick={() => goto("/settings/sync")}
-                      aria-label={serverMessage(locale, "openSync")}
-                    >
-                      <span>{serverMessage(locale, "syncStatusLabel")}</span>
-                      <span className="sync-status-detail">
-                        {serverStatus?.account
-                          ? serverStatus.profile.binding
-                            ? serverStatus.connected
-                              ? serverStatus.profile.displayName
-                              : serverMessage(locale, "needsUnlock")
-                            : serverMessage(locale, "signedIn")
-                          : serverMessage(locale, "needsLogin")}
-                      </span>
-                    </Button>
-                  )}
-                </div>
-                {server && profilesQuery.data && profilesQuery.data.length > 0 && (
-                  <label className="compact-field ledger-picker" htmlFor="local-ledger-picker">
-                    <span>{m("localLedger")}</span>
-                    <select
-                      id="local-ledger-picker"
-                      value={scope.profileId}
-                      disabled={serverBusy || switching || profilesQuery.isFetching}
-                      onChange={(event) => {
-                        const id = event.currentTarget.value;
-                        void runServer(() => server.selectProfile(id), true);
-                      }}
-                    >
-                      {profilesQuery.data.map((profile) => (
-                        <option key={profile.id} value={profile.id}>
-                          {profile.displayName}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-                {serverStatus?.profile.binding && (
-                  <span className="helper">{serverStatus.profile.displayName}</span>
-                )}
-                {(!isWebSurface || workspace) && (
+                {getClientSurface() !== "mobile" && (!isWebSurface || workspace) && (
                   <Button
                     id="open-secondary-menu"
                     className="menu-button"
@@ -655,6 +647,7 @@ export function App() {
                 active={primarySection}
                 locale={locale}
                 navigate={goto}
+                {...(getClientSurface() === "mobile" ? { settingsControlId: "open-secondary-menu" } : {})}
                 record={() =>
                   openEntry({ type: "expense", returnFocus: "primary-record" })
                 }
@@ -672,7 +665,7 @@ export function App() {
           {workspace &&
             (primarySection === "settings" ||
               (isWebSurface && primarySection === "budget")) &&
-            (!isWebSurface || path !== "/settings") && (
+            (getClientSurface() === "mobile" ? path !== "/settings" : !isWebSurface || path !== "/settings") && (
             <SettingsNavigation
               active={
                 path === "/settings/sync/advanced"
@@ -770,14 +763,14 @@ export function App() {
               ) : settingsSubpage === "budget" ? (
                 <BudgetEditor key={`${workspace.id}:${month}`} web={isWebSurface} changeMonth={setMonth} />
               ) : settingsSubpage === "account" ? (
-                <AccountPanel />
+                <AccountPanel navigate={goto} />
               ) : settingsSubpage === "sync" ? (
                 path === "/settings/sync/advanced" ? (
                   <Settings section="advanced" />
                 ) : server ? (
-                  <ServerSyncPanel />
+                  <ServerSyncPanel navigate={goto} />
                 ) : (
-                  <LedgerTools page="sync" active />
+                  <LedgerTools page="sync" active navigate={goto} />
                 )
               ) : settingsSubpage === "backup" ? (
                 <LedgerTools page="backup" active />
@@ -799,7 +792,7 @@ export function App() {
                   {path === "/settings/backup" ? (
                     <LedgerTools page="backup" active />
                   ) : (
-                    <AccountPanel />
+                    <AccountPanel navigate={goto} />
                   )}
                 </>
               ) : (
@@ -907,17 +900,18 @@ function PrimaryNavigation({
     params?: Readonly<Record<string, string | number>>,
   ) => string;
 }) {
+  const mobile = getClientSurface() === "mobile";
   const items = [
     {
       key: "ledger",
       path: "/luna",
-      label: message("recentLedger"),
+      label: message(mobile ? "ledgerNav" : "recentLedger"),
       icon: BookOpen,
     },
     {
       key: "statistics",
       path: "/statistics",
-      label: message("categoryBreakdown"),
+      label: message(mobile ? "statisticsNav" : "categoryBreakdown"),
       icon: BarChart3,
     },
     ...(!web
@@ -925,7 +919,7 @@ function PrimaryNavigation({
           {
             key: "budget",
             path: "/budget",
-            label: message("monthlyLimit"),
+            label: message(mobile ? "budgetNav" : "monthlyLimit"),
             icon: Wallet,
           },
         ]
@@ -981,7 +975,7 @@ function PrimaryNavigation({
           <span className="primary-record-icon">
             <Plus size={24} strokeWidth={2.3} aria-hidden="true" />
           </span>
-          <span>{message("addTransaction")}</span>
+          <span>{message(mobile ? "mobileRecord" : "addTransaction")}</span>
         </button>
       )}
     </nav>
@@ -1003,6 +997,14 @@ function SettingsNavigation({
   web: boolean;
 }) {
   const items = settingsNavigationItems(web);
+  if (getClientSurface() === "mobile")
+    return (
+      <nav className="mobile-settings-back" aria-label={message("settingsTitle")}>
+        <Button id="settings-back" type="button" variant="ghost" onClick={() => navigate("/settings")}>
+          <ArrowLeft aria-hidden="true" />{message("settingsTitle")}
+        </Button>
+      </nav>
+    );
   if (!web)
     return (
       <nav className="settings-navigation" aria-label={message("settingsTitle")}>
@@ -1063,12 +1065,14 @@ function StartupLedgerPicker({
   busy,
   locale,
   onChoose,
+  onCreate,
 }: {
   profiles: ProfileSummary[];
   activeId: string;
   busy: boolean;
   locale: import("../../shared/settings").AppLocale;
   onChoose: (id: string) => Promise<void>;
+  onCreate: (importBackup: boolean) => Promise<void>;
 }) {
   const m = (key: Parameters<typeof serverMessage>[1]) =>
     serverMessage(locale, key);
@@ -1086,14 +1090,20 @@ function StartupLedgerPicker({
             >
               <div>
                 <strong>{profile.displayName}</strong>
-                {profile.binding && (
-                  <p className="helper">{m("serverCopy")}</p>
-                )}
+                <p className="helper">
+                  {profile.binding
+                    ? m("serverCopy")
+                    : m(profile.id === "legacy-local" ? "originalLocal" : "local")}
+                </p>
+                <p className="helper">{m("storageLabel")}: {serverStorageMessage(locale, profile.storageKind)}</p>
+                <p className="helper">{m("lastOpened")}: {serverLastOpenedMessage(locale, profile.lastOpenedAt)}</p>
+                <p className="helper">{m("syncStateLabel")}: {serverSyncStateMessage(locale, profile.syncState)}</p>
+                {!profile.available && <p className="helper" role="status">{m("unavailableProfile")}</p>}
               </div>
               <Button
                 type="button"
                 variant={profile.id === activeId ? "secondary" : "default"}
-                disabled={busy}
+                disabled={busy || !profile.available}
                 aria-current={profile.id === activeId ? "true" : undefined}
                 onClick={() => void onChoose(profile.id)}
               >
@@ -1102,6 +1112,14 @@ function StartupLedgerPicker({
             </li>
           ))}
         </ul>
+        <div className="flex flex-wrap gap-3">
+          <Button type="button" variant="outline" disabled={busy} onClick={() => void onCreate(false)}>
+            {m("createLocalLedger")}
+          </Button>
+          <Button type="button" variant="outline" disabled={busy} onClick={() => void onCreate(true)}>
+            {m("importBackupIntoNewLedger")}
+          </Button>
+        </div>
       </section>
     </main>
   );

@@ -9,9 +9,12 @@ import { syncStatusMessageKey, type MessageKey } from "../i18n";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Field } from "../components/form";
+import { ChevronRight } from "lucide-react";
+import { getClientSurface } from "../client-surface";
 import {
   settingsAreaDefinitions,
   settingsAreaGroups,
+  mobileSettingsAreaGroups,
   type SettingsAreaDefinition,
 } from "./settings-navigation";
 export function LanguageSelect({ id }: { id: string }) {
@@ -48,6 +51,7 @@ export function Settings({
 } = {}) {
   const app = useApp();
   const { settings, message: m } = app;
+  const mobile = getClientSurface() === "mobile";
   const [error, setError] = useState("");
   const [privacy, setPrivacy] = useState(
     settings.hideSensitiveAmountsByDefault,
@@ -176,7 +180,7 @@ export function Settings({
       <div className="section-heading">
         <div>
           <h2 id="settings-title">{m(section === "preferences" ? "preferencesTitle" : section === "advanced" ? "advancedSettingsTitle" : "settingsTitle")}</h2>
-          <p>
+          {!mobile && <p>
             {m(
               section === "preferences"
                 ? "preferencesHelp"
@@ -186,7 +190,7 @@ export function Settings({
                     ? "settingsDescriptionWeb"
                     : "settingsDescription",
             )}
-          </p>
+          </p>}
         </div>
       </div>
       <div id="settings-alert" className="form-alert" role="alert">
@@ -195,7 +199,7 @@ export function Settings({
       <div className="settings-grid">
         {showPreferences && <>
         <fieldset>
-          <legend>{m("language")}</legend>
+          <legend className={mobile ? "visually-hidden" : undefined}>{m("language")}</legend>
           <LanguageSelect id="settings-language" />
         </fieldset>
         <fieldset>
@@ -225,7 +229,7 @@ export function Settings({
             <span>{m("hideByDefault")}</span>
           </label>
           <p className="helper">{m("hideByDefaultHelp")}</p>
-          <p className="helper">{m("revealAmountsHelp")}</p>
+          {!mobile && <p className="helper">{m("revealAmountsHelp")}</p>}
         </fieldset>
         </>}
         {showAdvanced && <fieldset className="sync-policy">
@@ -431,9 +435,9 @@ export function SettingsOverview({
 }) {
   const app = useApp();
   const m = app.message;
-  const serverStatus = app.serverStatus;
+  const mobile = getClientSurface() === "mobile";
   const sections = settingsAreaDefinitions(web);
-  const groups = settingsAreaGroups(web);
+  const groups = mobile ? mobileSettingsAreaGroups() : settingsAreaGroups(web);
   const renderCard = (item: SettingsAreaDefinition) => (
     <a
       className="settings-overview-card"
@@ -454,62 +458,27 @@ export function SettingsOverview({
         navigate(item.path);
       }}
     >
-      <strong>{m(item.titleKey)}</strong>
-      <span>
+      <strong>{m(mobile && item.key === "sync" ? "mobileLedgerSync" : item.titleKey)}</strong>
+      {(!mobile || item.key === "ledgers" || item.key === "conflicts") && <span>
         {item.key === "conflicts"
           ? app.snapshot.conflictCount
             ? m("ledgerConflictNotice", { count: app.snapshot.conflictCount })
             : m("conflictsClear")
-          : m(item.helpKey)}
-      </span>
-      <span className="settings-overview-action">{m("openSettingsSection")}</span>
+          : mobile ? app.snapshot.workspace?.name : m(item.helpKey)}
+      </span>}
+      {mobile ? <ChevronRight className="settings-row-chevron" aria-hidden="true" /> : <span className="settings-overview-action">{m("openSettingsSection")}</span>}
     </a>
   );
   return (
     <section className="panel settings-panel settings-overview" aria-labelledby="settings-title">
       <div className="section-heading">
         <div>
-          <span className="kicker">{m("settingsTitle")}</span>
+          {!mobile && <span className="kicker">{m("settingsTitle")}</span>}
           <h1 id="settings-title">{m("settingsTitle")}</h1>
-          <p>{m("settingsOverviewHelp")}</p>
+          {!mobile && <p>{m("settingsOverviewHelp")}</p>}
         </div>
-        {web && (
-          <div className="settings-overview-statuses">
-            <div
-              id="settings-storage-status"
-              className="settings-storage-status"
-              role="status"
-            >
-              <span className="sync-status-dot" aria-hidden="true" />
-              <span>
-                <strong>{m("localOnly")}</strong>
-                <span>{m("storageStatusHelp")}</span>
-              </span>
-            </div>
-            {serverStatus && navigate && (
-              <Button
-                id="open-sync-status"
-                className="sync-status-button settings-sync-status-button"
-                variant="outline"
-                onClick={() => navigate("/settings/sync")}
-                aria-label={serverMessage(app.locale, "openSync")}
-              >
-                <span>{serverMessage(app.locale, "syncStatusLabel")}</span>
-                <span className="sync-status-detail">
-                  {serverStatus.account
-                    ? serverStatus.profile.binding
-                      ? serverStatus.connected
-                        ? serverStatus.profile.displayName
-                        : serverMessage(app.locale, "needsUnlock")
-                      : serverMessage(app.locale, "signedIn")
-                    : serverMessage(app.locale, "needsLogin")}
-                </span>
-              </Button>
-            )}
-          </div>
-        )}
       </div>
-      {web ? (
+      {web || mobile ? (
         <div className="settings-overview-groups">
           {groups.map((group) => (
             <section className="settings-overview-group" key={group.key} aria-labelledby={`settings-group-${group.key}`}>

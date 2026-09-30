@@ -49,8 +49,15 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
   `max-height: calc(100dvh - 32px)` only inside a separate
   `@supports (height: 100dvh)` rule. A lone `dvh` declaration is discarded on
   that WebView, leaving `max-height: none` and placing editor controls outside
-  its scrollable viewport. The mobile transaction editor keeps its calculator
-  but stacks `.quick-core-fields` in one column; Web has its own layout rules.
+  its scrollable viewport. Mobile entry uses full-height `100vh`/supported
+  `100dvh`, with internally scrolling `#transaction-form` and a separate save
+  footer. It stacks `.quick-core-fields` in one column before its single keypad;
+  amount/expression/result share one amount control, not a second LCD. Mobile amount
+  input uses `inputMode="none"`: automatic focus must not open a second OS
+  number keyboard. Hardware arithmetic retains the evaluator path; category
+  search, merchant and notes retain real text IME. Amount/category/date/type,
+  calculator keys and save/close targets are at least 48px. Web keeps its optional
+  calculator and desktop three-column core form; Electron keeps its own layout.
 - Request `INTERNET` and `ACCESS_NETWORK_STATE`. The latter enables WebView's
   network-change observer, including `navigator.onLine`; do not fake this flag
   in tests. Android backup is disabled in the manifest; no storage permission
@@ -90,9 +97,21 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
   callback evaluates it only in the bundled `https://localhost` WebView.
   `preventDefault()` means handled; otherwise temporarily disable that callback
   and invoke the native dispatcher. Never expose arbitrary JavaScript execution
-  or consume home back without a renderer handler. Shared priority is category,
-  entry draft, menu child, menu, then native home fallback.
-
+  or consume home back without a renderer handler. Since dispatch targets
+  `window`, capture does not establish listener priority on that same target.
+  Shell routing defers to an actual visible dialog; its owner consumes the
+  event: image → its detail,
+  detail/filter → ledger, category → entry, entry → retained draft. Then route
+  child → parent, main route → ledger, and unhandled home → native fallback.
+  Consumers check `defaultPrevented`; hidden/inert/aria-hidden, closed,
+  visibility-hidden and zero-rect persistent portals are not active. Category
+  usage BACK closes that dialog and restores its opener before any route change.
+- Mobile period inputs retain the real native month/date control beneath an
+  aria-hidden UTC/localized centered display. Android can ignore desktop
+  datetime pseudo-element alignment. The interactive input remains labelled,
+  focusable and at least48px; actual center and indicator touches must open the
+  system picker, whose BACK cancellation leaves the period unchanged. An input
+  frame center alone is not proof that its visible text is centered.
 - The mobile transaction date keeps a labelled, focusable native
   `input[type="date"]` with its ISO value and native picker. Its visible text
   uses a separate aria-hidden `YYYY/MM/DD` projection so the order stays fixed
@@ -103,6 +122,11 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
   same visible projection while retaining browser date input behavior. Desktop
   Web and Electron keep their native date display. A browser `showPicker()` stub
   verifies only activation wiring, not the system dialog.
+- The three mobile period headers use matching 48px previous/next arrows.
+  Statistics moves the selected month, week or year through existing Router
+  handlers. Native QA must click those arrows on the installed app and inspect
+  the resulting input/route, alongside glyph alignment and picker cancellation;
+  desktop viewport assertions alone do not prove Android touch behavior.
 
 ## 4. Validation & Error Matrix
 
@@ -120,7 +144,10 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
 | Native save success | actual destination file closes, Node decrypts same ledger |
 | Native image selection | disposable Android DocumentsUI selects a supported image; renderer validates, stages and saves it, and a relaunch reads the same normalized bytes |
 | Hardware back with open IME | Android dismisses IME first; keep app dialog |
+| Mobile amount initially focused | Application calculator visible, OS IME closed, category/date precede calculator |
+| Notes or category search focused | Real OS text IME available; amount suppression must not leak to text controls |
 | Hardware back with nested editor | Close category first, then hide entry while retaining its draft |
+| Hardware back with image/detail/filter | Close only the top visible layer; keep app and underlying parent |
 | Hardware back at home | Native fallback; reopen retains committed data |
 
 ## 5. Good / Base / Bad Cases
@@ -166,6 +193,11 @@ fallback. In a browser regression test, remove the matching `100dvh`
 `@supports` CSSOM rule, then assert the `100vh` limit remains, the dialog is
 internally scrollable, and lower controls are reachable. Confirm the result on
 the installed Android WebView separately.
+`tests/e2e/android-entry-layout.spec.ts` checks 320/375/457px, both locales,
+hardware expression evaluation, nested focus and draft preservation. Its native
+presentation simulation does not prove real IME state. A physical-device check
+must verify initial amount IME absence, text IME, actual BACK order and committed
+record readback after force-stop/relaunch without clearing application data.
 
 ## 7. Wrong vs Correct
 

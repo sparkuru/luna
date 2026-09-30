@@ -4,7 +4,6 @@ const onePixelPng = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
   'base64',
 );
-const englishLedgerPrompt = /^(See what happened first, then record the next entry\.|Notice the pattern, then record the next entry\.|One small entry at a time keeps the picture clear\.|Start with what happened today, then keep going\.)$/;
 
 async function setupWorkspace(page: Page, name = 'Intuitive household'): Promise<void> {
   await page.goto('/');
@@ -60,8 +59,9 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
 
   await expect(page.locator('#month-label')).toHaveCount(0);
   await expect(page.locator('.page-heading-actions #month-picker')).toBeVisible();
-  await expect(page.locator('.hero-description')).toHaveText(englishLedgerPrompt);
-  const selectedMonth = await page.locator('#month-picker').inputValue();
+  await expect(page.locator('#page-title')).toHaveText('Ledger overview');
+  await expect(page.locator('.hero-description')).toHaveCount(0);
+  const selectedMonth = await page.locator('#month-picker').getAttribute('data-month');
   expect(selectedMonth).toMatch(/^\d{4}-\d{2}$/);
   const selectedMonthLabel = await page.evaluate((month) => {
     const year = Number(month.slice(0, 4));
@@ -71,7 +71,7 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
       year: 'numeric',
       timeZone: 'UTC',
     }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
-  }, selectedMonth);
+  }, selectedMonth ?? '');
   await expect(page.locator('#empty-month-state')).toHaveText(`No transactions in ${selectedMonthLabel}`);
   await expect(page.locator('#transaction-list-region .empty-state')).toHaveCount(1);
   await expect(page.locator('#transaction-list-region #empty-record-expense, #transaction-list-region #empty-record-income')).toHaveCount(0);
@@ -144,7 +144,7 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
   await expect(savedRow).toBeVisible();
 
   await page.locator('#next-month').click();
-  const followingMonth = await page.locator('#month-picker').inputValue();
+  const followingMonth = await page.locator('#month-picker').getAttribute('data-month');
   expect(followingMonth).not.toBe(selectedMonth);
   const followingMonthLabel = await page.evaluate((month) => {
     const year = Number(month.slice(0, 4));
@@ -154,7 +154,7 @@ test('empty ledger makes the next record obvious and saves a focused expense', a
       year: 'numeric',
       timeZone: 'UTC',
     }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
-  }, followingMonth);
+  }, followingMonth ?? '');
   await expect(page.locator('#empty-month-state')).toHaveText(`No transactions in ${followingMonthLabel}`);
   await expect(page.locator('#transaction-list-region .empty-state')).toHaveCount(1);
   await expect(page.locator('#primary-record')).toBeVisible();
@@ -182,23 +182,23 @@ test('zh-CN empty month copy names the selected month without an entry prompt', 
   await expect(page.locator('#primary-record')).toBeVisible();
 });
 
-test('ledger prompt stays stable through month loading and uses catalog copy on home re-entry', async ({ page }) => {
+test('ledger heading stays clear through month changes and home re-entry', async ({ page }) => {
   await setupWorkspace(page, 'Stable prompt household');
 
-  const prompt = page.locator('.hero-description');
-  const initialPrompt = await prompt.textContent();
-  expect(initialPrompt).not.toBeNull();
-  expect(initialPrompt ?? '').toMatch(englishLedgerPrompt);
+  const heading = page.locator('#page-title');
+  await expect(heading).toHaveText('Ledger overview');
+  await expect(page.locator('.hero-description')).toHaveCount(0);
   const initialMonth = await page.locator('#month-picker').getAttribute('data-month');
   await page.locator('#next-month').click();
   await expect(page.locator('#month-picker')).not.toHaveAttribute('data-month', initialMonth ?? '');
-  await expect(prompt).toHaveText(initialPrompt ?? '');
+  await expect(heading).toHaveText('Ledger overview');
 
   await page.locator('#open-secondary-menu').click();
   await expect(page).toHaveURL(/\/settings(?:\?.*)?$/);
   await page.getByRole('link', { name: 'Luna home' }).click();
   await expect(page).toHaveURL(/\/luna(?:\?.*)?$/);
-  await expect(prompt).toHaveText(englishLedgerPrompt);
+  await expect(heading).toHaveText('Ledger overview');
+  await expect(page.locator('.hero-description')).toHaveCount(0);
 });
 
 test('income entry and advanced fields are keyboard reachable', async ({ page }) => {

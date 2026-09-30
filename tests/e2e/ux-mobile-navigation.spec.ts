@@ -81,6 +81,83 @@ for (const locale of ['en', 'zh-CN'] as const) {
     expect(await page.locator('.settings-navigation-desktop .settings-navigation-group:visible').count()).toBeGreaterThan(1);
   });
 
+  test(`${locale}: native mobile home keeps quiet context, readable summaries and settings sync access`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await welcome(page, locale);
+    const ledgerName = 'Mobile household with a very long ledger name that must stay readable';
+    await page.locator('#workspace-name').fill(ledgerName);
+    await page.locator('#workspace-form button[type="submit"]').click();
+    await expect(page.locator('#primary-record')).toBeVisible();
+    await page.evaluate(async () => {
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      for (const merchant of ['Lunch', 'Groceries']) {
+        await window.lunaLedger.createTransaction({ type: 'expense', amountMinor: '987654321234', date,
+          splits: [{ category: 'expense:0', amountMinor: '987654321234' }], merchant });
+      }
+    });
+    await page.reload();
+    await expect(page.locator('.transaction-item')).toHaveCount(2);
+    await page.evaluate(() => { document.documentElement.dataset.clientSurface = 'mobile'; });
+    await page.locator('#primary-record').click();
+    await expect(page.locator('#transaction-dialog')).toBeVisible();
+    await page.locator('#close-transaction').click();
+    await expect(page.locator('.topbar-workspace')).toHaveText(ledgerName.trim());
+    await expect(page.locator('#workspace-name-label')).toHaveCount(0);
+    await expect(page.locator('.topbar .sync-summary, #open-sync-status, #local-ledger-picker')).toHaveCount(0);
+    expect((await page.locator('.topbar').boundingBox())!.height).toBeLessThanOrEqual(56);
+
+    for (const [width, height] of [[320, 740], [375, 800], [457, 999]] as const) {
+      await page.setViewportSize({ width, height });
+      for (const toggle of await page.locator('[data-summary-visibility-toggle]').all()) await toggle.click();
+      const geometry = await page.locator('.summary-card').evaluateAll(cards => cards.map(card => {
+        const amount = card.querySelector('.metric')!.getBoundingClientRect();
+        const toggle = card.querySelector('button')!.getBoundingClientRect();
+        return {
+          overlap: toggle.left < amount.right && toggle.right > amount.left && toggle.top < amount.bottom && toggle.bottom > amount.top,
+          clipped: card.querySelector('.metric')!.scrollWidth > card.querySelector('.metric')!.clientWidth,
+          width: toggle.width, height: toggle.height,
+        };
+      }));
+      for (const item of geometry) {
+        expect(item).toMatchObject({ overlap: false, clipped: false });
+        expect(item.width).toBeGreaterThanOrEqual(48);
+        expect(item.height).toBeGreaterThanOrEqual(48);
+      }
+      const dimensions = await page.evaluate(() => ({ width: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth }));
+      expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.width);
+      await page.locator('[data-summary-visibility-toggle]').first().click();
+      await expect(page.locator('#income-total')).toHaveText('••••');
+      await expect(page.locator('#expense-total')).not.toHaveText('••••');
+      for (const toggle of await page.locator('[data-summary-visibility-toggle]').all()) {
+        if ((await toggle.getAttribute('aria-pressed')) === 'true') await toggle.click();
+      }
+      await page.evaluate(() => window.scrollTo(0, 0));
+      if (width >= 375) {
+        const navigation = (await page.locator('.primary-navigation').boundingBox())!;
+        for (const row of await page.locator('.transaction-item').all()) {
+          const box = (await row.boundingBox())!;
+          expect(box.y + box.height, `${locale} ${width}: both records above fixed navigation`).toBeLessThanOrEqual(navigation.y);
+        }
+      }
+    }
+
+    await page.locator('#open-secondary-menu').click();
+    await page.locator('[data-settings-area="sync"]').click();
+    await expect(page.locator('#server-sync-status')).toBeVisible();
+    await expect(page.locator('#server-sync-mode')).toHaveValue('automatic');
+    await page.locator('#server-sync-mode').selectOption('manual');
+    await expect(page.locator('#server-sync-mode')).toHaveValue('manual');
+    await page.getByRole('link', { name: locale === 'en' ? 'Luna home' : 'Luna 首页' }).click();
+    await expect(page.locator('#server-sync-status')).toHaveCount(0);
+    await expect(page.locator('.sync-status-button, .sync-status-pill')).toHaveCount(0);
+    await page.locator('#open-secondary-menu').click();
+    await page.locator('[data-settings-area="ledgers"]').click();
+    await expect(page.locator('#ledger-directory-title')).toBeVisible();
+    await page.goto('/settings/sync');
+    await expect(page.locator('#server-sync-mode')).toHaveValue('manual');
+  });
+
   test(`${locale}: every statistics day is reachable through large controls and text details`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     await welcome(page, locale);

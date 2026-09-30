@@ -2,6 +2,12 @@ import type { AppLocale, ConfigSyncStatusCode } from '../shared/settings';
 import { parseMinorUnits } from '../shared/domain';
 
 export const en = {
+  mobileSettingsLedger: 'Ledger', mobileSettingsBackup: 'Backup & recovery', mobileSetupWelcome: 'Welcome to Luna', mobileLedgerSync: 'Ledger sync',
+  manageCategory: 'Manage {name}', manageCategoryAction: 'Manage', loadingCategoryUsage: 'Loading records…', categoryUsageAction: 'View usage',
+  budgetSet: 'Set budget', budgetEdit: 'Edit budget', budgetRemaining: 'Remaining', budgetOver: 'Over budget',
+  statWeekDate: 'Date in this week', statYearDate: 'Date in this year', statMethod: 'How totals are calculated',
+  mobileRecord: 'Record', mobileLedgerTitle: 'This month', moreCategories: 'More categories', showFilterResults: 'Show {count} records',
+
   backupHelp: 'Export or restore an encrypted backup, without signing in.',
   conflictsClear: 'No conflicts. Nothing needs your attention.',
   conflictsHelp: 'Review versions that need a decision.',
@@ -68,7 +74,7 @@ export const en = {
   currencyJpy: 'JPY — Japanese Yen',
   currencyAud: 'AUD — Australian Dollar',
   currencyCad: 'CAD — Canadian Dollar',
-  dashboardTitle: 'Your money, in focus.',
+  dashboardTitle: 'Ledger overview',
   ledgerKicker: 'Recent ledger first',
   ledgerIntro: 'See what happened first, then record the next entry.',
   ledgerPromptNotice: 'Notice the pattern, then record the next entry.',
@@ -94,6 +100,8 @@ export const en = {
   monthNavigation: 'Month navigation',
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
+  previousWeek: 'Previous week',
+  nextWeek: 'Next week',
   selectedMonth: 'Selected month',
   monthPickerButton: 'Selected month: {month}',
   monthPicker: 'Choose a month',
@@ -319,6 +327,12 @@ export const en = {
 export type MessageKey = keyof typeof en;
 
 export const zhCN = {
+  mobileSettingsLedger: '账本', mobileSettingsBackup: '备份与恢复', mobileSetupWelcome: '欢迎使用 Luna', mobileLedgerSync: '账本同步',
+  manageCategory: '管理{name}', manageCategoryAction: '管理', loadingCategoryUsage: '正在加载记录…', categoryUsageAction: '查看使用情况',
+  budgetSet: '设置预算', budgetEdit: '修改预算', budgetRemaining: '剩余', budgetOver: '超额',
+  statWeekDate: '本周日期', statYearDate: '年份参考日期', statMethod: '统计说明',
+  mobileRecord: '记账', mobileLedgerTitle: '本月账单', moreCategories: '更多分类', showFilterResults: '查看 {count} 笔账单',
+
   backupHelp: '导出或恢复加密备份，无需登录。', conflictsClear: '没有冲突，无需处理。', conflictsHelp: '检查需要选择的版本。', workspaceNameRequired: '请填写账本名称。', workspacePrecisionInvalid: '请选择 0 到 4 之间的整数。', amountExpressionInvalid: '请输入大于零的金额，或完成计算。', backupNav: '加密备份', conflictsNav: '冲突处理',
   savedRefreshFailed: '本机已保存，但刷新失败。请重新加载查看结果，不要重复提交。',
   discardDraft: '放弃尚未保存的修改？',
@@ -358,13 +372,14 @@ export const zhCN = {
   setupWebLocalNote: '请使用相同的网站地址访问账本。清除网站数据会删除本地记录；可使用上方入口恢复或连接已有账本。',
   currencyCny: 'CNY — 人民币（RMB）', currencyUsd: 'USD — 美元', currencySgd: 'SGD — 新加坡元', currencyEur: 'EUR — 欧元',
   currencyGbp: 'GBP — 英镑', currencyJpy: 'JPY — 日元', currencyAud: 'AUD — 澳大利亚元', currencyCad: 'CAD — 加拿大元',
-  dashboardTitle: '聚焦你的每月收支。', ledgerKicker: '先看最近账单', ledgerIntro: '先看发生了什么，再记下一笔。', ledgerPromptNotice: '留意收支的变化，再记下一笔。', ledgerPromptSmallStep: '一笔一笔记下，让收支更清楚。', ledgerPromptStart: '从今天发生的事开始，慢慢记下去。',
+  dashboardTitle: '收支账本', ledgerKicker: '先看最近账单', ledgerIntro: '先看发生了什么，再记下一笔。', ledgerPromptNotice: '留意收支的变化，再记下一笔。', ledgerPromptSmallStep: '一笔一笔记下，让收支更清楚。', ledgerPromptStart: '从今天发生的事开始，慢慢记下去。',
   recentLedger: '最近账单', recentLedgerHelp: '按当前查看月份，集中查看最近的收入和支出。', quickEntryTitle: '记一笔', quickEntryKicker: '一条清楚路径',
   quickEntryDescription: '先填写最必要的信息，需要时再补充更多详情。', recordExpense: '记一笔支出', recordIncome: '记一笔收入',
   quickEntryType: '选择交易类型', changeTypeCategoryConfirm: '这个分类不属于所选类型。切换类型并清空分类吗？', quickEntryExpense: '支出', quickEntryIncome: '收入', quickEntryCoreHelp: '选择类型、金额和分类即可保存一笔记录。',
   moreDetails: '更多信息', moreDetailsHelp: '商户、支付方式和备注', emptyLedgerTitle: '从第一笔开始',
   emptyLedgerHelp: '记录第一笔支出或收入，它会显示在最近账单中。', recordFirstTransaction: '记录第一笔交易',
   monthNavigation: '月份导航', previousMonth: '上个月', nextMonth: '下个月', selectedMonth: '所选月份', monthPickerButton: '所选月份：{month}', monthPicker: '选择月份', previousYear: '上一年', nextYear: '下一年', monthChoices: '{year} 年月份',
+  previousWeek: '上一周', nextWeek: '下一周',
   monthlySummary: '月度摘要', income: '收入', spending: '支出', netFlow: '结余',
   recordedThisMonth: '本月已记录', incomeMinusSpending: '收入减支出', budgetUsed: '已用预算', budgetNotSet: '未设置', addLimitBelow: '可在下方添加上限',
   budgetUsedOf: '已用 {used}，预算 {budget}', budgetPercentUsed: '已使用每月上限的 {percent}%', hiddenAmount: '金额已隐藏',

@@ -48,8 +48,7 @@ import {
 } from "../components/ui/dialog";
 import { getClientSurface } from "../client-surface";
 import { labelCategories, labelCategory } from "../category-display";
-import { WebMonthPicker } from "../components/month-picker";
-import { chooseLedgerCopyKey, type LedgerCopyKey } from "../ledger-copy";
+import { NativePeriodInput, WebMonthPicker } from "../components/month-picker";
 import type { Entry } from "./entry";
 
 type ImageViewerState = {
@@ -113,7 +112,6 @@ type LedgerHomeProps = {
   visibility: boolean[];
   web?: boolean;
   toggle(index: number): void;
-  ledgerCopyKey: LedgerCopyKey;
 };
 
 type LedgerMonthLoadingProps = {
@@ -123,10 +121,9 @@ type LedgerMonthLoadingProps = {
   changeMonth(month: string): void;
   onRetry(): void;
   error: string;
-  ledgerCopyKey: LedgerCopyKey;
 };
 
-type LedgerRouteProps = Omit<LedgerHomeProps, "ledgerCopyKey"> & {
+type LedgerRouteProps = LedgerHomeProps & {
   month: string;
   locale: AppLocale;
   message: Message;
@@ -255,7 +252,16 @@ function MonthControls({
       <label className="visually-hidden" htmlFor="month-picker">
         {m("selectedMonth")}
       </label>
-      <Input
+      {getClientSurface() === "mobile" ? <NativePeriodInput
+        id="month-picker"
+        type="month"
+        aria-label={m("selectedMonth")}
+        value={month}
+        displayValue={formatMonth(locale, month)}
+        onChange={(event) => {
+          if (event.currentTarget.value) changeMonth(event.currentTarget.value);
+        }}
+      /> : <Input
         id="month-picker"
         type="month"
         aria-label={m("selectedMonth")}
@@ -263,7 +269,7 @@ function MonthControls({
         onChange={(event) => {
           if (event.currentTarget.value) changeMonth(event.currentTarget.value);
         }}
-      />
+      />}
       <Button
         id="next-month"
         type="button"
@@ -285,7 +291,6 @@ export function LedgerMonthLoading({
   changeMonth,
   onRetry,
   error,
-  ledgerCopyKey,
 }: LedgerMonthLoadingProps) {
   const web = getClientSurface() === "web";
   const summaryPlaceholders: readonly {
@@ -306,9 +311,7 @@ export function LedgerMonthLoading({
         aria-busy={error === ""}
       >
         <div className="page-heading-copy">
-          <span className="kicker">{m("ledgerKicker")}</span>
           <h1 id="page-title">{m("dashboardTitle")}</h1>
-          <p className="hero-description">{m(ledgerCopyKey)}</p>
         </div>
         <div className="page-heading-actions">
           {!web && (
@@ -393,9 +396,8 @@ export function LedgerMonthLoading({
         <div className="section-heading">
           <div>
             <h2 id="transactions-title" tabIndex={-1}>
-              {m("recentLedger")}
+              {m(getClientSurface() === "mobile" ? "mobileLedgerTitle" : "recentLedger")}
             </h2>
-            <p>{m("recentLedgerHelp")}</p>
           </div>
           <p id="transaction-count" className="month-loading-count">
             <span id="month-loading-status" role="status">
@@ -477,7 +479,6 @@ export function LedgerRoute({
   error,
   ...homeProps
 }: LedgerRouteProps) {
-  const [ledgerCopyKey] = useState(() => chooseLedgerCopyKey());
   if (loading)
     return (
       <LedgerMonthLoading
@@ -487,10 +488,9 @@ export function LedgerRoute({
         changeMonth={homeProps.changeMonth}
         onRetry={onRetry}
         error={error}
-        ledgerCopyKey={ledgerCopyKey}
       />
     );
-  return <LedgerHome {...homeProps} ledgerCopyKey={ledgerCopyKey} />;
+  return <LedgerHome {...homeProps} />;
 }
 
 export function LedgerHome({
@@ -501,7 +501,6 @@ export function LedgerHome({
   visibility,
   web = false,
   toggle,
-  ledgerCopyKey,
 }: LedgerHomeProps) {
   const app = useApp();
   const {
@@ -512,6 +511,8 @@ export function LedgerHome({
     announce,
     errorMessage,
   } = app;
+  const mobile = getClientSurface() === "mobile";
+  const [filterOpen, setFilterOpen] = useState(false);
   const workspace = snapshot.workspace!;
   const summary = snapshot.summary!;
   const setType = changeType;
@@ -1043,6 +1044,19 @@ export function LedgerHome({
       )?.focus();
     });
   }
+  useEffect(() => {
+    if (imageViewer === null && transactionDetail === null && !filterOpen) return;
+    const back = (event: Event) => {
+      if (event.defaultPrevented) return;
+      event.preventDefault();
+      if (imageViewer !== null) closeImageViewer();
+      else if (transactionDetail !== null) closeTransactionDetail();
+      else setFilterOpen(false);
+    };
+    // The shell defers to visible feature dialogs; one layer consumes BACK.
+    window.addEventListener("luna:navigate-back", back, true);
+    return () => window.removeEventListener("luna:navigate-back", back, true);
+  }, [imageViewer, transactionDetail, filterOpen]);
   function editTransactionFromDetail(transaction: Transaction) {
     setTransactionDetail(null);
     queueMicrotask(() =>
@@ -1148,6 +1162,184 @@ export function LedgerHome({
       return false;
     }
   }
+  const filterForm = (
+    <form
+      id="filter-form"
+      className="filter-grid"
+      aria-label={m("filterTransactions")}
+      onSubmit={(e) => e.preventDefault()}
+      onReset={() => {
+        setType("all");
+        setQuery("");
+        setSelectedCategories([]);
+        setDateFrom("");
+        setDateTo("");
+        setMinimum("");
+        setMaximum("");
+        setQueryMode("text");
+      }}
+    >
+      <div className="field filter-search-field">
+        <label htmlFor="filter-query">{m("searchLabel")}</label>
+        <div className="filter-search-control">
+          <Input
+            id="filter-query"
+            name="query"
+            aria-describedby={mobile ? "mobile-filter-error" : "filter-error"}
+            aria-invalid={
+              queryInputState.field === "query" ||
+              (regexQueryActive && filterEvaluation.status === "invalid")
+            }
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <Button
+            id="filter-regex"
+            type="button"
+            variant="ghost"
+            className="filter-regex-toggle"
+            aria-label={m(
+              queryMode === "regex" ? "disableRegexSearch" : "enableRegexSearch",
+            )}
+            aria-pressed={queryMode === "regex"}
+            onClick={() =>
+              setQueryMode((mode) => (mode === "regex" ? "text" : "regex"))
+            }
+          >
+            <span aria-hidden="true" className="filter-regex-mark">
+              .*
+            </span>
+            <span className="visually-hidden">{m("searchModeRegex")}</span>
+          </Button>
+        </div>
+      </div>
+      <div className="field filter-type-field">
+        <label htmlFor="filter-type">{m("type")}</label>
+        <select
+          id="filter-type"
+          name="type"
+          value={type}
+          onChange={(e) => setType(e.target.value as typeof type)}
+        >
+          <option value="all">{m("allTransactions")}</option>
+          <option value="income">{m("income")}</option>
+          <option value="expense">{m("spending")}</option>
+        </select>
+      </div>
+      {categoryOptions.length > 0 ? (
+        <fieldset className="filter-category-options full">
+          <legend>{m("categoryMultiSelect")}</legend>
+          <div
+            id="filter-category-options"
+            className="filter-category-groups"
+          >
+            {(["expense", "income", "other"] as const).map((group) => {
+              const options = categoryOptions.filter(
+                (option) => option.group === group,
+              );
+              if (options.length === 0) return null;
+              const headingId = `filter-category-group-${group}`;
+              return (
+                <div
+                  key={group}
+                  className="filter-category-group"
+                  role="group"
+                  aria-labelledby={headingId}
+                >
+                  <h3 id={headingId} className="filter-category-group-title">
+                    {filterCategoryGroupLabel(group, m)}
+                  </h3>
+                  <div className="filter-category-list">
+                    {options.map((option) => (
+                      <label
+                        key={option.id}
+                        className="filter-category-option"
+                      >
+                        <input
+                          type="checkbox"
+                          value={option.id}
+                          checked={selectedCategories.includes(option.id)}
+                          onChange={(event) => {
+                            const checked = event.currentTarget.checked;
+                            setSelectedCategories((current) =>
+                              checked
+                                ? [...current, option.id]
+                                : current.filter(
+                                    (item) => item !== option.id,
+                                  ),
+                            );
+                          }}
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </fieldset>
+      ) : (
+        <p id="filter-category-empty" className="helper filter-category-empty">
+          {m("filterCategoryEmpty")}
+        </p>
+      )}
+      <details id="filter-advanced" className="filter-advanced full">
+        <summary>{m("filterAdvanced")}</summary>
+        <div className="filter-advanced-grid">
+          <Field
+            id="filter-date-from"
+            label={m("startDate")}
+            name="dateFrom"
+            type="date"
+            min={selectedMonthStart}
+            max={selectedMonthEnd}
+            aria-describedby={mobile ? "mobile-filter-error" : "filter-error"}
+            aria-invalid={queryInputState.field === "date"}
+            value={dateFrom}
+            data-empty={dateFrom.length === 0}
+            onChange={(e) => setDateFrom(e.target.value)}
+          />
+          <Field
+            id="filter-date-to"
+            label={m("endDate")}
+            name="dateTo"
+            type="date"
+            min={selectedMonthStart}
+            max={selectedMonthEnd}
+            aria-describedby={mobile ? "mobile-filter-error" : "filter-error"}
+            aria-invalid={queryInputState.field === "date"}
+            value={dateTo}
+            data-empty={dateTo.length === 0}
+            onChange={(e) => setDateTo(e.target.value)}
+          />
+          <Field
+            id="filter-minimum"
+            label={m("minimumAmount")}
+            name="minimum"
+            inputMode="decimal"
+            aria-describedby={mobile ? "mobile-filter-error" : "filter-error"}
+            aria-invalid={queryInputState.field === "amount"}
+            value={minimum}
+            onChange={(e) => setMinimum(e.target.value)}
+          />
+          <Field
+            id="filter-maximum"
+            label={m("maximumAmount")}
+            name="maximum"
+            inputMode="decimal"
+            aria-describedby={mobile ? "mobile-filter-error" : "filter-error"}
+            aria-invalid={queryInputState.field === "amount"}
+            value={maximum}
+            onChange={(e) => setMaximum(e.target.value)}
+          />
+        </div>
+      </details>
+      <Button type="reset" variant="outline">
+        {m("clearFilters")}
+      </Button>
+    </form>
+  );
   return (
     <>
       <section
@@ -1155,14 +1347,12 @@ export function LedgerHome({
         aria-labelledby="page-title"
       >
         <div className="page-heading-copy">
-          <span className="kicker">{m("ledgerKicker")}</span>
           <h1 id="page-title">{m("dashboardTitle")}</h1>
-          {!web && (
+          {!web && getClientSurface() !== "mobile" && (
             <p>
               <span id="workspace-name-label">{workspace.name}</span>
             </p>
           )}
-          <p className="hero-description">{m(ledgerCopyKey)}</p>
         </div>
         <div className="page-heading-actions">
           {!web && (
@@ -1267,9 +1457,8 @@ export function LedgerHome({
         <div className="section-heading">
           <div>
             <h2 id="transactions-title" tabIndex={-1}>
-              {m("recentLedger")}
+              {m(getClientSurface() === "mobile" ? "mobileLedgerTitle" : "recentLedger")}
             </h2>
-            <p>{m("recentLedgerHelp")}</p>
           </div>
           <p id="transaction-count" role="status">
             {filterEvaluation.status === "ready"
@@ -1280,6 +1469,41 @@ export function LedgerHome({
               : m("filterResultsNotUpdated")}
           </p>
         </div>
+        {mobile ? (
+          <>
+            <Button id="filter-details" type="button" variant="outline"
+              className="mobile-filter-trigger" aria-haspopup="dialog"
+              aria-expanded={filterOpen} aria-controls="filter-dialog"
+              onClick={() => setFilterOpen(true)}>
+              <SlidersHorizontal size={18} aria-hidden="true" />
+              {m("filterTransactions")}
+              {hasActiveQuery && <span>{activeFilterCount}</span>}
+            </Button>
+            <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+              <DialogContent active={filterOpen} id="filter-dialog" className="luna-dialog mobile-filter-panel"
+                aria-labelledby="filter-dialog-title" aria-describedby={undefined}
+                onOpenAutoFocus={(event) => {
+                  event.preventDefault();
+                  document.getElementById("close-filter")?.focus({ preventScroll: true });
+                }}
+                onCloseAutoFocus={(event) => {
+                  event.preventDefault();
+                  queueMicrotask(() => document.getElementById("filter-details")?.focus({ preventScroll: true }));
+                }}>
+                <header className="dialog-header">
+                  <DialogTitle id="filter-dialog-title">{m("filterTransactions")}</DialogTitle>
+                  <Button id="close-filter" variant="outline" onClick={() => setFilterOpen(false)}>{m("closeMenu")}</Button>
+                </header>
+                {filterForm}
+                <p id="mobile-filter-error" className="form-alert" role="alert">{error || filterEvaluation.error}</p>
+                <div className="mobile-filter-footer">
+                  <Button type="button" disabled={filterEvaluation.status !== "ready"}
+                    onClick={() => setFilterOpen(false)}>{m("showFilterResults", { count: filtered.length })}</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>
+        ) : (
         <details
           id="filter-details"
           className="filter-disclosure"
@@ -1301,183 +1525,9 @@ export function LedgerHome({
                 : m("filterHint")}
             </span>
           </summary>
-          <form
-            id="filter-form"
-            className="filter-grid"
-            aria-label={m("filterTransactions")}
-            onSubmit={(e) => e.preventDefault()}
-            onReset={() => {
-              setType("all");
-              setQuery("");
-              setSelectedCategories([]);
-              setDateFrom("");
-              setDateTo("");
-              setMinimum("");
-              setMaximum("");
-              setQueryMode("text");
-            }}
-          >
-            <div className="field filter-search-field">
-              <label htmlFor="filter-query">{m("searchLabel")}</label>
-              <div className="filter-search-control">
-                <Input
-                  id="filter-query"
-                  name="query"
-                  aria-describedby="filter-error"
-                  aria-invalid={
-                    queryInputState.field === "query" ||
-                    (regexQueryActive && filterEvaluation.status === "invalid")
-                  }
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-                <Button
-                  id="filter-regex"
-                  type="button"
-                  variant="ghost"
-                  className="filter-regex-toggle"
-                  aria-label={m(
-                    queryMode === "regex" ? "disableRegexSearch" : "enableRegexSearch",
-                  )}
-                  aria-pressed={queryMode === "regex"}
-                  onClick={() =>
-                    setQueryMode((mode) => (mode === "regex" ? "text" : "regex"))
-                  }
-                >
-                  <span aria-hidden="true" className="filter-regex-mark">
-                    .*
-                  </span>
-                  <span className="visually-hidden">{m("searchModeRegex")}</span>
-                </Button>
-              </div>
-            </div>
-            <div className="field filter-type-field">
-              <label htmlFor="filter-type">{m("type")}</label>
-              <select
-                id="filter-type"
-                name="type"
-                value={type}
-                onChange={(e) => setType(e.target.value as typeof type)}
-              >
-                <option value="all">{m("allTransactions")}</option>
-                <option value="income">{m("income")}</option>
-                <option value="expense">{m("spending")}</option>
-              </select>
-            </div>
-            {categoryOptions.length > 0 ? (
-              <fieldset className="filter-category-options full">
-                <legend>{m("categoryMultiSelect")}</legend>
-                <div
-                  id="filter-category-options"
-                  className="filter-category-groups"
-                >
-                  {(["expense", "income", "other"] as const).map((group) => {
-                    const options = categoryOptions.filter(
-                      (option) => option.group === group,
-                    );
-                    if (options.length === 0) return null;
-                    const headingId = `filter-category-group-${group}`;
-                    return (
-                      <div
-                        key={group}
-                        className="filter-category-group"
-                        role="group"
-                        aria-labelledby={headingId}
-                      >
-                        <h3 id={headingId} className="filter-category-group-title">
-                          {filterCategoryGroupLabel(group, m)}
-                        </h3>
-                        <div className="filter-category-list">
-                          {options.map((option) => (
-                            <label
-                              key={option.id}
-                              className="filter-category-option"
-                            >
-                              <input
-                                type="checkbox"
-                                value={option.id}
-                                checked={selectedCategories.includes(option.id)}
-                                onChange={(event) => {
-                                  const checked = event.currentTarget.checked;
-                                  setSelectedCategories((current) =>
-                                    checked
-                                      ? [...current, option.id]
-                                      : current.filter(
-                                          (item) => item !== option.id,
-                                        ),
-                                  );
-                                }}
-                              />
-                              <span>{option.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </fieldset>
-            ) : (
-              <p id="filter-category-empty" className="helper filter-category-empty">
-                {m("filterCategoryEmpty")}
-              </p>
-            )}
-            <details id="filter-advanced" className="filter-advanced full">
-              <summary>{m("filterAdvanced")}</summary>
-              <div className="filter-advanced-grid">
-                <Field
-                  id="filter-date-from"
-                  label={m("startDate")}
-                  name="dateFrom"
-                  type="date"
-                  min={selectedMonthStart}
-                  max={selectedMonthEnd}
-                  aria-describedby="filter-error"
-                  aria-invalid={queryInputState.field === "date"}
-                  value={dateFrom}
-                  data-empty={dateFrom.length === 0}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                />
-                <Field
-                  id="filter-date-to"
-                  label={m("endDate")}
-                  name="dateTo"
-                  type="date"
-                  min={selectedMonthStart}
-                  max={selectedMonthEnd}
-                  aria-describedby="filter-error"
-                  aria-invalid={queryInputState.field === "date"}
-                  value={dateTo}
-                  data-empty={dateTo.length === 0}
-                  onChange={(e) => setDateTo(e.target.value)}
-                />
-                <Field
-                  id="filter-minimum"
-                  label={m("minimumAmount")}
-                  name="minimum"
-                  inputMode="decimal"
-                  aria-describedby="filter-error"
-                  aria-invalid={queryInputState.field === "amount"}
-                  value={minimum}
-                  onChange={(e) => setMinimum(e.target.value)}
-                />
-                <Field
-                  id="filter-maximum"
-                  label={m("maximumAmount")}
-                  name="maximum"
-                  inputMode="decimal"
-                  aria-describedby="filter-error"
-                  aria-invalid={queryInputState.field === "amount"}
-                  value={maximum}
-                  onChange={(e) => setMaximum(e.target.value)}
-                />
-              </div>
-            </details>
-            <Button type="reset" variant="outline">
-              {m("clearFilters")}
-            </Button>
-          </form>
+          {filterForm}
         </details>
+        )}
         {filterChips.length > 0 && (
           <div id="filter-chips" className="filter-chips" aria-label={m("filterTransactions")}>
             {filterChips.map((chip) => (
@@ -1578,7 +1628,7 @@ export function LedgerHome({
                             <div className="transaction-bottomline">
                               <span>{labelCategories(snapshot.categories, tx.splits.map((s) => s.category))}</span>
                               <span className="transaction-secondary-text">
-                                {[tx.paymentMethod, tx.notes]
+                                {[tx.paymentMethod, mobile && tx.notes === title ? "" : tx.notes]
                                   .filter(Boolean)
                                   .join(" · ")}
                               </span>
@@ -1684,7 +1734,7 @@ export function LedgerHome({
             <>
               <header className="dialog-header">
                 <div>
-                  <span className="kicker">{m("recentLedger")}</span>
+                  {!mobile && <span className="kicker">{m("recentLedger")}</span>}
                   <DialogTitle id="transaction-detail-title">
                     {m("transactionDetails")}
                   </DialogTitle>
@@ -1732,12 +1782,12 @@ export function LedgerHome({
                     <dd>{detailTransaction.paymentMethod}</dd>
                   </div>
                 )}
-                <div id="transaction-detail-notes" className="full">
+                {(!mobile || detailTransaction.notes) && <div id="transaction-detail-notes" className="full">
                   <dt>{m("notes")}</dt>
                   <dd className="transaction-detail-notes">
                     {detailTransaction.notes || m("emptyValue")}
                   </dd>
-                </div>
+                </div>}
               </dl>
               {detailTransaction.attachments && detailTransaction.attachments.length > 0 && (
                 <div className="transaction-detail-attachments">
