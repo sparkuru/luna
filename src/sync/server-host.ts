@@ -139,6 +139,8 @@ export class ServerHost implements LunaServerApi {
       } finally {
         this.transitioning--;
         release();
+        // stop() cancels the probe; the last account/profile transition restores it.
+        if (this.transitioning === 0) this.scheduleRemoteProbe();
         this.emit();
       }
     })();
@@ -679,11 +681,31 @@ export class ServerHost implements LunaServerApi {
     const sync = session
       ? await session.getCurrentStatus()
       : await profile.api.getLedgerSyncStatus();
+    const syncState = binding ? sync.code : "local-only";
+    await this.profilesStore.setSyncState?.(id, syncState);
     const settings = await profile.api.getSettings();
     this.syncMode = settings.ledgerSyncMode;
+    const summary = (await this.profilesStore.list()).find(
+      (candidate) => candidate.id === id,
+    );
     const result: ServerStatus = {
       generation,
-      profile: { id, displayName: document?.workspace.name ?? "Luna", binding },
+      profile: {
+        ...(summary ?? {
+          id,
+          displayName: "Luna",
+          storageKind: "sqlite-native",
+          createdAt: null,
+          lastOpenedAt: null,
+          syncState,
+          binding,
+          available: true,
+        }),
+        displayName: document?.workspace.name ?? summary?.displayName ?? "Luna",
+        binding,
+        syncState,
+        available: true,
+      },
       account: a
         ? {
             baseUrl: a.baseUrl,
@@ -813,10 +835,21 @@ export class ServerHost implements LunaServerApi {
       .catch(() => undefined);
     return flight;
   }
+  async createLocalProfile() {
+    if (!this.profilesStore.createLocal)
+      throw new ServerTransportError("unavailable");
+    return this.transition(async () => {
+      const id = decodeProfileId(await this.profilesStore.createLocal!());
+      await this.profilesStore.activate?.(id, this.controller.signal);
+      this.assert(this.controller.signal);
+      this.currentId = id;
+      return this.status();
+    });
+  }
   async selectProfile(id: string) {
     id = decodeProfileId(id);
     return this.transition(async () => {
-      if (!(await this.profiles()).some((p) => p.id === id))
+      if (!(await this.profiles()).some((p) => p.id === id && p.available))
         throw new ServerTransportError("not-found");
       await this.profilesStore.activate?.(id, this.controller.signal);
       this.assert(this.controller.signal);
@@ -940,7 +973,7 @@ export class ServerHost implements LunaServerApi {
         userId: a.id,
         ledgerId,
       };
-      const destination = await this.profilesStore.open(destinationId);
+      const destination = await this.profilesStore.open(destinationId, true);
       const oldBinding = await destination.binding();
       if (
         oldBinding &&

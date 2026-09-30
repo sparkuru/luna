@@ -58,6 +58,10 @@ test(
       return response;
     };
     const host = new ServerHost(profiles, fetcher);
+    const committed = deferred(),
+      receipt = deferred(),
+      writing = deferred(),
+      finish = deferred();
     try {
       const old = host.login({
         baseUrl,
@@ -109,8 +113,6 @@ test(
       const updateSettings = localBeforeExpiry.api.updateSettings.bind(
         localBeforeExpiry.api,
       );
-      const committed = deferred(),
-        receipt = deferred();
       localBeforeExpiry.api.updateSettings = async (input) => {
         const result = await updateSettings(input);
         committed.resolve();
@@ -129,11 +131,9 @@ test(
       );
       localBeforeExpiry.api.updateSettings = updateSettings;
       const targetId = serverProfileId(randomUUID(), randomUUID());
-      await profiles.open(targetId);
+      await profiles.open(targetId, true);
       const local = await profiles.open("legacy-local");
       const originalCreate = local.api.createWorkspace.bind(local.api);
-      const writing = deferred(),
-        finish = deferred();
       local.api.createWorkspace = async (input) => {
         writing.resolve();
         await finish.promise;
@@ -160,8 +160,9 @@ test(
     } finally {
       release.resolve();
       releaseUnauthorized.resolve();
-      await host.logout();
-      await profiles.closeAll();
+      receipt.resolve();
+      finish.resolve();
+      await host.dispose();
       await app.close();
       database.close();
     }

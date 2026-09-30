@@ -1,5 +1,5 @@
 import { atomicWritePrivateFile } from "./atomic-file";
-import { mkdir, readdir, readFile, rm } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { SQLiteLocalStore } from "./store";
@@ -14,10 +14,20 @@ import { createNativeLedgerApi } from "./local-api";
 import { ServerHost } from "../sync/server-host";
 import type { LocalProfile, ProfileRepository } from "../sync/profile-port";
 import { decodeProfileId, type ProfileSummary } from "../shared/server-api";
+import {
+  decodeLocalLedgerCatalog,
+  defaultLocalLedgerEntry,
+  encodeLocalLedgerCatalog,
+  replaceLocalLedgerEntry,
+  type LocalLedgerCatalog,
+  type LocalLedgerCatalogEntry,
+  type LocalLedgerSyncState,
+} from "../shared/local-ledger";
 
 export class NativeProfiles implements ProfileRepository {
   private readonly instances = new Map<string, Promise<LocalProfile>>();
   private readonly historyPath: string;
+  private readonly storageKind = "sqlite-native" as const;
   constructor(
     private readonly directory: string,
     private readonly legacyStore: SQLiteLocalStore,
@@ -26,8 +36,17 @@ export class NativeProfiles implements ProfileRepository {
   ) {
     this.historyPath = path.join(directory, "profile-history.json");
   }
-  async open(value: string): Promise<LocalProfile> {
+  async open(value: string, createIfMissing = false): Promise<LocalProfile> {
     const id = decodeProfileId(value);
+    if (id !== "legacy-local" && !createIfMissing) {
+      try {
+        await stat(path.join(this.directory, "profiles", id, "luna.sqlite"));
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT")
+          throw new Error("LUNA_ERROR:server-not-found");
+        throw error;
+      }
+    }
     let result = this.instances.get(id);
     if (!result) {
       result = this.create(id);
@@ -57,7 +76,7 @@ export class NativeProfiles implements ProfileRepository {
       );
     }
     const api = createNativeLedgerApi(store, config);
-    return {
+    const profile: LocalProfile = {
       id,
       api,
       ledger: store,
@@ -75,8 +94,15 @@ export class NativeProfiles implements ProfileRepository {
         }
       },
       binding: async () => store.getProfileBinding(),
-      bind: async (document, binding, signal) =>
-        store.bindProfile(document, binding, signal),
+      bind: async (document, binding, signal) => {
+        await store.bindProfile(document, binding, signal);
+        await this.updateCatalogEntry({
+          id,
+          displayName: document.workspace.name,
+          binding,
+          syncState: "ready",
+        });
+      },
       close: async () => {
         await api.clearLedgerSync();
         config.cancelSession();
@@ -84,6 +110,8 @@ export class NativeProfiles implements ProfileRepository {
         this.instances.delete(id);
       },
     };
+    if (id !== "legacy-local") await this.updateCatalogEntry({ id });
+    return profile;
   }
   async active(): Promise<string> {
     try {
@@ -103,15 +131,24 @@ export class NativeProfiles implements ProfileRepository {
   }
   async activate(id: string, signal: AbortSignal): Promise<void> {
     const valid = decodeProfileId(id);
+    const catalog = await this.readCatalog();
+    const existing = catalog.entries.find((entry) => entry.id === valid);
+    if (valid !== "legacy-local" && !existing)
+      throw new Error("LUNA_ERROR:server-not-found");
+    const next = {
+      ...catalog,
+      entries: replaceLocalLedgerEntry(
+        catalog.entries,
+        {
+          ...(existing ?? defaultLocalLedgerEntry(valid, this.storageKind)),
+          lastOpenedAt: new Date().toISOString(),
+        },
+      ),
+    };
+    await this.writeCatalog(next);
     await atomicWritePrivateFile(
       path.join(this.directory, "active-profile.json"),
       JSON.stringify(valid),
-      signal,
-    );
-    const history = await this.history();
-    await atomicWritePrivateFile(
-      this.historyPath,
-      JSON.stringify([valid, ...history.filter((candidate) => candidate !== valid)].slice(0, 20)),
       signal,
     );
   }
@@ -131,10 +168,8 @@ export class NativeProfiles implements ProfileRepository {
         throw new Error("LUNA_ERROR:server-not-found");
       throw error;
     }
-    const history = await this.history();
-    await atomicWritePrivateFile(
-      this.historyPath,
-      JSON.stringify(history.filter((candidate) => candidate !== id)),
+    await this.updateCatalog((entries) =>
+      entries.filter((candidate) => candidate.id !== id),
     );
   }
   async closeAll(): Promise<void> {
@@ -148,53 +183,132 @@ export class NativeProfiles implements ProfileRepository {
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     }
-    const available = [
-      "legacy-local",
-      ...names.filter((name) => {
+    const profileNames = names.filter((name) => {
+      try {
+        return decodeProfileId(name) !== "legacy-local";
+      } catch {
+        return false;
+      }
+    });
+    const profileAvailability = await Promise.all(
+      profileNames.map(async (name) => {
         try {
-          return decodeProfileId(name) !== "legacy-local";
-        } catch {
-          return false;
+          await stat(path.join(this.directory, "profiles", name, "luna.sqlite"));
+          return name;
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+          throw error;
         }
       }),
-    ];
-    const history = await this.history();
-    const ids = [...history, ...available].filter(
-      (id, index, values) =>
-        available.includes(id) && values.indexOf(id) === index,
     );
-    const result: ProfileSummary[] = [];
-    for (const id of ids) {
-      const p = await this.open(id);
-      result.push({
-        id,
-        displayName:
-          (await p.ledger.getLedgerDocument())?.workspace.name ?? "Luna",
-        binding: await p.binding(),
-      });
+    const available = [
+      "legacy-local",
+      ...profileAvailability.filter((name): name is string => name !== null),
+    ];
+    const active = await this.active();
+    let catalog = await this.readCatalog();
+    const original = encodeLocalLedgerCatalog(catalog);
+    for (const id of available) {
+      if (!catalog.entries.some((entry) => entry.id === id)) {
+        catalog = {
+          ...catalog,
+          entries: replaceLocalLedgerEntry(
+            catalog.entries,
+            defaultLocalLedgerEntry(id, this.storageKind, null),
+          ),
+        };
+      }
     }
-    return result;
+
+    // Only inspect the selected database. Inactive catalog rows are metadata;
+    // listing them must not open or initialize their SQLite files.
+    if (available.includes(active)) {
+      const selected = await this.open(active);
+      const document = await selected.ledger.getLedgerDocument();
+      const binding = await selected.binding();
+      const sync = await selected.api.getLedgerSyncStatus();
+      const current = catalog.entries.find((entry) => entry.id === active)!;
+      catalog = {
+        ...catalog,
+        entries: replaceLocalLedgerEntry(catalog.entries, {
+          ...current,
+          displayName: document?.workspace.name ?? current.displayName,
+          storageKind: this.storageKind,
+          lastOpenedAt: current.lastOpenedAt ?? new Date().toISOString(),
+          syncState: binding ? sync.code : "local-only",
+          binding,
+        }),
+      };
+    }
+    if (encodeLocalLedgerCatalog(catalog) !== original)
+      await this.writeCatalog(catalog);
+    const availableSet = new Set(available);
+    return [...catalog.entries]
+      .sort((left, right) =>
+        (right.lastOpenedAt ?? "").localeCompare(left.lastOpenedAt ?? ""),
+      )
+      .map((entry) => ({ ...entry, available: availableSet.has(entry.id) }));
   }
 
-  private async history(): Promise<string[]> {
+  async createLocal(): Promise<string> {
+    const id = `local-${randomUUID()}`;
+    const directory = path.join(this.directory, "profiles", id);
+    await mkdir(directory, { recursive: true, mode: 0o700 });
+    await this.updateCatalogEntry({ id });
+    await this.open(id, true);
+    return id;
+  }
+  async setSyncState(id: string, syncState: LocalLedgerSyncState): Promise<void> {
+    const current = (await this.readCatalog()).entries.find(
+      (entry) => entry.id === decodeProfileId(id),
+    );
+    if (current?.syncState === syncState) return;
+    await this.updateCatalogEntry({ id, syncState });
+  }
+
+  private async readCatalog(): Promise<LocalLedgerCatalog> {
     try {
-      const value: unknown = JSON.parse(await readFile(this.historyPath, "utf8"));
-      if (!Array.isArray(value)) return [];
-      return value
-        .filter((id): id is string => typeof id === "string")
-        .map((id) => {
-          try {
-            return decodeProfileId(id);
-          } catch {
-            return null;
-          }
-        })
-        .filter((id): id is string => id !== null)
-        .slice(0, 20);
+      return decodeLocalLedgerCatalog(
+        await readFile(this.historyPath, "utf8"),
+        this.storageKind,
+      );
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-      return [];
+      if ((error as NodeJS.ErrnoException).code === "ENOENT")
+        return { version: 1, entries: [] };
+      throw error;
     }
+  }
+  private async updateCatalog(
+    change: (entries: LocalLedgerCatalogEntry[]) => LocalLedgerCatalogEntry[],
+  ): Promise<LocalLedgerCatalog> {
+    const catalog = await this.readCatalog();
+    const next = { version: 1 as const, entries: change(catalog.entries) };
+    if (encodeLocalLedgerCatalog(next) === encodeLocalLedgerCatalog(catalog))
+      return catalog;
+    await this.writeCatalog(next);
+    return next;
+  }
+  private async updateCatalogEntry(
+    update: Partial<LocalLedgerCatalogEntry> & { id: string },
+  ): Promise<void> {
+    const id = decodeProfileId(update.id);
+    await this.updateCatalog((entries) => {
+      const current =
+        entries.find((entry) => entry.id === id) ??
+        defaultLocalLedgerEntry(id, this.storageKind);
+      return replaceLocalLedgerEntry(entries, {
+        ...current,
+        ...update,
+        id,
+        storageKind: this.storageKind,
+      });
+    });
+  }
+  private async writeCatalog(catalog: LocalLedgerCatalog): Promise<void> {
+    await atomicWritePrivateFile(
+      this.historyPath,
+      encodeLocalLedgerCatalog(catalog),
+    );
   }
 }
 export function createNativeProfileHost(

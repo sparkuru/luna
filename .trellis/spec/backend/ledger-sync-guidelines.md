@@ -313,7 +313,11 @@ IndexedDB, SQLite or a file, and it must not survive closing the browser tab.
 
 `ServerHost.checkRemoteNow()` performs one marker probe. While a Web host is
 alive it schedules a five-second foreground-friendly probe; `setNotifications`
-may add cross-tab invalidation but is not required for the probe to run.
+attaches optional cross-tab invalidation and starts that host-owned probe even
+with a no-op transport. Session restoration also starts it. Account/profile
+transitions cancel timers through `stop()`; the last transition's `finally`
+must restart `scheduleRemoteProbe()` after `transitioning` reaches zero.
+`scheduleRemoteProbe()` refuses duplicate timers and disposed hosts.
 
 ### 3. Contracts
 
@@ -333,9 +337,12 @@ may add cross-tab invalidation but is not required for the probe to run.
 - After any successful sync or committed local mutation, the renderer refreshes
   its current profile snapshot/settings/status. Refreshing must not replay a
   committed write or replace an active form draft.
-- The sync status and an action that opens `/settings/sync` are visible from
-  the main shell. Mobile layout must keep these controls within the viewport,
-  with touch targets of at least 44 CSS pixels and accessible labels.
+- Sync status, mode and recovery actions belong to `/settings/sync`, reachable
+  from Settings. The primary shell has no persistent sync card, login/unlock
+  reminder or sync button. Automatic configured/unlocked sessions must continue
+  uploading local writes and pulling marker changes without opening settings;
+  explicit manual mode stays manual. This is active-host scheduling, not a
+  native service running after process termination.
 - WebSocket is optional, not a correctness dependency. The server marker poll
   is the baseline because it works through ordinary HTTPS/API deployments and
   keeps server push state out of the encrypted ledger protocol.
@@ -350,6 +357,7 @@ may add cross-tab invalidation but is not required for the probe to run.
 | Marker changes in manual mode | Set `remoteChangeAvailable`; do not call body GET until explicit sync |
 | Sync returns `pending`/failure/cancelled | Keep local graph and pending warning; do not acknowledge the marker as synced |
 | Host disposed | Cancel probe/sync timers and do not reschedule them |
+| Last login/connect/unlock/profile transition exits | Restart host probe after cancelled timers; no duplicate probe or renderer dependency |
 | Current account receives 401 after profile transitions | Invalidate that account by object identity; an older account response cannot invalidate its replacement |
 
 ### 5. Good/Base/Bad Cases
@@ -365,8 +373,18 @@ WebSocket connection the only way to discover a changed object.
 `src/web/profile-host.test.ts` must cover volatile session restoration and a
 manual marker change. Server API tests must assert the status response fields,
 authorization and no encrypted body. `tests/server-sync/*.test.ts` must retain
-the post-transition 401 invalidation regression. Browser Playwright must cover
+the post-transition 401 invalidation regression.
+`tests/server-sync/remote-probe.test.ts` must initialize notifications, connect
+two independent hosts, write on one and await automatic upload plus periodic
+pull/committed change notification on the other, without calling `sync()` or
+`checkRemoteNow()` after the write. Browser Playwright must cover
 normal reload without a second login/unlock and narrow-viewport overflow. A
+connectivity/foreground regression must keep `/luna` mounted with Sync settings
+absent: offline local write then real network recovery uploads automatically;
+after a failed upload with unchanged remote marker, a controlled visible-document
+`visibilitychange` event recovers the pending write. Compare decrypted remote
+object to local state; do not call manual sync/probe APIs. This controlled
+browser event is not evidence of Android Activity background/foreground behavior. A
 manual two-device check should record the Android upload, Web marker/sync status,
 and the resulting refreshed transaction list.
 

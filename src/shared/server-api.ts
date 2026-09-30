@@ -1,5 +1,6 @@
 import type { LedgerSessionStatus } from "./ledger-session";
 import type { LedgerSyncMode } from "./settings";
+import type { LocalLedgerCatalogEntry } from "./local-ledger";
 
 export interface ServerBinding {
   instanceId: string;
@@ -7,10 +8,8 @@ export interface ServerBinding {
   ledgerId: string;
   baseUrl: string;
 }
-export interface ProfileSummary {
-  id: string;
-  displayName: string;
-  binding: ServerBinding | null;
+export interface ProfileSummary extends LocalLedgerCatalogEntry {
+  available: boolean;
 }
 export interface ServerCapabilityLimits {
   ledgerBytes: number;
@@ -132,6 +131,7 @@ export interface LunaServerApi {
   login(input: ServerLoginInput): Promise<ServerStatus>;
   logout(): Promise<ServerStatus>;
   profiles(): Promise<ProfileSummary[]>;
+  createLocalProfile(): Promise<ServerStatus>;
   selectProfile(id: string): Promise<ServerStatus>;
   removeProfile(id: string): Promise<ServerStatus>;
   connect(input: ServerConnectInput): Promise<ServerStatus>;
@@ -196,6 +196,8 @@ export function serverProfileId(instanceId: string, userId: string): string {
 }
 export function decodeProfileId(value: unknown): string {
   if (value === "legacy-local") return value;
+  if (typeof value === "string" && value.startsWith("local-"))
+    return `local-${decodeServerId(value.slice(6))}`;
   if (
     typeof value !== "string" ||
     !/^server-[0-9a-f-]{36}-[0-9a-f-]{36}$/.test(value)

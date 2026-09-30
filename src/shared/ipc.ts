@@ -4,6 +4,7 @@ export const IPC_CHANNELS = {
   serverLogin: "luna:server-login",
   serverLogout: "luna:server-logout",
   serverProfiles: "luna:server-profiles",
+  serverCreateLocalProfile: "luna:server-createlocalprofile",
   serverSelectProfile: "luna:server-selectprofile",
   serverRemoveProfile: "luna:server-removeprofile",
   serverConnect: "luna:server-connect",

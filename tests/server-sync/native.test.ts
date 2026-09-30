@@ -127,7 +127,7 @@ test("native local copy removal deletes only an inactive profile directory", asy
   const host = new ServerHost(repository);
   const id = serverProfileId(randomUUID(), randomUUID());
   try {
-    await repository.open(id);
+    await repository.open(id, true);
     assert.ok(
       (await readdir(path.join(directory, "profiles", id))).length >= 1,
     );

@@ -38,7 +38,7 @@ class MemoryStorage implements Storage {
 }
 
 test(
-  "an active host pulls a remote device change and emits after the local view is committed",
+  "active hosts automatically publish and pull changes without renderer sync actions",
   { timeout: 90_000 },
   async () => {
     const database = await openTestDatabase();
@@ -53,6 +53,9 @@ test(
     const secondProfiles = new BrowserProfiles(new IDBFactory(), new MemoryStorage());
     const first = new ServerHost(firstProfiles);
     const second = new ServerHost(secondProfiles);
+    // Production hosts start periodic probes when attaching transport notifications.
+    first.setNotifications(() => undefined, () => undefined);
+    second.setNotifications(() => undefined, () => undefined);
     const login = {
       baseUrl,
       username,
@@ -86,9 +89,6 @@ test(
         allowLocalOnlyMigration: false,
       });
 
-      await second.api.createTransaction(draft);
-      await second.sync();
-
       let emittedAfterCommit = false;
       let resolveChange!: () => void;
       const change = new Promise<void>((resolve) => {
@@ -108,11 +108,29 @@ test(
           }
         });
       });
-      await first.checkRemoteNow();
+
+      const senderStatus = await second.status();
+      assert.equal(senderStatus.syncMode, "automatic");
+      assert.ok(senderStatus.profile.binding);
+      const objectKey = `ledger/${senderStatus.profile.binding.ledgerId}/v1.enc.json`;
+      const beforeUpload = await objectStore.get(objectKey);
+      assert.ok(beforeUpload);
+      await second.api.createTransaction(draft);
+      const uploadDeadline = Date.now() + 5_000;
+      while (
+        (await objectStore.get(objectKey))?.etag === beforeUpload.etag &&
+        Date.now() < uploadDeadline
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      const afterUpload = await objectStore.get(objectKey);
+      assert.ok(afterUpload);
+      assert.notEqual(afterUpload.etag, beforeUpload.etag, "Automatic local-write sync must publish a new remote object.");
+
       await Promise.race([
         change,
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("remote probe timeout")), 5_000),
+          setTimeout(() => reject(new Error("automatic remote probe timeout")), 10_000),
         ),
       ]);
       assert.equal(emittedAfterCommit, true);

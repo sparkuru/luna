@@ -24,6 +24,8 @@ const api: LunaLedgerApi = {
     login: (input) => ipcRenderer.invoke(IPC_CHANNELS.serverLogin, input),
     logout: () => ipcRenderer.invoke(IPC_CHANNELS.serverLogout),
     profiles: () => ipcRenderer.invoke(IPC_CHANNELS.serverProfiles),
+    createLocalProfile: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.serverCreateLocalProfile),
     selectProfile: (id) =>
       ipcRenderer.invoke(IPC_CHANNELS.serverSelectProfile, id),
     removeProfile: (id) =>

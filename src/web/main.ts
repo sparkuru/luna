@@ -46,11 +46,13 @@ if (import.meta.env.PROD) {
   const element = document.getElementById("offline-status");
   const renderStatus = (): void => {
     if (element === null) return;
-    element.hidden = false;
-    element.textContent = t(
+    const visible = status !== "offlineReady";
+    element.hidden = !visible;
+    if (element.parentElement) element.parentElement.hidden = !visible;
+    element.textContent = visible ? t(
       document.documentElement.lang === "en" ? "en" : "zh-CN",
       status,
-    );
+    ) : "";
   };
   const updateStatus = (ready: boolean): void => {
     status = ready ? "offlineReady" : "offlineUnavailable";

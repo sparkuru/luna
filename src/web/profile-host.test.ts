@@ -60,7 +60,7 @@ class MemorySessionVault implements SessionVault {
 test("IDB graph and binding commit together; metadata abort rolls back both", async () => {
   const database = new IDBFactory();
   const profiles = new BrowserProfiles(database, storage);
-  const profile = await profiles.open(serverProfileId(instanceId, userId));
+  const profile = await profiles.open(serverProfileId(instanceId, userId), true);
   const controller = new AbortController();
   const original = IDBObjectStore.prototype.put;
   IDBObjectStore.prototype.put = function (value: unknown, key?: IDBValidKey) {
@@ -107,7 +107,7 @@ test("deleting a local copy removes its catalog entry and never deletes the acti
     monthlyBudgetMinor: null,
   });
   const original = await (await profiles.open("legacy-local")).ledger.getLedgerDocument();
-  const copy = await profiles.open(id);
+  const copy = await profiles.open(id, true);
   await copy.bind(document(), binding, new AbortController().signal);
   assert.ok((await profiles.list()).some((profile) => profile.id === id));
   await assert.rejects(host.removeProfile("legacy-local"), /active-profile/);
@@ -121,11 +121,92 @@ test("deleting a local copy removes its catalog entry and never deletes the acti
   await host.dispose();
 });
 
+test("new local ledger starts empty and stays isolated from the original copy", async () => {
+  const profiles = new BrowserProfiles(new IDBFactory(), storage);
+  const host = new ServerHost(profiles);
+  try {
+    await host.api.createWorkspace({
+      name: "Original household",
+      currency: "CNY",
+      precision: 2,
+      monthlyBudgetMinor: null,
+    });
+    const original = await (await profiles.open("legacy-local")).ledger.getLedgerDocument();
+
+    const created = await host.createLocalProfile();
+    const id = created.profile.id;
+    assert.match(id, /^local-[0-9a-f]{8}-[0-9a-f-]{27}$/i);
+    assert.equal((await host.api.getSnapshot("2026-09")).workspace, null);
+    const entry = (await host.profiles()).find((profile) => profile.id === id);
+    assert.equal(entry?.storageKind, "indexeddb-compat");
+    assert.ok(entry?.createdAt);
+    assert.ok(entry?.lastOpenedAt);
+
+    await host.api.createWorkspace({
+      name: "Separate household",
+      currency: "CNY",
+      precision: 2,
+      monthlyBudgetMinor: null,
+    });
+    await host.selectProfile("legacy-local");
+    assert.deepEqual(
+      await (await profiles.open("legacy-local")).ledger.getLedgerDocument(),
+      original,
+    );
+    assert.equal(
+      (await (await profiles.open(id)).ledger.getLedgerDocument())?.workspace.name,
+      "Separate household",
+    );
+  } finally {
+    await host.dispose();
+  }
+});
+
+test("listing leaves an inactive ledger unopened", async () => {
+  const profiles = new BrowserProfiles(new IDBFactory(), storage);
+  const inactiveId = await profiles.createLocal();
+  const opened: string[] = [];
+  const originalOpen = profiles.open.bind(profiles);
+  profiles.open = async (id: string) => {
+    opened.push(id);
+    return originalOpen(id);
+  };
+
+  const entries = await profiles.list();
+  assert.deepEqual(opened, ["legacy-local"]);
+  assert.ok(entries.some((entry) => entry.id === inactiveId));
+  assert.ok(entries.every((entry) => entry.storageKind === "indexeddb-compat"));
+});
+
+test("missing inactive browser database stays unavailable and is never recreated by selection", async () => {
+  const database = new IDBFactory();
+  const profiles = new BrowserProfiles(database, storage);
+  const id = await profiles.createLocal();
+  await (await profiles.open(id)).close();
+  await new Promise<void>((resolve, reject) => {
+    const request = database.deleteDatabase(`luna-ledger-${id}`);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+
+  const entries = await profiles.list();
+  assert.equal(entries.find((entry) => entry.id === id)?.available, false);
+  await assert.rejects(profiles.open(id), /server-not-found/);
+  const host = new ServerHost(profiles);
+  try {
+    await assert.rejects(host.selectProfile(id), /not-found/);
+    const databases = await database.databases();
+    assert.ok(!databases.some((entry) => entry.name === `luna-ledger-${id}`));
+  } finally {
+    await host.dispose();
+  }
+});
+
 test("late backup decrypt cannot import into either profile after switching", async () => {
   const profiles = new BrowserProfiles(new IDBFactory(), storage);
   const host = new ServerHost(profiles);
   const id = serverProfileId(instanceId, userId);
-  await profiles.open(id);
+  await profiles.open(id, true);
   const raw = await encryptLedgerDocument(
     document(),
     "backup-fixture-passphrase",
@@ -275,7 +356,7 @@ test("web host restores its volatile session and detects a remote marker in manu
   const database = new IDBFactory();
   const profiles = new BrowserProfiles(database, storage);
   const id = serverProfileId(instanceId, userId);
-  const profile = await profiles.open(id);
+  const profile = await profiles.open(id, true);
   await profile.bind(document(), binding, new AbortController().signal);
   await profile.api.updateSettings({ ledgerSyncMode: "manual" });
   await profiles.activate(id, new AbortController().signal);

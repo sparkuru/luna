@@ -110,6 +110,7 @@ test(
     };
     const first = new ServerHost(profiles1, fetcher),
       second = new ServerHost(profiles2);
+    const hosts = [first, second];
     const login = {
       baseUrl,
       username,
@@ -185,6 +186,7 @@ test(
         new MemoryStorage(),
       );
       const other = new ServerHost(otherProfiles);
+      hosts.push(other);
       await other.api.createWorkspace({
         name: "Different workspace",
         currency: "CNY",
@@ -208,7 +210,6 @@ test(
         serverBefore,
       );
       await other.logout();
-      await other.dispose();
       await first.disconnect();
       await second.disconnect();
       const heads1 = (await first.api.getSnapshot("2026-09")).budgetHeadIds,
@@ -298,6 +299,7 @@ test(
         ),
       );
       const restarted = new ServerHost(new BrowserProfiles(db1, storage1));
+      hosts.push(restarted);
       assert.equal((await restarted.status()).account, null);
       assert.equal((await restarted.status()).profile.id, profileId);
       await restarted.selectProfile(profileId);
@@ -311,8 +313,7 @@ test(
         original,
       );
     } finally {
-      await first.logout();
-      await second.logout();
+      await Promise.all(hosts.map((host) => host.dispose()));
       await app.close();
       database.close();
     }
