@@ -8,6 +8,7 @@
 - [x] Probe the physical AIO-3568J Android 11 storage capability; record the HTTPS and IndexedDB fallback scope.
 - [x] Run the physical Android A03 SAF/DocumentsUI export, cancellation, wrong-password, and fresh-profile restore harness; record sanitized evidence.
 - [x] Preserve the physical Android A04 route geometry, touch-target, and DocumentsUI/BACK baseline; keep TalkBack and hardware keyboard claims manual.
+- [x] Run serial local browser acceptance for encrypted sync, offline storage, keyboard/focus, and mobile layout; record the browser-only scope.
 
 ## Manual acceptance sequence
 

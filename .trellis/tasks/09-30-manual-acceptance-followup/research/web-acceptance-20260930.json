@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-30",
+  "result": "passed",
+  "environment": {
+    "browser": "Chrome",
+    "runner": "Playwright",
+    "fixtures": "synthetic ledger, credentials, object store, and image bytes",
+    "execution": "serial worker where sync scenarios share the local web server"
+  },
+  "runs": [
+    {
+      "suite": "tests/e2e/ledger-sync.spec.ts",
+      "result": "5 passed",
+      "coverage": "encrypted two-client merge, offline edit/delete conflict, convergence, image object restart, restore/tamper/403 negatives, and stale budget draft"
+    },
+    {
+      "suite": "tests/e2e/offline-and-storage.spec.ts",
+      "result": "5 passed",
+      "mode": "production web bundle with service worker"
+    },
+    {
+      "suite": "tests/e2e/offline-and-storage.spec.ts",
+      "result": "3 passed, 2 production-only skipped",
+      "mode": "development web server"
+    },
+    {
+      "suite": "tests/e2e/accessibility.spec.ts + android-entry-layout.spec.ts",
+      "result": "3 passed",
+      "coverage": "keyboard focus, reduced motion, 457px/2x containment, mobile calculator and reachable controls"
+    }
+  ],
+  "scope": "These are browser-context and synthetic-fixture results. They do not replace two physical devices, Android TalkBack, vendor IME, system BACK, or a durable deployment. A mixed parallel run once hit a transient page-navigation race; the affected sync suite passed in serial reruns."
+}
