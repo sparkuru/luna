@@ -10,6 +10,7 @@ import { atomicWritePrivateFile, pathExists } from './atomic-file';
 
 const SECRET_FILE_SCHEMA_VERSION = 1;
 const MAX_SECRET_FILE_BYTES = 64 * 1024;
+const SAFE_STORAGE_PROBE_TIMEOUT_MS = 2_000;
 
 interface SecretFileV1 {
   schemaVersion: typeof SECRET_FILE_SCHEMA_VERSION;
@@ -23,22 +24,40 @@ export interface SecretProtector {
 }
 
 export class ElectronSafeStorageProtector implements SecretProtector {
+  private persistenceResult: Promise<SecretPersistence> | null = null;
+
   constructor(
     private readonly storage: SafeStorage,
     private readonly platform = process.platform,
+    private readonly probeTimeoutMs = SAFE_STORAGE_PROBE_TIMEOUT_MS,
   ) {}
 
-  async persistence(): Promise<SecretPersistence> {
+  persistence(): Promise<SecretPersistence> {
+    this.persistenceResult ??= this.detectPersistence();
+    return this.persistenceResult;
+  }
+
+  private async detectPersistence(): Promise<SecretPersistence> {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
-      const available = await this.storage.isAsyncEncryptionAvailable();
-      if (!available) return 'unavailable';
-      if (this.platform === 'linux' && this.storage.getSelectedStorageBackend() === 'basic_text') {
-        return 'unavailable';
-      }
+      const backend = this.platform === 'linux'
+        ? this.storage.getSelectedStorageBackend()
+        : undefined;
+      if (backend === 'basic_text') return 'unavailable';
+
+      const available = await Promise.race([
+        this.storage.isAsyncEncryptionAvailable(),
+        new Promise<null>((resolve) => {
+          timeout = setTimeout(() => resolve(null), this.probeTimeoutMs);
+        }),
+      ]);
+      if (available !== true) return 'unavailable';
+      return 'secure';
     } catch {
       return 'unavailable';
+    } finally {
+      if (timeout !== undefined) clearTimeout(timeout);
     }
-    return 'secure';
   }
 
   async protect(plaintext: string): Promise<Buffer> {

@@ -351,6 +351,7 @@ function isLocalRendererUrl(url: string): boolean {
  */
 async function runPackagedStorageSmoke(): Promise<void> {
   let store: SQLiteLocalStore | null = null;
+  let smokeStage = "initialize storage";
   try {
     store = createLocalStore();
     const now = "2026-08-30T12:00:00.000Z";
@@ -407,10 +408,13 @@ async function runPackagedStorageSmoke(): Promise<void> {
     handlersRegistered = true;
     mainWindow = createMainWindow();
     await waitForMainWindowLoad(mainWindow);
+    smokeStage = "exercise renderer and IPC";
     const bridgeResult = (await mainWindow.webContents.executeJavaScript(
       `(async () => {
+        let rendererStep = 'mount-renderer';
+        try {
         const waitFor = async (selector) => {
-          for (let attempt = 0; attempt < 100; attempt += 1) {
+          for (let attempt = 0; attempt < 500; attempt += 1) {
             const element = document.querySelector(selector);
             if (element !== null) return element;
             await new Promise((resolve) => setTimeout(resolve, 20));
@@ -425,21 +429,83 @@ async function runPackagedStorageSmoke(): Promise<void> {
           field.dispatchEvent(new Event('change', { bubbles: true }));
           await new Promise((resolve) => setTimeout(resolve, 50));
         };
+        await waitFor('#app > *');
+        rendererStep = 'read-seeded-workspace';
+        const seededSnapshot = await window.lunaLedger.getSnapshot('2026-08');
+        if (seededSnapshot.workspace === null) throw new Error('seeded workspace is missing');
+        rendererStep = 'load-profile-host-status';
+        const profileHost = window.lunaLedger.server;
+        if (profileHost === undefined) {
+          rendererStep = 'profile-host-api-missing';
+          throw new Error('profile host is missing');
+        }
+        rendererStep = 'probe-renderer-settings';
+        const settingsProbe = await Promise.race([
+          window.lunaLedger.getSettings(),
+          new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
+        ]);
+        if (settingsProbe === null) {
+          rendererStep = 'renderer-settings-timeout';
+          throw new Error('renderer settings probe timed out');
+        }
+        rendererStep = 'probe-ledger-status';
+        const ledgerStatusProbe = await Promise.race([
+          window.lunaLedger.getLedgerSyncStatus(),
+          new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
+        ]);
+        if (ledgerStatusProbe === null) {
+          rendererStep = 'ledger-status-timeout';
+          throw new Error('ledger status probe timed out');
+        }
+        rendererStep = 'probe-profile-list';
+        const profileListProbe = await Promise.race([
+          profileHost.profiles(),
+          new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
+        ]);
+        if (profileListProbe === null) {
+          rendererStep = 'profile-list-timeout';
+          throw new Error('profile list probe timed out');
+        }
+        rendererStep = 'load-profile-host-status';
+        let hostStatus;
+        try {
+          hostStatus = await Promise.race([
+            profileHost.status(),
+            new Promise((resolve) => setTimeout(() => resolve(null), 10000)),
+          ]);
+        } catch {
+          rendererStep = 'profile-host-status-error';
+          throw new Error('profile host status failed');
+        }
+        if (hostStatus === null) {
+          rendererStep = 'profile-host-status-timeout';
+          throw new Error('profile host status timed out');
+        }
+        rendererStep = 'open-ledger';
+        location.hash = '/luna';
+        rendererStep = 'load-ledger';
         await waitFor('#month-picker');
+        rendererStep = 'open-preferences';
         location.hash = '/settings/preferences';
+        rendererStep = 'load-preferences';
         await waitFor('#settings-language');
         const language = document.querySelector('#settings-language');
         if (!(language instanceof HTMLSelectElement)) throw new Error('language setting is missing');
+        rendererStep = 'set-locale';
         await setValue(language, 'zh-CN');
+        rendererStep = 'apply-locale';
         for (let attempt = 0; attempt < 100; attempt += 1) {
           const currentSettings = await window.lunaLedger.getSettings();
           if (currentSettings.locale === 'zh-CN' && document.documentElement.lang === 'zh-CN') break;
           await new Promise((resolve) => setTimeout(resolve, 20));
         }
+        rendererStep = 'return-to-ledger';
         location.hash = '/luna';
+        rendererStep = 'select-month';
         const monthPicker = await waitFor('#month-picker');
         if (!(monthPicker instanceof HTMLInputElement)) throw new Error('month picker is missing');
         await setValue(monthPicker, '2026-08');
+        rendererStep = 'seed-transaction';
         const transaction = await window.lunaLedger.createTransaction({
         type: 'expense',
         amountMinor: '375',
@@ -449,9 +515,17 @@ async function runPackagedStorageSmoke(): Promise<void> {
         paymentMethod: 'Test',
         notes: 'Packaged IPC verification'
       });
-        document.querySelector('#record-income').click();
+        rendererStep = 'open-transaction-form';
+        const primaryRecord = await waitFor('#primary-record:not(:disabled)');
+        if (!(primaryRecord instanceof HTMLButtonElement)) throw new Error('primary record action is missing');
+        primaryRecord.click();
+        rendererStep = 'load-transaction-form';
         const form = await waitFor('form#transaction-form');
         if (!(form instanceof HTMLFormElement)) throw new Error('transaction form is missing');
+        rendererStep = 'switch-to-income';
+        const incomeEntry = await waitFor('#quick-income');
+        if (!(incomeEntry instanceof HTMLButtonElement)) throw new Error('income entry action is missing');
+        incomeEntry.click();
         const setField = async (name, value) => {
           const field = form.elements.namedItem(name);
           if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) {
@@ -459,20 +533,27 @@ async function runPackagedStorageSmoke(): Promise<void> {
           }
           await setValue(field, value);
         };
+        rendererStep = 'fill-income-form';
         await setField('amount', '24.50');
         await setField('date', '2026-08-30');
+        rendererStep = 'open-category-picker';
         document.querySelector('#choose-category').click();
+        rendererStep = 'load-category-picker';
         await waitFor('#category-dialog');
+        rendererStep = 'select-income-category';
         const category = [...document.querySelectorAll('#category-options button')]
           .find((element) => element.textContent?.trim() === '兼职');
         if (!(category instanceof HTMLButtonElement)) throw new Error('income category option is missing');
         category.click();
+        rendererStep = 'complete-income-fields';
         await setField('merchant', 'UI form smoke');
         await setField('payment', 'Bank transfer');
         await setField('notes', 'Packaged UI form verification');
         const hasTransactionForm = true;
+        rendererStep = 'submit-income-form';
         form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
         let snapshot;
+        rendererStep = 'read-income-write';
         for (let attempt = 0; attempt < 50; attempt += 1) {
           await new Promise((resolve) => setTimeout(resolve, 20));
           snapshot = await window.lunaLedger.getSnapshot('2026-08');
@@ -481,11 +562,13 @@ async function runPackagedStorageSmoke(): Promise<void> {
         if (snapshot === undefined || !snapshot.transactions.some((item) => item.merchant === 'UI form smoke')) {
           throw new Error('renderer transaction form did not persist its record');
         }
+        rendererStep = 'verify-transaction-row';
         for (let attempt = 0; attempt < 100; attempt += 1) {
           if (document.querySelector('#transaction-list-region')?.textContent?.includes('UI form smoke')
             && document.querySelector('#transaction-dialog')?.getAttribute('data-state') !== 'open') break;
           await new Promise((resolve) => setTimeout(resolve, 20));
         }
+        rendererStep = 'verify-local-settings';
         const persistedSettings = await window.lunaLedger.getSettings();
         const summary = document.querySelector('#summary-grid');
         const summaryAmounts = [...document.querySelectorAll('#income-total, #expense-total, #net-total')];
@@ -504,23 +587,28 @@ async function runPackagedStorageSmoke(): Promise<void> {
         const transactionEditEnabled = [...document.querySelectorAll('#transaction-list-region button')]
           .some((element) => element.textContent?.includes('编辑') && !(element instanceof HTMLButtonElement && element.disabled));
         const liveStatus = document.querySelector('#live-status')?.textContent ?? '';
+        rendererStep = 'verify-budget-form';
         location.hash = '/budget';
         await waitFor('#budget-input');
         const hasBudgetForm = document.querySelector('form#budget-form') !== null;
         const budgetEditorEnabled = document.querySelector('#budget-input:not(:disabled)') !== null
           && document.querySelector('#save-budget:not(:disabled)') !== null;
+        rendererStep = 'return-to-ledger-for-backup';
         location.hash = '/luna';
         await new Promise((resolve) => setTimeout(resolve, 50));
         const originalLedgerSnapshot = await window.lunaLedger.getSnapshot('2026-08');
         const backupPassword = 'packaged ledger backup phrase';
+        rendererStep = 'export-ledger-backup';
         const encryptedLedger = await window.lunaLedger.exportLedgerBackup(backupPassword);
         if (encryptedLedger.includes('UI form smoke') || encryptedLedger.includes(backupPassword)) {
           throw new Error('ledger backup leaked plaintext');
         }
+        rendererStep = 'restore-ledger-backup';
         await window.lunaLedger.importLedgerBackup(encryptedLedger, backupPassword);
         const ledgerBackupVerified = JSON.stringify(await window.lunaLedger.getSnapshot('2026-08')) === JSON.stringify(originalLedgerSnapshot)
           && JSON.parse(encryptedLedger).format === 'luna-ledger-envelope'
           && (await window.lunaLedger.syncLedgerNow()).code === 'disabled';
+        rendererStep = 'configure-session-sync';
         const connectionStatus = await window.lunaLedger.configureLedgerSync({
           connection: { endpoint: 'https://example.invalid', region: 'us-east-1', bucket: 'smoke-ledger', prefix: 'test', forcePathStyle: true },
           credentials: { accessKeyId: 'synthetic-access', secretAccessKey: 'synthetic-secret', passphrase: backupPassword },
@@ -556,39 +644,53 @@ async function runPackagedStorageSmoke(): Promise<void> {
             hasLiveStatus: document.querySelector('#live-status[aria-live="polite"]') !== null,
           },
         };
+        } catch {
+          let failedStep = rendererStep;
+          if (rendererStep === 'load-ledger') {
+            const appRoot = document.querySelector('#app');
+            if (appRoot === null) failedStep = 'app-root-missing';
+            else if (appRoot.childElementCount === 0) failedStep = 'renderer-empty';
+            else if (document.querySelector('[role="alert"]') !== null) failedStep = 'renderer-alert';
+            else if (location.hash.includes('/luna') === false) failedStep = 'ledger-route-missing';
+            else if (document.querySelector('[role="status"]') !== null) failedStep = 'ledger-still-loading';
+            else failedStep = 'ledger-control-missing';
+          }
+          throw new Error('renderer smoke step failed: ' + failedStep);
+        }
       })()`,
       true,
     )) as PackagedBridgeSmokeResult;
-    if (
-      bridgeResult.amountMinor !== "-375" ||
-      bridgeResult.transactionCount !== 3 ||
-      bridgeResult.pendingChanges !== 3 ||
-      bridgeResult.remoteSyncEnabled !== false ||
-      !bridgeResult.ledgerBackupVerified ||
-      !bridgeResult.ledgerSessionVerified ||
-      !bridgeResult.uiFormSaved ||
-      bridgeResult.locale !== "zh-CN" ||
-      bridgeResult.hideSensitiveAmountsByDefault !== true ||
-      !bridgeResult.moneyMasked ||
-      !bridgeResult.summaryCollapsed ||
-      bridgeResult.sensitiveAttributeLeak ||
-      !bridgeResult.detailAmountsVisible ||
-      bridgeResult.summaryTextLeak ||
-      !bridgeResult.transactionEditEnabled ||
-      !bridgeResult.budgetEditorEnabled ||
-      bridgeResult.liveStatus !== "交易已保存到本机。" ||
-      bridgeResult.ui.title !== "Luna" ||
-      !bridgeResult.ui.hasMain ||
-      !bridgeResult.ui.hasTransactionForm ||
-      !bridgeResult.ui.hasBudgetForm ||
-      !bridgeResult.ui.hasMonthPicker ||
-      !bridgeResult.ui.hasLiveStatus
-    ) {
-      throw new Error(
-        "packaged IPC bridge did not persist the expected local record",
-      );
+    smokeStage = "check renderer and IPC results";
+    const failedChecks = [
+      bridgeResult.amountMinor === "-375" || "signed-amount",
+      bridgeResult.transactionCount === 3 || "transaction-count",
+      bridgeResult.pendingChanges === 3 || "pending-changes",
+      bridgeResult.remoteSyncEnabled === false || "remote-sync-disabled",
+      bridgeResult.ledgerBackupVerified || "ledger-backup-round-trip",
+      bridgeResult.ledgerSessionVerified || "ledger-session-isolation",
+      bridgeResult.uiFormSaved || "renderer-form-save",
+      bridgeResult.locale === "zh-CN" || "locale",
+      bridgeResult.hideSensitiveAmountsByDefault === true || "privacy-setting",
+      bridgeResult.moneyMasked || "summary-masking",
+      bridgeResult.summaryCollapsed || "summary-collapse",
+      bridgeResult.sensitiveAttributeLeak === false || "summary-attribute-leak",
+      bridgeResult.detailAmountsVisible || "detail-amounts",
+      bridgeResult.summaryTextLeak === false || "summary-text-leak",
+      bridgeResult.transactionEditEnabled || "transaction-edit",
+      bridgeResult.budgetEditorEnabled || "budget-editor",
+      bridgeResult.liveStatus === "交易已保存到本机。" || "live-status",
+      bridgeResult.ui.title === "Luna" || "document-title",
+      bridgeResult.ui.hasMain || "main-content",
+      bridgeResult.ui.hasTransactionForm || "transaction-form",
+      bridgeResult.ui.hasBudgetForm || "budget-form",
+      bridgeResult.ui.hasMonthPicker || "month-picker",
+      bridgeResult.ui.hasLiveStatus || "live-status-region",
+    ].filter((check): check is string => typeof check === "string");
+    if (failedChecks.length > 0) {
+      throw new Error(`packaged smoke checks failed: ${failedChecks.join(",")}`);
     }
 
+    smokeStage = "reopen storage";
     const smokeStore = localStore;
     localStore = null;
     smokeStore?.close();
@@ -609,6 +711,7 @@ async function runPackagedStorageSmoke(): Promise<void> {
     ) {
       throw new Error("packaged IPC record did not survive reopen");
     }
+    smokeStage = "round-trip settings crypto";
     const cryptoStartedAt = Date.now();
     const cryptoPayload = remotePayloadFromSettings(
       createDefaultSettings("smoke-crypto", "zh-CN"),
@@ -638,7 +741,7 @@ async function runPackagedStorageSmoke(): Promise<void> {
     localStore = null;
     await writeProcessOutput(
       process.stderr,
-      `LUNA_PACKAGED_STORAGE_SMOKE_FAILED: ${errorMessage(error)}\n`,
+      `LUNA_PACKAGED_STORAGE_SMOKE_FAILED: ${smokeStage}: ${errorMessage(error)}\n`,
     );
     app.exit(1);
   }
@@ -699,8 +802,20 @@ function waitForMainWindowLoad(window: BrowserWindow): Promise<void> {
 }
 
 function errorMessage(_error: unknown): string {
-  // Native errors can include the active SQLite path. Keep smoke diagnostics
-  // useful as a stable marker without echoing local paths or user data.
+  // Native errors can include the active SQLite path. Only smoke check keys
+  // are allowlisted; other failures stay generic and path-free.
+  if (_error instanceof Error) {
+    const prefix = "packaged smoke checks failed: ";
+    if (_error.message.startsWith(prefix)) {
+      const checks = _error.message.slice(prefix.length);
+      if (/^[a-z,-]+$/.test(checks)) return `failed checks: ${checks}`;
+    }
+    const rendererPrefix = "renderer smoke step failed: ";
+    if (_error.message.startsWith(rendererPrefix)) {
+      const step = _error.message.slice(rendererPrefix.length);
+      if (/^[a-z-]+$/.test(step)) return `failed at: ${step}`;
+    }
+  }
   return "packaged smoke assertion failed";
 }
 

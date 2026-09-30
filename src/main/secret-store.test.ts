@@ -63,14 +63,29 @@ test('safeStorage initialization and encryption failures degrade to session-only
     await new ElectronSafeStorageProtector(unavailableStorage, 'linux').persistence(),
     'unavailable',
   );
+  let basicBackendProbeCount = 0;
   const basicTextStorage = {
-    isAsyncEncryptionAvailable: async () => true,
+    isAsyncEncryptionAvailable: async () => { basicBackendProbeCount += 1; return true; },
     getSelectedStorageBackend: () => 'basic_text',
   } as unknown as SafeStorage;
   assert.equal(
     await new ElectronSafeStorageProtector(basicTextStorage, 'linux').persistence(),
     'unavailable',
   );
+  assert.equal(basicBackendProbeCount, 0);
+
+  let pendingProbeCount = 0;
+  const hangingStorage = {
+    isAsyncEncryptionAvailable: () => {
+      pendingProbeCount += 1;
+      return new Promise<boolean>(() => {});
+    },
+    getSelectedStorageBackend: () => 'gnome_libsecret',
+  } as unknown as SafeStorage;
+  const hangingProtector = new ElectronSafeStorageProtector(hangingStorage, 'linux', 5);
+  assert.equal(await hangingProtector.persistence(), 'unavailable');
+  assert.equal(await hangingProtector.persistence(), 'unavailable');
+  assert.equal(pendingProbeCount, 1);
 
   const directory = mkdtempSync(path.join(tmpdir(), 'luna-secrets-encrypt-failure-'));
   try {

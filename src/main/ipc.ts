@@ -233,6 +233,7 @@ export function registerIpcHandlers(
     );
     handle(IPC_CHANNELS.serverLogout, () => server.logout());
     handle(IPC_CHANNELS.serverProfiles, () => server.profiles());
+    handle(IPC_CHANNELS.serverCreateLocalProfile, () => server.createLocalProfile());
     handle(IPC_CHANNELS.serverSelectProfile, (id) =>
       server.selectProfile(decodeProfileId(id)),
     );
@@ -426,14 +427,18 @@ function assertTrustedRenderer(
   getMainWindow: () => BrowserWindow | null,
 ): void {
   const mainWindow = getMainWindow();
-  if (
-    mainWindow === null ||
-    mainWindow.isDestroyed() ||
-    event.sender !== mainWindow.webContents ||
-    event.senderFrame !== mainWindow.webContents.mainFrame
-  ) {
-    throw new Error("Untrusted IPC sender.");
-  }
+  const rejectionReason =
+    mainWindow === null
+      ? "window-missing"
+      : mainWindow.isDestroyed()
+        ? "window-destroyed"
+        : event.sender !== mainWindow.webContents
+          ? "webcontents-mismatch"
+          : event.senderFrame !== mainWindow.webContents.mainFrame
+            ? "frame-mismatch"
+            : null;
+  if (rejectionReason !== null)
+    throw new Error(`Untrusted IPC sender (${rejectionReason}).`);
 }
 
 async function callSafely<T>(
