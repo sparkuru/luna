@@ -1,0 +1,28 @@
+{
+  "date": "2026-09-30",
+  "result": "passed",
+  "environment": {
+    "serial": "192.168.9.14:5555",
+    "model": "AIO-3568J",
+    "android": "11",
+    "package": "majo.im.luna.lan",
+    "picker": "com.android.documentsui"
+  },
+  "syntheticFixture": {
+    "workspace": "A03 synthetic restore",
+    "transactionCount": 1,
+    "backupBytes": 2671,
+    "backupSha256": "a250ed01028211edfc6d5e4aa01012093602a086f3d3deed18e90cd6ddf4a655"
+  },
+  "checks": [
+    "real-documentsui-export",
+    "export-cancel",
+    "real-file-magic-and-decrypt",
+    "wrong-password-preserves-empty-profile",
+    "real-documentsui-import",
+    "restore-to-fresh-profile",
+    "restored-data-visible"
+  ],
+  "restoredTransactionCount": 1,
+  "scope": "The harness used a real Android DocumentsUI save and open flow, read the returned file bytes, decrypted the synthetic backup, rejected a wrong password without creating a workspace, then restored the correct backup into a cleared isolated package. No credentials or backup bytes are stored here."
+}

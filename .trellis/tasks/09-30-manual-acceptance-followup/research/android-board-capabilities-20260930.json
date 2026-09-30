@@ -1,0 +1,17 @@
+{
+  "date": "2026-09-30",
+  "environment": {
+    "serial": "192.168.9.14:5555",
+    "model": "AIO-3568J",
+    "android": "11",
+    "package": "majo.im.luna.lan",
+    "url": "https://localhost/",
+    "secureOrigin": true,
+    "viewport": { "width": 1098, "height": 578 }
+  },
+  "observations": {
+    "opfs": false,
+    "userAgent": "Mozilla/5.0 (Linux; Android 11; AIO-3568J Build/RD2A.211001.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/96.0.4664.104 Safari/537.36"
+  },
+  "scope": "This proves the Android 11 IndexedDB compatibility path on the physical board. It does not prove OPFS/SAH behavior on a device where navigator.storage.getDirectory is available."
+}

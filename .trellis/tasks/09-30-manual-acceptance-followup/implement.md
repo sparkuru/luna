@@ -5,12 +5,14 @@
 - [x] Archive every active task from before 2026-09-28 under `.trellis/tasks/archive/2026-09/`.
 - [x] Create the A01–A07 manual acceptance table in `prd.md`.
 - [x] Keep the implementation closeout in `e11c2da` and retain all archived research as the evidence baseline.
+- [x] Probe the physical AIO-3568J Android 11 storage capability; record the HTTPS and IndexedDB fallback scope.
+- [x] Run the physical Android A03 SAF/DocumentsUI export, cancellation, wrong-password, and fresh-profile restore harness; record sanitized evidence.
 
 ## Manual acceptance sequence
 
 - [ ] A01 — Electron GTK/native chooser, first-run directory selection, privacy, and restart.
 - [ ] A02 — OPFS/SAH storage isolation and persistence on an Android WebView that exposes the API.
-- [ ] A03 — Android SAF/DocumentsUI export, real-file import, validation failures, and restore to a new profile.
+- [ ] A03 — Android SAF/DocumentsUI export, real-file import, validation failures, restore to a new profile, and user satisfaction (automated scope recorded; original/new profile switching remains for review).
 - [ ] A04 — TalkBack, physical keyboard/IME, system BACK, focus order, and duplicate keypad behavior.
 - [ ] A05 — Two real clients: edit/delete, interrupted transport, concurrent heads, retry, and convergence.
 - [ ] A06 — Target deployment stop-copy restore and running-copy, half-init, bucket, and permissions negatives.
