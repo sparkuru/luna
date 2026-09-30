@@ -13,5 +13,9 @@
     "failed": 0,
     "skipped": 0
   },
+  "typecheck": {
+    "client": "passed",
+    "server": "passed"
+  },
   "scope": "Covers native SQLite/profile persistence, browser IndexedDB, backup encryption, sync/conflict/attachment behavior, Android bridge contracts, settings, and domain invariants. It is process-level evidence and does not replace physical Android accessibility or target-deployment acceptance."
 }

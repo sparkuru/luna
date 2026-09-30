@@ -27,6 +27,12 @@
       "suite": "tests/e2e/accessibility.spec.ts + android-entry-layout.spec.ts",
       "result": "3 passed",
       "coverage": "keyboard focus, reduced motion, 457px/2x containment, mobile calculator and reachable controls"
+    },
+    {
+      "suite": "tests/e2e/local-ledger-catalog.spec.ts",
+      "result": "2 passed",
+      "mode": "production web bundle with OPFS",
+      "coverage": "isolated local ledgers, fresh backup restore, missing inactive ledger remains unavailable and is not recreated"
     }
   ],
   "scope": "These are browser-context and synthetic-fixture results. They do not replace two physical devices, Android TalkBack, vendor IME, system BACK, or a durable deployment. A mixed parallel run once hit a transient page-navigation race; the affected sync suite passed in serial reruns."

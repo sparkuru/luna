@@ -119,6 +119,7 @@ test("OPFS catalog marks a missing inactive ledger unavailable without recreatin
   await page.locator("#create-local-ledger").click();
   await expect.poll(() => activeProfileId(page)).toMatch(/^local-/);
   const missingId = await activeProfileId(page);
+  if (missingId === null) throw new Error("The new local ledger did not expose an id.");
   expect(missingId).toMatch(/^local-/);
   await page.locator("#setup-back").click();
   await page.locator("#workspace-name").fill("Missing local copy");
