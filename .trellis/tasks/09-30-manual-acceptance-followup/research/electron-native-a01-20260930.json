@@ -14,5 +14,5 @@
     "choosing a different temporary directory writes sqlite/settings there and a location pointer under app config",
     "default and custom-directory selections restart without showing first-run dialog"
   ],
-  "scope": "The harness exercised the real native chooser and isolated userData with synthetic paths only. It did not retain screenshots, local paths, account data, or credentials. Renderer path exposure and visual/user satisfaction remain manual checks."
+  "scope": "The harness exercised the real native chooser and isolated userData with synthetic paths only. It did not retain screenshots, local paths, account data, or credentials. Renderer path exposure and behavior satisfaction remain manual checks; visual review is recorded in the task PRD."
 }
