@@ -7,10 +7,11 @@
 - [x] Keep the implementation closeout in `e11c2da` and retain all archived research as the evidence baseline.
 - [x] Probe the physical AIO-3568J Android 11 storage capability; record the HTTPS and IndexedDB fallback scope.
 - [x] Run the physical Android A03 SAF/DocumentsUI export, cancellation, wrong-password, and fresh-profile restore harness; record sanitized evidence.
+- [x] Preserve the physical Android A04 route geometry, touch-target, and DocumentsUI/BACK baseline; keep TalkBack and hardware keyboard claims manual.
 
 ## Manual acceptance sequence
 
-- [ ] A01 — Electron GTK/native chooser, first-run directory selection, privacy, and restart.
+- [x] A01 — Electron GTK/native chooser, first-run directory selection, and restart automation; renderer privacy and user satisfaction remain manual.
 - [ ] A02 — OPFS/SAH storage isolation and persistence on an Android WebView that exposes the API.
 - [ ] A03 — Android SAF/DocumentsUI export, real-file import, validation failures, restore to a new profile, and user satisfaction (automated scope recorded; original/new profile switching remains for review).
 - [ ] A04 — TalkBack, physical keyboard/IME, system BACK, focus order, and duplicate keypad behavior.

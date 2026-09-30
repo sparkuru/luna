@@ -1,0 +1,21 @@
+{
+  "date": "2026-09-30",
+  "result": "passed",
+  "environment": {
+    "serial": "192.168.9.14:5555",
+    "model": "AIO-3568J",
+    "android": "11",
+    "package": "majo.im.luna.lan",
+    "resolution": "1920x1080",
+    "density": 280,
+    "viewport": { "width": 1098, "height": 578 }
+  },
+  "checks": [
+    "home-entry-statistics-budget-settings-preferences-routes-have-no-horizontal-overflow",
+    "primary-settings-entry-controls-meet-48px-touch-target",
+    "entry-amount-category-save-close-controls-meet-48px-touch-target",
+    "real-documentsui-picker-opens",
+    "android-back-cancels-real-documentsui-picker"
+  ],
+  "scope": "This is a physical Android 11 geometry and native-picker baseline. It does not prove TalkBack speech/focus traversal, a hardware keyboard, or vendor IME behavior; those remain manual A04 checks. Screenshots contain only the synthetic app fixture and remain in the temporary test directory."
+}
