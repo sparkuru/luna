@@ -394,3 +394,44 @@ Completed final verification for the ledger filter task and reconciled the Web v
 ### Status
 
 [OK] **Completed**
+
+
+## Session 15: 2026-09-30 task archive audit
+
+**Date**: 2026-09-30
+**Task**: 2026-09-30 task archive audit
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+Revalidated all active pre-09-28 tasks, added current VPS/Android/Chrome/Electron evidence, committed the independently attributable SQLite profile catalog, packaged Electron smoke hardening, zoom-equivalent accessibility test, and validation records. No incomplete task was archived; mixed mobile hunks and human review gates remain explicit.
+
+### Main Changes
+
+- Re-ran unit, server, sync, contract, typecheck, build, and Web regression gates.
+- Committed the 09-10 local ledger/profile/sync group and safe Electron smoke group after exact-path review.
+- Recorded current-source HTTPS, Android 11 catalog, Chrome 200%, and GTK chooser evidence.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `021e212` | (see git log) |
+| `93968ce` | (see git log) |
+| `7bdf90a` | (see git log) |
+| `b24f669` | (see git log) |
+| `902e8c6` | (see git log) |
+| `9a4c99c` | (see git log) |
+
+### Testing
+
+- [OK] ./hako npm test: 221 passed; server 26/26; server-sync 9/9; contracts 6/6; Web 308 passed, 8 skipped.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Obtain target 22041216UC portrait density/touch feedback and review exact mixed-hunk commit groups before archiving mobile tasks.
+- Complete remaining native chooser selection, assistive-technology, and production recovery checks where required.
