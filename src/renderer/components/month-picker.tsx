@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ComponentProps } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   nextMonth,
   previousMonth,
@@ -11,6 +11,51 @@ import {
   type MessageKey,
 } from "../i18n";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+
+/** Keep the real native picker and value; WebViews need a separate centered paint. */
+export function NativePeriodInput({ displayValue, ...props }: ComponentProps<typeof Input> & { displayValue: string }) {
+  return (
+    <div className="native-period-input">
+      <span className="native-period-value" aria-hidden="true">{displayValue}</span>
+      <ChevronDown className="native-period-indicator" aria-hidden="true" />
+      <Input {...props} />
+    </div>
+  );
+}
+
+export function NativePeriodNavigator({
+  label,
+  previousLabel,
+  nextLabel,
+  previousId,
+  nextId,
+  onPrevious,
+  onNext,
+  ...inputProps
+}: ComponentProps<typeof NativePeriodInput> & {
+  id: string;
+  label: string;
+  previousLabel: string;
+  nextLabel: string;
+  previousId: string;
+  nextId: string;
+  onPrevious(): void;
+  onNext(): void;
+}) {
+  return (
+    <div className="month-controls month-navigator">
+      <Button id={previousId} type="button" variant="outline" aria-label={previousLabel} onClick={onPrevious}>
+        <ChevronLeft className="month-control-icon" aria-hidden="true" />
+      </Button>
+      <label className="visually-hidden" htmlFor={inputProps.id}>{label}</label>
+      <NativePeriodInput {...inputProps} />
+      <Button id={nextId} type="button" variant="outline" aria-label={nextLabel} onClick={onNext}>
+        <ChevronRight className="month-control-icon" aria-hidden="true" />
+      </Button>
+    </div>
+  );
+}
 
 type Message = (
   key: MessageKey,

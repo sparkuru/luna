@@ -132,15 +132,16 @@ async function verifyHardwareBack(page: Page, device: AndroidDevice): Promise<Pa
   };
   await page.locator('#open-secondary-menu').click();
   await expect(page).toHaveURL(/#\/settings$/);
-  await page.locator('.settings-navigation').getByRole('button', { name: 'Preferences', exact: true }).click();
+  await page.locator('.settings-overview-card[data-settings-area="preferences"]').click();
   await expect(page).toHaveURL(/#\/settings\/preferences$/);
   await back();
   await expect(page).toHaveURL(/#\/settings$/);
   await back();
   await expect(page.locator('.settings-navigation')).toHaveCount(0);
   await expect(page).toHaveURL(/#\/luna$/);
-  await page.locator('#record-expense').click();
+  await page.locator('#primary-record').click();
   await page.locator('#transaction-amount').fill('42.00');
+  await page.locator('.mobile-category-grid button').first().click();
   await page.locator('#choose-category').click();
   await expect(page.locator('#category-dialog')).toBeVisible();
   await back();
@@ -149,24 +150,27 @@ async function verifyHardwareBack(page: Page, device: AndroidDevice): Promise<Pa
   await expect(page.locator('#transaction-amount')).toHaveValue('42.00');
   await back();
   await expect(page.locator('#transaction-dialog')).not.toBeVisible();
-  await expect(page.locator('#record-expense')).toBeFocused();
-  await page.locator('#record-expense').click();
+  await expect(page.locator('#primary-record')).toBeFocused();
+  await page.locator('#primary-record').click();
   await expect(page.locator('#transaction-amount')).toHaveValue('42.00');
   await back();
   await expect(page.locator('#transaction-dialog')).not.toBeVisible();
-  // BACK retains the draft; changing entry type is the actual discard trigger.
+  // BACK retains the draft; accepting an incompatible type switch keeps the
+  // amount and clears only the category that does not apply to that type.
   await switchEntryWithNativeConfirmation(page, device, false);
-  await page.locator('#record-expense').click();
+  await page.locator('#primary-record').click();
   await expect(page.locator('#transaction-dialog')).toBeVisible();
   await expect(page.locator('#transaction-amount')).toHaveValue('42.00');
   await back();
   await expect(page.locator('#transaction-dialog')).not.toBeVisible();
   await switchEntryWithNativeConfirmation(page, device, true);
   await expect(page.locator('#transaction-type')).toHaveValue('income');
-  await expect(page.locator('#transaction-amount')).toHaveValue('');
+  await expect(page.locator('#quick-income')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#transaction-amount')).toHaveValue('42.00');
+  await expect(page.locator('#transaction-category')).toHaveValue('');
   await back();
   await expect(page.locator('#transaction-dialog')).not.toBeVisible();
-  await expect(page.locator('#record-income')).toBeFocused();
+  await expect(page.locator('#primary-record')).toBeFocused();
   await back();
   await expect.poll(async () => (await device.shell('dumpsys activity activities')).toString())
     .not.toMatch(/(?:mResumedActivity|topResumedActivity)[^\n]*io\.luna\.ledger/);
@@ -183,9 +187,12 @@ async function switchEntryWithNativeConfirmation(page: Page, device: AndroidDevi
   const nativeDialog = () => {};
   page.on('dialog', nativeDialog);
   try {
+    await page.locator('#primary-record').click();
+    await expect(page.locator('#transaction-dialog')).toBeVisible();
     await Promise.all([
-      page.locator('#record-income').click(), answerNativeConfirmation(device, accept),
+      page.locator('#quick-income').click(), answerNativeConfirmation(device, accept),
     ]);
+    if (!accept) await page.locator('#close-transaction').click();
   } finally {
     page.off('dialog', nativeDialog);
   }
@@ -333,26 +340,27 @@ async function main(): Promise<void> {
     await page.locator('#workspace-currency').selectOption('CNY');
     await page.locator('#workspace-form button[type="submit"]').click();
     await expect(page.locator('#summary-grid')).toBeVisible();
-    await page.locator('#record-expense').click();
+    await page.locator('#primary-record').click();
     const nativePickerDate = await verifyEntryDatePicker(page, device);
     await page.locator('#transaction-type').selectOption('expense');
     await page.locator('#transaction-amount').fill('12.50');
-    await page.locator('#transaction-category').fill('Groceries');
+    await page.locator('.mobile-category-grid button').first().click();
     await page.locator('#transaction-advanced-details summary').click();
     await expect(page.locator('#transaction-merchant')).toBeVisible();
     await page.locator('#transaction-merchant').fill('Android offline market');
-    await page.locator('#transaction-form button[type="submit"]').click();
+    await page.locator('#save-transaction').click();
+    await expect(page.locator('#transaction-list-region')).toContainText('12.50');
     const savedDate = await page.evaluate(async (month) =>
       (await window.lunaLedger.getSnapshot(month)).transactions.find((transaction) => transaction.merchant === 'Android offline market')?.date,
     nativePickerDate.slice(0, 7));
     assert.equal(savedDate, nativePickerDate, 'The selected native date must persist as its ISO value.');
-    await expect(page.locator('#transaction-list-region')).toContainText('12.50');
     // Capture the disposable device surface; WebView CDP screenshots can
     // detach transiently while the IME settles after form submission.
     await device.screenshot({ path: resolve(artifacts, 'android-offline-created.png') });
     await device.shell(`am force-stop ${appId}`);
     page = await openApp(device);
     await expect(page.locator('#transaction-list-region')).toContainText('Android offline market');
+    await expect(page.locator('#transaction-list-region')).toContainText('12.50');
     const restartedDate = await page.evaluate(async (month) =>
       (await window.lunaLedger.getSnapshot(month)).transactions.find((transaction) => transaction.merchant === 'Android offline market')?.date,
     nativePickerDate.slice(0, 7));
@@ -361,7 +369,6 @@ async function main(): Promise<void> {
       console.log('ANDROID_SMOKE_STAGE native-entry-date-passed');
       return;
     }
-    await expect(page.locator('#transaction-list-region')).toContainText('12.50');
     await expect(page.locator('#expense-total')).toHaveText('••••');
     assert.equal(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length), 0);
     const dimensions = await page.evaluate(() => ({

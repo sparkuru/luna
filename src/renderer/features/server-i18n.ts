@@ -1,5 +1,9 @@
 import type { AppLocale } from "../../shared/settings";
+import type { LocalLedgerStorageKind, LocalLedgerSyncState } from "../../shared/local-ledger";
 export const serverEn = {
+  signedOutCompact: 'Sign in to connect a ledger.',
+  localNoticeMobile: 'Restarting Luna requires signing in and unlocking again. Your account password and ledger password are different; keep the ledger password safe.',
+  serverExample: 'https://luna.example.com',
   showPassword: "Show password", hidePassword: "Hide password",
   connectionHelpTitle: "Connection help", sessionHelpTitle: "Session and local data",
   connectionHelp: "Use HTTPS for your Luna address. A trusted private-LAN HTTP address is supported for development only.",
@@ -15,10 +19,29 @@ export const serverEn = {
   localNotice:
     "Local copies stay on this device and remain usable offline. A normal refresh keeps this tab's signed-in and unlocked session; closing the tab or browser requires signing in and unlocking again. Your account password is not your ledger password, so keep the ledger password safe.",
   profiles: "Local ledger copies",
-  local: "Original local ledger",
+  createLocalLedger: "Create a new local ledger",
+  importBackupIntoNewLedger: "Import backup into a new ledger",
+  local: "Local ledger",
+  originalLocal: "Original local ledger",
   serverCopy: "Server-linked local copy",
   chooseProfile: "Open local copy",
   active: "Currently open",
+  storageLabel: "Storage",
+  storageNative: "On-device SQLite",
+  storageOpfs: "Browser SQLite (OPFS)",
+  storageIndexedDb: "Browser storage (IndexedDB)",
+  lastOpened: "Last opened",
+  neverOpened: "Not opened yet",
+  syncStateLabel: "Sync",
+  syncLocalOnly: "Local only",
+  syncUnknown: "Unknown",
+  syncDisabled: "Disabled",
+  syncReady: "Ready",
+  syncSyncing: "Syncing",
+  syncSynced: "Synced",
+  syncPending: "Pending changes",
+  syncFailed: "Failed",
+  unavailableProfile: "This local ledger is missing from this device.",
   removeLocalCopy: "Delete local copy",
   removeLocalCopyWarning:
     "Deletes this copy and its local settings from this device only. It does not delete the shared ledger or copies on other devices.",
@@ -113,6 +136,9 @@ export const serverEn = {
     "Offline: local copies remain usable. Server actions need a connection.",
 } as const;
 export const serverZh: Record<keyof typeof serverEn, string> = {
+  signedOutCompact: '登录后可连接账本。',
+  localNoticeMobile: '重启 Luna 后需要重新登录并解锁。账号密码与账本口令不同，请妥善保管账本口令。',
+  serverExample: 'https://luna.example.com',
   showPassword: "显示密码", hidePassword: "隐藏密码",
   connectionHelpTitle: "连接帮助", sessionHelpTitle: "会话与本地数据",
   connectionHelp: "Luna 地址应使用 HTTPS。仅开发环境支持可信局域网 HTTP 地址。",
@@ -127,10 +153,29 @@ export const serverZh: Record<keyof typeof serverEn, string> = {
   signedOut: "尚未登录，本地账本仍可离线使用。",
   localNotice: "本地副本保存在此设备上，离线时仍可使用。普通刷新会保留当前标签页的登录和解锁状态；关闭标签页或浏览器后需要重新登录并解锁。账号密码不是账本口令，请妥善保存账本口令。",
   profiles: "本地账本副本",
-  local: "原始本地副本",
+  createLocalLedger: "新建本地账本",
+  importBackupIntoNewLedger: "将备份导入新账本",
+  local: "本地账本",
+  originalLocal: "原始本地账本",
   serverCopy: "已连接的本地副本",
   chooseProfile: "打开副本",
   active: "当前打开",
+  storageLabel: "存储方式",
+  storageNative: "设备本地 SQLite",
+  storageOpfs: "浏览器 SQLite（OPFS）",
+  storageIndexedDb: "浏览器存储（IndexedDB）",
+  lastOpened: "最近打开",
+  neverOpened: "尚未打开",
+  syncStateLabel: "同步状态",
+  syncLocalOnly: "仅本地",
+  syncUnknown: "未知",
+  syncDisabled: "已停用",
+  syncReady: "就绪",
+  syncSyncing: "同步中",
+  syncSynced: "已同步",
+  syncPending: "有待同步修改",
+  syncFailed: "失败",
+  unavailableProfile: "此本地账本已不在这台设备上。",
   removeLocalCopy: "删除本地副本",
   removeLocalCopyWarning:
     "只会从此设备删除该副本及其本地设置，不会删除共享账本或其他设备上的副本。",
@@ -214,6 +259,48 @@ export function serverMessage(
   key: ServerMessageKey,
 ): string {
   return (locale === "zh-CN" ? serverZh : serverEn)[key];
+}
+
+export function serverStorageMessage(
+  locale: AppLocale,
+  storage: LocalLedgerStorageKind,
+): string {
+  const key = storage === "sqlite-native"
+    ? "storageNative"
+    : storage === "sqlite-wasm-opfs"
+      ? "storageOpfs"
+      : "storageIndexedDb";
+  return serverMessage(locale, key);
+}
+
+export function serverSyncStateMessage(
+  locale: AppLocale,
+  state: LocalLedgerSyncState,
+): string {
+  const keys: Record<LocalLedgerSyncState, ServerMessageKey> = {
+    "local-only": "syncLocalOnly",
+    unknown: "syncUnknown",
+    disabled: "syncDisabled",
+    ready: "syncReady",
+    syncing: "syncSyncing",
+    synced: "syncSynced",
+    pending: "syncPending",
+    failed: "syncFailed",
+  };
+  return serverMessage(locale, keys[state]);
+}
+
+export function serverLastOpenedMessage(
+  locale: AppLocale,
+  timestamp: string | null,
+): string {
+  if (!timestamp) return serverMessage(locale, "neverOpened");
+  const date = new Date(timestamp);
+  if (!Number.isFinite(date.getTime())) return serverMessage(locale, "neverOpened");
+  return new Intl.DateTimeFormat(locale === "zh-CN" ? "zh-CN" : "en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 }
 export function serverErrorMessage(
   locale: AppLocale,

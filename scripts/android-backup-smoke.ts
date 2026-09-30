@@ -38,10 +38,8 @@ export async function verifyAndroidBackup(device: AndroidDevice, page: Page): Pr
   try {
     assert.equal(await page.evaluate(() => typeof window.lunaLedger.saveLedgerBackup), 'function');
     await page.locator('#open-secondary-menu').click();
-    await page.locator('.settings-navigation').getByRole('button', { name: 'Encrypted backup', exact: true }).click();
-    const backupDetails = page.locator('#ledger-backup-details');
-    if (!(await backupDetails.evaluate((element) => (element as HTMLDetailsElement).open)))
-      await backupDetails.locator('summary').click();
+    await page.locator('.settings-overview-card[data-settings-area="backup"]').click();
+    await page.locator('#backup-choose-save').click();
     await openPicker();
     // First Back dismisses an optional keyboard; the next exits the picker.
     await device.shell('input keyevent KEYCODE_BACK');

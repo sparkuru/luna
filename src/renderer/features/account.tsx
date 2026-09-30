@@ -1,7 +1,12 @@
 import { useEffect, useState, type ComponentProps } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApp, formString, formChecked } from "../data/local";
-import { serverMessage } from "./server-i18n";
+import {
+  serverLastOpenedMessage,
+  serverMessage,
+  serverStorageMessage,
+  serverSyncStateMessage,
+} from "./server-i18n";
 import { ledgerToolsMessage } from "../ledger-tools-i18n";
 import { syncStatusMessageKey } from "../i18n";
 import {
@@ -12,6 +17,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Field } from "../components/form";
+import { getClientSurface } from "../client-surface";
 function PasswordField(props: ComponentProps<typeof Field>) {
   const { locale, serverBusy, serverStatus } = useApp();
   const [visible, setVisible] = useState(false);
@@ -79,6 +85,7 @@ function ServerFeedback() {
 /** Focused settings view for profile and local-ledger management. */
 export function LedgerDirectoryPanel() {
   const app = useApp();
+  const mobile = getClientSurface() === "mobile";
   const server = window.lunaLedger.server;
   const status = app.serverStatus;
   const profiles = useProfiles();
@@ -110,12 +117,13 @@ export function LedgerDirectoryPanel() {
     >
       <div className="section-heading">
         <div>
-          <span className="kicker">{m("profiles")}</span>
+          {!mobile && <span className="kicker">{m("profiles")}</span>}
           <h1 id="ledger-directory-title">{app.message("ledgersTitle")}</h1>
-          <p>{app.message("ledgersHelp")}</p>
+          {!mobile && <p>{app.message("ledgersHelp")}</p>}
         </div>
       </div>
-      <p className="helper">{m("removeLocalCopyWarning")}</p>
+      {!mobile && <p className="helper">{m("removeLocalCopyWarning")}</p>}
+      {profiles.isLoading && <p role="status">{m("working")}</p>}
       {profiles.error && (
         <p role="alert">{app.errorMessage(profiles.error)}</p>
       )}
@@ -128,14 +136,28 @@ export function LedgerDirectoryPanel() {
             <div className="profile-card-copy">
               <strong>{profile.displayName}</strong>
               <span className="helper">
-                {profile.binding ? m("serverCopy") : m("local")}
+                {profile.binding
+                  ? m("serverCopy")
+                  : m(profile.id === "legacy-local" ? "originalLocal" : "local")}
               </span>
+              <span className="helper">
+                {m("storageLabel")}: {serverStorageMessage(app.locale, profile.storageKind)}
+              </span>
+              <span className="helper">
+                {m("lastOpened")}: {serverLastOpenedMessage(app.locale, profile.lastOpenedAt)}
+              </span>
+              <span className="helper">
+                {m("syncStateLabel")}: {serverSyncStateMessage(app.locale, profile.syncState)}
+              </span>
+              {!profile.available && (
+                <span className="helper" role="status">{m("unavailableProfile")}</span>
+              )}
             </div>
             <div className="profile-card-actions">
               <Button
                 type="button"
                 variant="outline"
-                disabled={app.serverBusy || profile.id === status?.profile.id}
+                disabled={app.serverBusy || !profile.available || profile.id === status?.profile.id}
                 aria-current={
                   profile.id === status?.profile.id ? "true" : undefined
                 }
@@ -152,6 +174,7 @@ export function LedgerDirectoryPanel() {
               </Button>
               {profile.id !== "legacy-local" &&
                 profile.id !== status?.profile.id && (
+                  <div className="profile-delete-action">
                   <Button
                     type="button"
                     variant="destructive"
@@ -160,6 +183,8 @@ export function LedgerDirectoryPanel() {
                   >
                     {m("removeLocalCopy")}
                   </Button>
+                  <p className="helper">{m("removeLocalCopyWarning")}</p>
+                  </div>
                 )}
             </div>
           </li>
@@ -176,12 +201,14 @@ function SyncOnboarding({
   connected,
   mode,
   locale,
+  navigate,
 }: {
   account: boolean;
   bound: boolean;
   connected: boolean;
   mode: LedgerSyncMode;
   locale: import("../../shared/settings").AppLocale;
+  navigate?: (path: string) => void;
 }) {
   const m = (key: Parameters<typeof serverMessage>[1]) =>
     serverMessage(locale, key);
@@ -204,7 +231,9 @@ function SyncOnboarding({
               <p className="sync-step-status">{m("signedIn")}</p>
             ) : (
               <Button asChild variant="link" className="sync-step-link">
-                <a href="/settings/account#server-login-form">
+                <a href="/settings/account#server-login-form" onClick={(event) => {
+                  if (navigate && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate("/settings/account"); }
+                }}>
                   {m("goToAccount")}
                 </a>
               </Button>
@@ -255,8 +284,10 @@ function SyncOnboarding({
   );
 }
 
-export function AccountPanel() {
+export function AccountPanel({ navigate }: { navigate?: (path: string) => void } = {}) {
   const app = useApp();
+  const mobile = getClientSurface() === "mobile";
+  const DeviceContainer = mobile ? "details" : "div";
   const server = window.lunaLedger.server;
   const status = app.serverStatus;
   const m = (key: Parameters<typeof serverMessage>[1]) =>
@@ -306,17 +337,17 @@ export function AccountPanel() {
         aria-labelledby="server-account-title"
       >
         <h2 id="server-account-title">{m("title")}</h2>
-        <p>{m("help")}</p>
-        <details id="server-connection-help">
+        {!mobile && <p>{m("help")}</p>}
+        {!mobile && <details id="server-connection-help">
           <summary>{m("connectionHelpTitle")}</summary>
           <p className="helper">{m("connectionHelp")}</p>
-        </details>
+        </details>}
         <ServerFeedback />
         {!online && <p role="status">{m("offline")}</p>}
         {status?.account ? (
           <div className="space-y-3">
-            <p id="server-account-name">{status.account.username}</p>
-            <p>{status.account.baseUrl}</p>
+            <p id="server-account-name" className="server-account-identity">{status.account.username}</p>
+            <p className="server-account-identity">{status.account.baseUrl}</p>
             <Button
               id="server-logout"
               variant="outline"
@@ -328,7 +359,7 @@ export function AccountPanel() {
           </div>
         ) : (
           <>
-            <p id="server-account-state">{m("signedOut")}</p>
+            <p id="server-account-state">{m(mobile ? "signedOutCompact" : "signedOut")}</p>
             <form
               id="server-login-form"
               className="grid gap-4"
@@ -351,8 +382,9 @@ export function AccountPanel() {
                 label={m("server")}
                 type="url"
                 defaultValue={
-                  status?.profile.binding?.baseUrl ?? location.origin
+                  status?.profile.binding?.baseUrl ?? (mobile ? "" : location.origin)
                 }
+                placeholder={mobile ? m("serverExample") : undefined}
                 required
                 disabled={app.serverBusy}
               />
@@ -377,6 +409,8 @@ export function AccountPanel() {
                   disabled={app.serverBusy}
                 />
               </div>
+              <DeviceContainer id="server-device-details">
+              {mobile && <summary>{m("device")}</summary>}
               <Field
                 id="server-device"
                 name="deviceLabel"
@@ -385,6 +419,7 @@ export function AccountPanel() {
                 maxLength={80}
                 disabled={app.serverBusy}
               />
+              </DeviceContainer>
               <Button
                 id="server-login"
                 type="submit"
@@ -395,12 +430,17 @@ export function AccountPanel() {
             </form>
           </>
         )}
+        {mobile && <details id="server-connection-help">
+          <summary>{m("connectionHelpTitle")}</summary>
+          <p className="helper">{m("connectionHelp")}</p>
+          <p className="helper">{m("help")}</p>
+        </details>}
         <details id="server-session-help">
           <summary>{m("sessionHelpTitle")}</summary>
-          <p className="helper">{m("localNotice")}</p>
+          <p className="helper">{m(mobile ? "localNoticeMobile" : "localNotice")}</p>
         </details>
       </section>
-      {status?.account && <ServerSyncPanel feedback={false} />}
+      {status?.account && <ServerSyncPanel feedback={false} {...(navigate ? { navigate } : {})} />}
       <details id="server-local-copies" className="account-secondary-details">
         <summary>{m("profiles")}</summary>
       <section
@@ -414,6 +454,31 @@ export function AccountPanel() {
         >
           {m("removeLocalCopyWarning")}
         </p>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            id="create-local-ledger"
+            type="button"
+            variant="outline"
+            disabled={app.serverBusy}
+            onClick={() => void app.runServer(() => server.createLocalProfile(), true)}
+          >
+            {m("createLocalLedger")}
+          </Button>
+          <Button
+            id="import-backup-into-new-ledger"
+            type="button"
+            variant="outline"
+            disabled={app.serverBusy}
+            onClick={() => {
+              void (async () => {
+                if (await app.runServer(() => server.createLocalProfile(), true))
+                  navigate?.("/settings/backup");
+              })();
+            }}
+          >
+            {m("importBackupIntoNewLedger")}
+          </Button>
+        </div>
         {profiles.error && (
           <p role="alert">{app.errorMessage(profiles.error)}</p>
         )}
@@ -426,14 +491,22 @@ export function AccountPanel() {
               <div className="profile-card-copy">
                 <strong>{profile.displayName}</strong>
                 <p className="helper">
-                  {profile.binding ? m("serverCopy") : m("local")}
+                  {profile.binding
+                    ? m("serverCopy")
+                    : m(profile.id === "legacy-local" ? "originalLocal" : "local")}
                 </p>
+                <p className="helper">{m("storageLabel")}: {serverStorageMessage(app.locale, profile.storageKind)}</p>
+                <p className="helper">{m("lastOpened")}: {serverLastOpenedMessage(app.locale, profile.lastOpenedAt)}</p>
+                <p className="helper">{m("syncStateLabel")}: {serverSyncStateMessage(app.locale, profile.syncState)}</p>
+                {!profile.available && (
+                  <p className="helper" role="status">{m("unavailableProfile")}</p>
+                )}
               </div>
               <div className="profile-card-actions">
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={app.serverBusy || profile.id === status?.profile.id}
+                  disabled={app.serverBusy || !profile.available || profile.id === status?.profile.id}
                   aria-current={
                     profile.id === status?.profile.id ? "true" : undefined
                   }
@@ -525,8 +598,9 @@ export function AccountPanel() {
     </>
   );
 }
-export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
+export function ServerSyncPanel({ feedback = true, navigate }: { feedback?: boolean; navigate?: (path: string) => void }) {
   const app = useApp();
+  const mobile = getClientSurface() === "mobile";
   const server = window.lunaLedger.server;
   const status = app.serverStatus;
   const profiles = useProfiles();
@@ -550,7 +624,7 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
   return (
     <section className="panel space-y-4" aria-labelledby="server-sync-title">
       <h2 id="server-sync-title">{m("syncTitle")}</h2>
-      <p>{m(!status?.account ? "stepLoginHelp" : !bound ? "stepConnectHelp" : !status.connected ? "needsUnlock" : "stepActionHelp")}</p>
+      {!mobile && <p>{m(!status?.account ? "stepLoginHelp" : !bound ? "stepConnectHelp" : !status.connected ? "needsUnlock" : "stepActionHelp")}</p>}
       <details id="server-sync-guide">
         <summary>{m("syncSteps")}</summary>
       <SyncOnboarding
@@ -559,6 +633,7 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
         connected={!!status?.connected}
         mode={status?.syncMode ?? "automatic"}
         locale={app.locale}
+        {...(navigate ? { navigate } : {})}
       />
       </details>
       {feedback && <ServerFeedback />}
@@ -590,9 +665,13 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
           <option value="manual">{m("manual")}</option>
         </select>
       </div>
-      <p className="helper">{m("auto")}</p>
+      {!mobile && <p className="helper">{m("auto")}</p>}
       {!status?.account ? (
-        <p>{m("needsLogin")}</p>
+        <div className="sync-account-action"><p>{m("needsLogin")}</p>
+          <Button id="sync-go-to-account" asChild><a href="/settings/account" onClick={(event) => {
+            if (navigate && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate("/settings/account"); }
+          }}>{m("goToAccount")}</a></Button>
+        </div>
       ) : (
         <>
           {bound ? (
@@ -783,6 +862,13 @@ export function ServerSyncPanel({ feedback = true }: { feedback?: boolean }) {
           )}
         </>
       )}
+      {mobile && <details id="server-sync-advanced" className="mobile-sync-advanced">
+        <summary>{app.message("advancedSettingsTitle")}</summary>
+        <p className="helper">{app.message("advancedSettingsHelp")}</p>
+        <Button asChild variant="outline"><a href="/settings/sync/advanced" onClick={(event) => {
+          if (navigate && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate("/settings/sync/advanced"); }
+        }}>{app.message("configSyncTitle")}</a></Button>
+      </details>}
     </section>
   );
 }

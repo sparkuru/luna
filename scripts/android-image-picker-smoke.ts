@@ -110,10 +110,10 @@ export async function verifyAndroidImagePicker(
       (await device.shell(`stat -c %s ${imagePath}`)).toString().trim(),
       /^[1-9]\d*$/,
     );
-    await page.locator('#record-expense').click();
+    await page.locator('#primary-record').click();
     await expect(page.locator('#transaction-dialog')).toBeVisible();
     await page.locator('#transaction-amount').fill('6.50');
-    await page.locator('#transaction-category').fill('Android picker');
+    await page.locator('.mobile-category-grid button').first().click();
     date = await page.locator('#transaction-date').inputValue();
     await page.locator('#transaction-advanced-details summary').click();
     await page.locator('#transaction-merchant').fill(merchant);

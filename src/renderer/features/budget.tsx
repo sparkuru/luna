@@ -5,6 +5,8 @@ import {
   formatMinorMagnitude,
   parseMinorUnits,
   currentLocalDate,
+  nextMonth,
+  previousMonth,
 } from "../../shared/domain";
 import {
   calculateLedgerStatistics,
@@ -19,14 +21,19 @@ import {
 } from "../data/local";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
-import { WebMonthPicker } from "../components/month-picker";
+import { NativePeriodNavigator, WebMonthPicker } from "../components/month-picker";
 import { labelCategories, labelCategory } from "../category-display";
-export function BudgetEditor({ web = false, changeMonth }: {
+import { getClientSurface } from "../client-surface";
+export function BudgetEditor({
+  web = false,
+  changeMonth,
+}: {
   web?: boolean;
   changeMonth(month: string): void;
 }) {
   const app = useApp();
   const { snapshot, month, locale, message: m } = app;
+  const mobile = getClientSurface() === "mobile";
   const workspace = snapshot.workspace!;
   const summary = snapshot.summary!;
   const initial =
@@ -38,8 +45,15 @@ export function BudgetEditor({ web = false, changeMonth }: {
         ).replaceAll(",", "");
   const [value, setValue] = useState(initial);
   const observed = useRef([...(snapshot.budgetHeadIds ?? [])]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<{ message: string } | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
   const mutation = useLocalWrite();
+  useEffect(() => {
+    // Each failed attempt requests focus, even for identical synchronous errors;
+    // a failed write must first release the field's pending/disabled state.
+    if (error && !mutation.isPending)
+      document.getElementById("budget-input")?.focus();
+  }, [error, mutation.isPending]);
   const dirty = useRef(false);
   useEffect(() => {
     return () => app.setDirty("budget", false);
@@ -57,7 +71,7 @@ export function BudgetEditor({ web = false, changeMonth }: {
       : Number(((used > budget ? budget : used) * 10000n) / budget) / 100;
   async function save() {
     if (mutation.isPending) return;
-    setError("");
+    setError(null);
     try {
       const amount = value.trim()
         ? decimalToMinorUnits(value, workspace.precision)
@@ -70,16 +84,18 @@ export function BudgetEditor({ web = false, changeMonth }: {
         saved: () => {
           dirty.current = false;
           app.setDirty("budget", false);
+          if (mobile) setEditorOpen(false);
         },
       });
       if (refreshed) {
-        const fresh = queryClient.getQueryData(snapshotOptions(month, app.scope).queryKey);
+        const fresh = queryClient.getQueryData(
+          snapshotOptions(month, app.scope).queryKey,
+        );
         observed.current = [...(fresh?.budgetHeadIds ?? [])];
         app.announce(m(amount === null ? "budgetRemoved" : "budgetSaved"));
       }
     } catch (e) {
-      setError(app.errorMessage(e));
-      document.getElementById("budget-input")?.focus();
+      setError({ message: app.errorMessage(e) });
     }
   }
   return (
@@ -87,80 +103,200 @@ export function BudgetEditor({ web = false, changeMonth }: {
       className="panel budget-panel"
       aria-labelledby="budget-editor-title"
     >
-      <div className="section-heading">
+      <div className={`section-heading${mobile ? " mobile-period-heading" : ""}`}>
         <div>
-          <h2 id="budget-editor-title">{m("monthlyLimit")}</h2>
-          <p id="budget-month-label" className="helper">
+          {mobile ? (
+            <h1 id="budget-editor-title" className="visually-hidden">{m("budgetNav")}</h1>
+          ) : (
+            <h2 id="budget-editor-title">{m("monthlyLimit")}</h2>
+          )}
+          <p
+            id="budget-month-label"
+            className={mobile ? "visually-hidden" : "helper"}
+          >
             {formatMonth(locale, month)}
           </p>
-          <p
-            id="budget-status"
-            className={`budget-status ${summary.budgetRemainingMinor !== null && parseMinorUnits(summary.budgetRemainingMinor) < 0n ? "over-budget" : ""}`}
-          >
-            {summary.budgetMinor === null
-              ? m("budgetNotSet")
-              : m("budgetUsedOf", {
-                  used: money(summary.budgetUsedMinor),
-                  budget: money(summary.budgetMinor),
-                })}
-          </p>
-          <progress
-            id="budget-progress"
-            className="budget-progress"
-            max={100}
-            value={summary.budgetMinor === null ? 0 : progress}
-            aria-label={m("budgetUsed")}
-            aria-valuetext={m("budgetPercentUsed", { percent: progress })}
-          />
+          {!mobile && (
+            <>
+              <p
+                id="budget-status"
+                className={`budget-status ${summary.budgetRemainingMinor !== null && parseMinorUnits(summary.budgetRemainingMinor) < 0n ? "over-budget" : ""}`}
+              >
+                {summary.budgetMinor === null
+                  ? m("budgetNotSet")
+                  : m("budgetUsedOf", {
+                      used: money(summary.budgetUsedMinor),
+                      budget: money(summary.budgetMinor),
+                    })}
+              </p>
+              <progress
+                id="budget-progress"
+                className="budget-progress"
+                max={100}
+                value={summary.budgetMinor === null ? 0 : progress}
+                aria-label={m("budgetUsed")}
+                aria-valuetext={m("budgetPercentUsed", { percent: progress })}
+              />
+            </>
+          )}
         </div>
         {web && (
-          <fieldset className="budget-month-control" disabled={mutation.isPending}>
+          <fieldset
+            className="budget-month-control"
+            disabled={mutation.isPending}
+          >
             <legend className="visually-hidden">{m("monthNavigation")}</legend>
-            <WebMonthPicker month={month} locale={locale} message={m} changeMonth={changeMonth} />
+            <WebMonthPicker
+              month={month}
+              locale={locale}
+              message={m}
+              changeMonth={changeMonth}
+            />
           </fieldset>
         )}
       </div>
-      <form
-        id="budget-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void save();
-        }}
+      {mobile && (
+        <>
+          <fieldset
+            className="budget-month-control"
+            disabled={mutation.isPending}
+          >
+            <legend className="visually-hidden">{m("monthNavigation")}</legend>
+            <NativePeriodNavigator
+              id="month-picker"
+              type="month"
+              value={month}
+              displayValue={formatMonth(locale, month)}
+              label={m("selectedMonth")}
+              previousId="previous-month"
+              nextId="next-month"
+              previousLabel={m("previousMonth")}
+              nextLabel={m("nextMonth")}
+              onPrevious={() => changeMonth(previousMonth(month))}
+              onNext={() => changeMonth(nextMonth(month))}
+              onChange={(event) => {
+                if (event.currentTarget.value)
+                  changeMonth(event.currentTarget.value);
+              }}
+            />
+          </fieldset>
+          <div className="mobile-budget-summary">
+            <p className="mobile-budget-label">{m("spending")}</p>
+            <p className="mobile-budget-amount">
+              {money(summary.budgetUsedMinor)}
+            </p>
+            <p id="budget-status" className="budget-status">
+              {summary.budgetMinor === null
+                ? m("budgetNotSet")
+                : m("budgetUsedOf", {
+                    used: money(summary.budgetUsedMinor),
+                    budget: money(summary.budgetMinor),
+                  })}
+            </p>
+            {summary.budgetRemainingMinor !== null && (
+              <>
+                <p
+                  className={`mobile-budget-remaining${parseMinorUnits(summary.budgetRemainingMinor) < 0n ? " over-budget" : ""}`}
+                >
+                  <span>
+                    {m(
+                      parseMinorUnits(summary.budgetRemainingMinor) < 0n
+                        ? "budgetOver"
+                        : "budgetRemaining",
+                    )}
+                  </span>
+                  <strong>
+                    {money(
+                      absoluteMinor(summary.budgetRemainingMinor).toString(),
+                    )}
+                  </strong>
+                </p>
+                <progress
+                  id="budget-progress"
+                  className={`budget-progress${used > budget ? " over-budget" : ""}`}
+                  max={100}
+                  value={progress}
+                  aria-label={m("budgetUsed")}
+                  aria-valuetext={m("budgetPercentUsed", { percent: progress })}
+                />
+              </>
+            )}
+            {!editorOpen && (
+              <Button
+                id="open-budget-editor"
+                type="button"
+                disabled={mutation.isPending}
+                onClick={() => {
+                  // Opening a new edit observes the displayed budget. Refreshes during
+                  // that edit must never replace these heads or its financial draft.
+                  if (!dirty.current) {
+                    setValue(initial);
+                    observed.current = [...(snapshot.budgetHeadIds ?? [])];
+                  }
+                  setEditorOpen(true);
+                  requestAnimationFrame(() =>
+                    document
+                      .getElementById("budget-input")
+                      ?.focus({ preventScroll: true }),
+                  );
+                }}
+              >
+                {m(summary.budgetMinor === null ? "budgetSet" : "budgetEdit")}
+              </Button>
+            )}
+          </div>
+        </>
+      )}
+      <div
+        className={mobile ? "mobile-budget-editor" : undefined}
+        hidden={mobile && !editorOpen}
       >
-        <div className="field">
-          <label className="visually-hidden" htmlFor="budget-input">
-            {m("monthlyLimit")}
-          </label>
-          <Input
-            id="budget-input"
-            name="budget"
-            inputMode="decimal"
-            value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
-              dirty.current = true;
-              app.setDirty("budget", true);
-            }}
-            placeholder={m("noLimit")}
-            aria-invalid={!!error}
-            aria-describedby="budget-alert budget-help"
-          />
-        </div>
-        <Button
-          id="save-budget"
-          type="submit"
-          variant="outline"
-          disabled={mutation.isPending}
+        <form
+          id="budget-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void save();
+          }}
         >
-          {m(mutation.isPending ? "saving" : "saveLimit")}
-        </Button>
-      </form>
-      <p className="form-alert" id="budget-alert" role="alert">
-        {error}
-      </p>
-      <span className="helper" id="budget-help">
-        {m("removeLimitHelp")}
-      </span>
+          <div className="field">
+            <label
+              className={mobile ? undefined : "visually-hidden"}
+              htmlFor="budget-input"
+            >
+              {m("monthlyLimit")}
+            </label>
+            <Input
+              id="budget-input"
+              name="budget"
+              inputMode="decimal"
+              value={value}
+              disabled={mutation.isPending}
+              onChange={(e) => {
+                setValue(e.target.value);
+                dirty.current = true;
+                app.setDirty("budget", true);
+              }}
+              placeholder={m("noLimit")}
+              aria-invalid={!!error}
+              aria-describedby="budget-alert budget-help"
+            />
+          </div>
+          <Button
+            id="save-budget"
+            type="submit"
+            variant="outline"
+            disabled={mutation.isPending}
+          >
+            {m(mutation.isPending ? "saving" : "saveLimit")}
+          </Button>
+        </form>
+        <p className="form-alert" id="budget-alert" role="alert">
+          {error?.message}
+        </p>
+        <span className="helper" id="budget-help">
+          {m("removeLimitHelp")}
+        </span>
+      </div>
     </section>
   );
 }
@@ -172,6 +308,19 @@ type CategoryDrilldownRecord = {
   categories: readonly string[];
   amountMinor: string;
 };
+
+function adjacentStatisticsDate(anchor: string, period: "week" | "year", direction: -1 | 1): string {
+  const date = new Date(`${anchor}T00:00:00.000Z`);
+  if (period === "week") {
+    date.setUTCDate(date.getUTCDate() + direction * 7);
+  } else {
+    const month = date.getUTCMonth();
+    date.setUTCFullYear(date.getUTCFullYear() + direction);
+    // February 29 rolls into March in a non-leap year; keep the same month.
+    if (date.getUTCMonth() !== month) date.setUTCDate(0);
+  }
+  return date.toISOString().slice(0, 10);
+}
 
 export function Statistics({
   period,
@@ -193,11 +342,15 @@ export function Statistics({
   onTypeChange(type: "income" | "expense"): void;
 }) {
   const { snapshot, locale, message: m } = useApp();
+  const mobile = getClientSurface() === "mobile";
+  const compactTrend = web || mobile;
   const workspace = snapshot.workspace!;
-  const [categoryView, setCategoryView] = useState<"bars" | "ring">(
-    () => (web ? "ring" : "bars"),
+  const [categoryView, setCategoryView] = useState<"bars" | "ring">(() =>
+    web ? "ring" : "bars",
   );
-  const [selectedBucketKey, setSelectedBucketKey] = useState<string | null>(null);
+  const [selectedBucketKey, setSelectedBucketKey] = useState<string | null>(
+    null,
+  );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categorySort, setCategorySort] = useState<"amount" | "date">("amount");
   const [showAllCategories, setShowAllCategories] = useState(false);
@@ -259,9 +412,10 @@ export function Statistics({
     if (categoryTotal === 0n) return [];
     let consumed = 0;
     return donutCategories.map((category, index) => {
-      const share = Number(
-        (parseMinorUnits(category.amountMinor) * 1_000_000n) / categoryTotal,
-      ) / 1_000_000;
+      const share =
+        Number(
+          (parseMinorUnits(category.amountMinor) * 1_000_000n) / categoryTotal,
+        ) / 1_000_000;
       const length = donutCircumference * share;
       const segment = { index, length, offset: consumed };
       consumed += length;
@@ -269,20 +423,30 @@ export function Statistics({
     });
   })();
   const selectedBucket =
-    statistics.buckets.find((bucket) => bucket.key === selectedBucketKey) ?? null;
-  const selectedBucketIndex = statistics.buckets.findIndex((bucket) => bucket.key === selectedBucketKey);
-  const bucketTransactions = selectedBucket === null
-    ? []
-    : snapshot.transactions
-        .filter((transaction) => selectedBucket.transactionIds.includes(transaction.id))
-        .sort((left, right) =>
-          absoluteMinor(right.amountMinor) - absoluteMinor(left.amountMinor) > 0n
-            ? 1
-            : absoluteMinor(right.amountMinor) - absoluteMinor(left.amountMinor) < 0n
-              ? -1
-              : right.date.localeCompare(left.date) || left.id.localeCompare(right.id),
-        )
-        .slice(0, 3);
+    statistics.buckets.find((bucket) => bucket.key === selectedBucketKey) ??
+    null;
+  const selectedBucketIndex = statistics.buckets.findIndex(
+    (bucket) => bucket.key === selectedBucketKey,
+  );
+  const bucketTransactions =
+    selectedBucket === null
+      ? []
+      : snapshot.transactions
+          .filter((transaction) =>
+            selectedBucket.transactionIds.includes(transaction.id),
+          )
+          .sort((left, right) =>
+            absoluteMinor(right.amountMinor) - absoluteMinor(left.amountMinor) >
+            0n
+              ? 1
+              : absoluteMinor(right.amountMinor) -
+                    absoluteMinor(left.amountMinor) <
+                  0n
+                ? -1
+                : right.date.localeCompare(left.date) ||
+                  left.id.localeCompare(right.id),
+          )
+          .slice(0, 3);
   const categoryRecords = useMemo((): CategoryDrilldownRecord[] => {
     if (selectedCategory === null) return [];
     return snapshot.transactions
@@ -296,7 +460,10 @@ export function Statistics({
           return [];
         const amount = transaction.splits
           .filter((split) => split.category === selectedCategory)
-          .reduce((total, split) => total + absoluteMinor(split.amountMinor), 0n);
+          .reduce(
+            (total, split) => total + absoluteMinor(split.amountMinor),
+            0n,
+          );
         if (amount === 0n) return [];
         return [
           {
@@ -306,7 +473,9 @@ export function Statistics({
               transaction.merchant ||
               transaction.notes ||
               categoryNames(transaction.splits.map((split) => split.category)),
-            categories: transaction.splits.map((split) => categoryName(split.category)),
+            categories: transaction.splits.map((split) =>
+              categoryName(split.category),
+            ),
             amountMinor: amount.toString(),
           },
         ];
@@ -325,26 +494,67 @@ export function Statistics({
           left.id.localeCompare(right.id)
         );
       });
-  }, [categorySort, selectedCategory, snapshot.categories, snapshot.transactions, statistics.end, statistics.start, type]);
-  const selectedBucketLabel = selectedBucket === null
-    ? ""
-    : period === "year"
-      ? formatMonth(locale, selectedBucket.start.slice(0, 7))
-      : formatDate(locale, selectedBucket.start);
+  }, [
+    categorySort,
+    selectedCategory,
+    snapshot.categories,
+    snapshot.transactions,
+    statistics.end,
+    statistics.start,
+    type,
+  ]);
+  const selectedBucketLabel =
+    selectedBucket === null
+      ? ""
+      : period === "year"
+        ? formatMonth(locale, selectedBucket.start.slice(0, 7))
+        : formatDate(locale, selectedBucket.start);
   const visibleLargestExpenses = showAllLargestExpenses
     ? statistics.largestExpenses
     : statistics.largestExpenses.slice(0, 5);
   const visibleCategories = showAllCategories
     ? statistics.categories
     : statistics.categories.slice(0, 5);
+  const changePeriod = (direction: -1 | 1) => {
+    if (period === "month") {
+      onMonthChange(direction === -1 ? previousMonth(anchor.slice(0, 7)) : nextMonth(anchor.slice(0, 7)));
+    } else {
+      onAnchorChange(adjacentStatisticsDate(anchor, period, direction));
+    }
+  };
   return (
-    <section className="panel category-panel statistics-page" aria-labelledby="category-title">
-      <div className="section-heading">
+    <section
+      className="panel category-panel statistics-page"
+      aria-labelledby="category-title"
+    >
+      <div className={`section-heading${mobile ? " mobile-period-heading mobile-statistics-period" : ""}`}>
         <div>
-          <h1 id="category-title">{m("categoryBreakdown")}</h1>
-          <p>{m("splitCountHelp")}</p>
+          <h1 id="category-title" className={mobile ? "visually-hidden" : undefined}>
+            {m(mobile ? "statisticsNav" : "categoryBreakdown")}
+          </h1>
+          {!mobile && <p>{m("splitCountHelp")}</p>}
         </div>
-        {web && period === "month" ? (
+        {mobile ? (
+          <NativePeriodNavigator
+            id="statistics-anchor"
+            type={period === "month" ? "month" : "date"}
+            value={period === "month" ? anchor.slice(0, 7) : anchor}
+            displayValue={period === "month" ? formatMonth(locale, anchor.slice(0, 7)) : formatDate(locale, anchor)}
+            label={m(period === "month" ? "selectedMonth" : period === "week" ? "statWeekDate" : "statYearDate")}
+            previousId="statistics-previous-period"
+            nextId="statistics-next-period"
+            previousLabel={m(period === "month" ? "previousMonth" : period === "week" ? "previousWeek" : "previousYear")}
+            nextLabel={m(period === "month" ? "nextMonth" : period === "week" ? "nextWeek" : "nextYear")}
+            onPrevious={() => changePeriod(-1)}
+            onNext={() => changePeriod(1)}
+            onChange={(event) => {
+              if (event.currentTarget.value) {
+                if (period === "month") onMonthChange(event.currentTarget.value);
+                else onAnchorChange(event.currentTarget.value);
+              }
+            }}
+          />
+        ) : web && period === "month" ? (
           <WebMonthPicker
             month={anchor.slice(0, 7)}
             locale={locale}
@@ -353,7 +563,15 @@ export function Statistics({
           />
         ) : (
           <label className="compact-field" htmlFor="statistics-anchor">
-            <span>{m("selectedMonth")}</span>
+            <span className={mobile ? "visually-hidden" : undefined}>
+              {m(
+                period === "month"
+                  ? "selectedMonth"
+                  : period === "week"
+                    ? "statWeekDate"
+                    : "statYearDate",
+              )}
+            </span>
             <input
               id="statistics-anchor"
               type="date"
@@ -366,7 +584,11 @@ export function Statistics({
         )}
       </div>
       <div className="statistics-toolbar">
-        <div className="segmented-control" role="group" aria-label={m("statTrend")}>
+        <div
+          className="segmented-control"
+          role="group"
+          aria-label={m("statTrend")}
+        >
           {(["week", "month", "year"] as const).map((value) => (
             <button
               key={value}
@@ -375,7 +597,13 @@ export function Statistics({
               aria-pressed={period === value}
               onClick={() => onPeriodChange(value)}
             >
-              {m(value === "week" ? "periodWeek" : value === "month" ? "periodMonth" : "periodYear")}
+              {m(
+                value === "week"
+                  ? "periodWeek"
+                  : value === "month"
+                    ? "periodMonth"
+                    : "periodYear",
+              )}
             </button>
           ))}
         </div>
@@ -392,88 +620,170 @@ export function Statistics({
             </button>
           ))}
         </div>
-        <div className="segmented-control" role="group" aria-label={m("statCategories")}>
-          {(["bars", "ring"] as const).map((value) => (
-            <button
-              key={value}
-              id={`statistics-category-view-${value}`}
-              type="button"
-              aria-pressed={categoryView === value}
-              onClick={() => setCategoryView(value)}
-            >
-              {m(value === "bars" ? "statViewBars" : "statViewRing")}
-            </button>
-          ))}
-        </div>
+        {!mobile && (
+          <div
+            className="segmented-control"
+            role="group"
+            aria-label={m("statCategories")}
+          >
+            {(["bars", "ring"] as const).map((value) => (
+              <button
+                key={value}
+                id={`statistics-category-view-${value}`}
+                type="button"
+                aria-pressed={categoryView === value}
+                onClick={() => setCategoryView(value)}
+              >
+                {m(value === "bars" ? "statViewBars" : "statViewRing")}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <div className="statistics-grid" id="category-breakdown">
-        <article className="statistics-card" aria-labelledby="statistics-trend-title">
-          <h2 id="statistics-trend-title">{m("statTrend")}</h2>
+        <article
+          className="statistics-card"
+          aria-labelledby="statistics-trend-title"
+        >
+          <h2 id="statistics-trend-title">
+            {m(
+              mobile
+                ? type === "income"
+                  ? "statIncome"
+                  : "statExpense"
+                : "statTrend",
+            )}
+          </h2>
           <p className="statistics-total">{money(statistics.totalMinor)}</p>
-          <p className="statistics-average">
-            {statistics.averageMinor === null
-              ? m("statNoTransactions")
-              : `${m(period === "year" ? "statAverageMonth" : "statAverage")}: ${money(statistics.averageMinor)}`}
-          </p>
-          <p className="helper">{m("statAverageHelp")}</p>
-          {statistics.buckets.every((bucket) => bucket.amountMinor === null) ? (
+          {(!mobile || statistics.categories.length > 0) && (
+            <p className="statistics-average">
+              {statistics.averageMinor === null
+                ? m("statNoTransactions")
+                : `${m(period === "year" ? "statAverageMonth" : "statAverage")}: ${money(statistics.averageMinor)}`}
+            </p>
+          )}
+          {!mobile && <p className="helper">{m("statAverageHelp")}</p>}
+          {!mobile &&
+          statistics.buckets.every((bucket) => bucket.amountMinor === null) ? (
             <p className="empty-state">{m("statNoTransactions")}</p>
-          ) : web ? (
+          ) : compactTrend ? (
             <>
-              <p className="statistics-chart-help">{m("statChartHelp")}</p>
-              <div
-                className={`statistics-chart statistics-chart-${period}`}
-                role="group"
-                aria-label={`${m("statTrend")}: ${statistics.buckets
-                  .map(
-                    (bucket) =>
-                      `${period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} ${bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}`,
-                  )
-                  .join(", ")}`}
-              >
-                {statistics.buckets.map((bucket) => (
-                  <button
-                    key={bucket.key}
-                    type="button"
-                    className={`statistics-chart-button${selectedBucketKey === bucket.key ? " is-selected" : ""}`}
-                    aria-label={`${period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} · ${bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}`}
-                    aria-pressed={selectedBucketKey === bucket.key}
-                    onClick={() => setSelectedBucketKey(bucket.key)}
+              {!mobile && (
+                <p className="statistics-chart-help">{m("statChartHelp")}</p>
+              )}
+              {mobile && statistics.categories.length === 0 ? (
+                <p className="empty-state">{m("statNoTransactions")}</p>
+              ) : (
+                <>
+                  <div
+                    className={`statistics-chart statistics-chart-${period}`}
+                    role="group"
+                    aria-label={`${m("statTrend")}: ${statistics.buckets
+                      .map(
+                        (bucket) =>
+                          `${period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} ${bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}`,
+                      )
+                      .join(", ")}`}
                   >
-                    <progress
-                      className="statistics-chart-bar"
-                      max={100}
-                      value={barWidth(bucket.amountMinor)}
-                      aria-hidden="true"
-                    />
-                  </button>
-                ))}
-              </div>
-              <div className="statistics-chart-axis" aria-hidden="true">
-                <span>{period === "year" ? formatMonth(locale, statistics.buckets[0]?.key ?? statistics.start.slice(0, 7)) : formatDate(locale, statistics.start)}</span>
-                <span>{period === "year" ? formatMonth(locale, statistics.buckets.at(-1)?.key ?? statistics.end.slice(0, 7)) : formatDate(locale, statistics.end)}</span>
-              </div>
+                    {statistics.buckets.map((bucket) => (
+                      <button
+                        key={bucket.key}
+                        type="button"
+                        className={`statistics-chart-button${selectedBucketKey === bucket.key ? " is-selected" : ""}`}
+                        aria-label={`${period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} · ${bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}`}
+                        aria-pressed={selectedBucketKey === bucket.key}
+                        onClick={() => setSelectedBucketKey(bucket.key)}
+                      >
+                        <progress
+                          className="statistics-chart-bar"
+                          max={100}
+                          value={barWidth(bucket.amountMinor)}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="statistics-chart-axis" aria-hidden="true">
+                    <span>
+                      {period === "year"
+                        ? formatMonth(
+                            locale,
+                            statistics.buckets[0]?.key ??
+                              statistics.start.slice(0, 7),
+                          )
+                        : formatDate(locale, statistics.start)}
+                    </span>
+                    <span>
+                      {period === "year"
+                        ? formatMonth(
+                            locale,
+                            statistics.buckets.at(-1)?.key ??
+                              statistics.end.slice(0, 7),
+                          )
+                        : formatDate(locale, statistics.end)}
+                    </span>
+                  </div>
+                </>
+              )}
               <div className="statistics-bucket-picker">
-                <Button id="statistics-bucket-previous" variant="outline" aria-label={m("statPreviousBucket")}
+                <Button
+                  id="statistics-bucket-previous"
+                  variant="outline"
+                  aria-label={m("statPreviousBucket")}
                   disabled={selectedBucketIndex <= 0}
-                  onClick={() => setSelectedBucketKey(statistics.buckets[selectedBucketIndex - 1]!.key)}><ChevronLeft aria-hidden="true" /></Button>
+                  onClick={() =>
+                    setSelectedBucketKey(
+                      statistics.buckets[selectedBucketIndex - 1]!.key,
+                    )
+                  }
+                >
+                  <ChevronLeft aria-hidden="true" />
+                </Button>
                 <div className="field">
-                  <label htmlFor="statistics-bucket-select">{m("statSelectBucket")}</label>
-                  <select id="statistics-bucket-select" value={selectedBucketKey ?? ""}
-                    onChange={(event) => setSelectedBucketKey(event.target.value || null)}>
+                  <label htmlFor="statistics-bucket-select">
+                    {m("statSelectBucket")}
+                  </label>
+                  <select
+                    id="statistics-bucket-select"
+                    value={selectedBucketKey ?? ""}
+                    onChange={(event) =>
+                      setSelectedBucketKey(event.target.value || null)
+                    }
+                  >
                     <option value="">{m("statSelectBucket")}</option>
-                    {statistics.buckets.map(bucket => (
+                    {statistics.buckets.map((bucket) => (
                       <option key={bucket.key} value={bucket.key}>
-                        {period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)} · {bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}
+                        {period === "year"
+                          ? formatMonth(locale, bucket.key)
+                          : formatDate(locale, bucket.start)}{" "}
+                        ·{" "}
+                        {bucket.amountMinor === null
+                          ? m("statFuture")
+                          : money(bucket.amountMinor)}
                       </option>
                     ))}
                   </select>
                 </div>
-                <Button id="statistics-bucket-next" variant="outline" aria-label={m("statNextBucket")}
-                  disabled={selectedBucketIndex >= statistics.buckets.length - 1}
-                  onClick={() => setSelectedBucketKey(statistics.buckets[selectedBucketIndex + 1]!.key)}><ChevronRight aria-hidden="true" /></Button>
+                <Button
+                  id="statistics-bucket-next"
+                  variant="outline"
+                  aria-label={m("statNextBucket")}
+                  disabled={
+                    selectedBucketIndex >= statistics.buckets.length - 1
+                  }
+                  onClick={() =>
+                    setSelectedBucketKey(
+                      statistics.buckets[selectedBucketIndex + 1]!.key,
+                    )
+                  }
+                >
+                  <ChevronRight aria-hidden="true" />
+                </Button>
               </div>
-              <details id="statistics-trend-details" className="statistics-detail-disclosure">
+              <details
+                id="statistics-trend-details"
+                className="statistics-detail-disclosure"
+              >
                 <summary>{m("statViewDetails")}</summary>
                 <ul
                   className={`statistics-bars statistics-bars-${period}`}
@@ -489,7 +799,9 @@ export function Statistics({
                         onClick={() => setSelectedBucketKey(bucket.key)}
                       >
                         <span className="statistics-bar-label">
-                          {period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)}
+                          {period === "year"
+                            ? formatMonth(locale, bucket.key)
+                            : formatDate(locale, bucket.start)}
                         </span>
                         <progress
                           className="statistics-bar-track"
@@ -498,7 +810,9 @@ export function Statistics({
                           aria-hidden="true"
                         />
                         <span className="statistics-bar-value">
-                          {bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}
+                          {bucket.amountMinor === null
+                            ? m("statFuture")
+                            : money(bucket.amountMinor)}
                         </span>
                       </button>
                     </li>
@@ -521,7 +835,9 @@ export function Statistics({
                     onClick={() => setSelectedBucketKey(bucket.key)}
                   >
                     <span className="statistics-bar-label">
-                      {period === "year" ? formatMonth(locale, bucket.key) : formatDate(locale, bucket.start)}
+                      {period === "year"
+                        ? formatMonth(locale, bucket.key)
+                        : formatDate(locale, bucket.start)}
                     </span>
                     <progress
                       className="statistics-bar-track"
@@ -530,7 +846,9 @@ export function Statistics({
                       aria-hidden="true"
                     />
                     <span className="statistics-bar-value">
-                      {bucket.amountMinor === null ? m("statFuture") : money(bucket.amountMinor)}
+                      {bucket.amountMinor === null
+                        ? m("statFuture")
+                        : money(bucket.amountMinor)}
                     </span>
                   </button>
                 </li>
@@ -543,7 +861,9 @@ export function Statistics({
               className="statistics-bucket-detail"
               aria-labelledby="statistics-bucket-detail-title"
             >
-              <h3 id="statistics-bucket-detail-title">{m("statBucketDetails")}</h3>
+              <h3 id="statistics-bucket-detail-title">
+                {m("statBucketDetails")}
+              </h3>
               <p>
                 {m("statBucketHelp", {
                   date: selectedBucketLabel,
@@ -563,25 +883,60 @@ export function Statistics({
                         <strong>
                           {transaction.merchant ||
                             transaction.notes ||
-                            categoryNames(transaction.splits.map((split) => split.category))}
+                            categoryNames(
+                              transaction.splits.map((split) => split.category),
+                            )}
                         </strong>
                         <span>{formatDate(locale, transaction.date)}</span>
                       </span>
-                      <strong>{money(absoluteMinor(transaction.amountMinor).toString())}</strong>
+                      <strong>
+                        {money(
+                          absoluteMinor(transaction.amountMinor).toString(),
+                        )}
+                      </strong>
                     </li>
                   ))}
                 </ul>
               )}
             </section>
           )}
-          <p className="statistics-legend">
-            {formatDate(locale, statistics.start)} – {formatDate(locale, statistics.end)}
-          </p>
+          {!mobile && (
+            <p className="statistics-legend">
+              {formatDate(locale, statistics.start)} –{" "}
+              {formatDate(locale, statistics.end)}
+            </p>
+          )}
         </article>
-        <article className="statistics-card" aria-labelledby="statistics-categories-title">
-          <h2 id="statistics-categories-title">{m("statCategories")}</h2>
+        <article
+          className="statistics-card"
+          aria-labelledby="statistics-categories-title"
+        >
+          <div className="statistics-card-heading">
+            <h2 id="statistics-categories-title">{m("statCategories")}</h2>
+            {mobile && (
+              <div
+                className="segmented-control"
+                role="group"
+                aria-label={m("statCategories")}
+              >
+                {(["bars", "ring"] as const).map((value) => (
+                  <button
+                    key={value}
+                    id={`statistics-category-view-${value}`}
+                    type="button"
+                    aria-pressed={categoryView === value}
+                    onClick={() => setCategoryView(value)}
+                  >
+                    {m(value === "bars" ? "statViewBars" : "statViewRing")}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {statistics.categories.length === 0 ? (
-            <p className="empty-state">{m("noCategories")}</p>
+            <p className="empty-state">
+              {m(mobile ? "statNoTransactions" : "noCategories")}
+            </p>
           ) : (
             <>
               {categoryView === "ring" && (
@@ -595,7 +950,12 @@ export function Statistics({
                     aria-hidden="true"
                     focusable="false"
                   >
-                    <circle className="statistics-donut-track" cx="50" cy="50" r="40" />
+                    <circle
+                      className="statistics-donut-track"
+                      cx="50"
+                      cy="50"
+                      r="40"
+                    />
                     {donutSegments.map((segment) => (
                       <circle
                         key={segment.index}
@@ -613,7 +973,10 @@ export function Statistics({
               )}
               <ul className="statistics-categories">
                 {visibleCategories.map((category) => (
-                  <li className="statistics-category-row" key={category.category}>
+                  <li
+                    className="statistics-category-row"
+                    key={category.category}
+                  >
                     <button
                       type="button"
                       className="statistics-category-button"
@@ -622,6 +985,22 @@ export function Statistics({
                     >
                       <strong>{categoryName(category.category)}</strong>
                       <span>{money(category.amountMinor)}</span>
+                      {mobile && categoryView === "bars" && (
+                        <progress
+                          className="statistics-category-track"
+                          max={100}
+                          value={
+                            categoryTotal === 0n
+                              ? 0
+                              : Number(
+                                  (parseMinorUnits(category.amountMinor) *
+                                    10000n) /
+                                    categoryTotal,
+                                ) / 100
+                          }
+                          aria-hidden="true"
+                        />
+                      )}
                     </button>
                   </li>
                 ))}
@@ -645,10 +1024,20 @@ export function Statistics({
                 >
                   <div className="statistics-drilldown-heading">
                     <div>
-                      <h3 id="statistics-drilldown-title">{m("statDrilldown")}</h3>
-                      <p>{m("statDrilldownHelp", { category: categoryName(selectedCategory) })}</p>
+                      <h3 id="statistics-drilldown-title">
+                        {m("statDrilldown")}
+                      </h3>
+                      <p>
+                        {m("statDrilldownHelp", {
+                          category: categoryName(selectedCategory),
+                        })}
+                      </p>
                     </div>
-                    <div className="segmented-control" role="group" aria-label={m("statDrilldown")}>
+                    <div
+                      className="segmented-control"
+                      role="group"
+                      aria-label={m("statDrilldown")}
+                    >
                       <button
                         id="statistics-sort-amount"
                         type="button"
@@ -672,10 +1061,16 @@ export function Statistics({
                   ) : (
                     <ul className="statistics-drilldown-list">
                       {categoryRecords.map((record) => (
-                        <li className="statistics-drilldown-row" key={record.id}>
+                        <li
+                          className="statistics-drilldown-row"
+                          key={record.id}
+                        >
                           <span>
                             <strong>{record.title}</strong>
-                            <span>{formatDate(locale, record.date)} · {record.categories.join(" · ")}</span>
+                            <span>
+                              {formatDate(locale, record.date)} ·{" "}
+                              {record.categories.join(" · ")}
+                            </span>
                           </span>
                           <span className="statistics-drilldown-amount">
                             <strong>{money(record.amountMinor)}</strong>
@@ -691,7 +1086,10 @@ export function Statistics({
           )}
         </article>
       </div>
-      <article className="statistics-card statistics-largest-card" aria-labelledby="statistics-largest-title">
+      <article
+        className="statistics-card statistics-largest-card"
+        aria-labelledby="statistics-largest-title"
+      >
         <div className="statistics-card-heading">
           <h2 id="statistics-largest-title">{m("statLargestExpenses")}</h2>
           {statistics.largestExpenses.length > 5 && (
@@ -715,8 +1113,19 @@ export function Statistics({
               <li className="largest-expense-row" key={expense.id}>
                 <span className="largest-expense-rank">{index + 1}</span>
                 <span className="largest-expense-copy">
-                  <strong>{expense.merchant || expense.notes || expense.categories.map((id) => categoryName(id)).join(" · ")}</strong>
-                  <span>{formatDate(locale, expense.date)} · {expense.categories.map((id) => categoryName(id)).join(" · ")}</span>
+                  <strong>
+                    {expense.merchant ||
+                      expense.notes ||
+                      expense.categories
+                        .map((id) => categoryName(id))
+                        .join(" · ")}
+                  </strong>
+                  <span>
+                    {formatDate(locale, expense.date)} ·{" "}
+                    {expense.categories
+                      .map((id) => categoryName(id))
+                      .join(" · ")}
+                  </span>
                 </span>
                 <strong>{money(expense.amountMinor)}</strong>
               </li>
@@ -724,6 +1133,13 @@ export function Statistics({
           </ol>
         )}
       </article>
+      {mobile && (
+        <details className="statistics-method">
+          <summary>{m("statMethod")}</summary>
+          <p className="helper">{m("statAverageHelp")}</p>
+          <p className="helper">{m("splitCountHelp")}</p>
+        </details>
+      )}
     </section>
   );
 }

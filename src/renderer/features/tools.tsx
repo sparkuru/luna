@@ -28,6 +28,7 @@ import {
 import { Field } from "../components/form";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import { getClientSurface } from "../client-surface";
 export type ToolsPage = "all" | "sync" | "backup" | "conflicts";
 
 type BackupWriteChunk = Parameters<FileSystemWritableFileStream["write"]>[0];
@@ -44,11 +45,15 @@ type TrackedDownload = {
 export function LedgerTools({
   page = "all",
   active = true,
+  navigate,
 }: {
   page?: ToolsPage;
   active?: boolean;
+  navigate?: (path: string) => void;
 }) {
   const app = useApp();
+  const mobile = getClientSurface() === "mobile";
+  const BackupContainer = mobile ? "div" : "details";
   const api = window.lunaLedger;
   const serverBacked = api.server !== undefined;
   const m = (key: LedgerToolsMessageKey) => ledgerToolsMessage(app.locale, key);
@@ -88,6 +93,8 @@ export function LedgerTools({
     useState<LedgerToolsMessageKey | null>(null);
   const [error, setError] = useState<unknown>();
   const [passwordError, setPasswordError] = useState<{ field: string; message: string } | null>(null);
+  const [backupAction, setBackupAction] = useState<"save" | "import" | null>(app.snapshot.workspace ? null : "import");
+  const setBackupDirty = (action: "save" | "import", dirty: boolean) => app.setDirty(mobile ? `tools-${action}` : "tools", dirty);
   const checkPassword = (form: HTMLFormElement, field: string): boolean => {
     const password = formString(form, "password");
     try {
@@ -144,6 +151,8 @@ export function LedgerTools({
       for (const download of downloads.current.values()) download.cleanup();
       downloads.current.clear();
       app.setDirty("tools", false);
+      app.setDirty("tools-save", false);
+      app.setDirty("tools-import", false);
     },
     [],
   );
@@ -270,7 +279,7 @@ export function LedgerTools({
       } finally {
         form.reset();
       }
-      app.setDirty("tools", false);
+      setBackupDirty("save", false);
       return;
     }
     if (completeBackup) {
@@ -362,7 +371,7 @@ export function LedgerTools({
           await temporaryRoot.removeEntry(temporaryName).catch(() => undefined);
         form.reset();
       }
-      app.setDirty("tools", false);
+      setBackupDirty("save", false);
       return;
     }
     const raw = await api.exportLedgerBackup(password);
@@ -380,7 +389,7 @@ export function LedgerTools({
       trackDownload(url);
     }
     form.reset();
-    app.setDirty("tools", false);
+    setBackupDirty("save", false);
   }
   async function importBackup(form: HTMLFormElement) {
     const password = formString(form, "password");
@@ -453,7 +462,7 @@ export function LedgerTools({
       await api.importLedgerBackup(await file.text(), password);
     }
     form.reset();
-    app.setDirty("tools", false);
+    setBackupDirty("import", false);
   }
   const fields: {
     id: string;
@@ -507,9 +516,9 @@ export function LedgerTools({
       aria-busy={busy}
     >
       <h2 id="ledger-tools-title">{m(page === "backup" ? "backupTitle" : page === "conflicts" ? "conflictTitle" : page === "sync" ? "syncTitle" : "title")}</h2>
-      <p className="helper">
+      {!mobile && <p className="helper">
         {page === "backup" ? m("backupOfflineHelp") : page === "conflicts" ? m("conflictsHelp") : serverBacked ? serverMessage(app.locale, "syncHelp") : m("help")}
-      </p>
+      </p>}
       {visible("sync") && <p id="ledger-session-status" className="ledger-tools-session">
         {m(session.code)}
         {session.lastSyncedAt &&
@@ -626,19 +635,24 @@ export function LedgerTools({
         </>
       )}
       {visible("backup") && (
-        <details
+        <BackupContainer
           id="ledger-backup-details"
           className="ledger-tools-details"
           open={page === "backup" ? true : undefined}
         >
-          <summary>{m("backup")}</summary>
-          <p className="helper">{m(workspace ? "mergeHelp" : "restoreHelp")}</p>
+          {!mobile && <summary>{m("backup")}</summary>}
+          {mobile && <div className="backup-action-choices" role="group" aria-label={m("backupTitle")}>
+            {workspace && <Button id="backup-choose-save" type="button" variant={backupAction === "save" ? "default" : "outline"} aria-pressed={backupAction === "save"} disabled={busy} onClick={() => setBackupAction("save")}>{m("saveBackup")}</Button>}
+            <Button id="backup-choose-import" type="button" variant={backupAction === "import" ? "default" : "outline"} aria-pressed={backupAction === "import"} disabled={busy} onClick={() => setBackupAction("import")}>{m(workspace ? "importBackup" : "restoreBackup")}</Button>
+          </div>}
+          {(!mobile || backupAction === "import") && <p className="helper">{m(workspace ? "mergeHelp" : "restoreHelp")}</p>}
           {workspace && <form
             ref={exportRef}
             id="ledger-export-form"
+            hidden={mobile && backupAction !== "save"}
             className="form-grid ledger-tools-form"
             aria-describedby="ledger-tools-alert"
-            onChange={() => app.setDirty("tools", true)}
+            onChange={() => setBackupDirty("save", true)}
             onSubmit={(e) => {
               e.preventDefault();
               const form = e.currentTarget;
@@ -677,9 +691,10 @@ export function LedgerTools({
           <form
             ref={importRef}
             id="ledger-import-form"
+            hidden={mobile && backupAction !== "import"}
             className="form-grid ledger-tools-form"
             aria-describedby="ledger-tools-alert"
-            onChange={() => app.setDirty("tools", true)}
+            onChange={() => setBackupDirty("import", true)}
             onSubmit={(e) => {
               e.preventDefault();
               const form = e.currentTarget;
@@ -690,7 +705,7 @@ export function LedgerTools({
             <Field
               id="ledger-import-file"
               name="file"
-              label={m("importFile")}
+              label={m(mobile ? "importFileCompact" : "importFile")}
               type="file"
               accept=".luna-backup,.json,application/octet-stream,application/json"
               required
@@ -728,8 +743,15 @@ export function LedgerTools({
               {m(workspace ? "importBackup" : "restoreBackup")}
             </Button>
           </form>
-        </details>
+        </BackupContainer>
       )}
+      {mobile && showSyncTools && <details className="mobile-sync-advanced">
+        <summary>{app.message("advancedSettingsTitle")}</summary>
+        <p className="helper">{app.message("advancedSettingsHelp")}</p>
+        <Button asChild variant="outline"><a href="/settings/sync/advanced" onClick={(event) => {
+          if (navigate && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate("/settings/sync/advanced"); }
+        }}>{app.message("configSyncTitle")}</a></Button>
+      </details>}
       {visible("conflicts") && (
         <>
           {conflictsQuery.isFetching ? (

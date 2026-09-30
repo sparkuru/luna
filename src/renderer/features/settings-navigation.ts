@@ -145,6 +145,22 @@ export function settingsAreaGroups(web: boolean): {
   })).filter((group) => group.areas.length > 0);
 }
 
+export function mobileSettingsAreaGroups(): {
+  key: string;
+  labelKey: MessageKey;
+  areas: SettingsAreaDefinition[];
+}[] {
+  const groups: { key: string; labelKey: MessageKey; keys: SettingsAreaDefinition["key"][] }[] = [
+    { key: "workspace", labelKey: "mobileSettingsLedger", keys: ["ledgers", "categories"] },
+    { key: "access", labelKey: "settingsGroupAccess", keys: ["account", "sync"] },
+    { key: "data", labelKey: "mobileSettingsBackup", keys: ["backup", "conflicts"] },
+    { key: "preferences", labelKey: "preferencesTitle", keys: ["preferences"] },
+  ];
+  return groups.map(({ key, labelKey, keys }) => ({ key, labelKey,
+    areas: keys.map((areaKey) => SETTINGS_AREA_DEFINITIONS.find((area) => area.key === areaKey)!),
+  }));
+}
+
 export function settingsNavigationItems(web: boolean): SettingsNavigationItem[] {
   return [
     SETTINGS_HOME_ITEM,

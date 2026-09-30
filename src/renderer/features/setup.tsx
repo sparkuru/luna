@@ -3,8 +3,10 @@ import { decimalToMinorUnits } from "../../shared/domain";
 import { useApp, useLocalWrite, formString } from "../data/local";
 import { Field } from "../components/form";
 import { Button } from "../components/ui/button";
+import { getClientSurface } from "../client-surface";
 export function Setup({ navigate }: { navigate: (to: string) => void }) {
   const { message: m, locale, errorMessage } = useApp();
+  const mobile = getClientSurface() === "mobile";
   const [currency, setCurrency] = useState(locale === "zh-CN" ? "CNY" : "USD");
   const [precision, setPrecision] = useState("2");
   const [error, setError] = useState("");
@@ -55,29 +57,36 @@ export function Setup({ navigate }: { navigate: (to: string) => void }) {
     } catch (e) {
       setError(errorMessage(e));
       setErrorField(field);
+      if (mobile && field === "workspace-budget") {
+        const advanced = document.getElementById("setup-advanced") as HTMLDetailsElement | null;
+        if (advanced) advanced.open = true;
+      }
       document.getElementById(field ?? "setup-alert")?.focus();
     } finally {
       lock.current = false;
     }
   }
+  const budgetField = <>
+    <Field id="workspace-budget" name="budget" label={`${m("monthlyLimit")} (${m("optional")})`}
+      aria-invalid={errorField === "workspace-budget"} aria-describedby={errorField === "workspace-budget" ? "setup-alert" : undefined}
+      onChange={() => clearFieldError("workspace-budget")} inputMode="decimal" placeholder={m("budgetPlaceholder")} />
+    <p className="helper">{m("budgetPlanningHelp")}</p>
+  </>;
+  const recoveryActions = <nav className="setup-recovery-actions" aria-label={m("setupExistingLedger")}>
+    <Button id="setup-restore" variant="outline" onClick={() => navigate("/settings/backup")}>{m("setupRestore")}</Button>
+    <Button id="setup-connect" variant="outline" onClick={() => navigate("/settings/account")}>{m("setupConnect")}</Button>
+  </nav>;
   return (
     <div className="setup-shell">
       <section className="setup-copy" aria-labelledby="welcome-title">
-        <span className="kicker">{m("setupKicker")}</span>
-        <h1 id="welcome-title">{m("setupWelcome")}</h1>
-        <p>{m("setupDescription")}</p>
-        <nav className="setup-recovery-actions" aria-label={m("setupExistingLedger")}>
-          <Button id="setup-restore" variant="outline" onClick={() => navigate("/settings/backup")}>
-            {m("setupRestore")}
-          </Button>
-          <Button id="setup-connect" variant="outline" onClick={() => navigate("/settings/account")}>
-            {m("setupConnect")}
-          </Button>
-        </nav>
+        {!mobile && <span className="kicker">{m("setupKicker")}</span>}
+        <h1 id="welcome-title">{m(mobile ? "mobileSetupWelcome" : "setupWelcome")}</h1>
+        {!mobile && <p>{m("setupDescription")}</p>}
+        {!mobile && recoveryActions}
       </section>
       <section className="setup-card" aria-labelledby="setup-title">
         <h2 id="setup-title">{m("setupTitle")}</h2>
-        <p>{m("setupHelp")}</p>
+        {!mobile && <p>{m("setupHelp")}</p>}
         <div id="setup-alert" className="form-alert" role="alert" tabIndex={-1}>
           {error}
         </div>
@@ -146,7 +155,7 @@ export function Setup({ navigate }: { navigate: (to: string) => void }) {
               </select>
             </div>
           </div>
-          <p className="helper" id="setup-precision-summary">{m("setupPrecisionSummary", { precision })}</p>
+          <p className={mobile ? "visually-hidden" : "helper"} id="setup-precision-summary">{m("setupPrecisionSummary", { precision })}</p>
           <details id="setup-advanced">
             <summary>{m("setupAdvanced")}</summary>
             <Field
@@ -163,24 +172,16 @@ export function Setup({ navigate }: { navigate: (to: string) => void }) {
               onChange={(e) => { clearFieldError("workspace-precision"); setPrecision(e.target.value); }}
               required
             />
+          {mobile && budgetField}
           </details>
-          <Field
-            id="workspace-budget"
-            name="budget"
-            label={`${m("monthlyLimit")} (${m("optional")})`}
-            aria-invalid={errorField === "workspace-budget"}
-            aria-describedby={errorField === "workspace-budget" ? "setup-alert" : undefined}
-            onChange={() => clearFieldError("workspace-budget")}
-            inputMode="decimal"
-            placeholder={m("budgetPlaceholder")}
-          />
-          <p className="helper">{m("budgetPlanningHelp")}</p>
+          {!mobile && budgetField}
           <Button type="submit" disabled={mutation.isPending}>
             {m(mutation.isPending ? "creating" : "createWorkspace")}
           </Button>
         </form>
-        <p className="setup-note">{m("setupLocalNote")}</p>
+        {!mobile && <p className="setup-note">{m("setupLocalNote")}</p>}
       </section>
+      {mobile && recoveryActions}
     </div>
   );
 }

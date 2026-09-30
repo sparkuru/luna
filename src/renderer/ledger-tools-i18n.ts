@@ -1,6 +1,7 @@
 import type { AppLocale } from '../shared/settings';
 
 const en = {
+  importFileCompact: 'Backup file',
   title: 'Ledger sync & backup',
   syncTitle: 'Encrypted ledger sync',
   backupTitle: 'Encrypted backup', backupOfflineHelp: 'Export or restore a backup on this device. No account or internet connection is required.',
@@ -60,6 +61,7 @@ const en = {
 export type LedgerToolsMessageKey = keyof typeof en;
 
 const zh: Record<LedgerToolsMessageKey, string> = {
+  importFileCompact: '备份文件',
   syncTitle: '加密账本同步',
   backupTitle: '加密备份', backupOfflineHelp: '在此设备导出或恢复备份，无需登录或联网。',
   restoreHelp: '从加密备份中恢复已保存的账本和图片。',
