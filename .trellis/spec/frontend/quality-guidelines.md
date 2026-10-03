@@ -73,6 +73,14 @@ disclosures without changing the host permission or persistence contract.
 
 ## Testing Requirements
 
+When a Web host test compares a fixed month with its inherited future budget,
+freeze `Date` within that test using `t.mock.timers.enable({ apis: ['Date'],
+now: ... })`. `createWorkspace` seeds an explicit budget in the actual local
+current month, including a null limit; changing the seeded value to null does
+not test inheritance. The budget-conflict test pins September 2026 and asserts
+October's inherited value before divergence, during conflict and after choice.
+Keep the mock test-scoped so other tests retain their normal clock.
+
 Run `./hako npm run typecheck` and `./hako npm test` for every renderer/API
 change, then run `./hako npm run build` and `npm run smoke:electron` for
 cross-layer changes. Run `npm run web:build` and `npm run test:web` for Web UI

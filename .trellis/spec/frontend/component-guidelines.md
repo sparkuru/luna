@@ -208,6 +208,14 @@ into the lower half of the first screen and creates a large blank upper area.
 At `<=768px`, retain the same single-column flow and verify the card has no
 horizontal overflow at a 375px viewport.
 
+For desktop Web, `.client-surface-web:has(.web-setup-topbar)` keeps
+`max-width: 1440px` and `margin-inline: auto`; the workspace shell's `margin: 0`
+must not leave this width-constrained welcome shell anchored to the left.
+In `workspace-setup-visual-polish.spec.ts`, assert the topbar, welcome copy and
+card centers against `window.innerWidth / 2` at 1280px, 1366px and 2048px, not
+only against each other. At 2048px, mutual alignment alone permits the known
+304px left offset.
+
 A fresh browser must expose `#setup-restore` and `#setup-connect` from the welcome
 surface. With no workspace, `/settings/backup` renders the real restore tool and
 `/settings/account` renders the account flow without first creating a dummy ledger
@@ -230,6 +238,11 @@ in `#setup-advanced`. Invalid advanced input opens its disclosure before focus.
 The optional initial budget must say it is optional; name-only creation uses
 the displayed currency defaults. Existing ledgers are never altered by these
 setup presentation defaults.
+
+Only the explicit native mobile surface puts the optional budget inside
+`#setup-advanced`; desktop and narrow Web keep it visible outside the disclosure.
+Verify precision is hidden when collapsed, Enter toggles the disclosure on Web,
+and the native mobile budget remains hidden until its disclosure opens.
 
 After a successful mutation, reload the host snapshot before announcing the
 result. A failed mutation keeps the draft and its recovery path visible. This

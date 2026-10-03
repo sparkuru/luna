@@ -643,11 +643,13 @@ test('resolution checks the current graph inside its transaction and refuses sta
   await assert.rejects(first.api.resolveLedgerConflict(choice), /ledger-stale-heads/);
 });
 
-test('budget conflicts disable the limit and reject ordinary edits until a candidate is chosen', async () => {
+test('budget conflicts disable the limit and reject ordinary edits until a candidate is chosen', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-09-15T12:00:00.000Z').getTime() });
   const first = fixture();
   const second = fixture();
   await first.api.createWorkspace(setup);
   await first.api.setMonthlyBudget('2026-09', '10000');
+  assert.equal((await first.api.getSnapshot('2026-10')).summary?.budgetMinor, '10000');
   const base = await first.api.getLedgerDocument();
   assert.ok(base);
   await second.api.mergeLedgerDocument(base);
@@ -668,6 +670,7 @@ test('budget conflicts disable the limit and reject ordinary edits until a candi
   assert.ok(selected);
   await first.api.resolveLedgerConflict({ kind: 'budget', entityId: conflict.entityId, selectedHeadId: selected.id, expectedHeadIds: conflict.heads.map((head) => head.id) });
   assert.equal((await first.api.getSnapshot('2026-09')).summary?.budgetMinor, '20000');
+  assert.equal((await first.api.getSnapshot('2026-10')).summary?.budgetMinor, '20000');
   assert.deepEqual(await first.api.getLedgerConflicts(), []);
 });
 

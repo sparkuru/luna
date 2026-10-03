@@ -57,6 +57,27 @@ revalidate this format against vendor source and physical-device fixtures.
 
 ## This run's checks and cleanup
 
+### 2026-10-04 welcome layout followup
+
+- [x] Restore viewport-centered no-workspace Web shell without changing workspace navigation or native surfaces.
+- [x] Verify fresh-profile wide desktop, narrow Web/native mobile, advanced disclosure keyboard access, and create/restore/connect paths.
+- [x] Record current-source checks and independent review; retain A04/A06/A07 gaps and keep the task active.
+
+The 2048px regression failed before the correction with the welcome axis at
+720px instead of 1024px. Restoring `margin-inline: auto` on the no-workspace
+Web shell centers topbar/copy/card; 1280/1366/2048 tests now assert the actual
+viewport axis. Desktop and narrow Web budget visibility remains intentional;
+only the native mobile surface includes it inside advanced options.
+
+Validation: focused setup browser tests 12/12, native mobile welcome en/zh-CN
+2/2, typecheck and Web production build passed. Fresh Chinese 375px portrait
+and 800px landscape had no horizontal overflow. Independent review reproduced
+an unrelated October-sensitive budget test failure, froze its September clock
+and added explicit future inheritance assertions; the full unit suite then
+passed 226/226. Live HTTPS preview on port 6080 serves the corrected CSS.
+See [quality review](research/onboarding-layout-check-20261004.md) and
+[design decisions](research/onboarding-layout-uupm-20261004.md).
+
 - `./hako node_modules/.bin/tsx --test src/web/opfs-sah-exists.test.ts src/web/profile-host.test.ts`: initial implementation 13/13 passed; quality reviewer expanded regressions and reported 16/16 passed.
 - `./hako npm run typecheck`: implementation and final reviewer check passed; reviewer also reran the focused SAH browser regression (1/1).
 - `./hako npm run test:web -- tests/e2e/local-ledger-catalog.spec.ts --project=chrome --workers=1`: 3/3 passed, including genuine non-isolated SAH reload and removal of the database backing file while pool directories remain.

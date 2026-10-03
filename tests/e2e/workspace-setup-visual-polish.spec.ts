@@ -1,61 +1,78 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('workspace setup visual polish', () => {
-  test.describe('desktop welcome layout', () => {
-    test.use({ viewport: { width: 1280, height: 900 } });
+  for (const width of [1280, 1366, 2048]) {
+    test.describe(`desktop welcome layout at ${width}px`, () => {
+      test.use({ viewport: { width, height: 900 } });
 
-    test('centers the welcome copy above the setup card and creates a workspace', async ({
-      page,
-    }) => {
-      await page.goto('/');
-      await expect(page.locator('#workspace-form')).toBeVisible();
+      test('centers the welcome copy above the setup card and creates a workspace', async ({
+        page,
+      }) => {
+        await page.goto('/');
+        await expect(page.locator('#workspace-form')).toBeVisible();
 
-      const geometry = await page.evaluate(() => {
-        const readBox = (selector: string) => {
-          const element = document.querySelector(selector);
-          if (!(element instanceof HTMLElement)) return null;
-          const rect = element.getBoundingClientRect();
-          return {
-            top: rect.top,
-            bottom: rect.bottom,
-            left: rect.left,
-            right: rect.right,
-            width: rect.width,
+        const geometry = await page.evaluate(() => {
+          const readBox = (selector: string) => {
+            const element = document.querySelector(selector);
+            if (!(element instanceof HTMLElement)) return null;
+            const rect = element.getBoundingClientRect();
+            return {
+              top: rect.top,
+              bottom: rect.bottom,
+              left: rect.left,
+              right: rect.right,
+              width: rect.width,
+            };
           };
-        };
-        return {
-          viewportWidth: window.innerWidth,
-          copy: readBox('.setup-copy'),
-          card: readBox('.setup-card'),
-        };
+          return {
+            viewportWidth: window.innerWidth,
+            copy: readBox('.setup-copy'),
+            card: readBox('.setup-card'),
+            header: readBox('.web-setup-topbar'),
+          };
+        });
+
+        expect(geometry.copy).not.toBeNull();
+        expect(geometry.card).not.toBeNull();
+        expect(geometry.header).not.toBeNull();
+        for (const box of [geometry.copy, geometry.card, geometry.header]) {
+          expect(Math.abs(((box?.left ?? 0) + (box?.right ?? 0)) / 2 -
+            geometry.viewportWidth / 2)).toBeLessThanOrEqual(1);
+        }
+        expect(geometry.copy?.bottom ?? 0).toBeLessThanOrEqual(
+          geometry.card?.top ?? -1,
+        );
+        expect(
+          Math.abs(
+            ((geometry.copy?.left ?? 0) + (geometry.copy?.right ?? 0)) / 2 -
+              ((geometry.card?.left ?? 0) + (geometry.card?.right ?? 0)) / 2,
+          ),
+        ).toBeLessThanOrEqual(1);
+        expect(geometry.card?.width ?? geometry.viewportWidth + 1).toBeLessThanOrEqual(
+          672,
+        );
+        const submitBox = await page.locator('#workspace-form button[type="submit"]').boundingBox();
+        const noteBox = await page.locator('.setup-note').boundingBox();
+        expect((noteBox?.y ?? 0) - ((submitBox?.y ?? 0) + (submitBox?.height ?? 0)))
+          .toBeGreaterThanOrEqual(16);
+
+        await expect(page.locator('#workspace-currency option[value="CNY"]')).toHaveCount(1);
+        await expect(page.locator('.setup-note')).toContainText('saved on this device');
+        await expect(page.locator('#workspace-precision')).toBeHidden();
+        await expect(page.locator('#workspace-budget')).toBeVisible();
+        const advanced = page.locator('#setup-advanced summary');
+        await advanced.focus();
+        await advanced.press('Enter');
+        await expect(page.locator('#workspace-precision')).toBeVisible();
+        await advanced.press('Enter');
+        await expect(page.locator('#workspace-precision')).toBeHidden();
+        await expect(page.locator('#workspace-budget')).toBeVisible();
+        await page.getByLabel('Ledger name').fill('Centered welcome household');
+        await page.getByRole('button', { name: 'Create local ledger' }).click();
+        await expect(page.locator('#transactions-title')).toHaveText('Recent ledger');
       });
-
-      expect(geometry.copy).not.toBeNull();
-      expect(geometry.card).not.toBeNull();
-      expect(geometry.copy?.bottom ?? 0).toBeLessThanOrEqual(
-        geometry.card?.top ?? -1,
-      );
-      expect(
-        Math.abs(
-          ((geometry.copy?.left ?? 0) + (geometry.copy?.right ?? 0)) / 2 -
-            ((geometry.card?.left ?? 0) + (geometry.card?.right ?? 0)) / 2,
-        ),
-      ).toBeLessThanOrEqual(1);
-      expect(geometry.card?.width ?? geometry.viewportWidth + 1).toBeLessThanOrEqual(
-        672,
-      );
-      const submitBox = await page.locator('#workspace-form button[type="submit"]').boundingBox();
-      const noteBox = await page.locator('.setup-note').boundingBox();
-      expect((noteBox?.y ?? 0) - ((submitBox?.y ?? 0) + (submitBox?.height ?? 0)))
-        .toBeGreaterThanOrEqual(16);
-
-      await expect(page.locator('#workspace-currency option[value="CNY"]')).toHaveCount(1);
-      await expect(page.locator('.setup-note')).toContainText('saved on this device');
-      await page.getByLabel('Ledger name').fill('Centered welcome household');
-      await page.getByRole('button', { name: 'Create local ledger' }).click();
-      await expect(page.locator('#transactions-title')).toHaveText('Recent ledger');
     });
-  });
+  }
 
   test('keeps the setup form single-column and free of horizontal overflow at 375px', async ({
     page,
@@ -82,8 +99,12 @@ test.describe('workspace setup visual polish', () => {
     expect(dimensions.shellWidth).toBeLessThanOrEqual(dimensions.clientWidth);
     await expect(page.locator('#workspace-currency')).toBeVisible();
     await expect(page.locator('#workspace-precision')).toBeHidden();
+    await expect(page.locator('#workspace-budget')).toBeVisible();
     await page.locator('#setup-advanced summary').click();
     await expect(page.locator('#workspace-precision')).toBeVisible();
+    await expect(page.locator('#workspace-budget')).toBeVisible();
+    await page.locator('#setup-advanced summary').click();
+    await expect(page.locator('#workspace-precision')).toBeHidden();
     await expect(page.locator('#workspace-budget')).toBeVisible();
   });
 
