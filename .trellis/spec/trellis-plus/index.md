@@ -113,8 +113,9 @@ assistive technology, native Electron dialogs, or private environments.
 Before development or validation, check for the project-local `hako` wrapper
 and `.devhome` cache boundary. The current wrapper uses a Node 22 Bookworm
 image because Electron's native SQLite dependency needs a build toolchain; it
-mounts only the repository, runs as the invoking user, and has no persistent
-service. Its default image is built from the `dev` stage in the repository-root
+mounts only the repository and runs as the invoking user. One-shot commands
+use disposable containers; the preview lifecycle below manages its detached
+Web service. Its default image is built from the `dev` stage in the repository-root
 `Dockerfile`, which is the only Dockerfile used by the development and test
 workflow; keep Chrome and Firefox provisioning in that stage instead of adding
 a separate development Dockerfile. Deployment-specific Dockerfiles remain
@@ -122,6 +123,33 @@ owned by their respective Compose/release workflows. Use the `dev-it-in-docker`
 skill when changing that boundary, keep any wrapper allow rule scoped to
 `./hako`, and never broaden permissions for raw Docker, shell, or package-manager
 commands.
+
+## Trellis Plus: Preview lifecycle and environment
+
+Read [development.md](./development.md) before changing `preview.sh`, `dev.sh`,
+`hako`, preview configuration, or preview acceptance checks. It defines the
+Docker-backed HTTPS Web preview, root `.env` setup, explicit image build,
+readiness and address reporting, and data-preserving shutdown. Production
+Compose deployment retains its separate lifecycle and loopback-first boundary.
+
+## Project policy loading
+
+The installed Codex session-start hook discovers this index through the spec
+index scan; the compact startup record lists spec paths for on-demand reading.
+It does not establish that linked detail files have been read. Main sessions
+must read this index and `.trellis/mainline.md` at startup/resumption and before
+commit/archive; preview work must also read `development.md`.
+
+Implementation/check loading uses the active task's `implement.jsonl` and
+`check.jsonl` through native context injection or the agent's documented
+child-side fallback. That loader materializes registered files, not Markdown
+links. For preview work, register both this index and `development.md` in both
+manifests with `python3 .trellis/scripts/task.py add-context <task-dir>
+<implement|check> <repo-relative-spec-path> <reason>`, then inspect them with
+`task.py list-context <task-dir>` and run `task.py validate <task-dir>`.
+Future tasks still require this explicit detail registration; there is no
+automatic linked-spec enforcement. With an explicit no-task request, read the
+same specs directly and do not create a task just to carry context.
 
 ## Trellis Plus: ChatGPT/Codex commit completion and attribution
 

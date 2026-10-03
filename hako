@@ -11,7 +11,9 @@
 # The repository is mounted at /app and npm's HOME/cache is kept in .devhome.
 # The first command builds the Dockerfile dev stage, which provides Google
 # Chrome and Playwright Firefox. Override HAKO_IMAGE to use another image.
-# A future web service can use the configurable port mapping below.
+# ./preview.sh build explicitly prepares the image for persistent Web previews.
+# .env configures WEB_HOST_PORT -> WEB_CONTAINER_PORT and HAKO_BIND_HOST;
+# WEB_CONTAINER_HOST must be 0.0.0.0 for published container access.
 set -Eeuo pipefail
 
 # The development image retains Node 22 and adds the browsers needed by
@@ -22,17 +24,15 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT
 readonly DEVHOME="${REPO_ROOT}/.devhome"
 readonly DEV_DOCKERFILE="${REPO_ROOT}/Dockerfile"
-readonly IMAGE="${HAKO_IMAGE:-${DEFAULT_IMAGE}}"
 STEP_INDEX=0
 
 # Editable defaults. Override temporarily when another local service uses the port.
-HAKO_BIND_HOST="${HAKO_BIND_HOST:-127.0.0.1}"
-WEB_HOST_PORT="${WEB_HOST_PORT:-5173}"
-WEB_CONTAINER_PORT="${WEB_CONTAINER_PORT:-5173}"
+# shellcheck source=scripts/preview-config.sh
+source "${REPO_ROOT}/scripts/preview-config.sh"
 
 usage() {
 	printf 'Usage: %s [command [argument ...]]\n' "${BASH_SOURCE[0]##*/}" >&2
-	printf '\nRun one project command in %s.\n' "${IMAGE}" >&2
+	printf '\nRun one project command in %s; --build prepares the dev image.\n' "${HAKO_IMAGE:-${DEFAULT_IMAGE}}" >&2
 	printf 'Examples:\n  %s npm install\n  %s npm test\n' "${BASH_SOURCE[0]##*/}" "${BASH_SOURCE[0]##*/}" >&2
 }
 
@@ -67,9 +67,14 @@ run_step() {
 	"$@"
 }
 
+build_image() {
+	run_step build docker build --progress=plain --target dev --tag "${image}" \
+		--file "${DEV_DOCKERFILE}" "${REPO_ROOT}"
+}
+
 ensure_image() {
 	[[ -n "${HAKO_IMAGE:-}" ]] && return 0
-	if docker image inspect "${IMAGE}" >/dev/null 2>&1; then
+	if docker image inspect "${image}" >/dev/null 2>&1; then
 		return 0
 	fi
 
@@ -77,14 +82,14 @@ ensure_image() {
 		printf '[hako] development Dockerfile not found: %s\n' "${DEV_DOCKERFILE}" >&2
 		return 1
 	}
-	run_step build docker build --progress=plain --target dev --tag "${IMAGE}" \
-		--file "${DEV_DOCKERFILE}" "${REPO_ROOT}"
+	build_image
 }
 
 main() {
 	local -a tty_flags=()
 	local -a port_flags=()
 	local -a docker_command
+	local detached=false image=${HAKO_IMAGE:-${DEFAULT_IMAGE}}
 
 	if [[ $# -eq 0 || "$1" == '--help' || "$1" == '-h' ]]; then
 		usage
@@ -95,16 +100,42 @@ main() {
 	require_command docker
 	require_command id
 	require_command mkdir
+	load_preview_config "${REPO_ROOT}/.env"
+	image=${HAKO_IMAGE:-${DEFAULT_IMAGE}}
+	if [[ "$1" == --build ]]; then
+		[[ $# -eq 1 ]] || {
+			printf 'Error: --build takes no arguments\n' >&2
+			return 2
+		}
+		build_image
+		return
+	fi
+	if [[ "$1" == --detach ]]; then
+		detached=true
+		shift
+		[[ $# -gt 0 && "${HAKO_SCOPE:-}" == dev.sh && "${HAKO_SERVICE:-}" == web && -n "${HAKO_CONTAINER_NAME:-}" ]] || {
+			printf 'Error: detached mode requires dev.sh Web lifecycle ownership\n' >&2
+			return 2
+		}
+		validate_preview_config
+		docker image inspect "${image}" >/dev/null || {
+			printf 'Error: missing image; run ./preview.sh build\n' >&2
+			return 1
+		}
+	else
+		ensure_image
+	fi
 	run_step internal mkdir -p -- "${DEVHOME}"
-	ensure_image
 
-	[[ -t 0 ]] && tty_flags+=(-i)
-	[[ -t 0 && -t 1 ]] && tty_flags+=(-t)
+	if [[ "$detached" == false ]]; then
+		[[ -t 0 ]] && tty_flags+=(-i)
+		[[ -t 0 && -t 1 ]] && tty_flags+=(-t)
+	fi
 
 	case "${HAKO_SERVICE:-}" in
 	'') ;;
 	browser | web)
-		port_flags=(-p "${HAKO_BIND_HOST}:${WEB_HOST_PORT}:${WEB_CONTAINER_PORT}")
+		port_flags=(-p "${HAKO_BIND_HOST:-127.0.0.1}:${WEB_HOST_PORT:-5173}:${WEB_CONTAINER_PORT:-5173}")
 		;;
 	*)
 		printf '[hako] unknown service for port mapping: %s\n' "${HAKO_SERVICE}" >&2
@@ -123,9 +154,17 @@ main() {
 		--label "hako.scope=${HAKO_SCOPE:-manual}"
 		--label "hako.service=${HAKO_SERVICE:-}"
 		"${port_flags[@]}"
-		"${IMAGE}"
-		"$@"
 	)
+	if [[ "$detached" == true ]]; then
+		[[ -z "${HAKO_CID_FILE:-}" ]] || docker_command+=(--cidfile "$HAKO_CID_FILE")
+		docker_command+=(--detach --name "$HAKO_CONTAINER_NAME"
+			-e "WEB_CONTAINER_HOST=$WEB_CONTAINER_HOST" -e "WEB_CONTAINER_PORT=$WEB_CONTAINER_PORT"
+			-e "WEB_LAN_HOST=${WEB_LAN_HOST:-}"
+			--label "luna.preview.host=$WEB_CONTAINER_HOST"
+			--label "luna.preview.port=$WEB_CONTAINER_PORT"
+			--label "luna.preview.lan=${WEB_LAN_HOST:-}")
+	fi
+	docker_command+=("${image}" "$@")
 
 	log_step run "${docker_command[@]}"
 	exec "${docker_command[@]}"
