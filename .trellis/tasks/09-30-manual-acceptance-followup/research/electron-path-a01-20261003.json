@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-03",
+  "result": "passed",
+  "environment": {
+    "platform": "Linux x64",
+    "display": "isolated Xvfb",
+    "driverRuntime": "v20.19.2",
+    "electron": "44.0.0",
+    "artifactSha256": "3204e1c60a4bb0a1ab1959f0003ce5020d5036f4744e29257dbc108e73314589",
+    "chromiumSandbox": "Playwright launch adds --no-sandbox; BrowserWindow preference checked, OS sandbox enforcement not validated"
+  },
+  "checks": [
+    "Packaged BrowserWindow requests context isolation and sandbox, disables Node integration; renderer has no Node or raw IPC globals",
+    "Custom-directory pointer actually used; snapshot/settings/profiles/status/sync/usage/DOM/browser storage contain no private directory",
+    "Successful native backup selection writes nonempty file; renderer receives undefined, not its path",
+    "Cancel and real ENOENT write failure return sanitized errors including stack; ledger remains unchanged",
+    "Actual disk-file selection exposes basename/fake input path only; File.path absent and no selected directory in DOM",
+    "Restart with custom data-directory pointer preserves synthetic ledger and private-free projections"
+  ],
+  "scope": "Packaged main/preload/renderer and real filesystem I/O. Save dialog selection substituted only in main; native chooser presentation remains covered by 2026-09-30 evidence. Selected user-file and data-directory paths are private; file:// installation resource URLs are not claimed hidden. Not a comprehensive security audit or subjective satisfaction assessment.",
+  "command": "xvfb-run -a node .trellis/tasks/09-30-manual-acceptance-followup/research/electron-path-a01-20261003.mjs",
+  "validation": [
+    "Harness completed with exit code 0",
+    "node --check passed",
+    "git diff --check passed"
+  ],
+  "sourceInspection": [
+    "src/main.ts configures contextIsolation=true, nodeIntegration=false, sandbox=true",
+    "src/preload.ts exposes typed methods only, without ipcRenderer or webUtils",
+    "src/main/ipc.ts saveNativeLedgerBackup returns Promise<void> and callSafely replaces native errors with LUNA_ERROR:operation-failed",
+    "src/main/app-paths.ts owns directory pointer resolution in main"
+  ],
+  "executionNotes": [
+    "Initial sandboxed launch failed because Chromium socket shutdown was denied; authorized escalated isolated launch succeeded",
+    "Harness initially hit Playwright auto-dismiss behavior for native dialogs; a passive listener and explicit app.exit fixed harness shutdown",
+    "Initial file metadata probe ran after the application cleared its input; capture-phase change listener now reads the actual selected File before clearing",
+    "No product source changed, no native chooser presentation re-run, and no subjective satisfaction supplied"
+  ],
+  "provenance": {
+    "command": "./hako npm run package",
+    "result": "passed",
+    "nodeRuntime": "v22.22.0",
+    "sourceHead": "5b1d5c506642da0255a4419a8a699673876010ef",
+    "electronSourceLastCommit": "e11c2da55c259ac3d859291691da8fefdab7e0c8 2026-09-30T16:59:16+08:00",
+    "sourcePathScope": [
+      "src/main.ts",
+      "src/preload.ts",
+      "src/main/",
+      "src/shared/",
+      "src/sync/",
+      "src/renderer/",
+      "forge.config.ts",
+      "vite.main.config.ts",
+      "vite.preload.config.ts",
+      "vite.renderer.config.ts",
+      "package.json",
+      "package-lock.json"
+    ],
+    "sourceFileCount": 117,
+    "sourceSha256": "7b588d83786e97305add8ff26879ce19c6edfd5b0e1f28ee2370ba9631dd2d46",
+    "scopedDirtyPaths": "",
+    "buildTimestampUtc": "2026-10-03T04:22:56.126Z",
+    "asarViteFilesCompared": 20,
+    "asarViteMismatches": [],
+    "artifactSha256": "3204e1c60a4bb0a1ab1959f0003ce5020d5036f4744e29257dbc108e73314589",
+    "previousArtifact": {
+      "artifactSha256": "30553d0e8e13a005e831be3dfa3cd48ffdb07882bfc5920d487fc3fe041d9932",
+      "buildDate": "2026-09-30",
+      "asarViteFilesCompared": 20,
+      "asarViteMismatches": [],
+      "limitation": "Historical .vite byte equality alone did not establish current-source provenance; replaced by a new successful package run."
+    },
+    "notes": "Current working tree Electron source rebuilt. Concurrent changes under src/web were outside Electron entry dependencies. Native dependency packaging completed; fresh artifact acceptance is recorded in parent evidence."
+  }
+}

@@ -2,6 +2,62 @@ import { expect, test } from "@playwright/test";
 
 const ledgerPassword = "catalog-fixture-passphrase";
 
+test("SAH profiles survive reload and reject a missing backing file inside an existing pool", async ({ page }) => {
+  await page.route("**/*", async (route) => {
+    if (!route.request().isNavigationRequest()) return route.continue();
+    const response = await route.fetch();
+    const headers = response.headers();
+    delete headers["cross-origin-opener-policy"];
+    delete headers["cross-origin-embedder-policy"];
+    await route.fulfill({ response, headers });
+  });
+  await page.goto("/");
+  expect(await page.evaluate(() => crossOriginIsolated)).toBe(false);
+  await page.locator("#workspace-name").fill("SAH original");
+  await page.locator("#workspace-form button[type=submit]").click();
+  await expect(page.locator("#transactions-title")).toBeVisible();
+  const id = await page.evaluate(async () => {
+    const api = window.lunaLedger;
+    await api.server!.createLocalProfile();
+    const id = (await api.server!.status()).profile.id;
+    await api.createWorkspace({ name: "SAH separate", currency: "CNY", precision: 2, monthlyBudgetMinor: null });
+    await api.server!.selectProfile("legacy-local");
+    await api.server!.selectProfile(id);
+    return id;
+  });
+  await page.reload();
+  await expect.poll(async () => page.evaluate(async () => (await window.lunaLedger.getSnapshot("2026-10")).workspace?.name)).toBe("SAH separate");
+  await page.evaluate(() => window.lunaLedger.server!.selectProfile("legacy-local"));
+  await page.reload();
+  await expect.poll(() => activeProfileId(page)).toBe("legacy-local");
+  const removed = await page.evaluate(async (id) => {
+    const name = `luna-ledger-${id}`;
+    const root = await navigator.storage.getDirectory();
+    const parent = await root.getDirectoryHandle(".luna-sqlite");
+    const directory = await parent.getDirectoryHandle(name);
+    const opaque = await directory.getDirectoryHandle(".opaque");
+    const entries = opaque as FileSystemDirectoryHandle & { values(): AsyncIterableIterator<FileSystemFileHandle> };
+    for await (const handle of entries.values()) {
+      const file = await handle.getFile();
+      if ((await file.slice(0, 512).text()).startsWith(`/${name}.sqlite3\0`)) {
+        await opaque.removeEntry(handle.name);
+        return true;
+      }
+    }
+    return false;
+  }, id);
+  expect(removed).toBe(true);
+  const result = await page.evaluate(async (id) => {
+    const before = (await window.lunaLedger.server!.profiles()).find((p) => p.id === id);
+    let rejected = false;
+    try { await window.lunaLedger.server!.selectProfile(id); } catch { rejected = true; }
+    const after = (await window.lunaLedger.server!.profiles()).find((p) => p.id === id);
+    return { before: before?.available, after: after?.available, rejected };
+  }, id);
+  expect(result).toEqual({ before: false, after: false, rejected: true });
+  expect(await activeProfileId(page)).toBe("legacy-local");
+});
+
 async function account(page: import("@playwright/test").Page) {
   await page.locator("#open-secondary-menu").click();
   await page.locator('[data-settings-area="account"]').click();

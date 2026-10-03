@@ -3,6 +3,7 @@ import {
   type StateStore,
 } from "./browser-state-store";
 import { SqliteWasmStateStore } from "./sqlite-wasm-store";
+import { hasSahDatabase } from "./opfs-sah-exists";
 import { WebLedgerApi, decodeStoredState } from "./web-api";
 import { ServerHost } from "../sync/server-host";
 import { createWebSessionVault } from "./session-vault";
@@ -286,7 +287,7 @@ export class BrowserProfiles implements ProfileRepository {
     try {
       const parent = await root.getDirectoryHandle(".luna-sqlite");
       const profileDirectory = await parent.getDirectoryHandle(name);
-      return hasFile(profileDirectory, `${name}.sqlite3`);
+      return await hasSahDatabase(profileDirectory, `${name}.sqlite3`);
     } catch (error) {
       if (isNotFound(error)) return false;
       throw error;

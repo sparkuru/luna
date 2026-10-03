@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-03",
+  "checks": [
+    "Android and Chrome HTTPS using scoped test CA, no certificate bypass",
+    "desktop upload and Android download",
+    "two device runtimes offline edit/delete retain pending",
+    "manual mode retains local divergence after connectivity recovery",
+    "edit/delete conflict heads exposed and selected edit converges",
+    "server committed PUT response dropped; retry converges without duplicate"
+  ],
+  "finalCount": 3,
+  "scope": "Physical Android16 plus workstation Chrome. CDP per-client offline emulation and response-loss injection, not radio disconnection. Public host API mutations and conflict selection.",
+  "harnessNote": "Initial lost-response route.fetch failed because Node driver did not trust scoped CA; rerun used NODE_EXTRA_CA_CERTS and passed.",
+  "validationApk": {
+    "package": "majo.im.luna.acceptance",
+    "sha256": "098b3dc59bc9ee955da93d9c4e176da289849bceb40b57bb957be07e079cc730",
+    "source": "temporary copy of current source including SAH fix, Dockerfile.android build with suffix .acceptance",
+    "trust": "Temporary network-security-config trusts only test CA for 192.168.9.3; system trust elsewhere; no cleartext or certificate bypass. Product source and Android global trust unchanged.",
+    "distinctFromA02": "A02-A04 used unmodified trust configuration in majo.im.luna.lan (hash in android-a02-a04 evidence)."
+  },
+  "limit": "Network interruption uses CDP per-client offline and response-loss emulation, not physical radio disconnection. Conflict UI and automatic recovery are covered by followup. Attachment transfer and service reboot were not part of this A05 check.",
+  "cleanup": {
+    "devicePackages": "Both newly installed .lan and .acceptance packages uninstalled successfully; package query empty",
+    "deviceFiles": "Only two task-created synthetic backups and task XML dumps removed",
+    "adbForwards": "19222 and 19223 removed",
+    "local": "Task /tmp workspace and temporary CA-bearing APK image removed",
+    "globalTrust": "Unchanged",
+    "followup": "Second newly installed .acceptance package uninstalled; package query empty; forward 19223 removed. Followup created no backup file (native save cancelled). Second task temporary context/CA public copy/APK and image removed. Server-side private CA/session cleanup tracked in paired service evidence."
+  },
+  "followup": {
+    "date": "2026-10-03",
+    "conflictUi": {
+      "visibleCandidates": 2,
+      "bothValuesRendered": true,
+      "buttonSelected": "Android selected candidate",
+      "emptyInboxAfterSelection": true,
+      "bothClientsConverged": true
+    },
+    "automaticRecovery": {
+      "offlineWritePending": true,
+      "onlineRecoveryWithoutManualSync": true,
+      "desktopReceivedByPolling": true,
+      "finalCount": 2
+    },
+    "scope": "Physical Android16 WebView UI conflict click; workstation Chrome. Real isolated HTTPS API; CDP per-client offline emulation. No sync()/probe call after offline mutation.",
+    "validationApkSha256": "f6f2c4eb878c1b9c193b37e9404109305063c6553004eaa0bf05c7779842b0ff",
+    "validationApk": "Rebuilt current source into temporary .acceptance package with a new test CA scoped only to 192.168.9.3; first test CA was already destroyed.",
+    "harnessNote": "Initial followup imported expect from playwright rather than @playwright/test; corrected the harness and resumed the existing real conflict without recreating data."
+  }
+}

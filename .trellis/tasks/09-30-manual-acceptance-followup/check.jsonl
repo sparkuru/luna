@@ -2,3 +2,4 @@
 {"file":".trellis/spec/frontend/component-guidelines.md","reason":"Check focus, dialog, touch-target, semantic-label, and responsive claims against the renderer contract."}
 {"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Check sync, conflict, retry, backup, and convergence outcomes against the encrypted graph contract."}
 {"file":".trellis/spec/backend/deployment-and-recovery.md","reason":"Check target restore and negative initialization outcomes against deployment recovery invariants."}
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Check delegated acceptance and preserve uncovered scope"}

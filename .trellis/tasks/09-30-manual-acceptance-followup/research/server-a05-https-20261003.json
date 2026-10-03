@@ -1,0 +1,140 @@
+{
+  "date": "2026-10-03",
+  "acceptanceId": "A05",
+  "scope": "Temporary isolated HTTPS infrastructure for actual configuration A host and Android clients; pair behavior evidence is recorded separately by acceptance agent.",
+  "status": "all-paired-validation-rounds-complete-and-service-resources-cleaned",
+  "origin": "https://192.168.9.3:19443",
+  "isolation": {
+    "workspace": "/tmp/luna-a05-20261003-LEOBuU",
+    "label": "luna.restore-run=luna-restore-8ac5a09d",
+    "containers": [
+      "luna-a05-minio-20261003",
+      "luna-a05-api-20261003",
+      "luna-a05-web-20261003"
+    ],
+    "network": "luna-a05-20261003",
+    "user": "1000:1000",
+    "readOnlyRoot": true,
+    "capabilities": "ALL dropped",
+    "security": "no-new-privileges",
+    "published": "HTTPS target LAN IP port 19443; API random loopback port; MinIO no host port",
+    "syntheticOnly": true
+  },
+  "provenance": {
+    "apiImage": "sha256:2483ce467999ac00d42521e41458f922acdf5975609efe01fee51629b39dc65b",
+    "apiBuild": "Current-source Dockerfile.server build; exact compiled artifact verification described in server-a06-20261003.json",
+    "webBuild": "./hako npm run web:build passed",
+    "webIndexSha256": "534e187516498ac04401fe0c78ea1201c5b1731b01011f58af85db2e87d9a8e2",
+    "setupSha256": "15b7791b6a9b124d9db3a74539648c5972849c2015622246f5728c3b6fc4c096",
+    "nginxConfigSha256": "fb7d2219f26e58fe86974a844c96444e1304008203742b111fbd42cce4e00c03",
+    "nginx": "1.29.8-alpine3.23",
+    "setup": "Temporary derivative of reviewed restore smoke helpers; creates account from owner-only synthetic credential file, then leaves three labeled services for paired clients. Proxy variables cleared only for test containers."
+  },
+  "tls": {
+    "ca": "Ephemeral two-day isolated test CA",
+    "sha256Fingerprint": "2E:DB:7A:FB:59:13:BD:CA:69:25:10:FB:73:D3:2F:2A:E7:24:DD:69:3D:F6:D0:93:9D:77:55:54:5A:48:C1:97",
+    "serverSan": "IP:192.168.9.3",
+    "caPrivateKey": "Owner-only local /tmp; never uploaded to server or repository",
+    "serverPrivateKey": "Owner-only task /tmp; mounted readonly into task gateway",
+    "curl": {
+      "status": 200,
+      "sslVerifyResult": 0,
+      "endpoint": "/api/v1/meta"
+    },
+    "chrome": {
+      "trust": "Dedicated HOME NSS database and dedicated user data directory only; no global trust change",
+      "certificateBypass": false,
+      "httpStatus": 200,
+      "protocol": "TLS 1.3",
+      "issuer": "Luna isolated A05 acceptance CA",
+      "secureContext": true,
+      "crossOriginIsolated": true
+    },
+    "android": "Separate temporary validation APK with endpoint-scoped CA trust; see paired-client evidence for actual build and connection results"
+  },
+  "headers": {
+    "web": {
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "cacheControl": "no-cache"
+    },
+    "api": {
+      "cacheControl": "no-store, no-transform"
+    }
+  },
+  "limitations": [
+    "Ephemeral CA/private endpoint does not prove publicly trusted production HTTPS or certificate renewal.",
+    "Temporary test APK trust differs from release default and must not be reported as unmodified production package behavior.",
+    "Two independent browser contexts alone are not two real devices; paired Android/browser evidence is separate."
+  ],
+  "cleanup": {
+    "state": "complete",
+    "chrome": "Dedicated browser closed via its unique loopback CDP endpoint; driver session 11711 terminated with exit 130.",
+    "containers": "All three removed after matching exact luna.restore-run=luna-restore-8ac5a09d label; final matching list empty.",
+    "network": "Removed exact-label luna-a05-20261003 network; final matching list empty.",
+    "remoteWorkspace": "/tmp/luna-a05-20261003-LEOBuU removed, absence verified; includes synthetic database/session state, server TLS key, credentials and binary.",
+    "localWorkspace": "/tmp/luna-a05-20261003-LEOBuU removed, absence verified; includes CA private key, server key, credentials and dedicated browser profile.",
+    "nssTrust": "Main session confirmed /tmp/luna-a05-chrome-trust.gx0Wk0 removed with absence verified.",
+    "images": "Task-transferred images remain cached; no existing images removed.",
+    "existingServices": "No existing business services, persistent application data, host runtime or global trust configuration modified."
+  },
+  "privacy": "No credentials, key contents, tokens, account data or encrypted backup bytes are included.",
+  "pairedClientEvidence": {
+    "file": "two-device-a05-20261003.json",
+    "checks": 6,
+    "scope": "Physical Android 16 and workstation Chrome, scoped test CA with full TLS validation; CDP client network emulation and response-loss injection, not physical radio disconnection.",
+    "results": [
+      "desktop upload and Android download",
+      "offline edit/delete retain pending on two actual clients",
+      "manual mode retains divergence after connectivity returns",
+      "conflict heads exposed and selected edit converges",
+      "server committed PUT response dropped; retry converges without duplicate"
+    ],
+    "finalRecordCount": 3
+  },
+  "privacyIncident": {
+    "scope": "Initial Node route.fetch TLS exception printed a synthetic bearer in transient driver error output; not copied into repository evidence.",
+    "remediation": "Destroyed the synthetic account/session database and removed the temporary service, invalidating the exposed bearer; no real credentials were used.",
+    "prevention": "Future driver diagnostics should sanitize request headers before printing exceptions."
+  },
+  "followup": {
+    "reason": "Supplementary automatic recovery and actual conflict UI acceptance after initial scope review",
+    "status": "passed-and-cleaned",
+    "workspace": "/tmp/luna-a05-followup-20261003",
+    "label": "luna.restore-run=luna-restore-370a61c6",
+    "containers": [
+      "luna-a05-followup-minio",
+      "luna-a05-followup-api",
+      "luna-a05-followup-web"
+    ],
+    "network": "luna-a05-followup-20261003",
+    "caSha256Fingerprint": "7A:B2:D9:22:D2:92:37:61:BF:E3:8A:98:6C:D2:12:0C:B6:A7:36:94:60:43:9A:83:A6:96:81:A9:A0:2D:B9:91",
+    "scope": "New ephemeral scoped CA, synthetic account and browser profile; same current-source API image and Web build",
+    "chrome": {
+      "httpStatus": 200,
+      "protocol": "TLS 1.3",
+      "issuer": "Luna isolated A05 followup CA",
+      "secureContext": true,
+      "crossOriginIsolated": true,
+      "certificateBypass": false
+    },
+    "cleanup": {
+      "state": "complete",
+      "chrome": "Dedicated browser closed via exact CDP endpoint; driver session 99728 terminated exit 130",
+      "containers": "All three removed by exact luna.restore-run=luna-restore-370a61c6 label; matching list empty",
+      "network": "Removed exact-label luna-a05-followup-20261003; matching list empty",
+      "remoteWorkspace": "/tmp/luna-a05-followup-20261003 removed and absence verified, including synthetic session database and server key",
+      "localWorkspace": "/tmp/luna-a05-followup-20261003 removed and absence verified, including CA/server private keys, credentials, Chrome profile",
+      "nssTrust": "Main session removed /tmp/luna-a05-extra-trust.dgbzW5 and verified absence. Both rounds left global trust unchanged.",
+      "images": "Existing cached service images retained; no unrelated service or persistent user data touched"
+    },
+    "results": {
+      "source": "acceptance agent confirmed completed run; client evidence followup recorded separately in two-device-a05-20261003.json",
+      "checks": [
+        "Actual Android conflict UI displayed two candidates; selection committed and both devices converged",
+        "Automatic mode: Android offline write remained pending; network recovery without manual sync/probe delivered data to workstation automatically; both devices had identical two records"
+      ],
+      "finalRecordCount": 2
+    }
+  }
+}

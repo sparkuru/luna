@@ -130,6 +130,24 @@ the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
 
 ## 4. Validation & Error Matrix
 
+### SAH profile discovery
+
+`BrowserProfiles.profileDatabaseExists()` must discover the pinned SQLite-WASM
+SAH pool without opening or initializing it. The logical database filename is
+stored in the association header of a randomly named `.opaque` file; it is not
+a physical file directly beneath the profile directory. Use the read-only
+`hasSahDatabase(directory, filename)` probe in `src/web/opfs-sah-exists.ts`:
+require an exact NUL-terminated virtual path, main-database flags, valid
+association digest and SQLite payload signature. An empty pool, missing backing
+file or invalid header does not prove an available ledger. Recheck this format
+against the installed SQLite source whenever upgrading `@sqlite.org/sqlite-wasm`.
+
+Regression coverage must include the non-cross-origin-isolated SAH branch,
+profile switching and reload, and deletion of the backing file while leaving
+the pool directory present. Listing or selecting that missing profile must
+report unavailable/reject without creating an empty database. Regular browser
+OPFS and Android IndexedDB fallback tests do not cover this branch.
+
 | Condition | Required outcome |
 | --- | --- |
 | No network on first installed launch | embedded UI usable, secure context, offline writes commit |

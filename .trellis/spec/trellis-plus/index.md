@@ -65,6 +65,14 @@ stakeholder-judgment risk. Any request must name the changed path, checks that
 already ran, the exact residual scenario to test, and the useful failure
 evidence to return; never ask for a generic review.
 
+When the user explicitly delegates acceptance, run the observable checks within
+the authorized environment and record agent-verified results without requiring
+repeated per-row approval. Do not report subjective satisfaction on the user's
+behalf. Missing device capabilities or long-term deployment evidence remain
+uncovered, with the exact prerequisite recorded. A documentation-only evidence
+commit may preserve those gaps without claiming product acceptance or archiving
+an incomplete task.
+
 ## Trellis Plus: Playwright automated frontend validation
 
 The project now has a browser Web host for the shared renderer. For eligible

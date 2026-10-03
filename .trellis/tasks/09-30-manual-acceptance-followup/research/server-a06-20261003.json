@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-03",
+  "acceptanceId": "A06",
+  "conclusion": "partial-pass",
+  "environment": {
+    "configuration": "A",
+    "target": "user-designated trusted Debian server",
+    "docker": "20.10.24+dfsg1",
+    "compose": "v5.5.0 (version only; smoke uses Docker CLI)",
+    "hostNode": "v20.20.2",
+    "acceptedRunner": "v22.22.0 staged from existing image into task /tmp; no host installation",
+    "apiNode": "v22.22.0",
+    "temporaryWorkspace": "/tmp/luna-a06-20261003-8OS8eb"
+  },
+  "provenance": {
+    "sourceHead": "5b1d5c506642da0255a4419a8a699673876010ef",
+    "build": "docker build -f Dockerfile.server -t luna-api:a06-20261003 .",
+    "validation": "./hako npm run server:build passed; every dist/server file SHA256 in rebuilt API image exactly matches freshly compiled local files",
+    "bucketInitializerSha256": "78c80e8896f62003644607dae8b4e3b591c44700e04e2f649b86ce9f7ce83359",
+    "bucketInitializer": "image script matches current deploy/bucket-init.mjs",
+    "originalHarnessSha256": "5c897eb5d772f63a7b6ce56411ebb9368daa9922da3fb6120584016eee46b22e",
+    "adaptedHarnessSha256": "4e5e7cd35910282cc584d965b0163079505b8b82f94694820eb7b99dbe8355d2"
+  },
+  "adaptation": {
+    "location": "temporary copy only; repository script unchanged",
+    "change": "At start of docker(args,input), for args[0] === run, insert --env NAME= for HTTP_PROXY, HTTPS_PROXY, http_proxy, https_proxy, ALL_PROXY, all_proxy. All assertions unchanged.",
+    "reason": "Transferred images inherit proxy variables; mc internal MinIO request returned 502 despite direct readiness 200."
+  },
+  "restore": {
+    "exitCode": 0,
+    "passed": 8,
+    "total": 8,
+    "checks": [
+      "fresh SQLite/MinIO installation creates an account, ledger graph, attachment metadata, ciphertext object, usage and ETags",
+      "the complete data boundary is copied only after API and MinIO stop",
+      "restored data retains instance identity, account session, graph and attachment ciphertext/metadata, exact ETags, usage and idempotency replays",
+      "two authenticated clients reject stale CAS, retain both decoded revision sets and read identical merged ciphertext/ETag",
+      "API restart retains instance identity, both sessions, exact merged ciphertext/ETag and decoded revision graph",
+      "legacy root-backed API runtime upgrades to a limited key without losing ciphertext or instance identity",
+      "interrupted credential publication removes the orphan key before creating a replacement",
+      "missing bucket on an initialized installation fails without creating an empty replacement"
+    ],
+    "apiImage": "sha256:2483ce467999ac00d42521e41458f922acdf5975609efe01fee51629b39dc65b",
+    "minioImage": "sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9",
+    "boundary": "Disposable SQLite/MinIO/API resources and a copied data directory; not production or device evidence."
+  },
+  "initialization": {
+    "command": "TMPDIR=<task temp> ./node22 --test tests/deploy/instance-init.test.mjs",
+    "exitCode": 0,
+    "passed": 5,
+    "total": 5,
+    "checks": [
+      "fresh/repeated initialization preserves root credentials",
+      "completed bucket marker missing runtime rejects and preserves root",
+      "nonempty uninitialized directory rejects and preserves synthetic database",
+      "wrong secret permission 0644 rejects without silent repair",
+      "existing SQLite missing runtime rejects and preserves database"
+    ]
+  },
+  "failedAttempts": [
+    {
+      "runner": "Node20 with original proxy environment and preexisting API image",
+      "result": "Docker run timed out during bucket init; no passing restore report",
+      "cause": "mc stat root returned 502 Bad Gateway; direct container Node fetch MinIO readiness returned 200",
+      "cleanup": "exact ownership-label initializer removal released timeout; harness cleanup removed source MinIO/networks"
+    },
+    {
+      "runner": "Node20, proxy-cleared harness, current-source API",
+      "result": "process exited 13 without report or finally cleanup; root cause not established",
+      "cleanup": "removed only containers/networks bearing failed run label luna-restore-2113484e"
+    }
+  ],
+  "uncovered": [
+    "Running-copy rejection: repository smoke performs stopped copies only; no backup/copy command with a running-service rejection interface was found. Do not count policy documentation as runtime enforcement.",
+    "Compose lifecycle and existing deployment configuration: tests use isolated Docker CLI containers on target host, not an existing business Compose project.",
+    "Off-host backup transfer/restore and production traffic cutover were not exercised.",
+    "Proxy-free temporary harness success does not prove deployment works unchanged when image proxy variables apply.",
+    "Subjective user satisfaction not asserted."
+  ],
+  "cleanup": {
+    "containers": "No remaining luna.restore-run containers after final run",
+    "networks": "No remaining luna.restore-run networks after final run",
+    "remoteWorkspace": "removed; absence verified",
+    "globalChanges": "No global runtime/config/service change",
+    "images": "Transferred dependency images and isolated luna-api:a06-20261003 image remain cached; no preexisting image removed",
+    "existingData": "No existing business data or services touched"
+  },
+  "privacy": "Only synthetic data was used. No token, password, root/API key, ledger content, or backup bytes retained in this evidence."
+}

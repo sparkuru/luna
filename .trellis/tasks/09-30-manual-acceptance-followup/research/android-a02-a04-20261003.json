@@ -1,0 +1,146 @@
+{
+  "date": "2026-10-03",
+  "environment": {
+    "device": "PLR110",
+    "android": "16",
+    "webview": "143.0.7499.34",
+    "package": "majo.im.luna.lan",
+    "apkSha256": "78e75dd67852d5fd36a3e43fc113b13b38ae4330c0f690c5fe15daef8e1dc3d8",
+    "origin": "https://localhost",
+    "storage": "SQLite-WASM OPFS SAH-pool",
+    "artifact": "rebuilt this run from current source including SAH existence fix"
+  },
+  "a02": {
+    "result": "passed for tested scope",
+    "initialFailure": "createLocalProfile failed server-not-found because SAH opaque files were checked using a regular SQLite filename",
+    "fix": "Read-only pinned SAH association path/flags/digest/SQLite magic validation; no pool initialization",
+    "isolation": {
+      "id": "local-63ca591e-73d2-46b7-8884-044ddf13c2fb",
+      "originalCount": 1,
+      "originalMerchant": "A02 original synthetic",
+      "secondCount": 1,
+      "secondMerchant": "A02 separate synthetic",
+      "profiles": [
+        {
+          "id": "legacy-local",
+          "displayName": "A02 original synthetic",
+          "storageKind": "sqlite-wasm-opfs",
+          "createdAt": "2026-10-03T04:13:20.667Z",
+          "lastOpenedAt": "2026-10-03T04:24:48.442Z",
+          "syncState": "local-only",
+          "binding": null,
+          "available": true
+        },
+        {
+          "id": "local-63ca591e-73d2-46b7-8884-044ddf13c2fb",
+          "displayName": "A02 separate",
+          "storageKind": "sqlite-wasm-opfs",
+          "createdAt": "2026-10-03T04:24:48.367Z",
+          "lastOpenedAt": "2026-10-03T04:24:48.370Z",
+          "syncState": "local-only",
+          "binding": null,
+          "available": true
+        },
+        {
+          "id": "local-aaf1c0f9-f79d-4bd1-8751-f1e7211f8386",
+          "displayName": "Local ledger",
+          "storageKind": "sqlite-wasm-opfs",
+          "createdAt": "2026-10-03T04:15:36.430Z",
+          "lastOpenedAt": "2026-10-03T04:15:36.432Z",
+          "syncState": "local-only",
+          "binding": null,
+          "available": true
+        }
+      ]
+    },
+    "restartAndBackup": {
+      "first": [
+        "A02 original synthetic"
+      ],
+      "second": [
+        "A02 separate synthetic"
+      ],
+      "restored": [
+        "A02 separate synthetic"
+      ],
+      "restoredId": "local-3226f603-ad83-41ed-a880-25323a437d65",
+      "wrongPasswordRejected": true,
+      "wrongPasswordPreservedEmpty": true
+    },
+    "missingDirectory": {
+      "available": false,
+      "rejected": true,
+      "recreated": false,
+      "active": "legacy-local"
+    },
+    "limit": "Airplane mode not changed; local-only writes performed without a configured remote"
+  },
+  "a03": {
+    "result": "passed for real SAF export, file-byte import, wrong-password/new-profile restore, UI merge and restart scope",
+    "bytes": 2690,
+    "wrongPasswordRejected": true,
+    "wrongPasswordPreservedEmpty": true,
+    "restoredId": "local-0dd06a23-c70d-45c0-8c56-593d0caecd78",
+    "restoredCount": 1,
+    "originalCount": 1,
+    "restoredName": "A02 original synthetic",
+    "originalName": "A02 original synthetic",
+    "picker": "com.android.documentsui",
+    "limit": "New-profile restore and corruption/wrong-password checks use public complete-backup host sessions. SAF export, selection, cancellation and UI merge were exercised on physical Android; original/restored profiles survived force-stop.",
+    "ui": {
+      "trace": [
+        "beginBackupImport:start",
+        "beginBackupImport:success",
+        "appendBackupChunk:start",
+        "appendBackupChunk:success",
+        "finishBackupImport:start",
+        "finishBackupImport:success"
+      ],
+      "alert": "Backup merged. Open Conflicts in Settings if any versions need a decision.",
+      "count": 1
+    },
+    "afterForceStopRestart": {
+      "originalCount": 1,
+      "restoredCount": 1,
+      "originalName": "A02 original synthetic",
+      "restoredName": "A02 original synthetic"
+    },
+    "harnessNotes": "Initial click attempts did not enter backup API; subsequent observed click/submit and bounded completion check passed. Earlier string-import attempt correctly rejected the binary full-backup format; the complete-backup session API was used thereafter.",
+    "followup": {
+      "date": "2026-10-03",
+      "corruptRejected": true,
+      "unchanged": true,
+      "bytes": 2686,
+      "cancel": {
+        "result": "cancelled",
+        "count": 1
+      },
+      "scope": "Physical Android16, damaged bytes from real full-backup export rejected by complete-backup host sessions; actual DocumentsUI save cancellation via system BACK",
+      "apkSha256": "f6f2c4eb878c1b9c193b37e9404109305063c6553004eaa0bf05c7779842b0ff",
+      "package": "majo.im.luna.acceptance"
+    }
+  },
+  "a04": {
+    "result": "partial",
+    "inputMode": "none",
+    "amountIme": false,
+    "merchantIme": true,
+    "afterFirstBack": {
+      "ime": false,
+      "dialog": true
+    },
+    "afterSecondBack": {
+      "dialog": false
+    },
+    "ime": "com.baidu.input_oppo/.ImeService",
+    "limit": "TalkBack not enabled; no physical keyboard attached or full screen-reader traversal. No global accessibility settings changed."
+  },
+  "cleanup": {
+    "devicePackages": "Both newly installed .lan and .acceptance packages uninstalled successfully; package query empty",
+    "deviceFiles": "Only two task-created synthetic backups and task XML dumps removed",
+    "adbForwards": "19222 and 19223 removed",
+    "local": "Task /tmp workspace and temporary CA-bearing APK image removed",
+    "globalTrust": "Unchanged",
+    "followup": "Second newly installed .acceptance package uninstalled; package query empty; forward 19223 removed. Followup created no backup file (native save cancelled). Second task temporary context/CA public copy/APK and image removed. Server-side private CA/session cleanup tracked in paired service evidence."
+  }
+}
