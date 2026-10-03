@@ -3,4 +3,3 @@
 {"file":".trellis/spec/backend/ledger-sync-guidelines.md","reason":"Defines local-first sync, retry, conflict, convergence, encrypted backup, and two-client limits used by A03, A05, and A07."}
 {"file":".trellis/spec/backend/deployment-and-recovery.md","reason":"Defines deployment, backup, restore, initialization, and recovery invariants used by A06 and A07."}
 {"file": ".trellis/spec/trellis-plus/index.md", "reason": "Shared validation policy and evidence boundaries"}
-{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Load Docker HTTPS preview and dotenv contract when using or changing preview"}
