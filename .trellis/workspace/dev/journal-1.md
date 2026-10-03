@@ -435,3 +435,24 @@ Revalidated all active pre-09-28 tasks, added current VPS/Android/Chrome/Electro
 
 - Obtain target 22041216UC portrait density/touch feedback and review exact mixed-hunk commit groups before archiving mobile tasks.
 - Complete remaining native chooser selection, assistive-technology, and production recovery checks where required.
+
+
+## Session 16: Configuration A acceptance and Android SAH repair
+
+**Date**: 2026-10-03
+**Task**: Configuration A acceptance and Android SAH repair
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+Autonomous configuration A acceptance found and fixed Android SAH profile discovery. Focused tests, real Android storage/backup/IME, desktop privacy and two-device HTTPS sync passed; target restore 8/8 and init 5/5 passed within recorded scope. Both temporary environments cleaned. A04 TalkBack/keyboard, A06 running-copy and Compose, and A07 durable HTTPS remain active.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6306192` | (see git log) |
+
+### Status
+
+[OK] **Completed**
