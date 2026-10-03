@@ -456,3 +456,24 @@ Autonomous configuration A acceptance found and fixed Android SAH profile discov
 ### Status
 
 [OK] **Completed**
+
+
+## Session 17: Correct first-run Web welcome centering
+
+**Date**: 2026-10-04
+**Task**: Correct first-run Web welcome centering
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+Fixed left-anchored first-run Web shell on wide screens; added viewport-axis and keyboard disclosure regressions. Fixed an independently reproduced October-dependent budget-conflict test fixture with a scoped September clock. Unit tests 226/226, setup browser tests 12/12, native-mobile welcome 2/2, typecheck and Web build passed. Running HTTPS6080 preview serves the corrected CSS. Preserved pre-existing preview-tool WIP and kept manual-acceptance task active for A04/A06/A07.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `da8fbb7` | (see git log) |
+
+### Status
+
+[OK] **Completed**
