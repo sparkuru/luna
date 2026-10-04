@@ -2,7 +2,7 @@
   "id": "manual-acceptance-followup",
   "name": "manual-acceptance-followup",
   "title": "09-28 前遗留问题人工验收清单",
-  "description": "承接 09-28 之前已归档任务的剩余人工验收：为每个未自动证明的行为记录问题、复现步骤、通过标准和用户满意度，并引导用户逐项确认。",
+  "description": "配置 A 的 A01–A07 技术验收与独立质量复核通过，已可归档；10/05 正式 luna.majo.im VPS 部署、浏览器／真实 Android 同步与重启、备份／续期检查及凭据清理完成；TalkBack 已取消，保留键盘／IME／BACK。当前尚未提交或归档。",
   "status": "in_progress",
   "dev_type": null,
   "scope": null,

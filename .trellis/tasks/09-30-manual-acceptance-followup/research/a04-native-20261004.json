@@ -1,0 +1,1409 @@
+{
+  "date": "2026-10-04",
+  "scope": "A04 keyboard/IME/BACK per user cancellation of TalkBack",
+  "checks": [
+    {
+      "name": "native names ledger",
+      "controls": [
+        {
+          "id": "",
+          "text": "",
+          "description": "Skip to main content",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "luna",
+          "description": "Luna home",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Ledger",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Statistics",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Budget",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "open-secondary-menu",
+          "text": "",
+          "description": "Settings",
+          "hint": ""
+        },
+        {
+          "id": "primary-record",
+          "text": "Record",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "previous-month",
+          "text": "",
+          "description": "Previous month",
+          "hint": ""
+        },
+        {
+          "id": "month-picker",
+          "text": "2026-10",
+          "description": "",
+          "hint": "Selected month"
+        },
+        {
+          "id": "next-month",
+          "text": "",
+          "description": "Next month",
+          "hint": ""
+        },
+        {
+          "id": "toggle-income-amounts",
+          "text": "Show income amount",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "toggle-expense-amounts",
+          "text": "Show spending amount",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "toggle-net-amounts",
+          "text": "Show net flow amount",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "filter-details",
+          "text": "Filter transactions",
+          "description": "",
+          "hint": ""
+        }
+      ],
+      "blank": [],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native virtual TAB ledger",
+      "order": [
+        "previous-month",
+        "month-picker",
+        "next-month",
+        "toggle-income-amounts",
+        "toggle-expense-amounts",
+        "toggle-net-amounts",
+        "filter-details",
+        "BODY"
+      ],
+      "input": "ADB KEYCODE_TAB; no physical keyboard",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "amount native virtual arithmetic",
+      "expression": "12+3",
+      "evaluated": "15.00",
+      "ime": false,
+      "input": "ADB keyevents, Android Virtual device; physical keyboard absent",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native names category picker",
+      "controls": [
+        {
+          "id": "close-category",
+          "text": "Close",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "category-search",
+          "text": "",
+          "description": "",
+          "hint": "Search categories"
+        },
+        {
+          "id": "",
+          "text": "Food",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Transport",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Shopping",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Housing",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Household",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Leisure",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Health",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Education",
+          "description": "",
+          "hint": ""
+        }
+      ],
+      "blank": [],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native virtual TAB category picker",
+      "order": [
+        "category-search",
+        "Food",
+        "Transport",
+        "Shopping",
+        "Housing",
+        "Household",
+        "Leisure",
+        "Health"
+      ],
+      "input": "ADB KEYCODE_TAB; no physical keyboard",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "category BACK and focus",
+      "parentEntryRetained": true,
+      "focus": "choose-category",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "real text IME and first BACK",
+      "notes": "A04_native_note",
+      "imeOpened": true,
+      "imeDismissed": true,
+      "entryRetained": true,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "second BACK retains draft and restores focus",
+      "focus": "primary-record",
+      "amount": "15.00",
+      "notesRetained": true,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native names entry",
+      "controls": [
+        {
+          "id": "close-transaction",
+          "text": "",
+          "description": "Close",
+          "hint": ""
+        },
+        {
+          "id": "transaction-type",
+          "text": "Spending",
+          "description": "",
+          "hint": "Type"
+        },
+        {
+          "id": "quick-expense",
+          "text": "Expense",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "quick-income",
+          "text": "Income",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "transaction-amount",
+          "text": "15.00",
+          "description": "",
+          "hint": "Amount · USD Enter an amount in USD, up to 2 decimal places."
+        },
+        {
+          "id": "",
+          "text": "Food",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Transport",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Shopping",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Housing",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Household",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "choose-category",
+          "text": "Category *",
+          "description": "",
+          "hint": "Food"
+        },
+        {
+          "id": "transaction-date",
+          "text": "2026-10-04",
+          "description": "",
+          "hint": "Date"
+        },
+        {
+          "id": "",
+          "text": "More details",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "transaction-merchant",
+          "text": "",
+          "description": "",
+          "hint": "Merchant or person"
+        },
+        {
+          "id": "transaction-payment",
+          "text": "",
+          "description": "",
+          "hint": "Payment method"
+        },
+        {
+          "id": "transaction-notes",
+          "text": "A04_native_note",
+          "description": "",
+          "hint": "Notes"
+        },
+        {
+          "id": "",
+          "text": "Choose files",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "transaction-images",
+          "text": "No file chosen",
+          "description": "",
+          "hint": "Choose Files: No file chosen"
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "7",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "8",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "9",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "+",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "4",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "5",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "6",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "-",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "1",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "2",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "3",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "×",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": ".",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "0",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Clear calculator",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "÷",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Evaluate",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Delete the last amount character",
+          "hint": ""
+        },
+        {
+          "id": "save-transaction",
+          "text": "Save transaction",
+          "description": "",
+          "hint": ""
+        }
+      ],
+      "blank": [],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native virtual TAB entry",
+      "order": [
+        "Food",
+        "Transport",
+        "Shopping",
+        "Housing",
+        "Household",
+        "choose-category",
+        "transaction-date",
+        "More details"
+      ],
+      "input": "ADB KEYCODE_TAB; no physical keyboard",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "actual image DocumentsUI cancel",
+      "entryRetained": true,
+      "attachments": 0,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "UI save",
+      "count": 1,
+      "focus": "primary-record",
+      "alert": [
+        "",
+        "1 shown · 1 in this ledger",
+        "",
+        "",
+        ""
+      ],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native names transaction detail",
+      "controls": [
+        {
+          "id": "close-transaction-detail",
+          "text": "Close",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "transaction-detail-edit",
+          "text": "Edit",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "transaction-detail-delete",
+          "text": "Delete",
+          "description": "",
+          "hint": ""
+        }
+      ],
+      "blank": [],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "invalid save preserves ledger",
+      "count": 1,
+      "error": "Enter a valid amount for this workspace.",
+      "role": "alert",
+      "associated": true,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native names statistics",
+      "controls": [
+        {
+          "id": "",
+          "text": "",
+          "description": "Skip to main content",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "luna",
+          "description": "Luna home",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Ledger",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Statistics",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Budget",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "open-secondary-menu",
+          "text": "",
+          "description": "Settings",
+          "hint": ""
+        },
+        {
+          "id": "primary-record",
+          "text": "Record",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "statistics-previous-period",
+          "text": "",
+          "description": "Previous month",
+          "hint": ""
+        },
+        {
+          "id": "statistics-anchor",
+          "text": "2026-10",
+          "description": "",
+          "hint": "Selected month"
+        },
+        {
+          "id": "statistics-next-period",
+          "text": "",
+          "description": "Next month",
+          "hint": ""
+        },
+        {
+          "id": "statistics-period-week",
+          "text": "Week",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "statistics-period-month",
+          "text": "Month",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "statistics-period-year",
+          "text": "Year",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "statistics-type-expense",
+          "text": "Spending",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "statistics-type-income",
+          "text": "Income",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 1, 2026 · $0.00",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 2, 2026 · $0.00",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 3, 2026 · $0.00",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 4, 2026 · $15.00",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 5, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 6, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 7, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 8, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 9, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 10, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 11, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 12, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 13, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 14, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 15, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 16, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 17, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 18, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 19, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 20, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 21, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 22, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 23, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 24, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 25, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 26, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 27, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 28, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 29, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 30, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Oct 31, 2026 · Future",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "statistics-bucket-select",
+          "text": "Choose a day or period",
+          "description": "",
+          "hint": "Choose a day or period"
+        },
+        {
+          "id": "statistics-bucket-next",
+          "text": "",
+          "description": "Next day or period",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "View period details",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "statistics-category-view-bars",
+          "text": "Bars",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "statistics-category-view-ring",
+          "text": "Ring",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Food $15.00",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "How totals are calculated",
+          "description": "",
+          "hint": ""
+        }
+      ],
+      "blank": [],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native virtual TAB statistics",
+      "order": [
+        "statistics-previous-period",
+        "statistics-anchor",
+        "statistics-next-period",
+        "statistics-period-week",
+        "statistics-period-month",
+        "statistics-period-year",
+        "statistics-type-expense",
+        "statistics-type-income"
+      ],
+      "input": "ADB KEYCODE_TAB; no physical keyboard",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native names budget",
+      "controls": [
+        {
+          "id": "",
+          "text": "",
+          "description": "Skip to main content",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "luna",
+          "description": "Luna home",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Ledger",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Statistics",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Budget",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "open-secondary-menu",
+          "text": "",
+          "description": "Settings",
+          "hint": ""
+        },
+        {
+          "id": "primary-record",
+          "text": "Record",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "previous-month",
+          "text": "",
+          "description": "Previous month",
+          "hint": ""
+        },
+        {
+          "id": "month-picker",
+          "text": "2026-10",
+          "description": "",
+          "hint": "Selected month"
+        },
+        {
+          "id": "next-month",
+          "text": "",
+          "description": "Next month",
+          "hint": ""
+        },
+        {
+          "id": "open-budget-editor",
+          "text": "Set budget",
+          "description": "",
+          "hint": ""
+        }
+      ],
+      "blank": [],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native virtual TAB budget",
+      "order": [
+        "previous-month",
+        "month-picker",
+        "next-month",
+        "open-budget-editor",
+        "BODY",
+        "Skip to main content",
+        "Luna home",
+        "Ledger"
+      ],
+      "input": "ADB KEYCODE_TAB; no physical keyboard",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native names settings",
+      "controls": [
+        {
+          "id": "",
+          "text": "",
+          "description": "Skip to main content",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "luna",
+          "description": "Luna home",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Ledger",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Statistics",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Budget",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "open-secondary-menu",
+          "text": "",
+          "description": "Settings",
+          "hint": ""
+        },
+        {
+          "id": "primary-record",
+          "text": "Record",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Local ledgers A04 synthetic acceptance",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Categories",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Account",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Ledger sync",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Encrypted backup",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Conflicts No conflicts. Nothing needs your attention.",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "",
+          "description": "Preferences",
+          "hint": ""
+        }
+      ],
+      "blank": [],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native virtual TAB settings",
+      "order": [
+        "Statistics",
+        "Budget",
+        "open-secondary-menu",
+        "primary-record",
+        "Local ledgersA04 synthetic acceptance",
+        "Categories",
+        "Account",
+        "Ledger sync"
+      ],
+      "input": "ADB KEYCODE_TAB; no physical keyboard",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native names categories",
+      "controls": [
+        {
+          "id": "",
+          "text": "",
+          "description": "Skip to main content",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "luna",
+          "description": "Luna home",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Ledger",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Statistics",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Budget",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "open-secondary-menu",
+          "text": "",
+          "description": "Settings",
+          "hint": ""
+        },
+        {
+          "id": "primary-record",
+          "text": "Record",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "settings-back",
+          "text": "Settings",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "category-tab-expense",
+          "text": "Spending",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "category-tab-income",
+          "text": "Income",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Add category",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Manage Food",
+          "description": "",
+          "hint": "Manage"
+        },
+        {
+          "id": "",
+          "text": "Manage Transport",
+          "description": "",
+          "hint": "Manage"
+        },
+        {
+          "id": "",
+          "text": "Manage Shopping",
+          "description": "",
+          "hint": "Manage"
+        },
+        {
+          "id": "",
+          "text": "Manage Housing",
+          "description": "",
+          "hint": "Manage"
+        },
+        {
+          "id": "",
+          "text": "Manage Household",
+          "description": "",
+          "hint": "Manage"
+        },
+        {
+          "id": "",
+          "text": "Manage Leisure",
+          "description": "",
+          "hint": "Manage"
+        },
+        {
+          "id": "",
+          "text": "Manage Health",
+          "description": "",
+          "hint": "Manage"
+        },
+        {
+          "id": "",
+          "text": "Manage Education",
+          "description": "",
+          "hint": "Manage"
+        }
+      ],
+      "blank": [],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native virtual TAB categories",
+      "order": [
+        "settings-back",
+        "category-tab-expense",
+        "category-tab-income",
+        "Add category",
+        "Manage Food",
+        "Manage Transport",
+        "Manage Shopping",
+        "Manage Housing"
+      ],
+      "input": "ADB KEYCODE_TAB; no physical keyboard",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "category usage BACK",
+      "focusRestored": true,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "native names backup choices",
+      "controls": [
+        {
+          "id": "",
+          "text": "",
+          "description": "Skip to main content",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "luna",
+          "description": "Luna home",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Ledger",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Statistics",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "",
+          "text": "Budget",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "open-secondary-menu",
+          "text": "",
+          "description": "Settings",
+          "hint": ""
+        },
+        {
+          "id": "primary-record",
+          "text": "Record",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "settings-back",
+          "text": "Settings",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "backup-choose-save",
+          "text": "Save encrypted backup",
+          "description": "",
+          "hint": ""
+        },
+        {
+          "id": "backup-choose-import",
+          "text": "Merge encrypted backup",
+          "description": "",
+          "hint": ""
+        }
+      ],
+      "blank": [],
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "backup validation",
+      "error": "Use a password with at least 12 characters.",
+      "count": 1,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "actual backup DocumentsUI cancel",
+      "alert": "Saving was cancelled. No backup was saved; choose a destination to retry.",
+      "count": 1,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "actual import DocumentsUI cancel",
+      "count": 1,
+      "fileSelection": 0,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "pre-restart",
+      "committedCount": 1,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "force-stop restart committed readback",
+      "count": 1,
+      "amountMinor": "-1500",
+      "notes": "A04_native_note",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "detail BACK focus",
+      "passed": false,
+      "focus": {
+        "id": "",
+        "tag": "BODY"
+      },
+      "error": "expect(received).toMatch(expected)\n\nExpected pattern: /^transaction-details-/\nReceived string:  \"\"\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "filter BACK",
+      "passed": true,
+      "focus": {
+        "id": "filter-details",
+        "tag": "BUTTON"
+      },
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "budget actual IME footer",
+      "passed": true,
+      "saveWithinResizedViewport": true,
+      "firstBackKeepsRoute": true,
+      "stage": "initial APK baseline"
+    },
+    {
+      "name": "fixed actual detail BACK",
+      "passed": true,
+      "focusRestored": true,
+      "stage": "corrected APK"
+    },
+    {
+      "name": "fixed actual detail close",
+      "passed": true,
+      "focusRestored": true,
+      "stage": "corrected APK"
+    },
+    {
+      "name": "fixed actual detail Escape",
+      "passed": true,
+      "focusRestored": true,
+      "stage": "corrected APK"
+    },
+    {
+      "name": "fixed actual detail edit",
+      "passed": true,
+      "editorAmountFocus": true,
+      "stage": "corrected APK"
+    },
+    {
+      "name": "fixed APK persisted same synthetic ledger",
+      "passed": true,
+      "count": 1,
+      "amountMinor": "-1500",
+      "notesRetained": true,
+      "stage": "corrected APK"
+    }
+  ],
+  "failure": null,
+  "environment": {
+    "model": "PLR110",
+    "android": "16",
+    "package": "majo.im.luna.a04",
+    "webview": "Current WebView package (name, version): (com.google.android.webview, 143.0.7499.34)",
+    "ime": "com.baidu.input_oppo/.ImeService",
+    "initialApkSha256": "c5c896260f22220bce8986fb34780f72a1446a37320243a37223deb3127a1741",
+    "fixedApkSha256": "980abf2deb4f1ba22b682374b3e856a4af6fa780e23da8a716bf367de0be4abd",
+    "gitHeadBeforeFix": "011b0506d7402bf2043df1abbad996ac38e86e28",
+    "finalLedgerSourceSha256": "ba2ef238f30bbbe4fc789a64c9dff2421ad62edbe3e936c17eef63fd68501c6b"
+  },
+  "result": "passed current revised A04 nonvoice scope",
+  "initialFailure": {
+    "name": "native detail BACK loses opener focus",
+    "observed": "BODY remains after 5000ms",
+    "fixed": "Restore from Radix close-autofocus callback after its FocusScope is removed",
+    "verification": "Installed updated APK passes native BACK, close, Escape, and editor entry focus; same saved ledger retained"
+  },
+  "harnessCorrections": [
+    "Used visible Choose files action instead of hidden input; failed hidden-input pointer check did not prove a product defect",
+    "Reset retained amount/notes before rerunning arithmetic; retained draft correctly survived earlier runs",
+    "Read details.open before opening retained disclosure; toggling an already open disclosure had hidden notes",
+    "Wait for native BACK completion instead of reading DOM focus before processing"
+  ],
+  "voice": {
+    "scope": "User cancelled TalkBack acceptance; retain keyboard/IME/BACK",
+    "product": "No RECORD_AUDIO, SpeechRecognition, SpeechSynthesis, microphone, talkback or voice implementation matches in src or AndroidManifest",
+    "device": "TalkBack briefly enabled then stopped at user steering; temporary observer was installed but never successfully bound; no traversal/audio quality result claimed",
+    "restored": {
+      "enabledAccessibilityServices": "li.songe.gkd/com.google.android.accessibility.selecttospeak.SelectToSpeakService",
+      "accessibilityEnabled": "1",
+      "touchExplorationEnabled": false,
+      "onlyPreexistingServiceBound": true
+    },
+    "fixtureUninstalled": true
+  },
+  "limits": [
+    "No physical alphabetic keyboard attached; alphabetic device is Virtual. ADB keyevents prove application handling only. Original physical-keyboard OR real-IME requirement fulfilled by actual Baidu IME",
+    "Native accessibility names reflect currently visible controls; TAB records are eight-step samples. No TalkBack/voice acceptance claim",
+    "PLR110 Android16/WebView143 only; no claim for every WebView/IME vendor",
+    "Synthetic data and task-owned package only; no subjective satisfaction claimed"
+  ],
+  "validation": {
+    "focusedDesktopNarrow": "4/4 passed",
+    "typecheck": "passed",
+    "unit": "226/226 passed",
+    "androidBuild": "two current-source isolated .a04 debug builds passed",
+    "diffCheck": "passed"
+  },
+  "cleanup": {
+    "devicePackages": "majo.im.luna.a04 and majo.im.luna.a04probe uninstalled; prefix query empty",
+    "files": "Only owned /data/local/tmp/luna-a04-update.apk, luna-a04-ui.xml and luna-a04-install.xml removed",
+    "adb": "19224 forward removed",
+    "settings": "Exact original accessibility settings verified after cleanup; TalkBack disabled",
+    "globalTrust": "unchanged",
+    "image": "task-owned observer/SDK tags removed; normal Android build cache retained",
+    "documents": "Save/import/image selections cancelled; no persistent fixture document created",
+    "local": "Temporary APK, observer code/signing key, UI XML and raw scratch removed after sanitized evidence copied"
+  }
+}

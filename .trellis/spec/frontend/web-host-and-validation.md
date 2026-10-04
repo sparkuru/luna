@@ -364,6 +364,15 @@ sw:     the same supported app paths, never /api/*
   `LUNA_TEST_PRODUCTION=1 npm run test:web` after `npm run web:build` to make
   the complete browser gate report all production cases instead of a partial
   pass with skipped tests.
+- With the Docker wrapper, pass production selection inside the container:
+  `./hako env LUNA_TEST_PRODUCTION=1 npm run test:web`. An environment prefix
+  before `./hako` is not automatically forwarded. Cold offline profile-worker
+  startup requires a ready production shell and an active Service Worker;
+  do not require that behavior of a development server with no precache.
+  Keep general online login/copy/restore coverage active in both modes and
+  separate the explicitly production-gated offline case, preserving its
+  original recovery/data assertions and confirming `navigator.onLine` is
+  false. An online development pass does not count as offline acceptance.
 - Insecure-context capability regression: before page initialization, disable
   `crypto.randomUUID`, then assert setup renders and workspace plus transaction
   creation succeed through the cryptographic UUID fallback.
@@ -376,6 +385,14 @@ sw:     the same supported app paths, never /api/*
   no `luna.web.state.v1` or IndexedDB record is needed for recovery. Android
   exercises `opfs-sahpool` when available and must also verify the explicit
   IndexedDB fallback on a WebView without `navigator.storage.getDirectory`.
+- A browser SAH fixture that strips COOP/COEP must use its own
+  `test.describe` context with `serviceWorkers: 'block'` and assert
+  `crossOriginIsolated === false` after every reload. Production cached HTML
+  otherwise bypasses route header rewriting and silently switches to regular
+  OPFS, invalidating the SAH profile evidence. Keep neighboring regular-OPFS
+  tests and production offline-cache tests on their normal Service Worker
+  settings; blocking workers in the SAH fixture does not prove offline-shell
+  behavior. The embedded Android origin has no Service Worker.
 - Delivery order: record successful Web manual review plus `npm run web:build`
   and relevant `npm run test:web` coverage before starting the final package,
   make, and packaged-smoke gate for a user-visible workflow.
@@ -384,9 +401,11 @@ sw:     the same supported app paths, never /api/*
   changes after the Web-first gate, as final desktop integration validation.
 - Date-boundary regression: keep the initial budget assignment on the shared
   local-month helper and include a month-end test when changing Web persistence.
-- Human residual gate: review packaged Electron visuals, keyboard focus,
-  reduced motion, native first-run directory dialogs, and screen-reader output;
-  passing Playwright does not cover these cases.
+- Human residual gate: review applicable packaged Electron visuals, keyboard
+  focus, reduced motion and native first-run directory dialogs; passing
+  Playwright does not cover these cases. Spoken-reader acceptance requires an
+  explicit user requirement and activation request under development policy;
+  it is not a default completion gate for Luna.
 
 ## 7. Wrong vs Correct
 

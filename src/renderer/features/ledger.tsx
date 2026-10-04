@@ -537,6 +537,7 @@ export function LedgerHome({
     status: "ready",
   });
   const imageRequest = useRef(0);
+  const detailCloseFocus = useRef<string | null>(null);
   const imageUrl = useRef<string | null>(null);
   const searchWorker = useRef<Worker | null>(null);
   const searchRequest = useRef(0);
@@ -1030,6 +1031,7 @@ export function LedgerHome({
       queueMicrotask(() => document.getElementById(returnFocus)?.focus());
   }
   function openTransactionDetail(transaction: Transaction) {
+    detailCloseFocus.current = null;
     setTransactionDetail({
       transaction,
       returnFocus: `transaction-details-${transaction.id}`,
@@ -1037,12 +1039,8 @@ export function LedgerHome({
   }
   function closeTransactionDetail(fallback = "transactions-title") {
     const returnFocus = transactionDetail?.returnFocus ?? fallback;
+    detailCloseFocus.current = returnFocus;
     setTransactionDetail(null);
-    queueMicrotask(() => {
-      (
-        document.getElementById(returnFocus) ?? document.getElementById(fallback)
-      )?.focus();
-    });
   }
   useEffect(() => {
     if (imageViewer === null && transactionDetail === null && !filterOpen) return;
@@ -1728,6 +1726,16 @@ export function LedgerHome({
           }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
+            const returnFocus = detailCloseFocus.current;
+            detailCloseFocus.current = null;
+            if (returnFocus === null) return;
+            // Radix removes its FocusScope after this callback; restore afterward.
+            queueMicrotask(() => {
+              (
+                document.getElementById(returnFocus) ??
+                document.getElementById("transactions-title")
+              )?.focus({ preventScroll: true });
+            });
           }}
         >
           {detailTransaction && (

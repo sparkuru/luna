@@ -1,0 +1,161 @@
+{
+  "date": "2026-10-04",
+  "acceptanceId": "A06",
+  "conclusion": "technical-pass",
+  "userSatisfaction": "not asserted",
+  "environment": {
+    "configuration": "A",
+    "target": "user-designated trusted Debian server",
+    "docker": "20.10.24+dfsg1",
+    "compose": "v5.5.0",
+    "runner": "temporary Node22.22.0 from existing pinned image; no host installation",
+    "temporaryWorkspace": "/tmp/luna-a06-20261004-dKYhig",
+    "syntheticOnly": true
+  },
+  "provenance": {
+    "sourceHead": "011b0506d7402bf2043df1abbad996ac38e86e28",
+    "uncommittedFixes": [
+      "deploy/backup.mjs",
+      "deploy/bucket-init.mjs",
+      "tests/deploy/backup.test.mjs",
+      ".trellis/tasks/09-30-manual-acceptance-followup/research/a06-compose-20261004.mjs"
+    ],
+    "sha256": {
+      "deploy/backup.mjs": "e9d9ca4a719de8677604e045cd35c58f6e2430cd099a62b4814063d1038f0243",
+      "deploy/bucket-init.mjs": "26be597e01fcfc5b4cf0503a578077e1ab01222cad3c38d1702bc14c9a0af5a1",
+      "tests/deploy/backup.test.mjs": "85996d7174dda10f1b0cc3b80dadcb24cacab684a38758c685fab3548df69480",
+      ".trellis/tasks/09-30-manual-acceptance-followup/research/a06-compose-20261004.mjs": "cc5dd7d02b7ed3fdb4564815e79c45c786192d7dbfeed2f29111cd03d7686a39"
+    },
+    "apiImage": "sha256:2483ce467999ac00d42521e41458f922acdf5975609efe01fee51629b39dc65b",
+    "apiVerification": "./hako npm run server:build passed; all23 dist/server file hashes match API image exactly",
+    "webImage": "sha256:ad05403d5c115294d73c15d9b9da23c516f30f16acc29c37a9a2487752f98941",
+    "webBuild": "docker build -t luna-web:a06-20261004 . succeeded on target with original Dockerfile/classic builder",
+    "bucketImage": "sha256:3d5a88a9872c62b24498f3a667ef37dddfa44b8157598ec0f13ff54dedd54f62",
+    "bucketBuild": "Temporary Dockerfile FROM cached luna-bucket-init:local then COPY current deploy/bucket-init.mjs; Node and mc binaries unchanged",
+    "minioImage": "sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9",
+    "minioPinnedDigest": "sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
+    "minioVerification": "Local cached RepoDigests includes original pinned Compose digest; image ID exactly equals remote tag. Earlier docker save/load dropped remote RepoDigests. Image tag override therefore selects same artifact.",
+    "webSourceBoundary": "Web image built from initial A06 staged source before concurrent A04 renderer-only BACK focus fix in src/renderer/features/ledger.tsx. Deployment Dockerfile/Nginx behavior tested here remains current; do not claim final renderer UI bytes in this earlier image.",
+    "stagedSourceTarSha256": "3442a8dc682bd0f91e8deef7bd550af61a81eee0aee1ad3f3f3859f8b1f7994d"
+  },
+  "fixes": [
+    {
+      "file": "deploy/backup.mjs",
+      "reason": "Manual rsync documentation had no runtime refusal interface",
+      "behavior": "Local Unix-socket Docker daemon guard; refuses active bind/volume overlap including parent/nested/read-only mounts, incomplete initialized data, wrong secret ownership/permissions, symbolic links and special files. GNU cp -a preserves entire data tree and numeric ownership into owned0700 staging and a new destination. Check running mounts before/after copy. Refuse existing destinations and preserve unknown concurrent destination files on failure."
+    },
+    {
+      "file": "deploy/bucket-init.mjs",
+      "reason": "Original mc stat returned502 while direct MinIO readiness200 under Docker-injected proxies; unchanged Compose bootstrap stalled",
+      "behavior": "Delete HTTP/HTTPS/ALL proxy variables only from private-MinIO mc child env; host and other container proxy settings unchanged"
+    }
+  ],
+  "compose": {
+    "exitCode": 0,
+    "passed": 11,
+    "total": 11,
+    "checks": [
+      "fresh SQLite/MinIO installation creates an account, ledger graph, attachment metadata, ciphertext object, usage and ETags",
+      "product backup rejects running Compose data writers without creating a destination",
+      "the complete data boundary is copied only after API and MinIO stop",
+      "restored data retains instance identity, account session, graph and attachment ciphertext/metadata, exact ETags, usage and idempotency replays",
+      "two authenticated clients reject stale CAS, retain both decoded revision sets and read identical merged ciphertext/ETag",
+      "API restart retains instance identity, both sessions, exact merged ciphertext/ETag and decoded revision graph",
+      "Compose Web healthy under inherited host proxies, loopback publishing and private API/MinIO sandbox retained",
+      "real Compose refuses missing-runtime without starting API or changing original database",
+      "real Compose refuses wrong-permissions without starting API or changing original database",
+      "real Compose refuses half-initialized without starting API or changing original database",
+      "real Compose refuses missing bucket, preserves runtime/database and never recreates an empty bucket"
+    ],
+    "replay": "research/a06-compose-20261004.mjs",
+    "commands": [
+      "docker compose -f compose.yaml -f <image-only task overrides> -p <isolated project> config --quiet",
+      "LUNA_DATA_PATH=<synthetic data> LUNA_PORT=0 docker compose ... up -d --no-build",
+      "node22 deploy/backup.mjs <running data> <new directory> (expected failure and absent destination)",
+      "docker compose ... stop",
+      "node22 deploy/backup.mjs <stopped data> <new restored data>",
+      "docker compose -p <independent restored project> ... up -d --no-build",
+      "docker compose ... stop; docker compose ... up -d --no-build",
+      "Fault-injected Compose up for missing-runtime, wrong-secret-mode0644, nonempty half-initialized directory and missing initialized bucket"
+    ],
+    "finalProductBackup": "Latest backup.mjs separately passed real stopped Compose data after final daemon/volume corrections."
+  },
+  "restore": {
+    "exitCode": 0,
+    "passed": 8,
+    "total": 8,
+    "checks": [
+      "fresh SQLite/MinIO installation creates an account, ledger graph, attachment metadata, ciphertext object, usage and ETags",
+      "the complete data boundary is copied only after API and MinIO stop",
+      "restored data retains instance identity, account session, graph and attachment ciphertext/metadata, exact ETags, usage and idempotency replays",
+      "two authenticated clients reject stale CAS, retain both decoded revision sets and read identical merged ciphertext/ETag",
+      "API restart retains instance identity, both sessions, exact merged ciphertext/ETag and decoded revision graph",
+      "legacy root-backed API runtime upgrades to a limited key without losing ciphertext or instance identity",
+      "interrupted credential publication removes the orphan key before creating a replacement",
+      "missing bucket on an initialized installation fails without creating an empty replacement"
+    ],
+    "command": "TMPDIR=<task temp> LUNA_RESTORE_API_IMAGE=luna-api:a06-20261003 LUNA_RESTORE_MINIO_IMAGE=<verified pinned-equivalent cached tag> node22 scripts/smoke-server-restore.mjs",
+    "adaptation": "Temporary harness copy changes bucket image tag only to luna-bucket-init:a06-20261004; every assertion unchanged, no harness proxy clearing"
+  },
+  "regressions": {
+    "command": "./hako node --test tests/deploy/backup.test.mjs tests/deploy/instance-init.test.mjs",
+    "exitCode": 0,
+    "passed": 13,
+    "total": 13,
+    "backupTests": 8,
+    "initializationTests": 5,
+    "syntax": "node --check backup, bucket-init and Compose replay passed",
+    "diff": "git diff --check passed"
+  },
+  "failedAttempts": [
+    {
+      "stage": "Connection",
+      "failure": "Local system SSH include ownership error, then sandbox outbound socket refusal",
+      "resolution": "Use existing user config via -F with scoped SSH approval; no SSH config edited"
+    },
+    {
+      "stage": "Unchanged Compose original pinned artifact",
+      "failure": "Pinned MinIO digest pull access denied",
+      "resolution": "Verify exact pinned artifact via local RepoDigest and remote identical image ID, then cached-tag override; registry availability remains environmental"
+    },
+    {
+      "stage": "Unchanged Compose bootstrap",
+      "failure": "bucket-init still running beyond190s; separate original-image mc stat probe exit1, 502=true, direct MinIO readiness200",
+      "resolution": "mc-only product proxy bypass; default Compose then succeeds with inherited host proxies unchanged"
+    },
+    {
+      "stage": "First new backup regression",
+      "failure": "10/11: empty-directory cleanup rmSync raised EISDIR",
+      "resolution": "rmdirSync only on empty owned reservation; final13/13"
+    },
+    {
+      "stage": "First Compose harness",
+      "failure": "Wrong /readyz URL behind Nginx timed out",
+      "resolution": "Use real proxied /api/v1/meta; harness correction only; final11/11"
+    },
+    {
+      "stage": "Volume-aware backup verification",
+      "failure": "Unrelated root-owned /var/lib/docker/volumes parent caused realpath EACCES",
+      "resolution": "Compare Docker canonical volume source paths without host traversal, retain realpath for bind aliases; unrelated-volume regression plus actual stopped backup pass"
+    },
+    {
+      "stage": "Docker-context guard experiment",
+      "failure": "Docker20.10 context inspect with default context still reflected conflicting TCP DOCKER_HOST",
+      "resolution": "Conservatively refuse any non-unix DOCKER_HOST and non-unix selected context, including conflicting overrides; do not infer precedence"
+    }
+  ],
+  "limits": [
+    "Preflight/postflight is not a race-proof writer lock. Keep every writer stopped throughout maintenance; non-container writers or a restart wholly between checks cannot be intercepted. Raw cp/rsync outside the command is not prevented.",
+    "Requires trusted same-host Unix-socket Docker daemon. TCP/SSH contexts and conflicting remote overrides refuse.",
+    "Off-host transfer and production traffic cutover were not exercised; A06 target-isolated Compose criteria are covered.",
+    "Long-term HTTPS domain/certificate remains A07 scope. Subjective satisfaction is not asserted."
+  ],
+  "cleanup": {
+    "containers": "All generated Compose projects down --remove-orphans; proxy repro removed after exact task label check; final no luna-a06 or luna.restore-run resources",
+    "networks": "Final no luna-a06 or luna.restore-run networks",
+    "remoteWorkspace": "Owner-verified directory removed; A06_REMOTE_CLEANUP_OK/absence confirmed",
+    "globalChanges": "No global configuration/package/service/data change; unrelated business installations untouched",
+    "images": "Web/fixed bucket/dependency images remain cache-only; no preexisting image removed"
+  },
+  "privacy": "Only synthetic fixtures. No token, real password, root/API key, financial payload or backup bytes retained."
+}

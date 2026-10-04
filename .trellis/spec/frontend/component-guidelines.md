@@ -56,6 +56,14 @@ Keep a short source comment and browser assertions for both Escape and category
 selection. Re-check this lifecycle when upgrading Radix; do not replace the
 contract with arbitrary sleeps or treat repeated passes as proof of ordering.
 
+Transaction detail follows the same teardown boundary even when returning to
+a list-row opener. Capture its opener for an intentional close and restore it
+from the close-autofocus callback's microtask, after the scope exits; a
+microtask scheduled only by the state-close handler runs too early. Detail
+BACK, visible close and Escape must return to that opener (or the list heading
+if removed). Opening the editor from detail must instead keep amount focus;
+do not restore list focus over the newly opened editor.
+
 An icon-only dialog close action keeps its localized accessible name on the
 button and marks the decorative icon `aria-hidden`. The mobile and narrow-Web
 transaction close target remains exactly 48×48px and shares the title row's

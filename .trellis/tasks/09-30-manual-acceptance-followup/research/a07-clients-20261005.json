@@ -1,0 +1,1248 @@
+{
+  "date": "2026-10-05",
+  "origin": "https://luna.majo.im",
+  "status": "All A07 client scenarios passed and all owned client resources cleaned; independent task review belongs to main session",
+  "a07Passed": true,
+  "environment": {
+    "model": "22041216UC",
+    "android": "15",
+    "webview": "134.0.6998.95",
+    "package": "majo.im.luna.a07",
+    "packageAbsentBeforeInstall": true,
+    "apkSha256": "d13f95e4d305da7467f033a32155649325a5814af5d470c3fdd28002d22ce551",
+    "imageId": "af90c5c38b7425d43ede1da7fdecb21fd6fc9f6b075ff7d7ca57bd1603ebf3dc",
+    "buildInputFiles": 204,
+    "buildInputAggregateSha256": "4b14682e40edef1c97de81ab7bacfc397f09e36f8ea45b498fd67ae34bcfe985",
+    "trust": "Unmodified system trust; no custom CA, certificate bypass or Android trust setting change",
+    "initialAccessibilitySettings": {
+      "enabled_accessibility_services": "null",
+      "accessibility_enabled": "0",
+      "touch_exploration_enabled": "0"
+    },
+    "buildInputManifest": {
+      "date": "2026-10-05",
+      "algorithm": "sha256(sorted tracked build-input path plus file digest)",
+      "inputs": [
+        {
+          "path": ".dockerignore",
+          "sha256": "5a0697eb5e06927bef9f7fcfa433d7397405dbeab5c369d3706f9071639b18de"
+        },
+        {
+          "path": "Dockerfile.android",
+          "sha256": "ba669ffc0b73782ef1333c7a053beb9ab05ba710d6e27e588ac0bb7141efe491"
+        },
+        {
+          "path": "android/.gitattributes",
+          "sha256": "da6109392c901bd8587e8732c9055d1b966af2db4e29f596153f2b9e505218b8"
+        },
+        {
+          "path": "android/.gitignore",
+          "sha256": "5fc7eced3ed79015edcd2944386cbb4b5f456ad7dba8865e63aaa93a2e90e94d"
+        },
+        {
+          "path": "android/app/.gitignore",
+          "sha256": "99c54e51ee601a60fbde8016b2cbf717483bc2e92773be86c9247d02a7fa6ea4"
+        },
+        {
+          "path": "android/app/build.gradle",
+          "sha256": "4a7c5545db693bd43e068540e1bc8a03f9fc5761ea2fa570a8defbe0fe55d6a0"
+        },
+        {
+          "path": "android/app/capacitor.build.gradle",
+          "sha256": "7051cadfdbc532197d2cfd4f8a11684d81367f23cf7952e5a208f7b6aa0833e0"
+        },
+        {
+          "path": "android/app/proguard-rules.pro",
+          "sha256": "1cf8c57e8f79c250b0af9c1a5a4edad71a5c348a79ab70243b6bae086c150ad2"
+        },
+        {
+          "path": "android/app/src/main/AndroidManifest.xml",
+          "sha256": "f214eb18c6ce6a4206f726459bc42ba31608a564d7b16dc636212742402b709b"
+        },
+        {
+          "path": "android/app/src/main/java/majo/im/luna/LedgerBackupPlugin.java",
+          "sha256": "d2e5e9a19179f5d3b067b506970495e8aacab8221c78d07a0b76da4a353d7bf3"
+        },
+        {
+          "path": "android/app/src/main/java/majo/im/luna/LedgerImageInputPlugin.java",
+          "sha256": "f4e07fcad1876e121f61b3b71ee8830b5d06234f2ea6902707e7f9ed684e2763"
+        },
+        {
+          "path": "android/app/src/main/java/majo/im/luna/MainActivity.java",
+          "sha256": "1b8c7f1cb5babbc60e20f48fe9340294b43da6ca3480a204dca7e21ba9fbd63b"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-land-hdpi/splash.png",
+          "sha256": "08cc34ad7713fe7ed58bceaa37b2387b670c53cd60264b4bd6442db3098e75dc"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-land-mdpi/splash.png",
+          "sha256": "5cf98b4451bd99b20df26f9e608a46946118be6b0ae90762f9ca1786a30c76ff"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-land-xhdpi/splash.png",
+          "sha256": "22f87e1e3bc89aa01a7dbc39c9a4db058cd0bf4ad3fe9f55712bf69eb997f4bf"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-land-xxhdpi/splash.png",
+          "sha256": "42aa26392546fcdee1b8d3ac6d4b41bfcceb41dc6a4f3a3c30c24a8a8f4db862"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-land-xxxhdpi/splash.png",
+          "sha256": "60393ce8636fd263e4e1fea3fd4ab2de948c6295e898fda9b50ac4e5283be809"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-port-hdpi/splash.png",
+          "sha256": "c5015f4ba3628392b538386c5e210f0b94f352a3160adab934fd0311972137ca"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-port-mdpi/splash.png",
+          "sha256": "07fa579e1c83e04ba7f9cbcbfcf41b68e15fe3638f2c44a04e58b809103e6b69"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-port-xhdpi/splash.png",
+          "sha256": "b73049cb37fe76d6c11b87a796766bf6af0c85483b31eb6a921657b0d764a4b9"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-port-xxhdpi/splash.png",
+          "sha256": "0c7f1212f25b7b90e9a6e1d320013e4ff3d3e03e634cbb07b7b7981cac51627f"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-port-xxxhdpi/splash.png",
+          "sha256": "3db071a03b2f8ffe0dfd4170fc59842d53cd15bba5e88af59401d58efabf7827"
+        },
+        {
+          "path": "android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml",
+          "sha256": "a8514094f754b099d3e55ce1d6e0b2de79db418b2eeacb0fc2a6bb0bfadef221"
+        },
+        {
+          "path": "android/app/src/main/res/drawable/ic_launcher_background.xml",
+          "sha256": "718ba51adf166bb55c3e9936bb8199a0148457f7f0191aaa2f37a94f3159d6ec"
+        },
+        {
+          "path": "android/app/src/main/res/drawable/luna_icon.xml",
+          "sha256": "f14ce932218447e03f78f39a5762dc52d7df9f2a5d313ec403c08c5c0f6bed28"
+        },
+        {
+          "path": "android/app/src/main/res/drawable/splash.png",
+          "sha256": "5cf98b4451bd99b20df26f9e608a46946118be6b0ae90762f9ca1786a30c76ff"
+        },
+        {
+          "path": "android/app/src/main/res/layout/activity_main.xml",
+          "sha256": "5d770feb791313b947020cbfc57e5c733c556dac5e9e49261a1190e527073253"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+          "sha256": "9c3a7e0a6515c6e1a7ae834a9ae430311ebc3241f7b2e5e7f0460aa690709a7c"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+          "sha256": "9c3a7e0a6515c6e1a7ae834a9ae430311ebc3241f7b2e5e7f0460aa690709a7c"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+          "sha256": "72b71c3581ca3b5a23b1c168d69b9d855b3f184fa079902a01f088eb4f0607d5"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png",
+          "sha256": "32baa10d2632a4417454a579f992bd640e0a3cec79321423559b2c9940de58a9"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png",
+          "sha256": "bfcc1b0fa931b14bb241372c76ab4f04374b67d02363c98d9cb12edfdacdf5f3"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+          "sha256": "27ed3603010ebc278f64f8645741ab132ff517abb5308eb9df6c8e42a48956b2"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png",
+          "sha256": "58e78a618778926b1f6d9472a6468de878de8530970934e94aab5ba4ba08cc00"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png",
+          "sha256": "0166fc333074c373fbd0ce6b5defd71552166165ac778121ca9c9dff6b83f0fc"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+          "sha256": "d35dbfff175b83c13ef59cf924abfc810f7b6a158595d7417c5498ea8c7c7ed1"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png",
+          "sha256": "6f88083b8166cc559102f7044688de7525287632ebe09ac45d001ac8bf4b3eae"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
+          "sha256": "40911a00922868686854a4804b93fd6e56b503664696de03f450bff690affb6d"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+          "sha256": "ed346eb1e3f0280f15709393705899b3ff55c20b88f4e0308006b3c33cf5fe14"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png",
+          "sha256": "4a82bc1e9923576275869998925ce0ae021a79aa18b24a0dd87ad6b61ca85053"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
+          "sha256": "1ee4cd9ff371dcb2e3938097e434f6fb8731688ed7165e61fc63693ad5b2f455"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+          "sha256": "87cb2f2ffe992652bb4fa768c73719a37b5852ab17fbf8e170e888f7a42b0761"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png",
+          "sha256": "bd24fd383253bf8d43f0a81f11c071d76d1d555114376dd647cd9fb38fa0a9da"
+        },
+        {
+          "path": "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
+          "sha256": "ab93096331e7cd8ec379f73f1e9adcaaa9ee1115c9f4ff10411a811fb9700174"
+        },
+        {
+          "path": "android/app/src/main/res/values/ic_launcher_background.xml",
+          "sha256": "cd40bafe618ff506f4088778b135cb4faa15f25e0c9b475e22d730c74b7be115"
+        },
+        {
+          "path": "android/app/src/main/res/values/strings.xml",
+          "sha256": "e8091c58d4f102e930f8b230bea7d5665377e9841529a895470c689e890a7334"
+        },
+        {
+          "path": "android/app/src/main/res/values/styles.xml",
+          "sha256": "e1eab7862043c11a5fadde5bbb3524f564893f7002c4b2fae7c12fcbaa0fd838"
+        },
+        {
+          "path": "android/app/src/main/res/xml/file_paths.xml",
+          "sha256": "a46ed43ef65c90cb6778f4581decf3556e3f0055aad8f36d69dae16f9a0e99aa"
+        },
+        {
+          "path": "android/app/src/test/java/majo/im/luna/LedgerImageInputPluginTest.java",
+          "sha256": "878db82b7b864d20bca0e231530e0399d3d3f7472d6584c8eb9cb03bc5767b36"
+        },
+        {
+          "path": "android/build.gradle",
+          "sha256": "44cccefc5bbd1567a0b4eb163ec35d5b14d8e4f874f9a5cfbb40b4d6e09015b4"
+        },
+        {
+          "path": "android/capacitor.settings.gradle",
+          "sha256": "b488e162f552d6efb8286793c7871bbc1061c9bf5ca3a6a495fdeb8988a541c7"
+        },
+        {
+          "path": "android/gradle.properties",
+          "sha256": "3bab15c5b8bc4c2f4b6cf525497d15ad4abca53a460e6dd2eb0f0135817d31e6"
+        },
+        {
+          "path": "android/gradle/wrapper/gradle-wrapper.jar",
+          "sha256": "7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172"
+        },
+        {
+          "path": "android/gradle/wrapper/gradle-wrapper.properties",
+          "sha256": "05fcb55a155233ee632da57149d1ba3cd39a001701ae00e0c20782fbaf6c378b"
+        },
+        {
+          "path": "android/gradlew",
+          "sha256": "b187b4c52e749f5760afdd6fadc31b2a98ad35fb249bf0dff03b72650f320409"
+        },
+        {
+          "path": "android/gradlew.bat",
+          "sha256": "1d297e00bd21de3ace22b4d7f2de1f9dfa858883d66bbf7c1ccbecccec8f4f3b"
+        },
+        {
+          "path": "android/scripts/run-emulator.sh",
+          "sha256": "841b10bd7cb87bc40d59381cb5e1fb91dc4f5ed5620e7ee54400c0fc305b8ac4"
+        },
+        {
+          "path": "android/settings.gradle",
+          "sha256": "6ce098d15ebd69b44c4ecd786bca1bdc366340d2459b2af4d7bb0ab317aa9669"
+        },
+        {
+          "path": "android/variables.gradle",
+          "sha256": "83d502c9ed8fcf1dd4791482067abeedbebae49fafe9cd14a8a1f5891deb0d88"
+        },
+        {
+          "path": "capacitor.config.ts",
+          "sha256": "7501e1c5e57f503185c5fd94834d44ff7e4bcc6bfd1019ce0566af8fb9e1877b"
+        },
+        {
+          "path": "package-lock.json",
+          "sha256": "a1680a3ea9ac6fcaaa63599c3e4d5a4c771b762def142d87fe9d60a5052d1df3"
+        },
+        {
+          "path": "package.json",
+          "sha256": "f8ddc1fbdad5d131399a942dc9941c609a833d3323239c9e54cf3e08e06bd7ba"
+        },
+        {
+          "path": "scripts/web-offline-plugin.ts",
+          "sha256": "85ebaf9216cd923277f8516080acd4088c67e4da44994607ec16d7e801c2465f"
+        },
+        {
+          "path": "src/api-client/generated/@tanstack/react-query.gen.ts",
+          "sha256": "c60a692812ae212f48481bbc7e7f596f7dcdd00573e2fb2f322e870d87281a71"
+        },
+        {
+          "path": "src/api-client/generated/client.gen.ts",
+          "sha256": "b325822184abc7aed91c42bb1ea0697bb8ae178833c3fca97f6ec498398c1377"
+        },
+        {
+          "path": "src/api-client/generated/client/client.gen.d.ts",
+          "sha256": "30d25df03e0b8eb78bfbf1cbbbb5f1293d8858aa3f7c2af9afc1386ad29eca5d"
+        },
+        {
+          "path": "src/api-client/generated/client/client.gen.js",
+          "sha256": "dcdedaffbe03c9a04642863b3aa9507e52bbebc49b84cd0e6ede036234f4b537"
+        },
+        {
+          "path": "src/api-client/generated/client/index.d.ts",
+          "sha256": "977283ae6ed32aaeb6c0d3431052b7424cb4b13037f7cd51d723f76050633b60"
+        },
+        {
+          "path": "src/api-client/generated/client/index.js",
+          "sha256": "365fcb9ba45a51292eb0067af6ff76eeac72e1bdc61827df84583d764af7e699"
+        },
+        {
+          "path": "src/api-client/generated/client/types.gen.d.ts",
+          "sha256": "b52dbeb4e29322719772c6b2e3db68d5bd157cfdba841e7e11795874819f24d1"
+        },
+        {
+          "path": "src/api-client/generated/client/types.gen.js",
+          "sha256": "17ebe2baaa8d2f0c94afaaaae74a46e43e2b163a0f4ffd69adb39ad57c318e78"
+        },
+        {
+          "path": "src/api-client/generated/client/utils.gen.d.ts",
+          "sha256": "64461312f44314320145ce16bd8bdb1b07febcf2613287b40335b80935b69e34"
+        },
+        {
+          "path": "src/api-client/generated/client/utils.gen.js",
+          "sha256": "0bf886da9d1d29141df0493053dbfb331cf2c2eb5a88ddac4f38b5ed04e254d9"
+        },
+        {
+          "path": "src/api-client/generated/core/auth.gen.d.ts",
+          "sha256": "baaf667467a104128dbad679d65d9bf60bd6585073557d968fe6b41705747f66"
+        },
+        {
+          "path": "src/api-client/generated/core/auth.gen.js",
+          "sha256": "a8a8faa4b1c7383a3f8570b9e74849cd77c4ee59406bf00b9e00ff2f0c89321d"
+        },
+        {
+          "path": "src/api-client/generated/core/bodySerializer.gen.d.ts",
+          "sha256": "2a9e0120ba004087de66ee6dc4e13f74239678d7700275f12149fb03ce703e13"
+        },
+        {
+          "path": "src/api-client/generated/core/bodySerializer.gen.js",
+          "sha256": "85f6abdc0ad36c810a635e0a24fa7a05cf1fd40b1aa4638d5128055178aac467"
+        },
+        {
+          "path": "src/api-client/generated/core/params.gen.d.ts",
+          "sha256": "24c3a8e82e56cf4eb5cf9e28d7a6ff05d0c4048e6c98c2d58665ea52b89abd3b"
+        },
+        {
+          "path": "src/api-client/generated/core/params.gen.js",
+          "sha256": "25ddaaae0571f0efa0821d47f3ab963e82097a08e05fcb6f6ecf0ca48dbfd11c"
+        },
+        {
+          "path": "src/api-client/generated/core/pathSerializer.gen.d.ts",
+          "sha256": "6601856f69d92e2a6de5c5505f2b97d7e5d4ffc734491e8c9ea1c52dc07b17c1"
+        },
+        {
+          "path": "src/api-client/generated/core/pathSerializer.gen.js",
+          "sha256": "a1ad57fbaeb6331c3e3d811cbfdb1c16f9884b4d6b93658a6c73f2882088d994"
+        },
+        {
+          "path": "src/api-client/generated/core/queryKeySerializer.gen.d.ts",
+          "sha256": "137b06ec431c2ede0e82663e8190ec2d3d9c0eadda2265ec36a2aa8009cba2b3"
+        },
+        {
+          "path": "src/api-client/generated/core/queryKeySerializer.gen.js",
+          "sha256": "759a91074785c0e7f6161c98d0a2f055ac1755e101ca2bcb548cefc84113dd00"
+        },
+        {
+          "path": "src/api-client/generated/core/serverSentEvents.gen.d.ts",
+          "sha256": "2ae63706fddee02d9a0c5028904d30cdefa44ad834b96e540a0edc9842f236a2"
+        },
+        {
+          "path": "src/api-client/generated/core/serverSentEvents.gen.js",
+          "sha256": "550784cb0e43872d31eb0d7257765b162b72855fac54f729710fbf0a3cc2bd31"
+        },
+        {
+          "path": "src/api-client/generated/core/types.gen.d.ts",
+          "sha256": "24247b735b63f6165af87512c6f483c02a7d353778e7ab6d24209b2a39947d4d"
+        },
+        {
+          "path": "src/api-client/generated/core/types.gen.js",
+          "sha256": "17ebe2baaa8d2f0c94afaaaae74a46e43e2b163a0f4ffd69adb39ad57c318e78"
+        },
+        {
+          "path": "src/api-client/generated/core/utils.gen.d.ts",
+          "sha256": "cf556b477fe79e9598864722ae792c036691a688e52837896402a46352005b28"
+        },
+        {
+          "path": "src/api-client/generated/core/utils.gen.js",
+          "sha256": "ece75e15745ae991bc993ca447296a0c590acf3c9f8aa556f3ed242eda53bbc2"
+        },
+        {
+          "path": "src/api-client/generated/index.ts",
+          "sha256": "4da6d63712e189f570316e4dbb374ae1bb378a3c6f209df0e8cb5eb0422515dc"
+        },
+        {
+          "path": "src/api-client/generated/sdk.gen.ts",
+          "sha256": "7b534b30f81e4856ff9a2a52e9ddf064b8f8b9adbcb9fc11676bb5adc629574e"
+        },
+        {
+          "path": "src/api-client/generated/types.gen.ts",
+          "sha256": "f4db156a7d7fdc2a091b9532329608475cdc9a5bbc844d7b22afad27f7290c90"
+        },
+        {
+          "path": "src/api-client/runtime/account-queries.ts",
+          "sha256": "ccb73c0e93166a3ce46afa35106ec5c68e4e2db7a8a50b89b7f750d52e56475a"
+        },
+        {
+          "path": "src/api-client/runtime/client.ts",
+          "sha256": "7c3964cdc94a34457d7dc16d6687cd306732e8c53d6b2f76f1804ee385d83080"
+        },
+        {
+          "path": "src/renderer/app/router.tsx",
+          "sha256": "ee00c274f1f0742b6ce0cd87fed81aa5c612eb968149a42a40b99b0b1d0cd073"
+        },
+        {
+          "path": "src/renderer/app/search.test.ts",
+          "sha256": "5e6c35d18d0419bfb4bc829dcf21c21f3ffc6d44e1a08986e1af1adbb6bd57d9"
+        },
+        {
+          "path": "src/renderer/app/search.ts",
+          "sha256": "b475809e736ecdd4f7aabfaf9eacd111ba1ad298bcecff617670708426bba9e1"
+        },
+        {
+          "path": "src/renderer/app/shell.tsx",
+          "sha256": "8ce32d7ceb3210dfeb88003b732fd787ada04eb5d9a394a24815297395563f02"
+        },
+        {
+          "path": "src/renderer/category-display.ts",
+          "sha256": "5937d8dfe5b5a8e8f5c29a62ac1d85e9dd7819b739492652f7ff9b3337665862"
+        },
+        {
+          "path": "src/renderer/client-surface.ts",
+          "sha256": "693cc06e7912fb98989e24d5da8ade049af4cf4571667f67db4f39898a1aae81"
+        },
+        {
+          "path": "src/renderer/components/form.tsx",
+          "sha256": "06443e5454547f5e7cafcc3495c18d83946aaf9040825823d183ecc7954597d7"
+        },
+        {
+          "path": "src/renderer/components/month-picker.tsx",
+          "sha256": "7ae538d3b431037c0e3de99899cadec6bd86b4c6e028c5e5f4ad894b6fe98640"
+        },
+        {
+          "path": "src/renderer/components/ui/LICENSE.md",
+          "sha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
+        },
+        {
+          "path": "src/renderer/components/ui/button.tsx",
+          "sha256": "fd1aae1061cddcf58366c5c89481185e55b5a60c177a4934db45312211295fa2"
+        },
+        {
+          "path": "src/renderer/components/ui/dialog.tsx",
+          "sha256": "c6e9178b7b991f0a33a87f1e21122d279422932d9f05decbe757f0ece3dc16d9"
+        },
+        {
+          "path": "src/renderer/components/ui/input.tsx",
+          "sha256": "cb86e7a4571d552b0cd3dc846d460f5c96652af43e082843bd6c17af79dad1b8"
+        },
+        {
+          "path": "src/renderer/components/ui/utils.ts",
+          "sha256": "b485908a166284212b5a2cc8aac289b733b1315f1fe93936986bf015b5953495"
+        },
+        {
+          "path": "src/renderer/data/local.tsx",
+          "sha256": "a74ae0b9cadad01e593a9d2f00fd4a8615361e20e127113175e0096abf403a5c"
+        },
+        {
+          "path": "src/renderer/electron.d.ts",
+          "sha256": "7f895a8077b3796f5d3a8e27b03b372a5d6fd9bb5ac3706926e5f5815f40e56b"
+        },
+        {
+          "path": "src/renderer/features/account.tsx",
+          "sha256": "83088c95a12e5809d09633f3ae1de01ad328928ed9540ace3cc69ee1fa03355a"
+        },
+        {
+          "path": "src/renderer/features/budget.tsx",
+          "sha256": "0532ce9826c183aba806f32b8f6a1b9ad8c36dfeef60add711cb49fe7b2577bb"
+        },
+        {
+          "path": "src/renderer/features/categories.tsx",
+          "sha256": "a59e2034b96defd88c3889a4e6500f5825eda77df4c42becde0f19a4a51fcef8"
+        },
+        {
+          "path": "src/renderer/features/entry.tsx",
+          "sha256": "a2e0c4cee55a32c1f415b525f29d7a573a7c603bb6596875cd9f4cc2cf825f8c"
+        },
+        {
+          "path": "src/renderer/features/ledger.tsx",
+          "sha256": "ba2ef238f30bbbe4fc789a64c9dff2421ad62edbe3e936c17eef63fd68501c6b"
+        },
+        {
+          "path": "src/renderer/features/server-i18n.ts",
+          "sha256": "194512be8e54c40dcd64ebac1d9fb2c1412e40792d7d022054c27585bf2e434e"
+        },
+        {
+          "path": "src/renderer/features/settings-navigation.ts",
+          "sha256": "3e178635ef7952872fa43da607078ee71910a7be95c74cc3ca3102dc5039def3"
+        },
+        {
+          "path": "src/renderer/features/settings.tsx",
+          "sha256": "9cc4c49eb0a0d8e5918edcb13360dea9cb8eece9d0fa48cab2eeca2e9874c02c"
+        },
+        {
+          "path": "src/renderer/features/setup.tsx",
+          "sha256": "41ef225ee319cd793670f838df7dcff515249888e0d455c984190ef543b5e8a6"
+        },
+        {
+          "path": "src/renderer/features/tools.tsx",
+          "sha256": "9e110d491e6d2f4d77654622cceb0bf6ef8c232eeda76293aab02e8eb39c4ca5"
+        },
+        {
+          "path": "src/renderer/i18n.test.ts",
+          "sha256": "793243d635a956a2fe2f858178a9665efdf9661466b7823459e969d17605c6ca"
+        },
+        {
+          "path": "src/renderer/i18n.ts",
+          "sha256": "0c19d94c0d34eb3b7ec4a53c098c2cd6ac952b1ea94b2bdd7e22f75b2c94e7de"
+        },
+        {
+          "path": "src/renderer/index.html",
+          "sha256": "938fc62fc84dd74071387d75b5d6aa90b770c27e358a3d33729eebd0319ab8a6"
+        },
+        {
+          "path": "src/renderer/ledger-copy.test.ts",
+          "sha256": "a73086753090f89cf0a6aa3ccd361ad090e4965f3286212a0a23529523123844"
+        },
+        {
+          "path": "src/renderer/ledger-copy.ts",
+          "sha256": "d59a19178ef0a49d7b391c8b01e43821001c01052fcc775c479d1824cfb41e46"
+        },
+        {
+          "path": "src/renderer/ledger-tools-i18n.test.ts",
+          "sha256": "41539c414ce9a261696536f75ca5b4661a8bd34a0d06bdcaa1179035da781dde"
+        },
+        {
+          "path": "src/renderer/ledger-tools-i18n.ts",
+          "sha256": "9ade069178dd849927b46521195cd847fadb01a6a99e21857114de515fa89e9f"
+        },
+        {
+          "path": "src/renderer/renderer.ts",
+          "sha256": "f558847893f13736848d8b73e863cc0e368bd714ffbd17a84adce84f5df883fc"
+        },
+        {
+          "path": "src/renderer/scoped-read.test.ts",
+          "sha256": "0189f3286ae708d4bb87a37160d7115d97c3bc49417699597f94bc6fbe8a9cbd"
+        },
+        {
+          "path": "src/renderer/search.worker.ts",
+          "sha256": "84928b0ede56a4359e9fcfdabeca407126119f06b05a39d1b32ea950a6e56478"
+        },
+        {
+          "path": "src/renderer/settings-navigation.test.ts",
+          "sha256": "e881e9adf085a02d0e936e3af982a472fb7d1a6a89c182b2c8b003947fbf1abb"
+        },
+        {
+          "path": "src/renderer/styles.css",
+          "sha256": "e4c26298534dea8ddff38f86254ece99113224dbaa907d9152883bd5bae48128"
+        },
+        {
+          "path": "src/shared/abort.test.ts",
+          "sha256": "e8dd33e7d95ee258c8ce8f09d1d6a8afad1ae63ab65875ee8299beb4c9d7c5e1"
+        },
+        {
+          "path": "src/shared/abort.ts",
+          "sha256": "fb53568a4cbec5f654e175d0a393ada829977ec6914aa7edd6579f661ce6c785"
+        },
+        {
+          "path": "src/shared/amount-expression.test.ts",
+          "sha256": "92623e0265360a550fb81143362dcd42561483a0b4600d26155842862b236f49"
+        },
+        {
+          "path": "src/shared/amount-expression.ts",
+          "sha256": "e26488620c667ace878ff0dc81cbe28268f80b26c0db4f47c3baf37a34658c93"
+        },
+        {
+          "path": "src/shared/api.ts",
+          "sha256": "1417a03f732ee87aa71f54616e67ef1e8e1a77bc6c780e41dfc94f02e56d09df"
+        },
+        {
+          "path": "src/shared/attachment-contract.test.ts",
+          "sha256": "af6a1b298f6bc64dcdfe25945cca8304b95cedc8c529b8f65a1b5ee674cbce66"
+        },
+        {
+          "path": "src/shared/attachment-contract.ts",
+          "sha256": "89eb8f342a0ec051cb2205b9b0f5b348b61d99e5c306084887c871a0ac87bd7f"
+        },
+        {
+          "path": "src/shared/category-catalog.ts",
+          "sha256": "286ff132c47c1bca673d99632dbdf7bcb4409f5aa1ef5c2035193a8ee93dec00"
+        },
+        {
+          "path": "src/shared/config-crypto.ts",
+          "sha256": "fc59476f160a8d1b7e69aa508dcf59e6d98a2a8f1068fa9b224d9340aff662bb"
+        },
+        {
+          "path": "src/shared/domain.test.ts",
+          "sha256": "6c83a835b9ff04f1b89cc479983913c8d6e4e7cb36b223f1786f1a323bd11ced"
+        },
+        {
+          "path": "src/shared/domain.ts",
+          "sha256": "d2ee8e4c1b710668dc8e11c36e53e11c92d4109332539939a582364eed13a517"
+        },
+        {
+          "path": "src/shared/full-backup-session.test.ts",
+          "sha256": "a79a05511151609d7693b02f12d341a0d692bfffd65be61e1b0036ef1b8902cd"
+        },
+        {
+          "path": "src/shared/full-backup-session.ts",
+          "sha256": "a6241741d190237460955b95d35792f610dbac99324ea7d590da6af98b7aa6e1"
+        },
+        {
+          "path": "src/shared/full-backup.test.ts",
+          "sha256": "2dbbe2a79281ee476a56a9c8a7cea938577f4742a4d6af206dfc25a00996003d"
+        },
+        {
+          "path": "src/shared/full-backup.ts",
+          "sha256": "de22bfa1daf732858bb9ed73058a6f80258e3f772c3789b32f69685f159e5d07"
+        },
+        {
+          "path": "src/shared/ipc.ts",
+          "sha256": "60a8a37023ce88611d90fe9b1344d46f8c2f450691e432d64f81e00a2f619641"
+        },
+        {
+          "path": "src/shared/ledger-crypto.test.ts",
+          "sha256": "e740fa8481fd2c8ee5a702cbe1b4731321fdf04b9d37f40cf80694a800f61f90"
+        },
+        {
+          "path": "src/shared/ledger-crypto.ts",
+          "sha256": "6be31b78f2c272574304da98a0383f65034025c61fc907b58773d3db5201fbf5"
+        },
+        {
+          "path": "src/shared/ledger-data.ts",
+          "sha256": "f5b681bbac59a4ba4a316a3abde7f94f6de78e4ea688a061889e1844ff3e7d20"
+        },
+        {
+          "path": "src/shared/ledger-public.ts",
+          "sha256": "991f4601ae04f0ffe18643f756b6358d5ff1ea3e3c6b3a5ba9607a6f009ee99e"
+        },
+        {
+          "path": "src/shared/ledger-query.test.ts",
+          "sha256": "e8839d6d949ca276788d785f681f4c41f2c4282b5a79eb00369441accb355765"
+        },
+        {
+          "path": "src/shared/ledger-query.ts",
+          "sha256": "83a65819c779184b9c74824d71d790305ec590cb8999abf881556b6d7db522e5"
+        },
+        {
+          "path": "src/shared/ledger-record.ts",
+          "sha256": "db3e23f1110977453ca7b5ad98e4cc97249b8d67c73ebf2a0138fcd0a90d35a9"
+        },
+        {
+          "path": "src/shared/ledger-session.ts",
+          "sha256": "7130482fe06228e31b938faefa6bedccb6cccc81067bb4391702d3fadf24cffe"
+        },
+        {
+          "path": "src/shared/ledger-statistics.test.ts",
+          "sha256": "e99621368ba5af9c36cf82c543eb49b7a250fbe2282fe4b9ca41c91fea64c5d4"
+        },
+        {
+          "path": "src/shared/ledger-statistics.ts",
+          "sha256": "b30c3bdd552a522b0d11a8e37b5f338fefb8e72ee78fcd6600859075bbe70feb"
+        },
+        {
+          "path": "src/shared/ledger-sync.test.ts",
+          "sha256": "7069efb866d07e957723fd21b7461bedb540a7cdaa21d79bda3e77852b382fee"
+        },
+        {
+          "path": "src/shared/ledger-sync.ts",
+          "sha256": "e5ea22886f4ff810f8dd7c715048f8fea54bc21eab9b1fa13ed1a23e32f9ae18"
+        },
+        {
+          "path": "src/shared/ledger-v2.test.ts",
+          "sha256": "ccffc728144d5284bef7adef02de359a8e64b4cdef6b7fb2029f2c4bea47894b"
+        },
+        {
+          "path": "src/shared/local-ledger.test.ts",
+          "sha256": "919aaad36f756bfef2765bc6f629827c23ee0f6b39e6df91ef8e2efed0031d32"
+        },
+        {
+          "path": "src/shared/local-ledger.ts",
+          "sha256": "c188bd63b48cee411f8671ef2e601453c891ada4190df6a4a6b2376a61d5d307"
+        },
+        {
+          "path": "src/shared/portable-config-crypto.test.ts",
+          "sha256": "f942f809dd2d4ae6291202f570e2a715f5e3648e35502d2e0ec382cffdd7584e"
+        },
+        {
+          "path": "src/shared/portable-config-crypto.ts",
+          "sha256": "0efede4496e1cb42ea5e00a17cc397e63939bdd8c447074e928528caa446c5c9"
+        },
+        {
+          "path": "src/shared/ports.ts",
+          "sha256": "c69cb50c3c9b47c3a29d12a7092f55b2cd254c3c0b5bc0d7d41e34a159f15b9e"
+        },
+        {
+          "path": "src/shared/secure-random.test.ts",
+          "sha256": "fe9d48ff693472fc3602c9f1eadda7c975b68a146dbfcf395ea8b5bde9656486"
+        },
+        {
+          "path": "src/shared/secure-random.ts",
+          "sha256": "70f87f77e6db40a0dd4e55ecc665854c7b1bb52f2c15d4f89c3fc5d36da9e626"
+        },
+        {
+          "path": "src/shared/server-api.ts",
+          "sha256": "2265fcf2817a004e32269174eb760b6ea8b1c4b8a0bf8e5062988d2eae02ce68"
+        },
+        {
+          "path": "src/shared/settings.test.ts",
+          "sha256": "7d66be9cf63a6f4a376997711cb0925584880118104b07e24da00eb3990c5690"
+        },
+        {
+          "path": "src/shared/settings.ts",
+          "sha256": "7469250cdc1191362fc3306c1a7543acf4bb7b9932d3e62fa071a3390474c3dd"
+        },
+        {
+          "path": "src/sync/attachment-object-store.ts",
+          "sha256": "b0af463fc4ffc01e5ac72d548ed4b68dcc95cb1e0e6eb386ffe6d1ba938c2ecb"
+        },
+        {
+          "path": "src/sync/config-service.test.ts",
+          "sha256": "f34ca642b4d1b6d12cc9348b5f47018f7db185d78882bbee65992099887a4447"
+        },
+        {
+          "path": "src/sync/config-service.ts",
+          "sha256": "83350e91ffa5e14f4de35e191784ca0281bf1f923f19e0ce03ba2d428f7ec986"
+        },
+        {
+          "path": "src/sync/http-object-store.ts",
+          "sha256": "75cc384794de362dd02658ce940ecfe157d5e63f4c39eed56bbbd23240233789"
+        },
+        {
+          "path": "src/sync/ledger-service.test.ts",
+          "sha256": "c2a4964b03c7ac5a045deb56f601cf251b2504cddef055d8aa82e5556d67d177"
+        },
+        {
+          "path": "src/sync/ledger-service.ts",
+          "sha256": "32548f1b75992727a7ccfa2e4c004ea5ecc4f6e518baaffadfab2ba060147051"
+        },
+        {
+          "path": "src/sync/profile-port.ts",
+          "sha256": "8417f30be3c165ea76f5609d0a60b31b42cf1f590671fae5bc02d04aa4a1db5d"
+        },
+        {
+          "path": "src/sync/s3-config-store.ts",
+          "sha256": "e3bc5307148560bedc984747fbfdb220c2ca0940a4517fb702255303a84aa7ec"
+        },
+        {
+          "path": "src/sync/s3-ledger-store.test.ts",
+          "sha256": "1494e219d42559842cfb017174321d61614e75a7bb91dcc695bfc2a83e763c8b"
+        },
+        {
+          "path": "src/sync/s3-ledger-store.ts",
+          "sha256": "d556a9de2acd943fb1082eaa5e1c9a359a370074b947d7b1529daecbd6cf6e55"
+        },
+        {
+          "path": "src/sync/server-host.ts",
+          "sha256": "ad63a9add617867f8ed2159b92c1778816479f2fece448556cd1f6adf254f305"
+        },
+        {
+          "path": "src/sync/session-vault.ts",
+          "sha256": "8d143911ba0c58974f6a63a5cbcfc44cacf914db67bb4c51caf9f1187c52229a"
+        },
+        {
+          "path": "src/web/android-backup.test.ts",
+          "sha256": "c72d5886ec62446c827bc00683ec9c2106876e49c6700ce18d07bfef96c878b5"
+        },
+        {
+          "path": "src/web/android-backup.ts",
+          "sha256": "0ec09dbba91b9f83c5427b72130d15df43b777cbccb9e3b61c942cb91b8f1199"
+        },
+        {
+          "path": "src/web/android-image-input.test.ts",
+          "sha256": "f68add57b048259fa6eba907ba9b0129c1fbda3f0c318535a08822e5bab4a994"
+        },
+        {
+          "path": "src/web/android-image-input.ts",
+          "sha256": "b08756d78cd3c53b66b8d140c3c2d626382e38592ca1c1b31e0f1427274e7c11"
+        },
+        {
+          "path": "src/web/browser-state-store.ts",
+          "sha256": "db3f4c60babd7a7e7bc09c68dbeb74b9a20d94cda542fdfd3d2cd9b906bcb50c"
+        },
+        {
+          "path": "src/web/index.html",
+          "sha256": "f15267fbea8caeef862e0fcce7e6dd79eb26d310624e069144da41383a699aed"
+        },
+        {
+          "path": "src/web/main.ts",
+          "sha256": "a7747b16f6a048695059abe34d1fd5995086554551055dc378107d08c76afa55"
+        },
+        {
+          "path": "src/web/opfs-sah-exists.test.ts",
+          "sha256": "be354c2db6a0b3cb5186465429e26ddbbefdb9d3838011f6316c388a50a217be"
+        },
+        {
+          "path": "src/web/opfs-sah-exists.ts",
+          "sha256": "85187b5dee684628bff8642c684984e0cb2d895df83dd4a811b830b526037136"
+        },
+        {
+          "path": "src/web/profile-host.test.ts",
+          "sha256": "ac15487b58d9d7558ebc4768417012d39ad4ffa31785a8386fae9850b37e969f"
+        },
+        {
+          "path": "src/web/profile-host.ts",
+          "sha256": "fe7e934ab505fe12ddcab134dd7cd10c817e08ce8113fc8566962cbfef4b0ed9"
+        },
+        {
+          "path": "src/web/session-vault.test.ts",
+          "sha256": "75597fb162736faefddf0773f60bd097d2955f4b2a5ee5f3ea28b75e6849fb79"
+        },
+        {
+          "path": "src/web/session-vault.ts",
+          "sha256": "ce62e2dc5b5a020b3a713fea01521e6a3e7ed9bcd58fdd465a0549a4d7fb6e07"
+        },
+        {
+          "path": "src/web/session-vault.worker.ts",
+          "sha256": "e83dff0022e97099118f8a0a1448dde440633dd7285708564051dd37d1e951cf"
+        },
+        {
+          "path": "src/web/sqlite-wasm-store.ts",
+          "sha256": "d0f3929430503036bdfae9be4fa4c43cab63ee010038e6ab2462dcaee7ec2c0b"
+        },
+        {
+          "path": "src/web/sqlite-wasm.worker.ts",
+          "sha256": "4a07efa04118a32bee7f9f027553ed8997d78dd72d6a4eb302abd6431ca1f296"
+        },
+        {
+          "path": "src/web/styles.css",
+          "sha256": "110d77dd52062bed4742aaac5509026a77ef02fc3a38ecbf22e435fe19599acd"
+        },
+        {
+          "path": "src/web/vite-env.d.ts",
+          "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5"
+        },
+        {
+          "path": "src/web/web-api.test.ts",
+          "sha256": "02789c7aad2dec1f84b1b584c1af6b1f1ebc517da6065491f3a09c307fbbe2c4"
+        },
+        {
+          "path": "src/web/web-api.ts",
+          "sha256": "5a83e77463864a970b8785592c157e3c38fdf09aba9260c67d668602abc8165c"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "b0723743f858edf0bf0652eb96bd5f87a2dc3af96ac006f2e449ab82a3991712"
+        },
+        {
+          "path": "vite.web.config.ts",
+          "sha256": "caf308759a6f36264126d169aee7832b09fcca4cb8bcc78da461c4e85d0ef18b"
+        }
+      ],
+      "aggregateSha256": "4b14682e40edef1c97de81ab7bacfc397f09e36f8ea45b498fd67ae34bcfe985"
+    },
+    "apkPublicAssets": [
+      {
+        "path": "assets/public/assets/index-60qUYmbP.js",
+        "sha256": "5ccb950d04aa6068c7b898ea56d47f4f2fd5e6418527304604ba639949c63cfd"
+      },
+      {
+        "path": "assets/public/assets/index-DObmjUGa.css",
+        "sha256": "aa5aaf2ce986d0f2ba0263680f53ed766a4bd650b4f8cf9623045c0afc6ee90e"
+      },
+      {
+        "path": "assets/public/assets/index.browser-BUkox7xx.js",
+        "sha256": "282d4f1123e392af130d3456e6eda13248071a150904e2d1005bae3cac8e0b44"
+      },
+      {
+        "path": "assets/public/assets/renderer-Ct3gXVGX.js",
+        "sha256": "ab1f1e7444e607bfafd52b3d4f1098ea8ed535c8ff21ca85ae6706ffdff49458"
+      },
+      {
+        "path": "assets/public/assets/search.worker-SuM7AkK2.js",
+        "sha256": "1441e3a10ad5319c49c73ba88db3a66e63ba0462f12e45b064229a8fd21b2ce3"
+      },
+      {
+        "path": "assets/public/assets/session-vault.worker-DkIJB30k.js",
+        "sha256": "669ee12117c0988880215484448866f0e6347513d51c95181c1eff67ad063d05"
+      },
+      {
+        "path": "assets/public/assets/sqlite-wasm.worker-B9CMnZpc.js",
+        "sha256": "e9f266a914bd3c0e8a22669f2c4a7155cbe2d3d84f35a0e9529887fa5147e8ec"
+      },
+      {
+        "path": "assets/public/assets/sqlite3-BVKGSWc-.wasm",
+        "sha256": "02d7e48164395fa68f81c6ec33e9da5461be397dc57602ac0cd89b4bbba1d312"
+      },
+      {
+        "path": "assets/public/assets/sqlite3-opfs-async-proxy-D_xnb1D8.js",
+        "sha256": "502762db7bd24130f345df6a42883166ec0a91815207940328c9739bb0f5ec2f"
+      },
+      {
+        "path": "assets/public/assets/sqlite3-worker1-BNYi6TGw.js",
+        "sha256": "e942c116a14dd0e500603c677903e67b1ada00f94a7ab659f4f3e821a852bcc7"
+      },
+      {
+        "path": "assets/public/cordova.js",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "assets/public/cordova_plugins.js",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "assets/public/icon.svg",
+        "sha256": "7f4490123f61462c5c7fe5b63ee5ba998eb743fe0b0dc3127bcb85374677ee9b"
+      },
+      {
+        "path": "assets/public/index.html",
+        "sha256": "558fcb8b573714f6f540eb075f0c49eab06029f1239a172c50ee7100616f73b4"
+      },
+      {
+        "path": "assets/public/manifest.webmanifest",
+        "sha256": "d385d3aa27081238650091b7d878989c6a9c54fbf6efe4676019e67b1522370f"
+      },
+      {
+        "path": "assets/public/sw.js",
+        "sha256": "a17f1dc77aa3552a4f13d56afc1ec0b1c89b83c6adbe4cddd51126bf9fffba96"
+      }
+    ],
+    "actualInstalledApkSha256": "d13f95e4d305da7467f033a32155649325a5814af5d470c3fdd28002d22ce551",
+    "nativeColdPids": {
+      "before": 8322,
+      "after": 8679
+    },
+    "finalAccessibilitySettings": {
+      "enabled_accessibility_services": "null",
+      "accessibility_enabled": "0",
+      "touch_exploration_enabled": "0"
+    },
+    "secondConnection": "Same model/Android/WebView verified after user restored wireless ADB; existing owned package retained without reinstall or data reset"
+  },
+  "checksRun": [
+    "Current-source isolated .a07 Docker/Gradle build and apksigner verification",
+    "APK has 16 public Web assets and no added PEM/CRT/network-security-config asset",
+    "Replay syntax under host Node and required Docker Node22",
+    "Explicit disposable-account opt-in guard refuses before any remote request",
+    "Credential file metadata validated as current-user-owned and owner-only with exact required fields; values not printed",
+    "Synthetic RGBA PNG fixture signature, all chunk CRCs and zlib payload verified",
+    "Fresh physical local WebView probe: secure https://localhost, OPFS available, no Service Worker controller, workspace null and account null",
+    "Physical trusted HTTPS UI recovery and exact browser image viewer/readback",
+    "Unique Android synthetic transaction/image upload through public host API followed by normal UI sync",
+    "Live physical memory session sync/readback across owned service restart without re-login",
+    "True native force-stop/relaunch PID 8322 to 8679; explicit cleared volatile sessions, durable binding/images retained, normal UI login/unlock/readback",
+    "Both original Chrome profiles converged to exact two transactions/two images after Android upload/restart",
+    "Installed APK SHA matched built artifact before uninstall; device accessibility null/0/0 unchanged",
+    "Only owned package uninstall Success and owned loopback 19225 removal; subsequent package/forward inventory empty",
+    "Exact owned scratch absent after removal; dedicated .a07 Docker tag/image deletion succeeded without force/prune"
+  ],
+  "failedAttempts": [
+    {
+      "stage": "native local CDP connection",
+      "kind": "harness compatibility",
+      "reason": "WebView rejects Browser.setDownloadBehavior because browser context management is unsupported",
+      "correction": "Use supported connectOverCDP({noDefaults:true}) to preserve native download/focus/media defaults",
+      "repeatResult": "local-only probe passed"
+    },
+    {
+      "stage": "chrome-init external execution approval",
+      "kind": "automatic approval review rejection before execution",
+      "reason": "Review requires explicit authorization for disposable credentials and synthetic transaction/image payload transmission to the public destination",
+      "subsequentAction": "Main submitted same bounded operation for one evidence-based review; rejected again; explicit user approval requested",
+      "executed": false,
+      "publicAccountWrites": 0
+    },
+    {
+      "stage": "physical public replay connection",
+      "kind": "wireless ADB interruption before login",
+      "reason": "Device disappeared; exact original address connection refused; read-only mdns service list empty",
+      "publicNativeAccountWrites": 0,
+      "preserved": "Installed owned package; no reinstall/reset/scanning/guessed port"
+    }
+  ],
+  "pending": [
+    "Independent final review and main-session task closure"
+  ],
+  "retainedOwnedResources": {
+    "scratch": "Exact task scratch removed; profiles, credentials/audit, raw snapshots, APK and scratch helpers absent",
+    "installedPackage": "Owned majo.im.luna.a07 removed and absence verified",
+    "adbForward": "Owned loopback 19225 removed and absence verified",
+    "buildImage": "Owned luna-android-apk:a07-20261005 untagged and exact image af90c5c3... deleted without force/prune",
+    "retained": "Sanitized fixed-stage/build logs in /tmp and these three research files only; protected VPS deployment/backup managed independently",
+    "cleanup": "No other apps/user data/system trust/accessibility/pairing/global ADB state touched"
+  },
+  "limits": "Local build/probe is not public TLS or sync acceptance. No voice/TalkBack tests. Android image upload replay uses the public host API, with native DocumentsUI acceptance retained separately in A03. No commits/archive or VPS route/data operation by client agent.",
+  "explicitPayloadAuthorization": {
+    "answer": "授权，继续 A07 验收",
+    "scope": "Dedicated synthetic login credentials, synthetic transaction and one-pixel image sent to https://luna.majo.im; no real account or ledger",
+    "effect": "Same bounded operation approved and executed after the two preserved automatic review rejections"
+  },
+  "replaySha256": "e0157834ae73bfa5da0d9359a6394597ed9852c411706e43685bbd8d34376650",
+  "coordinatedServiceRestart": {
+    "source": "VPS agent verified owned stack stopped-backup/restart and public readiness before client cold checks",
+    "instanceId": "9b106922-5d3f-4948-b5e7-0f2c50910282",
+    "metadataSha256BeforeAfter": "e79f71273bace91116f3e4519b78da4147db0e740fa598654530cad88adc15e8",
+    "fullBackupTreeSha256": "124a9af806ddcc2e9b18ebd78d99a1aaf3b676a770b59a3243c92014d496036b",
+    "backup": "/opt/luna/backups/a07-seeded-20261005",
+    "chrome1ColdReadback": "passed",
+    "chrome2ColdReadback": "passed",
+    "coldSessionClearedBeforeRelogin": true,
+    "normalReloadRetainedAccount": true
+  },
+  "a07PassedBoundary": "Agent-observed client scope passed; task closure and independent final review belong to main session",
+  "clientResult": {
+    "date": "2026-10-05",
+    "origin": "https://luna.majo.im",
+    "trust": "default browser/system trust; no certificate bypass",
+    "checks": [
+      {
+        "mode": "chrome-init",
+        "name": "two-fresh-chrome-profiles-trusted-https-headers",
+        "timestamp": "2026-10-04T16:58:58.309Z"
+      },
+      {
+        "mode": "chrome-init",
+        "name": "first-ui-create-login-bind-transaction-image-upload",
+        "timestamp": "2026-10-04T16:59:03.311Z",
+        "image": {
+          "transactionId": "transaction-1830d000-7978-45f9-ae15-e62ccd6c838d",
+          "attachmentId": "c9b810f0-9f01-400a-8e93-8f10cbf1b50c",
+          "sha256": "1b1593b61b3c83f6f7f2a20699e1c46233ce5c60855e2779d2f4c2645171802c",
+          "length": 88,
+          "mime": "image/png",
+          "width": 1,
+          "height": 1
+        },
+        "transactions": 1
+      },
+      {
+        "mode": "chrome-init-resume",
+        "name": "first-tab-reload-preserves-session-binding-and-image",
+        "timestamp": "2026-10-04T17:04:08.793Z"
+      },
+      {
+        "mode": "chrome-init-resume",
+        "name": "first-tab-reload-preserves-session-binding-and-image",
+        "timestamp": "2026-10-04T17:08:09.050Z"
+      },
+      {
+        "mode": "chrome-init-resume",
+        "name": "second-original-fresh-ui-recovery-readback-after-harness-navigation-fix",
+        "timestamp": "2026-10-04T17:08:14.256Z"
+      },
+      {
+        "mode": "chrome-restart",
+        "name": "chrome-1-cold-relaunch-after-service-restart-local-remote-image-stable",
+        "timestamp": "2026-10-04T17:12:47.398Z",
+        "accountSessionCleared": true,
+        "encryptedRemoteSessionCleared": true,
+        "durableBindingRetained": true
+      },
+      {
+        "mode": "chrome-restart",
+        "name": "chrome-2-cold-relaunch-after-service-restart-local-remote-image-stable",
+        "timestamp": "2026-10-04T17:12:53.277Z",
+        "accountSessionCleared": true,
+        "encryptedRemoteSessionCleared": true,
+        "durableBindingRetained": true
+      },
+      {
+        "mode": "android-recover-resume",
+        "name": "physical-android-ui-login-recover-browser-image-system-trust",
+        "timestamp": "2026-10-04T17:26:14.079Z"
+      },
+      {
+        "mode": "android-recover-resume",
+        "name": "physical-android-public-host-transaction-image-upload",
+        "timestamp": "2026-10-04T17:26:20.326Z",
+        "inputBoundary": "public host API, not native DocumentsUI picker"
+      },
+      {
+        "mode": "android-service-restart",
+        "name": "physical-android-live-session-survives-owned-service-restart-without-relogin",
+        "timestamp": "2026-10-04T17:28:54.735Z"
+      },
+      {
+        "mode": "android-restart",
+        "name": "physical-android-force-stop-relaunch-local-and-remote-image-stable",
+        "timestamp": "2026-10-04T17:29:54.294Z",
+        "accountSessionCleared": true,
+        "encryptedRemoteSessionCleared": true,
+        "durableBindingRetained": true
+      },
+      {
+        "mode": "chrome-after-android",
+        "name": "chrome-downloads-android-upload-exact-image-after-native-restart",
+        "timestamp": "2026-10-04T17:30:18.571Z"
+      },
+      {
+        "mode": "chrome-first-after-android",
+        "name": "chrome-1-downloads-android-upload-exact-image-after-native-restart",
+        "timestamp": "2026-10-04T17:39:12.584Z"
+      }
+    ],
+    "failures": [
+      {
+        "mode": "chrome-init",
+        "stage": "ui-connect",
+        "timestamp": "2026-10-04T17:01:05.640Z"
+      },
+      {
+        "mode": "chrome-init-resume",
+        "stage": "ui-sync",
+        "timestamp": "2026-10-04T17:06:10.033Z"
+      },
+      {
+        "mode": "android-recover",
+        "stage": "configuration",
+        "timestamp": "2026-10-04T17:08:45.119Z"
+      },
+      {
+        "mode": "android-recover",
+        "stage": "ui-connect-return-account",
+        "timestamp": "2026-10-04T17:19:01.011Z"
+      },
+      {
+        "mode": "android-recover-resume",
+        "stage": "android-target-validation",
+        "timestamp": "2026-10-04T17:23:02.576Z"
+      },
+      {
+        "mode": "chrome-first-after-android",
+        "stage": "ui-login",
+        "timestamp": "2026-10-04T17:33:17.072Z"
+      },
+      {
+        "mode": "chrome-first-after-android",
+        "stage": "ui-login-confirm-account",
+        "timestamp": "2026-10-04T17:37:46.493Z"
+      }
+    ],
+    "browser": "153.0.8010.47",
+    "authHttpStatuses": [
+      {
+        "mode": "chrome-first-after-android",
+        "status": 201,
+        "timestamp": "2026-10-04T17:39:09.978Z"
+      },
+      {
+        "mode": "chrome-first-after-android",
+        "status": 200,
+        "timestamp": "2026-10-04T17:39:10.098Z"
+      },
+      {
+        "mode": "chrome-first-after-android",
+        "status": 200,
+        "timestamp": "2026-10-04T17:39:11.496Z"
+      },
+      {
+        "mode": "chrome-first-after-android",
+        "status": 200,
+        "timestamp": "2026-10-04T17:39:12.026Z"
+      }
+    ]
+  },
+  "clientResultSha256": "7d4a26d9a2018f7f35bfcba106c354673c4f21cf29d409836d8434a84573b937",
+  "finalImages": [
+    {
+      "transactionId": "transaction-1830d000-7978-45f9-ae15-e62ccd6c838d",
+      "attachmentId": "c9b810f0-9f01-400a-8e93-8f10cbf1b50c",
+      "sha256": "1b1593b61b3c83f6f7f2a20699e1c46233ce5c60855e2779d2f4c2645171802c",
+      "length": 88,
+      "mime": "image/png",
+      "width": 1,
+      "height": 1
+    },
+    {
+      "transactionId": "transaction-c68b4183-453d-4cb0-950d-97c105d5a5d9",
+      "attachmentId": "267d4242-80fa-4afc-9894-2d36b724429d",
+      "sha256": "2e9e614a233d1845c927cdda9175ec8bdf3929c242f4d2ad97a90547bf19974e",
+      "length": 70,
+      "mime": "image/png",
+      "width": 1,
+      "height": 1
+    }
+  ],
+  "finalTransactions": 2,
+  "harnessFailureInterpretations": [
+    {
+      "mode": "chrome-init",
+      "stage": "ui-connect",
+      "observed": "Second original fresh profile recovered workspace/binding and navigated to /luna; account controls were no longer mounted",
+      "fix": "Return to normal account view before existing sync assertions"
+    },
+    {
+      "mode": "chrome-init-resume",
+      "stage": "ui-sync",
+      "observed": "Exact second-profile local image bytes passed independent probe; narrow image action was hidden in collapsed details",
+      "fix": "Open actual action disclosure before unchanged decoded viewer assertion; original broad failure label retained"
+    },
+    {
+      "mode": "android-recover",
+      "stage": "configuration",
+      "observed": "Wireless ADB disappeared before public native login",
+      "fix": "Wait for user restoration; verify same device and preserve installed owned data"
+    },
+    {
+      "mode": "android-recover",
+      "stage": "ui-connect-return-account",
+      "observed": "Native UI login/recovery and synced session had completed; native device-name field was inside collapsed server-device-details",
+      "fix": "Open actual device disclosure; retain initial failure without overstating exact timeout cause"
+    },
+    {
+      "mode": "android-recover-resume",
+      "stage": "android-target-validation",
+      "observed": "App already on settings/account; ready helper matched only welcome/ledger heading",
+      "fix": "Include actual account title in target readiness, preserve one-transaction/one-image resume guard"
+    },
+    {
+      "mode": "chrome-first-after-android",
+      "stage": "ui-login and ui-login-confirm-account",
+      "observed": "No auth/sessions events in VPS previous five-minute read-only probe; final guarded run POST 201 and session GET 200",
+      "fix": "Wait for either visible login or account identity before conditional login; no limiter/service changes or bypass"
+    }
+  ],
+  "coordinatedNativeServiceRestart": {
+    "source": "VPS agent independently verified short owned stack restart after native upload; client retained PID and memory session",
+    "instanceId": "9b106922-5d3f-4948-b5e7-0f2c50910282",
+    "metadataSha256BeforeAfter": "fef9433a743e7e783e3fac0f5a1646e1356f23e9da295d1811967b682488380d",
+    "nativeNoReloginSync": "passed",
+    "counts": {
+      "users": 1,
+      "sessions": 8,
+      "ledgers": 1,
+      "remoteObjects": 1,
+      "attachments": 2,
+      "idempotency": 5
+    },
+    "readiness": "Initial 502 during maintenance followed by bounded successful public 200/TLS verify 0"
+  },
+  "finalLogAuditAndRevocation": {
+    "source": "VPS agent final report; no VPS operation performed by client agent",
+    "knownClientSecrets": 11,
+    "knownInternalKeys": 4,
+    "matches": 0,
+    "apiEvents": 794,
+    "allowedMetadataFields": 5,
+    "scope": "New API/Web/MinIO/bucket-init/instance-init/proxy actual logs",
+    "dedicatedAccountPasswordReset": "Random unrecoverable password; data preserved",
+    "activeSessions": 0,
+    "oldBearerTokensTested": 9,
+    "oldBearerAuthMeStatus": 401,
+    "oldPasswordAuthSessionsStatus": 401,
+    "beforeRevocationEvents": 781,
+    "afterRevocationEvents": 794,
+    "negativeCleanupRequestsIncluded": true
+  },
+  "cleanupComplete": true,
+  "finalChecks": {
+    "nodeSyntax": "passed",
+    "jsonParse": "passed",
+    "gitDiffCheck": "passed",
+    "currentBuildInputHashes": "204/204 matched",
+    "runtimeResultHashReconstructed": "matched",
+    "replayHash": "matched",
+    "node22DockerSyntax": "passed"
+  }
+}

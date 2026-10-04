@@ -9,3 +9,7 @@
 {"file":".trellis/spec/trellis-plus/uupm-integration.md","reason":"Current project-owned policy, preview and acceptance boundaries"}
 {"file":".trellis/spec/trellis-plus/commit-policy.md","reason":"Current project-owned policy, preview and acceptance boundaries"}
 {"file":".trellis/spec/trellis-plus/continuity.md","reason":"Current project-owned policy, preview and acceptance boundaries"}
+{"file": ".trellis/tasks/09-30-manual-acceptance-followup/research/a04-focus-decisions-20261004.md", "reason": "Approved minimal BACK focus repair; no visual redesign or voice capability"}
+{"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Production shell and cold offline worker acceptance boundary"}
+{"file": ".trellis/tasks/09-30-manual-acceptance-followup/research/a07-vps-20261005.md", "reason": "Current A07 isolated durable deployment, certificate renewal, source provenance and rollback evidence"}
+{"file": ".trellis/tasks/09-30-manual-acceptance-followup/research/a07-clients-20261005.md", "reason": "Current A07 explicit synthetic payload authorization and fresh client trust/session/attachment boundaries"}

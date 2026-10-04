@@ -122,11 +122,15 @@ test("online and controlled foreground hooks sync automatic writes with settings
   }
 });
 
-test("real server login, encrypted copy, second-device restore and offline profile recovery", async ({
+for (const offlineRecovery of [false, true]) {
+test(offlineRecovery
+  ? "production server copy cold-opens original local profile offline"
+  : "real server login, encrypted copy, second-device restore and local profile recovery", async ({
   page,
   browser,
   baseURL,
 }) => {
+  test.skip(offlineRecovery && !process.env.LUNA_TEST_BASE_URL && process.env.LUNA_TEST_PRODUCTION !== "1", "Cold offline workers require the production shell");
   test.setTimeout(120_000);
   const database = await openTestDatabase();
   const username = `ui_${randomUUID().slice(0, 8)}`;
@@ -396,7 +400,12 @@ test("real server login, encrypted copy, second-device restore and offline profi
       "Signed out",
     );
     await expect(page.locator("#server-account-name")).toHaveCount(0);
-    await page.context().setOffline(true);
+    if (offlineRecovery) {
+      await expect(page.locator("html")).toHaveAttribute("data-offline-shell", "ready");
+      await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+      await page.context().setOffline(true);
+      expect(await page.evaluate(() => navigator.onLine)).toBe(false);
+    }
     await page.locator(".brand").click();
     await expect(page.locator("#transaction-list-region")).toContainText(
       "Private meal",
@@ -490,3 +499,4 @@ test("real server login, encrypted copy, second-device restore and offline profi
     database.close();
   }
 });
+}

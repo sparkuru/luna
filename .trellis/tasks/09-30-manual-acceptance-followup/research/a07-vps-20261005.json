@@ -1,0 +1,267 @@
+{
+  "date": "2026-10-05",
+  "stage": "server-acceptance-complete",
+  "origin": "https://luna.majo.im",
+  "sshConfigFallback": "/home/wkyuu/.ssh/config",
+  "docker": "26.1.5+dfsg1",
+  "compose": "2.26.1-4",
+  "hostNodeBackup": "20.19.2",
+  "serviceNode": "22.22.0",
+  "project": "luna-production",
+  "release": "/opt/luna/releases/20261005-bf4071f3fbdd77ac",
+  "data": "/opt/luna/data",
+  "webBind": "127.0.0.1:18111",
+  "source": {
+    "files": 137,
+    "manifestSha256": "bf4071f3fbdd77ac3311d07e2c14c9ac7fc03af7f4da615f7f381093dc05bacf",
+    "tarSha256": "93ed91c1510a2106f5141b223e6433864f5d26fa8ebf33b605a4b0b79ec9a636"
+  },
+  "images": {
+    "web": "sha256:69a043ed22c6a3bbd4317db95d319e18bdea9e5220322734b15ef46462f6fa26",
+    "api": "sha256:2483ce467999ac00d42521e41458f922acdf5975609efe01fee51629b39dc65b",
+    "bucketInit": "sha256:dbbd70825d2b652061ac80176c0228579c577ebe9f63f84ed986f05c2986500e",
+    "minio": "sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9"
+  },
+  "assetManifestSha256": "f1729f1292e5dc9a60f4e2d896e5d31fefe55c60b0d8cc9b001ffaca0f8aa9dd",
+  "compiledManifestSha256": "e30b00ca6ffcb14af0ad51bb40538f516918f9ee6b8c10bbd4741b0a00db7af6",
+  "instanceId": "9b106922-5d3f-4948-b5e7-0f2c50910282",
+  "certificate": {
+    "san": [
+      "luna.majo.im"
+    ],
+    "issuer": "Let's Encrypt YE1",
+    "notBeforeUtc": "2026-10-04T15:48:28Z",
+    "notAfterUtc": "2027-01-02T15:48:27Z",
+    "sha256Fingerprint": "F323F20C4175E21C888FCE2C8C0D6FFC8BC72D1E9DCB41EFDE839ECB4C22FA8B",
+    "privateKeyMode": "0600",
+    "dedicatedHome": "/opt/luna/ops/acme-home",
+    "sharedWildcardUntouched": true
+  },
+  "renewal": {
+    "unit": "luna-cert-renew.service",
+    "timer": "luna-cert-renew.timer",
+    "schedule": "daily; RandomizedDelaySec=1h; Persistent=true",
+    "actualCheckResult": "success",
+    "execMainStatus": 0,
+    "checkStartedLocal": "2026-10-05 00:51:28 +08",
+    "checkOutcome": "skipped-not-due",
+    "nextRenewalThresholdUtc": "2026-12-02T16:47:00Z",
+    "futureRenewalClaimed": false,
+    "installReloadHookSucceeded": true
+  },
+  "http": {
+    "rootStatus": 200,
+    "metaStatus": 200,
+    "tlsVerifyResult": 0,
+    "nativeOriginPreflightStatus": 204,
+    "unapprovedOriginStatus": 400,
+    "apiNoStoreNoTransform": true,
+    "coop": "same-origin",
+    "coep": "require-corp"
+  },
+  "baseline": {
+    "users": 1,
+    "sessions": 0,
+    "remoteObjects": 0,
+    "activeBackupRefused": true,
+    "refusedBackupDestinationAbsent": true
+  },
+  "existingPreservedProject": {
+    "path": "/opt/luna-acceptance-20260928-codex",
+    "loopbackPort": 18110,
+    "instanceId": "12550081-6af1-49f8-b28a-ef93b0f7ac88"
+  },
+  "operatorHandoff": "/opt/luna/ops/operations.md",
+  "ownedLocalScratch": "/tmp/luna-a07-vps-20261005.9hbYYa",
+  "pending": [
+    "main-session independent review and commit/archive decisions"
+  ],
+  "limits": [
+    "renewal check skipped certificate not yet due; no months-long uptime claim",
+    "host Node20 only for standalone backup, API/runtimeNode22",
+    "do not delete or replace old installation",
+    "no TalkBack activation"
+  ],
+  "restart": {
+    "clientSeedCloseFlushConfirmed": true,
+    "onlyNewStackStopped": true,
+    "metadataStateSha256BeforeAfter": "e79f71273bace91116f3e4519b78da4147db0e740fa598654530cad88adc15e8",
+    "countsAtRestart": {
+      "users": 1,
+      "sessions": 5,
+      "ledgers": 1,
+      "remoteObjects": 1,
+      "attachments": 1,
+      "idempotencyRecords": 3
+    },
+    "instancePreserved": true,
+    "publicTrustedMeta200": true,
+    "newWebApiHealthy": true,
+    "oldProjectStillRunning": true
+  },
+  "backup": {
+    "path": "/opt/luna/backups/a07-seeded-20261005",
+    "stoppedFullTree": true,
+    "files": 21,
+    "bytes": 132342,
+    "completeTreeSha256": "124a9af806ddcc2e9b18ebd78d99a1aaf3b676a770b59a3243c92014d496036b",
+    "includesPathModeUidGidBytesAndRootAttributes": true,
+    "sourceCopyIdentical": true,
+    "rootMode": "0700",
+    "restoredPreRevocationAuthMustBeRevokedBeforeRouting": true
+  },
+  "logAuditSnapshot": {
+    "result": "passed",
+    "distinctKnownSecretStrings": 7,
+    "apiEvents": 250,
+    "apiFields": [
+      "requestId",
+      "route",
+      "status",
+      "durationMs",
+      "bytes"
+    ],
+    "sources": [
+      {
+        "source": "api-private.log",
+        "bytes": 28395,
+        "knownSyntheticSecretsPresent": false,
+        "bearerPatternPresent": false
+      },
+      {
+        "source": "web-private.log",
+        "bytes": 0,
+        "knownSyntheticSecretsPresent": false,
+        "bearerPatternPresent": false
+      },
+      {
+        "source": "proxy-private.log",
+        "bytes": 0,
+        "knownSyntheticSecretsPresent": false,
+        "bearerPatternPresent": false
+      }
+    ]
+  },
+  "remoteScratch": "/tmp/luna-a07-vps-20261005.HjxPpj",
+  "nativeSeededRestart": {
+    "onlyNewStackRestarted": true,
+    "metadataStateSha256BeforeAfter": "fef9433a743e7e783e3fac0f5a1646e1356f23e9da295d1811967b682488380d",
+    "countsAtRestart": {
+      "users": 1,
+      "sessions": 8,
+      "ledgers": 1,
+      "remoteObjects": 1,
+      "attachments": 2,
+      "idempotencyRecords": 5
+    },
+    "instancePreserved": true,
+    "firstReadinessPollStatus": 502,
+    "boundedReadinessRetryPassed": true,
+    "publicTrustedMeta200": true,
+    "newWebApiHealthy": true,
+    "oldProjectStillRunning": true,
+    "minioRuntimeHousekeepingTreeStabilityClaimed": false
+  },
+  "clientResultReported": {
+    "allClientPhasesPassed": true,
+    "nativeOriginalMemorySessionAfterServerRestart": true,
+    "nativeColdPidBefore": 8322,
+    "nativeColdPidAfter": 8679,
+    "finalTransactions": 2,
+    "bothOriginalChromeProfilesConverged": true,
+    "clientOwnedDetailedEvidenceSeparate": true,
+    "finalExactImages": 2
+  },
+  "finalLogAudit": {
+    "result": "passed",
+    "knownClientSecretStrings": 11,
+    "knownInternalSecretStrings": 4,
+    "apiEvents": 794,
+    "apiFields": [
+      "requestId",
+      "route",
+      "status",
+      "durationMs",
+      "bytes"
+    ],
+    "sources": [
+      {
+        "service": "api",
+        "bytes": 86139,
+        "knownSecretsPresent": false,
+        "bearerPatternPresent": false
+      },
+      {
+        "service": "web",
+        "bytes": 643,
+        "knownSecretsPresent": false,
+        "bearerPatternPresent": false
+      },
+      {
+        "service": "minio",
+        "bytes": 1210,
+        "knownSecretsPresent": false,
+        "bearerPatternPresent": false
+      },
+      {
+        "service": "bucket-init",
+        "bytes": 91,
+        "knownSecretsPresent": false,
+        "bearerPatternPresent": false
+      },
+      {
+        "service": "instance-init",
+        "bytes": 0,
+        "knownSecretsPresent": false,
+        "bearerPatternPresent": false
+      },
+      {
+        "service": "proxy",
+        "bytes": 0,
+        "knownSecretsPresent": false,
+        "bearerPatternPresent": false
+      }
+    ],
+    "coversAccountResetAndAllNegativeAuthenticationChecks": true,
+    "snapshotSequence": [
+      "before-revocation: 781 API events",
+      "owned-account reset; nine old bearer checks 401; prior password check 401",
+      "after-revocation: 794 API events"
+    ]
+  },
+  "syntheticAccountRevocation": {
+    "result": "passed",
+    "activeSyntheticSessions": 0,
+    "knownOldTokensRejected401": 9,
+    "priorSyntheticPasswordRejected401": true,
+    "dataDeleted": false,
+    "allStoredSessionsRevoked": 11
+  },
+  "finalRetainedCounts": {
+    "users": 1,
+    "revokedSessions": 11,
+    "ledgers": 1,
+    "remoteObjects": 1,
+    "attachments": 2,
+    "idempotencyRecords": 5
+  },
+  "finalRetainedMetadataStateSha256": "32b0a35498fc839aeabb61c21c9ff8504bdb4fa4657953a42ba51e8af98bf4ae",
+  "operatorHandoffSha256": "8f65809b82bab6a2bba09e1320977fd738f43ba2f0c92d30e7049c691478f3ac",
+  "cleanup": {
+    "remoteOwnedHelperFilesRemoved": 4,
+    "remoteScratchAbsentVerified": true,
+    "persistentProductionDataTlsReleaseAndBackupRetained": true,
+    "clientAndDeviceCleanupOwnedByClientAgent": true,
+    "localScratchCleanupPending": false,
+    "localScratchAbsentVerified": true
+  },
+  "transients": {
+    "sshConnectionClosedTwice": true,
+    "laterExistingKeyAuthenticationSucceeded": true,
+    "causeUnknown": true,
+    "noSshFirewallLimitChanges": true,
+    "actualAuthRouteTemplate": "/api/v1/auth/sessions",
+    "fixedFixtureFinalAuth201": true,
+    "rateLimitCauseClaimed": false
+  }
+}

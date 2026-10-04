@@ -45,6 +45,15 @@ coverage for supported pages/core interactions even without responsive CSS
 changes. Record real-device limitations separately; a desktop or narrow-screen
 pass does not establish touch, keyboard, picker or Android WebView behavior.
 
+Do not enable TalkBack or another device-wide spoken accessibility service
+during application tests unless the user explicitly requests that operation.
+Luna has no required voice capability; do not introduce voice input or make
+spoken-reader acceptance a completion gate without an approved requirement.
+Keep existing semantic labels and ordinary keyboard/focus checks. When a user
+cancels a device setting test, stop it, restore the exact prior settings and
+record verification before continuing unrelated tests. Configuration A device
+access alone does not authorize an unsolicited spoken-reader test.
+
 ## Workspace, documentation and completion
 
 Preserve user-owned dirty files, local configuration and unknown artifacts. Do

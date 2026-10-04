@@ -14,6 +14,9 @@ await chmod(scratch, 0o700);
 try {
   const mcConfig = join(scratch, "mc");
   const mcEnv = { ...process.env, MC_CONFIG_DIR: mcConfig, MC_DISABLE_PAGER: "1", MC_NO_COLOR: "1" };
+  // Every alias targets private Compose MinIO, even when Docker injects host proxies.
+  for (const name of ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"])
+    delete mcEnv[name];
   const rootAlias = JSON.stringify({
     url: "http://minio:9000",
     accessKey: rootCredentials.user,

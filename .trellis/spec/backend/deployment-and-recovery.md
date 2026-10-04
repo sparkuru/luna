@@ -15,6 +15,7 @@ docker compose up --build -d
 docker compose exec api node dist/server/server/cli/admin.js create-account
 docker compose exec api node dist/server/server/cli/admin.js reset-password
 docker compose exec api node dist/server/server/cli/admin.js cleanup
+node deploy/backup.mjs DATA NEW_BACKUP_DIRECTORY
 ```
 
 `instance-init` creates `data/.luna/minio.env` and the `initialized` marker;
@@ -48,10 +49,36 @@ HTTP exception; HTTPS remains required for production or untrusted networks.
 - Only Web publishes a host port, loopback by default. API and MinIO remain on
   Compose's private network; public or cross-device use requires a trusted
   HTTPS reverse proxy and a reachable hostname/IP.
+- A deployment serving both public Web and the embedded Android client must
+  preserve both exact origins in `LUNA_ALLOWED_ORIGINS`, for example
+  `https://luna.majo.im,https://localhost`. The latter is the native bundled
+  origin, not permission for arbitrary websites or insecure public HTTP.
+  Verify its real preflight/login path and reject an unrelated origin.
+- Long-lived HTTPS acceptance requires a valid system-trusted certificate,
+  installed-key protection and an enabled persistent renewal job whose actual
+  execution and validator-before-reload integration are verified. A successful
+  not-yet-due renewal check proves the execution path only; do not report it
+  as a completed future certificate renewal. Keep a Luna-specific certificate
+  and route rollback when the host serves unrelated sites.
 - `data/` contains `.luna/runtime.json`, `.luna/minio.env`, the initialization
   marker, `server.sqlite` and its WAL/SHM sidecars, and the MinIO object tree.
   It is the server backup boundary. Do not describe a container layer or a
   single SQLite file as the complete shared ledger backup.
+- `deploy/backup.mjs` runs on the data host with Node, GNU `cp` and the
+  same-host Docker CLI using a local Unix socket. Reject a non-Unix
+  `DOCKER_HOST` even when `DOCKER_CONTEXT` is also set, then require the
+  selected context endpoint to be Unix; conflicting remote overrides fail
+  before copying. Stop all writers and prevent restart for the entire
+  command. It refuses active container mounts overlapping the resolved data
+  tree, including parent/nested/read-only mounts, checks again around the
+  copy, and publishes an owned staging tree to a new destination. It rejects
+  an existing/overlapping destination, incomplete initialization, invalid
+  0700 directory/0600 secret permissions or ownership, symbolic links and
+  special files. Preserve numeric ownership and the entire boundary, and
+  never remove source data or unknown destination contents on failure.
+  These checks do not lock Docker restarts or non-container writers and do
+  not intercept arbitrary `cp`/`rsync` commands; this remains a controlled
+  stopped maintenance window.
 - `minio.env` holds only the MinIO root pair (0600); MinIO reads it through
   `MINIO_CONFIG_ENV_FILE`, so Compose and Docker inspect do not contain root
   values. `runtime.json` holds a different access key with `s3:ListBucket` on
@@ -62,6 +89,11 @@ HTTP exception; HTTPS remains required for production or untrusted networks.
   removes unreferenced `luna-sync-api` keys with the expected policy before
   issuing a replacement. A missing bucket on an installation with an existing
   runtime fails; it is never silently recreated as empty.
+- Bucket initialization's `mc` subprocess targets only the private Compose
+  MinIO service. Remove upper/lowercase HTTP, HTTPS and ALL proxy variables
+  from that subprocess environment so Docker-injected host proxies cannot
+  redirect its internal readiness/policy operations. Keep external build and
+  host proxy configuration untouched.
 - API's `/data/.luna/minio.env` mount is an empty file and `/data/minio` is an
   unreadable tmpfs. These mounts hide root material and object files despite
   API's writable bind mount for `server.sqlite`. Keep them when changing
@@ -131,6 +163,12 @@ HTTP exception; HTTPS remains required for production or untrusted networks.
 | Oversized route request | 413 before application state changes |
 | Restored object and stale CAS | 412; client re-downloads, merges and retries conditionally |
 | Backup while writes are active | Not accepted as a plain file copy; use a stop window or consistent snapshot |
+| Product backup sees a running overlapping mount | Nonzero refusal before publication; original data retained |
+| Product backup uses a remote Docker daemon, unsafe tree or existing destination | Nonzero refusal; source and unknown destination contents retained |
+| Container restart observed during product backup | No accepted backup; owned staging/empty reservation cleaned |
+| Docker injects host proxy into bucket initializer | Private MinIO `mc` operations still succeed without global proxy changes |
+| Public-only allowed origins replace the embedded origin | Native login is not accepted until exact `https://localhost` is retained and verified |
+| Renewal timer is enabled but has not run | Configuration evidence only; execute and inspect the job before claiming the renewal path works |
 
 ## 5. Good / Base / Bad Cases
 
@@ -150,6 +188,16 @@ MinIO sandbox for a healthcheck, exposing the root file/object mount to API,
 or running `down -v` against an existing installation.
 
 ## 6. Tests Required
+
+Run `./hako node --test tests/deploy/backup.test.mjs
+tests/deploy/instance-init.test.mjs`. Cover full-tree bytes, secret permissions
+and numeric ownership, active/parent/nested/read-only mounts, unrelated mounts,
+remote daemon selection/conflicting overrides, incomplete state, symlinks,
+existing destinations, Docker failure and a restart observed during copy.
+Real Compose smoke must invoke the product backup entrypoint both during
+runtime (refused) and after stopping writers (accepted), restore its complete
+output into a new project and verify the API state below. Do not bypass
+inherited host proxies in the passing deployment run.
 
 Run `docker compose config` (and the target's `docker-compose config` when
 Compose v1 is in scope), `./hako npm run server:build`, `./hako npm run
@@ -178,8 +226,22 @@ Human acceptance additionally checks real hostname routing, HTTPS certificate
 trust on a second browser and Android device, cold/offline local SQLite reopen,
 manual-mode unsynced records, and restoration from an off-host copy. A browser
 loopback fixture is not evidence for these boundaries.
+For a long-lived origin, use fresh independent browser profiles and a fresh
+physical Android package with unmodified system trust. Verify transaction and
+normalized attachment bytes, then close/relaunch clients and restart only the
+owned service. Separate ordinary reload session survival from cold-process
+memory-only session clearing: durable profile binding/data must survive and
+normal reauthentication/unlock must restore remote access. Review actual logs
+without printing credentials, and record certificate issuance, installed files,
+renewal job exit status, next schedule and route/data rollback commands.
 
 ## 7. Wrong vs Correct
+
+Wrong: run raw `cp` against active API/MinIO, or select a different host's
+Docker daemon when checking local data. Correct: stop every writer, keep the
+maintenance window closed and run `node deploy/backup.mjs data
+/absolute/new-backup` on the same data/Docker host; the parent exists and the
+destination is new. Treat the entire resulting tree as sensitive.
 
 Wrong: require users to create `postgres-password` files, expose MinIO keys in
 the device UI, let API use MinIO root or read its root file, or call a health

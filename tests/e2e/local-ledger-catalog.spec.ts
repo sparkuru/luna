@@ -2,6 +2,11 @@ import { expect, test } from "@playwright/test";
 
 const ledgerPassword = "catalog-fixture-passphrase";
 
+test.describe("non-isolated SAH storage", () => {
+  // The shell worker caches isolated HTML and bypasses this fixture's header
+  // rewrite on reload. Embedded SAH hosts do not use that production shell.
+  test.use({ serviceWorkers: "block" });
+
 test("SAH profiles survive reload and reject a missing backing file inside an existing pool", async ({ page }) => {
   await page.route("**/*", async (route) => {
     if (!route.request().isNavigationRequest()) return route.continue();
@@ -26,9 +31,11 @@ test("SAH profiles survive reload and reject a missing backing file inside an ex
     return id;
   });
   await page.reload();
+  expect(await page.evaluate(() => crossOriginIsolated)).toBe(false);
   await expect.poll(async () => page.evaluate(async () => (await window.lunaLedger.getSnapshot("2026-10")).workspace?.name)).toBe("SAH separate");
   await page.evaluate(() => window.lunaLedger.server!.selectProfile("legacy-local"));
   await page.reload();
+  expect(await page.evaluate(() => crossOriginIsolated)).toBe(false);
   await expect.poll(() => activeProfileId(page)).toBe("legacy-local");
   const removed = await page.evaluate(async (id) => {
     const name = `luna-ledger-${id}`;
@@ -56,6 +63,7 @@ test("SAH profiles survive reload and reject a missing backing file inside an ex
   }, id);
   expect(result).toEqual({ before: false, after: false, rejected: true });
   expect(await activeProfileId(page)).toBe("legacy-local");
+});
 });
 
 async function account(page: import("@playwright/test").Page) {

@@ -84,9 +84,13 @@ Keep the mock test-scoped so other tests retain their normal clock.
 Run `./hako npm run typecheck` and `./hako npm test` for every renderer/API
 change, then run `./hako npm run build` and `npm run smoke:electron` for
 cross-layer changes. Run `npm run web:build` and `npm run test:web` for Web UI
-changes. The packaged smoke and Playwright verify behavior, not all visual
-quality or assistive technology; a human must still review packaged Electron,
-keyboard focus, reduced-motion, native dialogs, and assistive technology.
+changes. Packaged smoke and Playwright establish only their observed scope.
+Review residual visual, keyboard-focus, reduced-motion and native-dialog
+behavior when it is in the approved scope and remains unautomated; honor
+delegated observable acceptance under development policy. Spoken-reader tests
+and device-wide reader activation require an explicit user requirement and
+operation request. They are not a default Luna completion gate. Preserve
+semantic labels and ordinary keyboard/focus validation without adding voice.
 
 ## Code Review Checklist
 

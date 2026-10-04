@@ -149,11 +149,13 @@ test("mobile navigation yields to a reduced text viewport and returns after land
 test("renderer BACK closes visible details and images once; closed portals do not consume home", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 457, height: 999 });
   await mobileLedger(page, "en");
-  await page.locator(".transaction-item").filter({ hasText: "Commute" }).locator(".transaction-main-button").click();
+  const detailOpener = page.locator(".transaction-item").filter({ hasText: "Commute" }).locator(".transaction-main-button");
+  await detailOpener.click();
   await expect(page.locator("#transaction-detail-dialog")).toBeVisible();
   await expect(page.locator("#transaction-detail-notes")).toHaveCount(0);
   expect(await back(page)).toBe(false);
   await expect(page.locator("#transaction-detail-dialog")).toBeHidden();
+  await expect(detailOpener).toBeFocused();
   expect(await back(page)).toBe(true);
   await page.locator("#primary-record").click();
   await page.locator("#transaction-amount").fill("8.50");
@@ -183,4 +185,22 @@ test("renderer BACK closes visible details and images once; closed portals do no
   expect(await back(page)).toBe(false);
   await expect(page.locator("#transaction-detail-dialog")).toBeHidden();
   expect(await back(page)).toBe(true);
+});
+
+test("detail closure restores its opener while editing keeps focus in the entry", async ({ page }) => {
+  await mobileLedger(page, "en");
+  await page.evaluate(() => { document.documentElement.dataset.clientSurface = "web"; });
+  const opener = page.locator(".transaction-item").filter({ hasText: "Commute" }).locator(".transaction-main-button");
+  await opener.click();
+  await page.locator("#close-transaction-detail").click();
+  await expect(page.locator("#transaction-detail-dialog")).toBeHidden();
+  await expect(opener).toBeFocused();
+  await opener.click();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#transaction-detail-dialog")).toBeHidden();
+  await expect(opener).toBeFocused();
+  await opener.click();
+  await page.locator("#transaction-detail-edit").click();
+  await expect(page.locator("#transaction-dialog")).toBeVisible();
+  await expect(page.locator("#transaction-amount")).toBeFocused();
 });

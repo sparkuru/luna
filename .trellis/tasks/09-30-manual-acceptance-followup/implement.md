@@ -1,5 +1,30 @@
 # Implementation and Acceptance Plan
 
+## 2026-10-05 A07 resumed acceptance (current)
+
+User resumes `https://luna.majo.im` with updated configuration A VPS access.
+This supersedes the 10/04 deferral and archive-ready disposition below;
+A01–A06 and the canceled TalkBack scope remain unchanged.
+
+- [x] Inspect VPS route, existing Luna state, Docker/Compose and certificate renewal; record exact deployment/rollback boundary before changes. Existing Sep28 project preserved; fresh `/opt/luna` and loopback18111 ownership/availability checked. Dedicated HTTP-01 challenge externally verified and Luna-only certificate issued; completed service/renewal/client checks are recorded below.
+- [x] Prepare current-source persistent Compose deployment under `/opt`, preserving unrelated services and existing data; validate before applying the Luna route.
+- [x] Verify trusted public HTTPS, headers, API readiness and no public API/MinIO ports; document renewal and operator commands. Luna-specific certificate and actual successful not-due renewal check verified; future renewal is not claimed.
+- [x] Use isolated synthetic account and fresh browsers/physical Android with unmodified system trust for login, transaction and attachment upload/download. Two originally fresh Chrome profiles and actual Android15/WebView134 converged on two transactions/two images; normal reload, cold client/session clearing/reauthentication, and native live-session/server-restart continuity passed. Harness retries preserved; no product-source change.
+- [x] Verify coordinated service/client restarts preserve identity, local ledger and remote attachment bytes; review sanitized logs and complete owned device test cleanup. First Chrome-seeded backup/restart and second native-seeded restart-only passed; original native session remains usable. Final all-service/proxy logs expose none of 11 actual client secrets or 4 VPS-only internal keys across 794 API events including failed authentication after revocation; unique account reset, all11 stored sessions revoked, zero active sessions, all9 old bearers and old password401. Owned Android package/forward, client/VPS scratch, raw credentials/profiles/logs and dedicated APK image removed; retained deployment/backup and sanitized diagnostic logs are explicit.
+- [x] Independently verify A07 deployment/client evidence and reconcile current PRD/mainline/closeout before commit/archive handling. [Final review](research/a07-quality-check-20261005.md) passed with no unresolved in-scope finding; both 15-entry context manifests validate, with the known oversized component spec fully read directly.
+
+## 2026-10-04 closeout amendment (historical; superseded on 10/05)
+
+User explicitly deferred A07 after confirming durable HTTPS inputs are absent.
+Complete and independently verify A01–A06 before archive; preserve A07's
+deployment prerequisites in mainline as a follow-up, without reporting a pass or
+automatically starting new work. A04 permits the original real-system-IME input
+alternative; virtual keyboard injection must stay distinct from physical input.
+Historical all-seven archive gates below are superseded by this amendment.
+User additionally canceled TalkBack acceptance and retained keyboard/IME/BACK;
+stop the temporary reader and restore original accessibility settings. Do not
+remove existing semantic controls or claim the canceled scope passed.
+
 ## Bookkeeping already completed
 
 - [x] Archive every active task from before 2026-09-28 under `.trellis/tasks/archive/2026-09/`.
@@ -23,10 +48,10 @@ checks above remain historical; the following results describe this run.
 - [x] A01 — Current-source packaged Electron path-privacy check passed; combine only with the dated native chooser baseline. [Evidence](research/electron-path-a01-20261003.json).
 - [x] A02 — Physical Android 16 / WebView 143 exposes OPFS. Reproduced and fixed SAH profile discovery, verified two isolated ledgers, force-stop/reopen, and missing inactive directory rejection without recreation. Local-only writes used no configured remote; radio disconnection was not tested. [Evidence](research/android-a02-a04-20261003.json).
 - [x] A03 — Real DocumentsUI export and selection; wrong-password complete-backup session preserves an empty profile; correct restore creates a separate profile; UI merge finishes successfully; original/restored profiles both survive force-stop. Followup verified corrupted full-backup rejection with the original snapshot unchanged, and real DocumentsUI cancellation retaining the original data. [Evidence](research/android-a02-a04-20261003.json).
-- [ ] A04 — Actual Baidu IME and BACK ordering passed; amount input suppresses duplicate system keypad. TalkBack traversal and physical keyboard remain unverified. [Evidence](research/android-a02-a04-20261003.json).
+- [x] A04 — Revised nonvoice scope passed on actual Android 16: virtual arithmetic, real Baidu IME, layered BACK/draft protection, names/focus, save/errors, DocumentsUI cancellation and restart. Detail close lost opener focus before the minimal correction; corrected APK passed BACK/close/Escape and kept editor amount focus. Physical keyboard absent; real IME fulfills the original OR alternative. TalkBack canceled by user; original system settings restored. [Current evidence](research/a04-native-20261004.md), [historical evidence](research/android-a02-a04-20261003.json).
 - [x] A05 — Physical Android plus workstation Chrome passed HTTPS upload/download, offline edit/delete pending, manual mode, conflict-head selection and convergence, and a committed PUT with deliberately lost response followed by duplicate-free retry. Followup verified two visible conflict candidates on the actual Android UI, button selection and convergence, then automatic recovery of an offline write without calling sync/probe after mutation. Network interruption was CDP per-client emulation rather than physical radio disconnection. [Client evidence](research/two-device-a05-20261003.json), [service evidence](research/server-a05-https-20261003.json).
-- [ ] A06 — Configuration A server passed current-source restore 8/8 and initialization negatives 5/5. Runtime running-copy refusal and existing Compose deployment lifecycle remain uncovered. [Evidence](research/server-a06-20261003.json).
-- [ ] A07 — Temporary CA HTTPS onboarding passed as part of A05. No authorized long-lived domain/certificate-renewal deployment was supplied or established; do not treat the disposable endpoint as durable deployment.
+- [x] A06 — Final configuration A actual isolated Compose 11/11, original restore smoke 8/8 and backup/initialization tests 13/13 (8+5) passed. New backup command refuses active mounts and preserves source data; stopped copy/new-project restore/restart and missing-runtime/permissions/half-init/missing-bucket negatives passed. Product mc-only proxy correction reproduced and verified. Same-host daemon and maintained stopped window required; raw copies/concurrent writers are not intercepted. No off-host traffic cutover or A07 pass claimed. [Current evidence](research/a06-server-20261004.json), [historical evidence](research/server-a06-20261003.json).
+- [x] A07 — Resumed and passed deployment/client/lifecycle scope on 2026-10-05. [VPS evidence](research/a07-vps-20261005.md), [client evidence](research/a07-clients-20261005.md). Preserve the explicitly deferred 10/04 disposition as [historical evidence](research/a07-deferral-20261004.json), not the current outcome.
 
 Run rows in the order above. A02/A03 may share an Android setup; A06/A07 may share an isolated deployment setup. Do not mark a row complete from a neighboring row's evidence.
 
@@ -40,10 +65,11 @@ failed attempts and distinguish harness corrections from product defects.
 ## Validation gates
 
 - [x] `python3 .trellis/scripts/task.py validate 09-30-manual-acceptance-followup` passes; existing component-guidelines context-size warning retained in the quality report.
-- [ ] A01–A07 each has real evidence and a dated result.
+- [x] A01–A07 each has actual evidence and a dated result under the current approved scope; A01–A06 passed and resumed A07 deployment/client/restart/cleanup acceptance passed on 10/05.
 - [x] Record autonomous acceptance authorization without fabricating subjective satisfaction.
-- [x] Independent Trellis quality check passed for the code and recorded evidence scope; see [final report](research/quality-check-20261003.md). A04/A06/A07 remain open, so this does not satisfy the archive gate.
-- [ ] Archive this task only after the preceding gates; otherwise keep it as the sole active follow-up.
+- [x] Historical 10/03 independent quality check passed for its code/evidence scope; [historical report](research/quality-check-20261003.md) retained A04/A06/A07 as then open. The [10/04 report](research/quality-check-20261004.md) covers A01–A06/nonvoice and the then-deferred A07. Current A07 review is [10/05 report](research/a07-quality-check-20261005.md).
+- [x] Final 2026-10-04 full-scope independent quality gate and complete production coverage passed: full run 326 pass / 2 SAH fixture failures / no skips, corrected catalog production 6/6 and development 6/6 passed; unchanged 326 cases need no duplicate full run after the isolated fixture-only correction. [Final validation](research/validation-closeout-20261004.md).
+- [ ] Phase 3.4 commit and archive bookkeeping: the requested testing stops at archive readiness; no commit or archive was executed. Final independent review passed and A01–A07 technical gates are ready under the current scope. No subjective satisfaction fabricated.
 
 ## Rollback points
 
@@ -54,6 +80,13 @@ read-only and tied to the pinned SQLite-WASM 3.53 SAH association format:
 512-byte virtual path, flags, association digest and SQLite magic at offset
 4096. It never initializes a pool during discovery. Package upgrades must
 revalidate this format against vendor source and physical-device fixtures.
+
+The 10/04 detail-close focus correction can be reverted independently, which
+restores the observed native BODY-focus defect. The mc proxy correction can
+be reverted independently, which restores the demonstrated initializer 502
+under injected host proxies. Removing the new backup entrypoint removes its
+active-writer refusal; historical raw copy instructions still require a
+strictly stopped window and cannot be described as an enforced refusal.
 
 ## This run's checks and cleanup
 

@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-04",
+  "acceptanceId": "A07",
+  "conclusion": "deferred-by-user-not-passed",
+  "decision": "User confirmed no durable HTTPS deployment inputs and instructed postponement.",
+  "candidateSource": "deploy/README.md names https://luna.majo.im as the target origin; naming alone does not establish an active deployment.",
+  "publicReadOnlyProbe": {
+    "origin": "https://luna.majo.im",
+    "paths": { "/": 404, "/api/v1/meta": 404 },
+    "tlsVerifyResult": 0,
+    "certificateIssuer": "Google Trust Services WE1",
+    "certificateValidityUtc": { "from": "2026-09-02 06:50:58", "to": "2026-12-01 07:49:41" },
+    "command": "curl --connect-timeout 10 --max-time 20 -sS -o <temporary-body> -w 'http=%{http_code} tls=%{ssl_verify_result}' https://luna.majo.im/api/v1/meta",
+    "certificateBypass": false,
+    "authentication": "none",
+    "initialSandboxAttempt": "DNS resolution blocked/unavailable; public network probe repeated through approved execution and returned HTTP 404."
+  },
+  "uncovered": [
+    "Active durable Luna deployment and protected routing",
+    "Certificate renewal and operator handoff",
+    "New browser/Android onboarding using unmodified system trust",
+    "Service/client restart continuity, production log review and rollback"
+  ],
+  "nextPrerequisites": "User supplies durable origin, deployment location, certificate renewal/operations plan and authorization for that deployment.",
+  "sideEffects": "No accounts, proxy, DNS, certificates or services modified; only unauthenticated public HTTP GET requests.",
+  "privacy": "No private keys, credentials, tokens, personal data or response bodies retained."
+}
