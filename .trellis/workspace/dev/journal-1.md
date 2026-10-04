@@ -498,3 +498,39 @@ User explicitly authorized committing all remaining dirty and untracked project 
 ### Status
 
 [OK] **Completed**
+
+
+## Session 19: Configuration A acceptance completed and archived
+
+**Date**: 2026-10-05
+**Task**: Configuration A acceptance completed and archived
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+用户授权提交和归档后完成三阶段收尾；A01–A07 技术验收与独立复核通过，正式 Luna HTTPS 部署保留，测试认证与临时资源清理。
+
+### Main Changes
+
+- Committed detail opener-focus repair, stopped-backup guards, private MinIO proxy correction, fixture regressions, durable specs and sanitized acceptance evidence.
+- Archived manual-acceptance-followup at .trellis/tasks/archive/2026-10/09-30-manual-acceptance-followup; archive commit f396078 includes exactly one Codex trailer; active task cleared.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `def6cf93946c3cb205fbbc0505e6c6546e557813` | (see git log) |
+
+### Testing
+
+- [OK] Prior code/unit/server/sync/contracts/package/device/Compose gates passed; all 328 production cases covered across the 326-pass full run and corrected catalog 6/6 runs, not a single 328/328 run.
+- [OK] A07 fresh desktop/narrow Chrome and Android15 default-trust sync, exact two images, service/client restarts, full backup, 794-event secret audit and test-session revocation passed; renewal job correctly skipped not-due certificate.
+- [OK] Archive verification: 41 moved files, 36 unchanged evidence files, 85 local Markdown links, both 15-entry context manifests passed; known oversized component spec read completely.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- No active task. Keep the persistent Luna deployment; future renewal and long-term uptime remain operational observations, and new product work waits for user selection. TalkBack stays canceled.
