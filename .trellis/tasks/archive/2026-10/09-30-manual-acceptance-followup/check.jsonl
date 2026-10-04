@@ -9,7 +9,7 @@
 {"file":".trellis/spec/trellis-plus/uupm-integration.md","reason":"Current project-owned policy, preview and acceptance boundaries"}
 {"file":".trellis/spec/trellis-plus/commit-policy.md","reason":"Current project-owned policy, preview and acceptance boundaries"}
 {"file":".trellis/spec/trellis-plus/continuity.md","reason":"Current project-owned policy, preview and acceptance boundaries"}
-{"file": ".trellis/tasks/09-30-manual-acceptance-followup/research/a04-focus-decisions-20261004.md", "reason": "Verify detail opener focus restoration and unchanged editor focus"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-manual-acceptance-followup/research/a04-focus-decisions-20261004.md", "reason": "Verify detail opener focus restoration and unchanged editor focus"}
 {"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Validate production mode forwarding and full offline regression gate"}
-{"file": ".trellis/tasks/09-30-manual-acceptance-followup/research/a07-vps-20261005.md", "reason": "Verify current A07 hosting isolation, actual renewal job and deployment provenance"}
-{"file": ".trellis/tasks/09-30-manual-acceptance-followup/research/a07-clients-20261005.md", "reason": "Verify physical Android and independent browser evidence without trust or session overclaims"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-manual-acceptance-followup/research/a07-vps-20261005.md", "reason": "Verify current A07 hosting isolation, actual renewal job and deployment provenance"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-manual-acceptance-followup/research/a07-clients-20261005.md", "reason": "Verify physical Android and independent browser evidence without trust or session overclaims"}

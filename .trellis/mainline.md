@@ -1,8 +1,12 @@
 # Luna 项目主线
 
+## 2026-10-05 提交与归档
+
+用户确认“不错；可以提交、归档”，授权本任务工作提交和归档。工作提交为 `def6cf9`；[验收任务](tasks/archive/2026-10/09-30-manual-acceptance-followup/task.json) 已完成并归档，活动指针已清除。A01–A07 与独立质量门禁通过，正式 Luna 部署保留；证书未来续签和长期连续运行不作已实测承诺。当前无活动任务，不自动启动其它工作。归档提交按项目规则包含一次 Codex 署名，会话日志单独记录。
+
 ## 2026-10-05 恢复 A07 长期部署验收
 
-用户确认继续使用 Luna 入口，并更新配置 A，新增 `wkyuu@ssh.majo.im` VPS 及 sudo；临时内容放 `/tmp`、持久部署放 `/opt`。当前 task 恢复 A07，正式入口 `https://luna.majo.im` 已部署在独立 `/opt/luna`，保留原安装和其它站点。新浏览器／真实 Android 默认系统信任、两笔交易／两张图片同步、服务和客户端重启、停写备份、日志与运维交接均通过；证书专用续期任务已启用并实际执行未到期检查，不宣称未来续签或长期连续运行已实测。测试认证已撤销，临时客户端和部署资源已清理。独立复核通过，A01–A07 技术验收已可归档，尚未提交或归档；详见[当前实测](tasks/09-30-manual-acceptance-followup/prd.md#2026-10-05-a07-实测结果当前)及[独立复核](tasks/09-30-manual-acceptance-followup/research/a07-quality-check-20261005.md)。10/04 的延后是历史结论。A01–A06 已验证结果保留，TalkBack 取消和禁止擅自启用语音规则继续有效。
+用户确认继续使用 Luna 入口，并更新配置 A，新增 `wkyuu@ssh.majo.im` VPS 及 sudo；临时内容放 `/tmp`、持久部署放 `/opt`。当前 task 恢复 A07，正式入口 `https://luna.majo.im` 已部署在独立 `/opt/luna`，保留原安装和其它站点。新浏览器／真实 Android 默认系统信任、两笔交易／两张图片同步、服务和客户端重启、停写备份、日志与运维交接均通过；证书专用续期任务已启用并实际执行未到期检查，不宣称未来续签或长期连续运行已实测。测试认证已撤销，临时客户端和部署资源已清理。独立复核通过，A01–A07 技术验收完成，工作提交 `def6cf9` 已完成，任务于 2026-10-05 归档；详见[当前实测](tasks/archive/2026-10/09-30-manual-acceptance-followup/prd.md#2026-10-05-a07-实测结果当前)及[独立复核](tasks/archive/2026-10/09-30-manual-acceptance-followup/research/a07-quality-check-20261005.md)。10/04 的延后是历史结论。A01–A06 已验证结果保留，TalkBack 取消和禁止擅自启用语音规则继续有效。
 
 公网客户端测试的自动审批在两次未执行拒绝后，用户已明确授权向上述入口发送本次专用合成账号登录凭据、合成交易和一像素图片，用于 A07 浏览器／Android 同步验收；不使用真实账号或账本。范围及审批历史记录在当前 PRD，不重复索取相同操作授权。
 
@@ -18,16 +22,16 @@
 
 用户要求使用配置 A 自行处理和验收，当前任务继续负责 A01–A07，按实际证据判定可观测行为，无需重复索取逐行满意度。未覆盖的设备能力、人工感知和长期部署条件仍明确保留，不推定通过；此前 guided／人工回复门槛在本次授权范围内由此更新。配置 A 环境和本轮结果以当前任务记录为准。
 
-本轮 Android 16 实机发现并修复 SAH pool 账本存在性误判：只读核验 `.opaque` 关联头，避免把随机物理文件名误当逻辑数据库名，也不在发现阶段初始化空库。当前源码 Electron 路径隔离、Android 账本持久化、配置 A 服务器恢复与双端 HTTPS 验收证据集中在 [本轮结果](tasks/09-30-manual-acceptance-followup/prd.md#2026-10-03-配置-a-实测结果)。TalkBack／实体键盘、运行中复制拒绝及 Compose 生命周期、长期 HTTPS 部署仍需补齐，任务继续保持活动。
+本轮 Android 16 实机发现并修复 SAH pool 账本存在性误判：只读核验 `.opaque` 关联头，避免把随机物理文件名误当逻辑数据库名，也不在发现阶段初始化空库。当前源码 Electron 路径隔离、Android 账本持久化、配置 A 服务器恢复与双端 HTTPS 验收证据集中在 [本轮结果](tasks/archive/2026-10/09-30-manual-acceptance-followup/prd.md#2026-10-03-配置-a-实测结果)。TalkBack／实体键盘、运行中复制拒绝及 Compose 生命周期、长期 HTTPS 部署仍需补齐，任务继续保持活动。
 
 更新日期：2026-09-30。用户已明确授权将 09-28 之前的任务全部归档，并由单一人工验收任务承接遗留项。
 
 ## 推进方式与状态
 
-- 推进方式：guided；历史实现已提交，当前进入人工验收收尾。
+- 推进方式：guided；实现与 A01–A07 技术验收已完成并归档，后续工作由用户选择。
 - 本记录确认产品方向和计划入口；此前用户指令授权启动任务并编码，不授权提交、部署或归档。2026-09-13 用户已明确授权提交当前本地进度，并要求后续优先前端与体验；部署、跨端联动、真实同步及其验收后置。
-- 当前主线事项：Luna 记账体验、统计搜索与加密图片附件改版的遗留人工验收。
-- 状态：历史实现任务已归档；唯一活动任务为人工验收清单，行状态仍以实际证据和用户满意度为准。
+- 当前主线事项：Luna 记账体验、统计搜索与加密图片附件改版的遗留技术验收已完成；正式 HTTPS 部署保留。
+- 状态：历史实现与人工验收任务均已归档，当前无活动任务；验证边界和历史记录保留，不推定新的实施授权。
 - 本记录不推定其他任务的优先级、完成状态或执行顺序。
 
 ## 目标与已确认范围
@@ -42,13 +46,13 @@
 
 ## 计划入口与权威边界
 
-当前任务：[09-28 前遗留问题人工验收清单](tasks/09-30-manual-acceptance-followup/task.json)。历史实现任务已移入 `tasks/archive/2026-09/`；详细契约只在任务目录维护，主线不复制验收正文。
+已归档任务：[09-28 前遗留问题人工验收清单](tasks/archive/2026-10/09-30-manual-acceptance-followup/task.json)。历史实现任务已移入 `tasks/archive/2026-09/`；详细契约只在任务目录维护，主线不复制验收正文。
 
 | 文档 | 用途 |
 | --- | --- |
-| [人工验收 PRD](tasks/09-30-manual-acceptance-followup/prd.md) | A01–A07 的问题、复现、通过标准和用户满意度 |
-| [人工验收设计](tasks/09-30-manual-acceptance-followup/design.md) | 证据边界、结果模型和隐私约束 |
-| [人工验收计划](tasks/09-30-manual-acceptance-followup/implement.md) | 逐行执行顺序、记录要求和归档门槛 |
+| [人工验收 PRD](tasks/archive/2026-10/09-30-manual-acceptance-followup/prd.md) | A01–A07 的问题、复现、通过标准和用户满意度 |
+| [人工验收设计](tasks/archive/2026-10/09-30-manual-acceptance-followup/design.md) | 证据边界、结果模型和隐私约束 |
+| [人工验收计划](tasks/archive/2026-10/09-30-manual-acceptance-followup/implement.md) | 逐行执行顺序、记录要求和归档门槛 |
 | [历史 UI 任务归档](tasks/archive/2026-09/09-12-luna-ui-redesign/) | 已实现范围及其自动化验证记录 |
 
 本任务以修订2为规划依据，替代此前仅 UI、仅月统计、不自建计算键盘、不涉及附件和协议升级的约束。规划不改写已实现能力的技术规范；对应功能实现并验证后，再更新 `.trellis/spec/` 中描述现状的规范。
@@ -69,4 +73,4 @@
 
 本轮对 09-28 之前仍活跃的任务完成了当前工作树复验：共享单测 221/221、服务端 26/26、server-sync 9/9、契约 6/6、root/server typecheck、Web build、API reproducibility 和 Web 回归 308 passed/8 skipped 均通过；所有 9 个 active task 的 Trellis context validation 也通过。当前源码独立 VPS HTTPS 双浏览器同步、Android 11 目录重启持久化、Linux x64 ZIP 默认 sandbox smoke、真实 Chrome 200% 五路由无横溢出和 GTK chooser 打开/取消证据已分别写入任务目录。
 
-按用户最终指令，09-28 之前的 9 个活动任务已全部移入 `tasks/archive/2026-09/`，行政归档不等于每个遗留验收项技术上通过。移动端可证明的整文件、新 E2E 与 Android smoke helper 已在 `f51da40` 提交；剩余范围集中在当前 [A01–A07 人工验收表](tasks/09-30-manual-acceptance-followup/prd.md)。用户逐行回复 `Axx：通过/不满意；备注：...`；只有所有行都有真实证据、通过结论和满意度后，才归档当前任务。
+按用户最终指令，09-28 之前的 9 个活动任务已全部移入 `tasks/archive/2026-09/`，行政归档不等于每个遗留验收项技术上通过。移动端可证明的整文件、新 E2E 与 Android smoke helper 已在 `f51da40` 提交；剩余范围集中在当前 [A01–A07 人工验收表](tasks/archive/2026-10/09-30-manual-acceptance-followup/prd.md)。用户逐行回复 `Axx：通过/不满意；备注：...`；只有所有行都有真实证据、通过结论和满意度后，才归档当前任务。

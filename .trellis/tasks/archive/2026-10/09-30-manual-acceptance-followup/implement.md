@@ -69,7 +69,7 @@ failed attempts and distinguish harness corrections from product defects.
 - [x] Record autonomous acceptance authorization without fabricating subjective satisfaction.
 - [x] Historical 10/03 independent quality check passed for its code/evidence scope; [historical report](research/quality-check-20261003.md) retained A04/A06/A07 as then open. The [10/04 report](research/quality-check-20261004.md) covers A01–A06/nonvoice and the then-deferred A07. Current A07 review is [10/05 report](research/a07-quality-check-20261005.md).
 - [x] Final 2026-10-04 full-scope independent quality gate and complete production coverage passed: full run 326 pass / 2 SAH fixture failures / no skips, corrected catalog production 6/6 and development 6/6 passed; unchanged 326 cases need no duplicate full run after the isolated fixture-only correction. [Final validation](research/validation-closeout-20261004.md).
-- [ ] Phase 3.4 commit and archive bookkeeping: the requested testing stops at archive readiness; no commit or archive was executed. Final independent review passed and A01–A07 technical gates are ready under the current scope. No subjective satisfaction fabricated.
+- [x] Phase 3.4 work commit and task archive: user explicitly authorized both on 2026-10-05. Work commit `def6cf9` is complete; the task is completed and moved to `archive/2026-10/09-30-manual-acceptance-followup` through `archive --no-commit`. Final independent review and A01–A07 technical gates passed. Separate archive/journal commits follow project policy; no subjective satisfaction fabricated.
 
 ## Rollback points
 
