@@ -8,12 +8,15 @@ REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT
 # shellcheck source=scripts/preview-config.sh
 source "${REPO_ROOT}/scripts/preview-config.sh"
+# shellcheck source=scripts/preview-console.sh
+source "${REPO_ROOT}/scripts/preview-console.sh"
+preview_verbose=false
 new_container=''
 startup_directory=''
 
 usage() {
 	cat >&2 <<'HELP'
-Usage: ./preview.sh [start|stop|down|status|build] [--port PORT]
+Usage: ./preview.sh [start|stop|down|status|build] [--port PORT] [--verbose]
 
 First setup: cp .env.example .env
 Prepare:     ./preview.sh build; ./hako npm install
@@ -21,6 +24,8 @@ Start:       ./preview.sh (or start); returns after HTTPS readiness
 Inspect:     ./preview.sh status (never starts services)
 Stop:        ./preview.sh stop (or down); persistent data is retained
 --port sets the published host port for start; 0 requests Docker assignment.
+--verbose shows safe wrapper startup diagnostics. Wildcard publishing requires
+host iproute2 and enumerates all host interface addresses as unverified candidates.
 Root .env is primary; exported recognized keys override it. Stop then start
 for changed settings. HTTPS uses a temporary self-signed certificate for OPFS.
 HELP
@@ -49,7 +54,17 @@ stop_services() {
 	fi
 	local -a containers
 	mapfile -t containers <<<"$ids"
+	require_command sleep
 	docker stop "${containers[@]}" >/dev/null
+	local container deadline
+	for container in "${containers[@]}"; do
+		deadline=$((SECONDS + 5))
+		# Docker --rm removal may finish just after stop returns.
+		while docker inspect "$container" >/dev/null 2>&1; do
+			((SECONDS < deadline)) || die 'stopped preview is still being removed; inspect Docker state before restarting'
+			sleep 0.1
+		done
+	done
 	printf 'Web preview stopped; persistent data retained.\n'
 }
 
@@ -61,7 +76,7 @@ cleanup_failed_start() {
 		docker stop "$new_container" >/dev/null 2>&1 || printf 'Warning: preview cleanup failed; run ./preview.sh stop\n' >&2
 	fi
 	if [[ -n "$startup_directory" ]]; then
-		rm -f -- "$startup_directory/container.id"
+		rm -f -- "$startup_directory/container.id" "$startup_directory/start.log"
 		rmdir -- "$startup_directory"
 	fi
 }
@@ -99,59 +114,47 @@ runtime_health() {
 }
 
 print_summary() {
-	local container=$1 port listen_host lan mappings mapping host host_port browser_host
-	port=$(runtime_label "$container" luna.preview.port)
-	listen_host=$(runtime_label "$container" luna.preview.host)
-	lan=$(runtime_label "$container" luna.preview.lan)
-	mappings=$(docker port "$container" "$port/tcp")
-	printf 'System is ready.\nListening web: %s:%s (container; HTTPS)\n' "$listen_host" "$port"
+	local container=$1 port listen_host lan mappings mapping host host_port
+	local -a preview_entries=() preview_listeners=() preview_publications=()
+	local -a preview_internal=() preview_notes=()
+	port=$(runtime_label "$container" luna.preview.port) || return
+	listen_host=$(runtime_label "$container" luna.preview.host) || return
+	lan=$(runtime_label "$container" luna.preview.lan) || return
+	mappings=$(docker port "$container" "$port/tcp") || return
+	preview_listeners+=("Listening web: $listen_host:$port (container; HTTPS)")
 	while IFS= read -r mapping; do
 		host=${mapping%:*}
 		host=${host#[}
 		host=${host%]}
 		host_port=${mapping##*:}
-		printf 'Published web: %s -> %s:%s\n' "$mapping" "$listen_host" "$port"
-		case "$host" in
-		0.0.0.0) browser_host=127.0.0.1 ;;
-		::) browser_host=::1 ;;
-		*) browser_host=$host ;;
-		esac
-		printf 'Website: https://%s:%s\n' "$(url_host "$browser_host")" "$host_port"
-		if [[ "$host" == 0.0.0.0 || "$host" == :: || "$host" == "$lan" ]]; then
-			if [[ -n "$lan" ]]; then
-				printf 'Host/LAN Website (configured; verify from device): https://%s:%s\n' "$(url_host "$lan")" "$host_port"
-			else
-				printf 'Host/LAN: use this host\x27s reachable address on port %s; set WEB_LAN_HOST to name it.\n' "$host_port"
-			fi
-		fi
+		preview_publications+=("Published web: $mapping -> $listen_host:$port (active listener)")
+		preview_entries+=("Website|web|https|$host|$host_port||$lan")
 	done <<<"$mappings"
-	printf 'TLS: temporary self-signed certificate; accept/trust it on each test device.\n'
+	preview_notes+=('TLS: temporary self-signed certificate; accept/trust it on each test device.')
+	preview_console_render
 }
 
 status_service() {
-	local ids container state
+	local ids container
 	ids=$(owned_containers) || return
 	[[ -n "$ids" ]] || {
 		printf 'Web preview stopped.\n'
 		return 1
 	}
 	while IFS= read -r container; do
-		state=$(docker inspect --format '{{.State.Status}}' "$container")
-		printf 'Web preview: %s\n' "$state"
 		runtime_health "$container" || {
-			printf 'Web preview health: unavailable/unhealthy.\n' >&2
+			printf 'Web preview health: unavailable/unhealthy; inspect owned web container logs.\n' >&2
 			return 1
 		}
-		printf 'Web preview health: healthy.\n'
 		print_summary "$container"
 	done <<<"$ids"
 }
 
 start_service() {
 	local ids container deadline name_token
+	preview_prepare_addresses "$HAKO_BIND_HOST" || return
 	ids=$(owned_containers) || return
 	if [[ -n "$ids" ]]; then
-		printf 'Reusing existing Web preview; stop then start to apply configuration changes.\n'
 		status_service
 		return
 	fi
@@ -167,14 +170,18 @@ start_service() {
 	trap 'exit 130' INT
 	trap 'exit 143' TERM
 	container=$(env HAKO_SCOPE=dev.sh HAKO_SERVICE=web HAKO_CONTAINER_NAME="luna-preview-$name_token" HAKO_CID_FILE="$startup_directory/container.id" \
-		"$REPO_ROOT/hako" --detach bash /app/scripts/preview-web.sh) || return
+		"$REPO_ROOT/hako" --detach bash /app/scripts/preview-web.sh 2>"$startup_directory/start.log") || {
+		cat -- "$startup_directory/start.log" >&2
+		return 1
+	}
+	[[ "$preview_verbose" != true ]] || cat -- "$startup_directory/start.log" >&2
 	new_container=$container
 	deadline=$((SECONDS + PREVIEW_READY_TIMEOUT))
 	while ((SECONDS < deadline)); do
 		if runtime_health "$container"; then
-			print_summary "$container"
+			print_summary "$container" || return
 			new_container=''
-			rm -f -- "$startup_directory/container.id"
+			rm -f -- "$startup_directory/container.id" "$startup_directory/start.log"
 			rmdir -- "$startup_directory"
 			startup_directory=''
 			trap - EXIT INT TERM
@@ -199,6 +206,10 @@ main() {
 			usage
 			return
 			;;
+		--verbose)
+			preview_verbose=true
+			shift
+			;;
 		--port)
 			[[ $# -ge 2 ]] || die '--port requires a value'
 			[[ -n "$2" ]] || die '--port requires a nonempty numeric value'
@@ -220,6 +231,7 @@ main() {
 	stop | down) stop_services ;;
 	status)
 		require_command curl
+		_preview_local_daemon || return
 		status_service
 		;;
 	start | build)
@@ -230,7 +242,9 @@ main() {
 		if [[ "$action" == build ]]; then
 			exec "$REPO_ROOT/hako" --build
 		fi
+		_preview_local_daemon || return
 		require_command curl
+		require_command cat
 		require_command sleep
 		start_service
 		;;

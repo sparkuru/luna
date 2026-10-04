@@ -51,13 +51,11 @@ other architectures need a separately prepared compatible image.
 | `WEB_HOST_PORT` | Published TCP port, `1..65535`, or `0` for Docker assignment; example `4173` |
 | `WEB_CONTAINER_HOST` | Vite container listener, `0.0.0.0` for host publishing |
 | `WEB_CONTAINER_PORT` | Vite listener port, `1..65535`; example `4173` |
-| `WEB_LAN_HOST` | Optional explicit host IP/name for cross-device URLs; empty means no claimed LAN address |
+| `WEB_LAN_HOST` | Optional explicit host IP/name for cross-device URLs; empty still enumerates host addresses |
 | `PREVIEW_READY_TIMEOUT` | Positive readiness deadline in seconds; an in-flight bounded probe can finish just after it |
 
 Preview uses root `.env` as primary configuration. A recognized exported value
-overrides the file; CLI `--port` overrides `WEB_HOST_PORT`. The legacy exported
-`LUNA_PREVIEW_PORT` is a CLI-compatibility alias, not a second dotenv key source.
-The loader reads dotenv values as data, never `source`/`eval`, and does not
+overrides the file; CLI `--port` overrides `WEB_HOST_PORT`. The loader reads dotenv values as data, never `source`/`eval`, and does not
 inject unrelated production keys into the container environment. The existing
 development wrapper still mounts the repository at `/app`. `start/build`
 require initial setup; `stop/status` inspect owned runtime state even without
@@ -73,9 +71,13 @@ shell-expanded or interpolated; use literal preview settings.
 - Fail with an actionable prerequisite message when configuration, Docker,
   image or dependencies are unavailable. Never fall back to a host Vite process.
 - `status` reports actual running/stopped state and health without starting;
+  a healthy status uses the same unified summary as start;
   `build` builds without starting. `stop/down` are idempotent and stop only
   exact repository/scope/service-labeled preview containers. Never stop a
   production Compose stack, unrelated `hako` command, or host process by port.
+  After `docker stop`, wait up to five seconds for each stopped `--rm` container
+  to disappear before reporting success, so immediate restart cannot reuse an
+  exited container still being removed. A timeout is an actionable failure.
 - Shutdown preserves repository dependencies, `.devhome`, browser-origin OPFS
   data and production data volumes. Temporary container TLS material may be
   discarded. Signal/failure cleanup must respect the same ownership filters.
@@ -89,22 +91,14 @@ shell-expanded or interpolated; use literal preview settings.
 
 ### Listener and access summary
 
-Print `System is ready.` only after required probes pass. List every preview
-listener with its service, protocol and container endpoint. Report Docker's
-effective host mappings separately, including dynamically assigned ports.
-Inspect runtime state; do not infer an active listener merely from a mapping.
-Label uninspectable listeners as unverified, and never announce a working URL
-for a mapping with no active listener.
-
-Print an HTTPS `Website` URL using a reachable specific host (loopback for an
-all-interface or loopback bind), never `0.0.0.0` or `[::]` as a browser host.
-An explicitly configured `WEB_LAN_HOST` may supply a candidate cross-device
-URL; identify it as unverified until tested from that device. Do not select a
-Docker bridge, VPN or arbitrary first interface and assert LAN reachability.
-If no LAN host is configured, instruct the user to choose the reachable host
-address. Preview has no Admin/API-docs service; do not fabricate those routes
-or print passwords/tokens. Distinguish HTTPS transport/isolation readiness from
-an accepted ledger workflow.
+The mandatory [preview console contract](preview-console.md) defines fixed
+sections and service-grouped complete URLs, host-side `ip -br a` enumeration
+on every ready start/status, local/internal separation and failure behavior.
+It supersedes the previous configured-LAN-only output. Every eligible address
+is a candidate, including secondary, bridge and tunnel addresses; physical
+device reachability remains unverified until tested. `WEB_LAN_HOST` is an
+optional additional candidate, never a replacement for enumeration. Default
+startup hides wrapper chatter; `--verbose` exposes safe diagnostics.
 
 ### Incremental environment changes
 
@@ -175,3 +169,13 @@ explicit `stop/down` using exact ownership labels.
 Policy loading and context-registration steps are in [index.md](./index.md).
 These project-authored files are outside Trellis template targets; future
 `trellis update` must revalidate them without modifying protected runtime files.
+
+## Current console dependency and loading contract
+
+Read `preview-console.md` before preview changes or checks. Wildcard publication
+requires host `ip` (iproute2) and a discoverable local Docker endpoint; dependency
+or enumeration failures are actionable failures, never a localhost-only success.
+Specific/loopback bindings retain their narrower access boundary. `--verbose`
+controls safe startup diagnostics. Root `AGENTS.md` directs policy loading from
+a project-owned section outside the unchanged Trellis-managed block. This
+reconciliation requires no new task and changes no product acceptance state.

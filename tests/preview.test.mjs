@@ -15,7 +15,9 @@ const logPath = process.env.MOCK_LOG;
 fs.appendFileSync(logPath, JSON.stringify(args)+'\\n');
 let state = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath)) : null;
 const output = text => process.stdout.write(text+'\\n');
-if (args[0] === 'ps') {
+if (args[0] === 'context') {
+  output(process.env.MOCK_CONTEXT_ENDPOINT || 'unix:///var/run/docker.sock');
+} else if (args[0] === 'ps') {
   if (!args.includes('label=hako.repo='+process.env.MOCK_REPO) || !args.includes('label=hako.scope=dev.sh') || !args.includes('label=hako.service=web')) process.exit(10);
   if (state) output('owned-web');
 } else if (args[0] === 'image') {
@@ -31,6 +33,12 @@ if (args[0] === 'ps') {
 } else if (args[0] === 'inspect') {
   const format = args[args.indexOf('--format')+1];
   if (!state) process.exit(1);
+  if (state.pendingRemoval && !args.includes('--format')) {
+    state.removalPolls += 1;
+    if (state.removalPolls >= 3) { fs.unlinkSync(statePath); process.exit(1); }
+    fs.writeFileSync(statePath, JSON.stringify(state));
+    output('removal pending'); process.exit(0);
+  }
   if (format.includes('.State.Running')) output(String(state.running));
   else if (format.includes('.State.Status')) output(state.running ? 'running' : 'exited');
   else { const match = format.match(/"([^"]+)"/); output(state.labels[match[1]]); }
@@ -41,7 +49,10 @@ if (args[0] === 'ps') {
   if (process.env.MOCK_FAIL_READY) process.exit(1);
 } else if (args[0] === 'stop') {
   if (args.slice(1).some(id => id !== 'owned-web')) process.exit(11);
-  if(state) fs.unlinkSync(statePath);
+  if (state && process.env.MOCK_DELAY_REMOVE) {
+    state.running = false; state.pendingRemoval = true; state.removalPolls = 0;
+    fs.writeFileSync(statePath, JSON.stringify(state));
+  } else if(state) fs.unlinkSync(statePath);
 } else if (args[0] === 'logs') {
   output('mock Vite not ready');
 } else if (args[0] !== 'build') {
@@ -56,15 +67,17 @@ function fixture(t, environment = config) {
   fs.mkdirSync(path.join(root, 'bin'));
   fs.mkdirSync(path.join(root, 'node_modules', '.bin'), { recursive: true });
   fs.writeFileSync(path.join(root, 'node_modules', '.bin', 'vite'), '#!/bin/sh\n', { mode: 0o755 });
-  for (const file of ['preview.sh', 'dev.sh', 'hako', 'Dockerfile', 'scripts/preview-config.sh']) {
+  for (const file of ['preview.sh', 'dev.sh', 'hako', 'Dockerfile', 'scripts/preview-config.sh', 'scripts/preview-console.sh']) {
     fs.copyFileSync(path.join(repo, file), path.join(root, file));
   }
   if (environment !== null) fs.writeFileSync(path.join(root, '.env'), environment);
   fs.writeFileSync(path.join(root, 'bin', 'docker'), mockDocker, { mode: 0o755 });
+  fs.writeFileSync(path.join(root, 'bin', 'ip'), '#!/usr/bin/env node\nif (process.env.MOCK_IP_FAIL) process.exit(1); process.stdout.write(process.env.MOCK_IP_DATA || "lo UNKNOWN 127.0.0.1/8 ::1/128\\neth0 UP 192.0.2.10/24 192.0.2.11/24 2001:db8::10/64 fe80::1/64\\ntun0 UNKNOWN 198.51.100.20/32 192.0.2.10/24\\nbr0 UP 172.18.0.1/16\\ndown DOWN 203.0.113.99/24\\n");\n', { mode: 0o755 });
   fs.writeFileSync(path.join(root, 'bin', 'curl'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
   const log = path.join(root, 'docker.jsonl');
   const state = path.join(root, 'state.json');
   const env = { ...process.env, PATH: path.join(root, 'bin') + ':' + process.env.PATH, MOCK_LOG: log, MOCK_STATE: state, MOCK_REPO: root };
+  delete env.DOCKER_HOST; delete env.DOCKER_CONTEXT; delete env.NODE_TEST_CONTEXT;
   for (const key of ['HAKO_IMAGE', 'HAKO_BIND_HOST', 'WEB_HOST_PORT', 'WEB_CONTAINER_HOST', 'WEB_CONTAINER_PORT', 'WEB_LAN_HOST', 'PREVIEW_READY_TIMEOUT', 'LUNA_PREVIEW_PORT']) delete env[key];
   return {
     root, state,
@@ -125,7 +138,7 @@ test('start is background/idempotent, status uses actual port, stop owns only pr
   assert.match(result.stdout, /System is ready/);
   assert.match(result.stdout, /Listening web: 0.0.0.0:4173/);
   assert.match(result.stdout, /Published web: 0.0.0.0:49123/);
-  assert.match(result.stdout, /Website: https:\/\/127.0.0.1:49123/);
+  assert.match(result.stdout, /Website \(web\):\nhttps:\/\/127.0.0.1:49123/);
   assert.doesNotMatch(result.stdout, /https:\/\/0.0.0.0/);
   result = f.run(['start', '--port', '5000']);
   assert.equal(result.status, 0, result.stderr);
@@ -151,14 +164,26 @@ test('explicit build never starts; CLI and environment override root port', (t) 
   assert.match(f.calls().find(([command]) => command === 'run').join(' '), /0.0.0.0:45123:4173/);
 });
 
+test('stop waits for asynchronous Docker removal before an immediate restart', (t) => {
+  const f = fixture(t);
+  assert.equal(f.run(['start']).status, 0);
+  const result = f.run(['stop'], { MOCK_DELAY_REMOVE: '1' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(fs.existsSync(f.state), false);
+  assert.equal(f.calls().filter(args => args[0] === 'inspect' && !args.includes('--format')).length, 3);
+  const restart = f.run(['start']);
+  assert.equal(restart.status, 0, restart.stderr);
+});
+
 test('IPv6 wildcard publishing reports a loopback browser URL', (t) => {
   const f = fixture(t, config.replace('HAKO_BIND_HOST=0.0.0.0', 'HAKO_BIND_HOST=[::]'));
   const result = f.run();
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /Published web: \[::\]:4173/);
-  assert.match(result.stdout, /Website: https:\/\/\[::1\]:4173/);
+  assert.match(result.stdout, /Website \(web\):\nhttps:\/\/\[::1\]:4173/);
   assert.doesNotMatch(result.stdout, /https:\/\/\[::\]:/);
-  assert.match(result.stdout, /Host\/LAN: use this host/);
+  assert.match(result.stdout, /https:\/\/\[2001:db8::10\]:4173/);
+  assert.doesNotMatch(result.stdout, /https:\/\/192.0.2/);
 });
 
 test('missing image and invalid arguments fail without build or startup', (t) => {
@@ -195,4 +220,45 @@ test('readiness failure returns nonzero, never announces URLs, cleans only new o
   assert.doesNotMatch(result.stdout, /System is ready|Website:/);
   assert.ok(f.calls().some(([command, id]) => command === 'stop' && id === 'owned-web'));
   assert.ok(!fs.existsSync(f.state));
+});
+
+test('unified output enumerates every eligible host address and ready status matches start', (t) => {
+  const f = fixture(t);
+  const started = f.run();
+  assert.equal(started.status, 0, started.stderr);
+  assert.equal(started.stderr, '');
+  for (const host of ['192.0.2.10', '192.0.2.11', '198.51.100.20', '172.18.0.1']) {
+    assert.equal(started.stdout.split('https://' + host + ':4173').length - 1, 1);
+  }
+  assert.doesNotMatch(started.stdout, /203.0.113.99|https:\/\/0.0.0.0|\/24|https:\/\/\[2001/);
+  assert.ok(started.stdout.indexOf('Open:') < started.stdout.indexOf('Local only (preview host):'));
+  assert.ok(started.stdout.indexOf('Local only (preview host):') < started.stdout.indexOf('Listeners:'));
+  const status = f.run(['status']);
+  assert.equal(status.status, 0, status.stderr);
+  assert.equal(status.stdout, started.stdout);
+  assert.equal(f.run(['start']).stdout, started.stdout);
+});
+
+test('discovery failure prevents startup and remote daemon never uses caller addresses', (t) => {
+  for (const overrides of [{ MOCK_IP_FAIL: '1' }, { DOCKER_HOST: 'ssh://example.invalid' }]) {
+    const f = fixture(t);
+    const result = f.run(['start'], overrides);
+    assert.notEqual(result.status, 0);
+    assert.doesNotMatch(result.stdout, /System is ready|Open:/);
+    assert.ok(!f.calls().some(([command]) => command === 'run'));
+  }
+});
+
+test('specific and loopback binds preserve exposure while verbose reveals wrapper diagnostics', (t) => {
+  const local = fixture(t, config.replace('HAKO_BIND_HOST=0.0.0.0', 'HAKO_BIND_HOST=127.0.0.1'));
+  const result = local.run(['start', '--verbose'], { MOCK_IP_FAIL: '1' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /Open:/);
+  assert.match(result.stdout, /Local only \(preview host\):/);
+  assert.match(result.stderr, /hako run/);
+  const specific = fixture(t, config.replace('HAKO_BIND_HOST=0.0.0.0', 'HAKO_BIND_HOST=192.0.2.10'));
+  const bound = specific.run([], { MOCK_IP_FAIL: '1' });
+  assert.equal(bound.status, 0, bound.stderr);
+  assert.match(bound.stdout, /https:\/\/192.0.2.10:4173/);
+  assert.doesNotMatch(bound.stdout, /192.0.2.11|Local only/);
 });
