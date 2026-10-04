@@ -19,3 +19,19 @@ If you're using Codex or another agent-capable tool, additional project-scoped h
 Managed by Trellis. Edits outside this block are preserved; edits inside may be overwritten by a future `trellis update`.
 
 <!-- TRELLIS:END -->
+
+<!-- TRELLIS-PLUS:PROJECT-START -->
+## Project-owned Trellis Plus policy
+
+Before repository work, after a substantial interruption, before commit/archive,
+and when choosing subsequent work, read `.trellis/spec/trellis-plus/index.md`
+and `.trellis/mainline.md`. Read every applicable detail named by the index;
+preview work also requires `development.md` and `preview-console.md` from that
+policy directory. A listed path is not proof that its contents were loaded.
+
+For a normal task, register applicable detail files explicitly in both implement
+and check context; Markdown links alone are insufficient. For explicitly
+authorized work without a task, read the same policy directly and do not create
+a task just to carry context. Keep this project-authored section outside the
+Trellis-managed block when reconciling updates.
+<!-- TRELLIS-PLUS:PROJECT-END -->

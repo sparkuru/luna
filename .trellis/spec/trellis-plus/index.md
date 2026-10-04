@@ -26,10 +26,10 @@ future Trellis Plus runs and before any user-visible UI planning or validation.
 - Trellis upstream paths remain read-only: do not modify `.trellis/workflow.md`,
   `.trellis/scripts/**`, `.trellis/agents/**`, `.trellis/config.yaml`, update
   metadata, or managed platform files.
-- The project `license` file is present. A repository-local Trellis-specific
-  license/copyright notice was not found; treat the upstream notice state as
-  `license-notice-needed` and never stage protected Trellis material through
-  Trellis Plus.
+- The project `license` file is present. Trellis 0.6.14's exact notice is
+  collected in [third_party](../../../third_party/index.md); preserve upstream
+  headers and never stage protected runtime material through Trellis Plus.
+  UUPM notice provenance remains explicitly unresolved for sharing its material.
 
 ## Shared versus personal files
 
@@ -40,6 +40,12 @@ future Trellis Plus runs and before any user-visible UI planning or validation.
 - Before staging any future change, inspect the complete candidate path list,
   classify every path, run `git diff --check`, and stage only explicit
   project-owned or user-authorized ordinary paths.
+
+## Trellis Plus: Development-stage principles
+
+Read [development-principles.md](development-principles.md) on every development
+task and explicitly authorized no-task change. These contain scope, evidence,
+README, user-work/data and compatibility boundaries.
 
 ## Trellis Plus: UUPM integration
 
@@ -75,23 +81,32 @@ an incomplete task.
 
 ## Trellis Plus: Playwright automated frontend validation
 
-The project now has a browser Web host for the shared renderer. For eligible
+The project now has a browser Web host for the shared renderer. Classify mobile
+applicability before implementation for every changed page/core interaction;
+mobile-supported flows require desktop and narrow-mobile coverage even without
+a responsive CSS diff. Record mobile-not-applicable only with scope evidence;
+missing runtime/tests mean unavailable, not passed. For eligible
 browser changes, classify each UI change as required, existing-equivalent,
 not-effective, or unavailable; run focused semantic coverage before human
 review, and retain traces/screenshots/logs on failure. A passing browser test
 does not replace targeted review of subjective visuals, real devices,
 assistive technology, native Electron dialogs, or private environments.
 
-### Project validation profile
+### Trellis Plus: Playwright Validation Profile
 
-- execution mode: project-local Playwright against the Vite Web host
-- setup/install: `npm install`; browser project uses installed Google Chrome
-  (`channel: chrome`) on the current validation host; if that channel is not
-  available, install the pinned Playwright browser before running the command
-- app readiness: `npm run web -- --host 127.0.0.1 --port 4173`; base URL is
-  `http://127.0.0.1:4173`
-- focused test command: `npm run test:web -- tests/e2e/privacy-and-web.spec.ts --project=chrome`
-- full browser command: `npm run test:web`
+- execution mode: `docker-wrapper`; run project-local Playwright through
+  `./hako`, using the Node 22/browser image described below.
+- setup/install: `./preview.sh build`, then `./hako npm install`; the Dockerfile
+  dev stage provides Google Chrome for `channel: chrome` and matching Firefox.
+  No global workstation browser or Node installation is required.
+- app readiness: `playwright.config.ts` starts and probes its own Vite Web host
+  at `http://127.0.0.1:4173` inside the test container; `reuseExistingServer` is
+  false. Do not start a second server first. `LUNA_TEST_PRODUCTION=1` selects
+  the built preview command; build with `./hako npm run web:build` first.
+  `LUNA_TEST_BASE_URL` selects an explicitly authorized external origin and
+  disables the managed server; it must be reachable from the container.
+- focused test command: `./hako npm run test:web -- tests/e2e/privacy-and-web.spec.ts --project=chrome`
+- full/CI browser command: `./hako npm run test:web`; no CI result is claimed.
 - test location/config: `tests/e2e/privacy-and-web.spec.ts` and
   `playwright.config.ts`
 - browser projects/viewports: `chrome` at Desktop Chrome defaults and
@@ -129,21 +144,23 @@ commands.
 Read [development.md](./development.md) before changing `preview.sh`, `dev.sh`,
 `hako`, preview configuration, or preview acceptance checks. It defines the
 Docker-backed HTTPS Web preview, root `.env` setup, explicit image build,
-readiness and address reporting, and data-preserving shutdown. Production
+readiness and the mandatory [console contract](preview-console.md), and
+data-preserving shutdown. Production
 Compose deployment retains its separate lifecycle and loopback-first boundary.
 
 ## Project policy loading
 
-The installed Codex session-start hook discovers this index through the spec
-index scan; the compact startup record lists spec paths for on-demand reading.
-It does not establish that linked detail files have been read. Main sessions
-must read this index and `.trellis/mainline.md` at startup/resumption and before
-commit/archive; preview work must also read `development.md`.
+Root `AGENTS.md` now directs main sessions to read this index and mainline
+through a project-owned section outside the unchanged Trellis-managed block.
+The current Codex hook configuration has no SessionStart registration; the
+existence of `session-start.py` does not prove execution. Read applicable details
+explicitly at startup/resumption and before commit/archive. Preview work requires
+both `development.md` and `preview-console.md`.
 
 Implementation/check loading uses the active task's `implement.jsonl` and
 `check.jsonl` through native context injection or the agent's documented
 child-side fallback. That loader materializes registered files, not Markdown
-links. For preview work, register both this index and `development.md` in both
+links. For preview work, register this index, `development.md`, and `preview-console.md` in both
 manifests with `python3 .trellis/scripts/task.py add-context <task-dir>
 <implement|check> <repo-relative-spec-path> <reason>`, then inspect them with
 `task.py list-context <task-dir>` and run `task.py validate <task-dir>`.
@@ -153,25 +170,40 @@ same specs directly and do not create a task just to carry context.
 
 ## Trellis Plus: ChatGPT/Codex commit completion and attribution
 
-For each work commit, decide whether Codex made a substantial author-level
-contribution. If yes, include a concise completion body covering the request,
-important design boundaries, and validation, followed by:
-
-`Co-authored-by: OpenAI Codex <codex@openai.com>`
-
-Do not add the trailer merely because Codex touched a file. Omit it for small
-mechanical changes, user-authored files, task archive commits, and journal
-commits. Preserve a different established project convention if one appears
-later in project history. The repository's prior history has no Codex/OpenAI
-trailer convention; the first substantial implementation commit should follow
-the rule above.
+Read [commit-policy.md](commit-policy.md). Each successfully archived
+Codex-assisted task receives exactly one
+`Co-authored-by: OpenAI Codex <codex@openai.com>` trailer on its archive commit.
+Use the verified `archive --no-commit` route and explicit paths. Ordinary work
+and separate journal commits do not receive this task trailer. This supersedes
+the earlier substantial-contribution/work-commit rule; historical commits stay
+unchanged.
 
 ## Trellis Plus: Mainline continuity
 
-No `.trellis/mainline.md` is created until the user explicitly approves a
-project initiative. For relevant no-task requests, run a read-only pulse over
+Read [continuity.md](continuity.md). Import existing requirements with source
+and approval boundaries; preserve drafts as proposed without implementation
+authority. Do not request already-established approval again. For relevant no-task requests, run a read-only pulse over
 the mainline record, task/archive evidence, git state, and validation results.
 Use `guided` as the default, recommend rather than create work, honor
 `paused`, and permit serial continuation only under an explicit recorded
 authorization. Stop for dirty state, missing evidence, ambiguity, risk, or a
 new product decision.
+
+## Preview contract context registration
+
+For normal preview tasks, register `index.md`, `development.md` and
+`preview-console.md` explicitly in both implement/check manifests; loaders do
+not recursively follow Markdown links. Root AGENTS supplies the portable main
+session read directive. An explicitly authorized no-task change reads the same
+files directly and must not create a task or change existing task status merely
+for this policy reconciliation.
+
+## Context size and complete reads
+
+The current frontend `component-guidelines.md` exceeds the installed 32768-byte
+per-file context injection limit. `task.py validate` warns and native injection
+will truncate that file. When context contains a truncation marker or validation
+reports a size warning, implementation/check agents must open the complete
+registered source directly before applying its rules; a truncated injection is
+not complete loading. This reconciliation does not modify protected loaders or
+personal hook budgets, and no live hook invocation is claimed here.
