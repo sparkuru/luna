@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import type { Plugin } from 'vite';
 
 /** Precache only the complete, immutable application release, never user data. */
@@ -8,11 +9,11 @@ export function webOfflinePlugin(): Plugin {
     apply: 'build',
     enforce: 'post',
     generateBundle(_options, bundle) {
-      const icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#4338ca"/><path d="M180 120v272h176v-56H240V120z" fill="white"/></svg>';
+      const icon = readFileSync(new URL('../src/renderer/assets/luna-icon.svg', import.meta.url), 'utf8');
       const manifest = JSON.stringify({
         id: '/', name: 'Luna', short_name: 'Luna', lang: 'zh-CN',
         start_url: '/', scope: '/', display: 'standalone',
-        background_color: '#f4f7fb', theme_color: '#4338ca',
+        background_color: '#f7f8fc', theme_color: '#3048bd',
         icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
       });
       this.emitFile({ type: 'asset', fileName: 'icon.svg', source: icon });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -479,6 +479,24 @@ export function LedgerRoute({
   error,
   ...homeProps
 }: LedgerRouteProps) {
+  const monthFocusTarget = useRef<string | null>(null);
+  useEffect(() => {
+    const rememberFocus = (event: FocusEvent) => {
+      const target = event.target;
+      monthFocusTarget.current = target instanceof HTMLElement && target.closest(".dashboard-hero .month-controls")
+        ? target.id || "month-picker"
+        : null;
+    };
+    document.addEventListener("focusin", rememberFocus);
+    return () => document.removeEventListener("focusin", rememberFocus);
+  }, []);
+  useLayoutEffect(() => {
+    // Loading swaps the home subtree; return focus only if its removal lost it.
+    if (document.activeElement !== document.body || !monthFocusTarget.current) return;
+    const target = document.getElementById(monthFocusTarget.current);
+    if (target?.closest(".dashboard-hero .month-controls")) target.focus({ preventScroll: true });
+  }, [loading, month]);
+
   if (loading)
     return (
       <LedgerMonthLoading

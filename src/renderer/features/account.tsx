@@ -287,6 +287,7 @@ function SyncOnboarding({
 export function AccountPanel({ navigate }: { navigate?: (path: string) => void } = {}) {
   const app = useApp();
   const mobile = getClientSurface() === "mobile";
+  const Title = getClientSurface() === "web" ? "h1" : "h2";
   const DeviceContainer = mobile ? "details" : "div";
   const server = window.lunaLedger.server;
   const status = app.serverStatus;
@@ -312,7 +313,7 @@ export function AccountPanel({ navigate }: { navigate?: (path: string) => void }
   if (!server)
     return (
       <section className="panel">
-        <h2>{app.message("accountTitle")}</h2>
+        <Title>{app.message("accountTitle")}</Title>
         <p>{app.message("accountUnavailable")}</p>
       </section>
     );
@@ -336,7 +337,7 @@ export function AccountPanel({ navigate }: { navigate?: (path: string) => void }
         className="panel space-y-4"
         aria-labelledby="server-account-title"
       >
-        <h2 id="server-account-title">{m("title")}</h2>
+        <Title id="server-account-title">{m("title")}</Title>
         {!mobile && <p>{m("help")}</p>}
         {!mobile && <details id="server-connection-help">
           <summary>{m("connectionHelpTitle")}</summary>
@@ -601,6 +602,7 @@ export function AccountPanel({ navigate }: { navigate?: (path: string) => void }
 export function ServerSyncPanel({ feedback = true, navigate }: { feedback?: boolean; navigate?: (path: string) => void }) {
   const app = useApp();
   const mobile = getClientSurface() === "mobile";
+  const Title = getClientSurface() === "web" ? "h1" : "h2";
   const server = window.lunaLedger.server;
   const status = app.serverStatus;
   const profiles = useProfiles();
@@ -623,7 +625,7 @@ export function ServerSyncPanel({ feedback = true, navigate }: { feedback?: bool
       : m("unavailable");
   return (
     <section className="panel space-y-4" aria-labelledby="server-sync-title">
-      <h2 id="server-sync-title">{m("syncTitle")}</h2>
+      <Title id="server-sync-title">{m("syncTitle")}</Title>
       {!mobile && <p>{m(!status?.account ? "stepLoginHelp" : !bound ? "stepConnectHelp" : !status.connected ? "needsUnlock" : "stepActionHelp")}</p>}
       <details id="server-sync-guide">
         <summary>{m("syncSteps")}</summary>

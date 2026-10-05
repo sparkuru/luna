@@ -107,12 +107,14 @@ export function BudgetEditor({
         <div>
           {mobile ? (
             <h1 id="budget-editor-title" className="visually-hidden">{m("budgetNav")}</h1>
+          ) : web ? (
+            <h1 id="budget-editor-title">{m("monthlyLimit")}</h1>
           ) : (
             <h2 id="budget-editor-title">{m("monthlyLimit")}</h2>
           )}
           <p
             id="budget-month-label"
-            className={mobile ? "visually-hidden" : "helper"}
+            className={mobile || web ? "visually-hidden" : "helper"}
           >
             {formatMonth(locale, month)}
           </p>
@@ -532,7 +534,7 @@ export function Statistics({
           <h1 id="category-title" className={mobile ? "visually-hidden" : undefined}>
             {m(mobile ? "statisticsNav" : "categoryBreakdown")}
           </h1>
-          {!mobile && <p>{m("splitCountHelp")}</p>}
+          {!mobile && !web && <p>{m("splitCountHelp")}</p>}
         </div>
         {mobile ? (
           <NativePeriodNavigator
@@ -662,7 +664,7 @@ export function Statistics({
                 : `${m(period === "year" ? "statAverageMonth" : "statAverage")}: ${money(statistics.averageMinor)}`}
             </p>
           )}
-          {!mobile && <p className="helper">{m("statAverageHelp")}</p>}
+          {!mobile && !web && <p className="helper">{m("statAverageHelp")}</p>}
           {!mobile &&
           statistics.buckets.every((bucket) => bucket.amountMinor === null) ? (
             <p className="empty-state">{m("statNoTransactions")}</p>
@@ -1133,7 +1135,7 @@ export function Statistics({
           </ol>
         )}
       </article>
-      {mobile && (
+      {(mobile || web) && (
         <details className="statistics-method">
           <summary>{m("statMethod")}</summary>
           <p className="helper">{m("statAverageHelp")}</p>

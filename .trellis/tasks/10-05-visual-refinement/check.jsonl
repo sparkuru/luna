@@ -1,0 +1,14 @@
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/spec/trellis-plus/uupm-integration.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/spec/trellis-plus/continuity.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/tasks/10-05-visual-refinement/design.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Shared renderer and asset ownership"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Typed renderer and browser checks"}
+{"file": ".trellis/spec/frontend/web-visual-contract.md", "reason": "Responsive brand, typography and motion contracts"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Focus continuity across month subtree replacement"}

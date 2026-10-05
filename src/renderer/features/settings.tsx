@@ -9,7 +9,7 @@ import { syncStatusMessageKey, type MessageKey } from "../i18n";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Field } from "../components/form";
-import { ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import { getClientSurface } from "../client-surface";
 import {
   settingsAreaDefinitions,
@@ -52,6 +52,7 @@ export function Settings({
   const app = useApp();
   const { settings, message: m } = app;
   const mobile = getClientSurface() === "mobile";
+  const Title = getClientSurface() === "web" ? "h1" : "h2";
   const [error, setError] = useState("");
   const [privacy, setPrivacy] = useState(
     settings.hideSensitiveAmountsByDefault,
@@ -179,7 +180,7 @@ export function Settings({
     <section className="panel settings-panel" aria-labelledby="settings-title">
       <div className="section-heading">
         <div>
-          <h2 id="settings-title">{m(section === "preferences" ? "preferencesTitle" : section === "advanced" ? "advancedSettingsTitle" : "settingsTitle")}</h2>
+          <Title id="settings-title">{m(section === "preferences" ? "preferencesTitle" : section === "advanced" ? "advancedSettingsTitle" : "settingsTitle")}</Title>
           {!mobile && <p>
             {m(
               section === "preferences"
@@ -466,14 +467,14 @@ export function SettingsOverview({
             : m("conflictsClear")
           : mobile ? app.snapshot.workspace?.name : m(item.helpKey)}
       </span>}
-      {mobile ? <ChevronRight className="settings-row-chevron" aria-hidden="true" /> : <span className="settings-overview-action">{m("openSettingsSection")}</span>}
+      {mobile ? <ChevronRight className="settings-row-chevron" aria-hidden="true" /> : <span className="settings-overview-action">{m("openSettingsSection")}<ArrowRight aria-hidden="true" /></span>}
     </a>
   );
   return (
     <section className="panel settings-panel settings-overview" aria-labelledby="settings-title">
       <div className="section-heading">
         <div>
-          {!mobile && <span className="kicker">{m("settingsTitle")}</span>}
+          {!mobile && !web && <span className="kicker">{m("settingsTitle")}</span>}
           <h1 id="settings-title">{m("settingsTitle")}</h1>
           {!mobile && <p>{m("settingsOverviewHelp")}</p>}
         </div>

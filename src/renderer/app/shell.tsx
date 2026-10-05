@@ -33,6 +33,7 @@ import {
   scopedRead,
 } from "../data/local";
 import { Button } from "../components/ui/button";
+import { BrandMark } from "../components/brand-mark";
 import { LedgerRoute } from "../features/ledger";
 import { Setup } from "../features/setup";
 import { TransactionDialog, type Entry } from "../features/entry";
@@ -608,9 +609,7 @@ export function App() {
                   goto("/luna");
                 }}
               >
-                <span className="brand-mark" aria-hidden="true">
-                  L
-                </span>
+                <BrandMark />
                 <span>{m("appTitle")}</span>
               </a>
               {workspace && (
@@ -859,9 +858,7 @@ function WebSidebar({
             navigate("/luna");
           }}
         >
-          <span className="brand-mark" aria-hidden="true">
-            L
-          </span>
+          <BrandMark />
           <span>{message("appTitle")}</span>
         </a>
       </div>

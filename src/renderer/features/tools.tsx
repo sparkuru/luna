@@ -53,6 +53,7 @@ export function LedgerTools({
 }) {
   const app = useApp();
   const mobile = getClientSurface() === "mobile";
+  const Title = getClientSurface() === "web" ? "h1" : "h2";
   const BackupContainer = mobile ? "div" : "details";
   const api = window.lunaLedger;
   const serverBacked = api.server !== undefined;
@@ -515,7 +516,7 @@ export function LedgerTools({
       aria-labelledby="ledger-tools-title"
       aria-busy={busy}
     >
-      <h2 id="ledger-tools-title">{m(page === "backup" ? "backupTitle" : page === "conflicts" ? "conflictTitle" : page === "sync" ? "syncTitle" : "title")}</h2>
+      <Title id="ledger-tools-title">{m(page === "backup" ? "backupTitle" : page === "conflicts" ? "conflictTitle" : page === "sync" ? "syncTitle" : "title")}</Title>
       {!mobile && <p className="helper">
         {page === "backup" ? m("backupOfflineHelp") : page === "conflicts" ? m("conflictsHelp") : serverBacked ? serverMessage(app.locale, "syncHelp") : m("help")}
       </p>}

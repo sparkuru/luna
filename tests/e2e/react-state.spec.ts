@@ -740,6 +740,10 @@ test("month loading keeps the ledger frame stable and isolates the old month", a
     "1200",
   );
 
+  await page.locator("#month-picker").click();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#month-picker")).toBeFocused();
+
   await page.evaluate(() => {
     const state = window as unknown as {
       releaseMonthSnapshot: (() => void) | undefined;
@@ -749,6 +753,7 @@ test("month loading keeps the ledger frame stable and isolates the old month", a
   await expect(page.locator("#transaction-list-region")).toContainText(
     "Loading previous sentinel",
   );
+  await expect(page.locator("#month-picker")).toBeFocused();
 });
 
 test("month loading keeps its frame and retries a failed snapshot", async ({

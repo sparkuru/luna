@@ -19,7 +19,7 @@
   --color-danger-soft: #fff0ee;
   --color-border: #e1e5ed;
   --color-focus: #405de6;
-  --shadow-card: 0 14px 34px rgba(31, 55, 93, 0.08);
+  --shadow-card: 0 8px 28px rgba(31, 55, 93, 0.045);
   --radius-card: 16px;
   --radius-control: 10px;
   --space-1: 0.25rem;
@@ -34,7 +34,10 @@
   --web-sidebar-width: 252px;
   --web-content-max: 1180px;
   --web-workspace-gutter: clamp(1.5rem, 4vw, 4.5rem);
-  --web-surface-shadow: 0 20px 60px rgba(31, 55, 93, 0.06);
+  --web-surface-shadow: 0 8px 32px rgba(31, 55, 93, 0.035);
+  --motion-feedback: 160ms;
+  --motion-enter: 240ms;
+  --ease-enter: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .ledger-tools-panel { margin-bottom: var(--space-8); }
@@ -309,12 +312,19 @@ dialog.overlay-dialog::backdrop {
   width: 2.25rem;
   height: 2.25rem;
   place-items: center;
-  border-radius: 12px;
-  background: linear-gradient(145deg, var(--color-primary), #7048d9);
-  box-shadow: 0 8px 18px rgba(30, 64, 175, 0.24);
+  border-radius: 50%;
+  background: var(--color-primary-dark);
+  box-shadow: 0 3px 10px rgba(30, 64, 175, 0.12);
   color: white;
   font-size: 0.75rem;
   letter-spacing: 0.08em;
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
 }
 
 .status-pill,
@@ -2742,10 +2752,10 @@ h1, h2, h3, h4 { font-weight: 700; }
     min-width: 0;
     min-height: 100vh;
     flex-direction: column;
-    gap: var(--space-5);
+    gap: var(--space-10);
     border-right: 1px solid var(--color-border);
-    background: color-mix(in srgb, var(--color-surface) 92%, var(--color-primary-soft));
-    padding: 1.5rem 1.25rem 1.25rem;
+    background: var(--color-surface);
+    padding: 2rem 1.25rem 1.25rem;
   }
 
   .web-sidebar-header {
@@ -5003,5 +5013,540 @@ html[data-client-surface="mobile"] #main-content > .statistics-page { padding-in
   }
   html[data-client-surface="web"] #main-content > .statistics-page {
     padding-inline: 24px;
+  }
+}
+
+/* The Web craft layer shares type, rhythm and feedback across routed surfaces.
+   Native mobile keeps its compact presentation and platform period controls. */
+html[data-client-surface="web"] .setup-copy {
+  position: relative;
+  isolation: isolate;
+}
+
+html[data-client-surface="web"] .setup-copy h1 {
+  text-wrap: balance;
+}
+
+html[data-client-surface="web"] :where(button, a, input, select, textarea, summary):focus-visible {
+  outline-color: var(--color-focus);
+}
+
+html[data-client-surface="web"] a[data-slot="button"][data-variant="default"] {
+  color: var(--color-primary-foreground, #fff);
+  text-decoration: none;
+}
+
+html[data-client-surface="web"] #main-content > .panel > h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(1.65rem, 2.2vw, 2rem);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+
+html[data-client-surface="web"] .statistics-method {
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+html[data-client-surface="web"] .statistics-method > summary {
+  min-height: 44px;
+  padding-block: var(--space-3);
+  color: var(--color-primary-dark);
+  cursor: pointer;
+}
+
+html[data-client-surface="web"] .statistics-method > summary:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+
+html[data-client-surface="web"] .account-password-field .field {
+  display: contents;
+}
+
+html[data-client-surface="web"] .account-password-field label {
+  grid-column: 1 / -1;
+}
+
+html[data-client-surface="web"] .account-password-field input {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+html[data-client-surface="web"] .account-password-field button {
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 48px;
+}
+
+html[data-client-surface="web"] .setup-copy::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: calc(50% - 8rem);
+  top: -3rem;
+  width: 16rem;
+  height: 16rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 9%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+html[data-client-surface="web"] .setup-card .form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html[data-client-surface="web"] .setup-card {
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+html[data-client-surface="web"] .page-heading h1,
+html[data-client-surface="web"] .statistics-page > .section-heading h1,
+html[data-client-surface="web"] #main-content > .panel > .section-heading h1,
+html[data-client-surface="web"] .budget-panel > .section-heading h1 {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(1.75rem, 2.6vw, 2.75rem);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+html[data-client-surface="web"] .section-heading h2,
+html[data-client-surface="web"] .setup-card h2 {
+  font-family: inherit;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+html[data-client-surface="web"] .statistics-card h2 {
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+html[data-client-surface="web"] .summary-card .subtext {
+  min-height: 1.25em;
+}
+
+html[data-client-surface="web"] .statistics-total {
+  margin-top: 0.5rem;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+}
+
+html[data-client-surface="web"] .statistics-largest-card {
+  margin-top: var(--space-5);
+}
+
+html[data-client-surface="web"] .statistics-chart-bar {
+  background: transparent;
+}
+
+html[data-client-surface="web"] .statistics-chart-bar::-webkit-progress-bar {
+  background: transparent;
+}
+
+html[data-client-surface="web"] .statistics-chart-button {
+  border-radius: 4px;
+  transition: background-color var(--motion-feedback) ease;
+}
+
+html[data-client-surface="web"] .statistics-chart-button:hover,
+html[data-client-surface="web"] .statistics-chart-button.is-selected {
+  background: color-mix(in srgb, var(--color-primary-soft) 65%, transparent);
+}
+
+html[data-client-surface="web"] .settings-overview-groups {
+  display: grid;
+  gap: 1.5rem;
+}
+
+html[data-client-surface="web"] .settings-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  align-items: start;
+}
+
+html[data-client-surface="web"] .settings-overview-group {
+  display: grid;
+  gap: 0.75rem;
+}
+
+html[data-client-surface="web"] .settings-overview-group > h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+html[data-client-surface="web"] .settings-overview-group > h2::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--color-border);
+}
+
+html[data-client-surface="web"] .settings-overview-card {
+  transition: border-color var(--motion-feedback) ease,
+    background-color var(--motion-feedback) ease,
+    box-shadow var(--motion-feedback) ease;
+}
+
+html[data-client-surface="web"] .settings-overview-card:hover {
+  box-shadow: 0 4px 16px rgba(31, 55, 93, 0.06);
+}
+
+html[data-client-surface="web"] .settings-overview-card .settings-overview-action {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-overview-action > svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+html[data-client-surface="web"] .settings-overview-card .settings-overview-action > svg {
+  transition: translate var(--motion-feedback) ease;
+}
+
+html[data-client-surface="web"] .settings-overview-card:hover .settings-overview-action > svg {
+  translate: 2px 0;
+}
+
+html[data-client-surface="web"] .quick-type-button.expense[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+html[data-client-surface="web"] .primary-record-button {
+  box-shadow: 0 4px 12px rgba(64, 93, 230, 0.16);
+}
+
+html[data-client-surface="web"] .primary-record-icon {
+  background: transparent;
+}
+
+html[data-client-surface="web"] [data-slot="dialog-overlay"]:not([hidden]) {
+  animation: luna-overlay-enter var(--motion-feedback) ease-out both;
+}
+
+html[data-client-surface="web"] .luna-dialog[data-state="open"] {
+  border: 1px solid var(--color-border);
+  box-shadow: 0 24px 80px rgba(24, 36, 58, 0.2);
+  animation: luna-dialog-enter var(--motion-enter) var(--ease-enter) both;
+}
+
+@keyframes luna-overlay-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes luna-dialog-enter {
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@media (min-width: 768px) {
+  html[data-client-surface="web"] .summary-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "heading" "metric" "foot";
+    grid-template-rows: 44px 3rem auto;
+    row-gap: 0.35rem;
+    min-height: 148px;
+    padding: 0.75rem 1.5rem 1.25rem;
+  }
+
+  html[data-client-surface="web"] .summary-card .metric {
+    align-self: start;
+    max-height: 3rem;
+    overflow-y: auto;
+    text-align: left;
+    font-size: clamp(1.4rem, 2.1vw, 2rem);
+    font-weight: 650;
+    letter-spacing: -0.035em;
+    line-height: 1.25;
+  }
+
+  html[data-client-surface="web"] .summary-card .eyebrow {
+    font-size: 0.8rem;
+    font-weight: 550;
+    letter-spacing: 0;
+  }
+
+  html[data-client-surface="web"] .summary-card.net {
+    background: color-mix(in srgb, var(--color-primary-soft) 55%, var(--color-surface));
+  }
+
+  html[data-client-surface="web"] .summary-card .subtext {
+    font-size: 0.8rem;
+  }
+
+  html[data-client-surface="web"] .transaction-day-list {
+    gap: 0;
+  }
+
+  html[data-client-surface="web"] .transaction-item {
+    min-height: 80px;
+    border: 0;
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    transition: background-color var(--motion-feedback) ease;
+  }
+
+  html[data-client-surface="web"] .transaction-item:last-child {
+    border-bottom: 0;
+  }
+
+  html[data-client-surface="web"] .transaction-item:hover,
+  html[data-client-surface="web"] .transaction-item:focus-within {
+    background: color-mix(in srgb, var(--color-primary-soft) 30%, var(--color-surface));
+    box-shadow: none;
+    transform: none;
+  }
+
+  html[data-client-surface="web"] .statistics-toolbar {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    gap: var(--space-3);
+  }
+
+  html[data-client-surface="web"] .statistics-toolbar .segmented-control {
+    border: 1px solid var(--color-border);
+  }
+}
+
+@media (min-width: 1024px) {
+  html[data-client-surface="web"] .web-sidebar .primary-navigation-link {
+    position: relative;
+    border-radius: 10px;
+    font-weight: 550;
+  }
+
+  html[data-client-surface="web"] .web-sidebar .primary-navigation-link.is-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 3px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--color-primary);
+  }
+
+  html[data-client-surface="web"] .dashboard-hero {
+    min-height: 128px;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-6);
+  }
+
+  html[data-client-surface="web"] .setup-shell {
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  html[data-client-surface="web"] .client-surface-web {
+    padding-inline: clamp(16px, 4vw, 24px);
+  }
+
+  html[data-client-surface="web"] .summary-grid,
+  html[data-client-surface="web"] .transactions-panel,
+  html[data-client-surface="web"] .statistics-page,
+  html[data-client-surface="web"] .web-sidebar .primary-navigation {
+    container-type: inline-size;
+  }
+
+  html[data-client-surface="web"] .month-controls.month-navigator {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+  }
+
+  html[data-client-surface="web"] .month-navigator > #previous-month,
+  html[data-client-surface="web"] .month-navigator > #next-month {
+    width: 44px;
+    min-width: 44px;
+  }
+
+  html[data-client-surface="web"] .statistics-page {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  html[data-client-surface="web"] .statistics-page > .section-heading h1,
+  html[data-client-surface="web"] #main-content > .panel > .section-heading h1,
+  html[data-client-surface="web"] .budget-panel > .section-heading h1 {
+    font-size: 1.65rem;
+  }
+
+  html[data-client-surface="web"] .statistics-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(96px, 1fr);
+    gap: 0.5rem;
+  }
+
+  html[data-client-surface="web"] .statistics-toolbar > .segmented-control:first-child {
+    grid-column: 1 / -1;
+  }
+
+  html[data-client-surface="web"] .statistics-toolbar .segmented-control {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 4px;
+  }
+
+  html[data-client-surface="web"] .statistics-toolbar .segmented-control button {
+    flex: 1 1 auto;
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 100%;
+    padding-inline: 2px;
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+  }
+
+  html[data-client-surface="web"] .transaction-inline-meta {
+    flex: 0 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  html[data-client-surface="web"] .transaction-inline-meta .transaction-amount {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  html[data-client-surface="web"] .web-sidebar .primary-navigation-link {
+    overflow-wrap: anywhere;
+  }
+
+  html[data-client-surface="web"] .ledger-tools-actions > button {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  html[data-client-surface="web"] .statistics-card {
+    padding: clamp(16px, 1rem, 24px);
+  }
+
+  html[data-client-surface="web"] .statistics-chart {
+    height: 9rem;
+    gap: 0.12rem;
+  }
+
+  html[data-client-surface="web"] .web-sidebar .primary-navigation {
+    box-shadow: 0 4px 20px rgba(24, 36, 58, 0.1);
+  }
+}
+
+/* Relative thresholds reflow controls when text grows, even at a fixed viewport. */
+@container (max-width: 12rem) {
+  html[data-client-surface="web"] .summary-card {
+    grid-template-columns: minmax(0, 1fr) 44px;
+    grid-template-areas: "heading toggle" "metric metric" "foot foot";
+    row-gap: 0.5rem;
+    padding: 16px;
+  }
+
+  html[data-client-surface="web"] .summary-card :is(.eyebrow, .subtext) {
+    white-space: normal;
+    overflow: visible;
+  }
+
+  html[data-client-surface="web"] .summary-card .metric {
+    text-align: left;
+    font-size: 1rem;
+  }
+
+  html[data-client-surface="web"] .statistics-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html[data-client-surface="web"] #main-content > .statistics-page > .section-heading h1 {
+    font-size: 1.5rem;
+    hyphens: auto;
+  }
+
+  html[data-client-surface="web"] .filter-disclosure > summary.filter-disclosure-trigger {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  html[data-client-surface="web"] .filter-disclosure-meta {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  html[data-client-surface="web"] .web-sidebar .primary-navigation-links {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  html[data-client-surface="web"] .web-sidebar .primary-navigation-link:nth-child(n) {
+    grid-column: 1;
+    grid-row: auto;
+    flex-direction: row;
+    gap: 8px;
+    padding: 4px;
+  }
+
+  html[data-client-surface="web"] #open-secondary-menu {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  html[data-client-surface="web"] .statistics-bucket-picker {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    gap: 8px;
+  }
+
+  html[data-client-surface="web"] .statistics-bucket-picker .field {
+    display: contents;
+  }
+
+  html[data-client-surface="web"] .statistics-bucket-picker .field label {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  html[data-client-surface="web"] .statistics-bucket-picker :is(button, select) {
+    grid-row: 2;
+    padding-inline: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-client-surface="web"] .luna-dialog[data-state="open"],
+  html[data-client-surface="web"] [data-slot="dialog-overlay"]:not([hidden]) {
+    animation: none;
+  }
+
+  html[data-client-surface="web"] .settings-overview-card:hover .settings-overview-action > svg {
+    translate: none;
+  }
+
+  html[data-client-surface="web"] button:active:not(:disabled),
+  html[data-client-surface="web"] .calculator-grid button:hover:not(:disabled),
+  html[data-client-surface="web"] .calculator-grid button:active:not(:disabled) {
+    transform: none;
   }
 }

@@ -26,6 +26,7 @@ function errorCode(error: unknown): string {
 export function Categories() {
   const app = useApp();
   const mobile = getClientSurface() === "mobile";
+  const Title = getClientSurface() === "web" ? "h1" : "h2";
   const categories = (app.snapshot.categories ?? []).filter(
     (category) => category.deletedAt === null,
   );
@@ -297,7 +298,7 @@ export function Categories() {
       <div className="section-heading">
         <div>
           {!mobile && <span className="kicker">{app.message("settingsTitle")}</span>}
-          <h2 id="categories-title">{app.message("categoriesTitle")}</h2>
+          <Title id="categories-title">{app.message("categoriesTitle")}</Title>
           {!mobile && <p>{app.message("categoriesHelp")}</p>}
         </div>
       </div>
