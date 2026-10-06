@@ -567,3 +567,39 @@ User explicitly authorized committing all remaining dirty and untracked project 
 ### Next Steps
 
 - 等待用户选择后续工作，不推送或自动继续其他task。
+
+
+## Session 21: Visual refinement resumption and archive
+
+**Date**: 2026-10-06
+**Task**: Visual refinement resumption and archive
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+恢复视觉 task，纠正真实 401 自动退出后点击已消失同步按钮的账户测试竞态；原断言与超时保留，独立复核通过。用户确认后提交修正并归档，原失败 trace 保留。
+
+### Main Changes
+
+- 账户测试核验真实撤销 204、会话读取 401、退出与身份清除、重新登录和本地恢复；应用代码未改。
+- 本地归档 visual-refinement，归档提交 da0d517 含一次 Codex 署名；主线和上下文引用同步。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `edbd4dc` | (see git log) |
+| `41d8140` | (see git log) |
+
+### Testing
+
+- [OK] 类型检查、226 项单测、生产构建通过；本轮 16 视觉＋6 焦点＋10 账户／离线专项共 32 项浏览器检查通过。
+- [OK] 实现者账户四种场景另行 4/4 通过；原 8 通过／2 超时证据保留，未称新一轮 344 项全套、CI 或原生平台验收。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 当前无活动任务；等待用户选择后续工作，未推送或部署。
