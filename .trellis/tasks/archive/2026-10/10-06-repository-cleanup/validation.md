@@ -87,3 +87,11 @@ task 进入 review，视觉 task 仍为 review；本轮没有 stage、提交、�
 前述未 stage/提交与 index 为空为整理完成时的检查快照；本次按完整候选路径显式
 暂存、核对后提交，ignored 本地数据/归档/缓存保留。task 继续 review，不推送、部署
 或 task 归档，已有实测与平台限制保持原范围。
+
+## 归档
+
+工作提交 `00b2ac5` 已包含全部当时 Git 脏文件。用户随后明确“归档 clean-up；提交”，
+2026-10-06 使用 `task.py archive --no-commit` 归档本 task 为 completed，清除当前
+指针，更新 task context 和迁移文档/spec/mainline/视觉证据导航到归档位置。
+此前 review/未归档描述为原时点记录，既有实测和平台限制保留。视觉 task 保持 review。
+归档提交包含一次 `Co-authored-by: OpenAI Codex <codex@openai.com>`，日志提交单独记录。

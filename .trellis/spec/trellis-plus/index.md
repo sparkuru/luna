@@ -13,7 +13,7 @@ future Trellis Plus runs and before any user-visible UI planning or validation.
   The concise [README](../../../readme.md) links to the current deployment and
   development guides in this spec tree. The former root `prd.md` began as the
   product baseline and later held usage instructions; its useful contents were
-  consolidated by the [repository cleanup task](../../tasks/10-06-repository-cleanup/prd.md).
+  consolidated by the [repository cleanup task](../../tasks/archive/2026-10/10-06-repository-cleanup/prd.md).
   Historical task references retain their original revision context.
 - Capability audit (2026-08-30): the first usable local slice now has a
   TypeScript/Electron Forge/Vite source tree, strict tests, native SQLite

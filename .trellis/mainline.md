@@ -2,13 +2,19 @@
 
 ## 2026-10-06 仓库目录整理
 
+工作提交为 `00b2ac5`。用户随后明确“归档 clean-up；提交”，本任务已移至
+`tasks/archive/2026-10/10-06-repository-cleanup/`，状态 completed，当前指针清除。
+本次仅归档 clean-up，视觉 task 保持 review；下方 review/未归档描述保留为历史。
+AC1–AC8 与平台限制见归档验收，归档提交按项目政策包含一次 Codex 署名，
+会话日志另行记录；未推送或部署。
+
 用户随后回复“可以提交；包括所有脏文件”，授权将当前全部 Git 脏文件合为一个
 目录与容器配置整理工作提交。task 保持 review；ignored 本地 archive/.env/data/缓存
 保留，不执行推送、部署或 task 归档。下文未提交描述是整理完成时的历史状态。
 
-用户要求“整理当前目录；将多余的各类文件，合并、规整处理一下；建 task”，随后明确参考 `05-kisara/readme.md` 精简 README，其他正文归入 `.trellis`，并回复“开始”授权实施。[目录整理任务](tasks/10-06-repository-cleanup/prd.md)第一轮已完成实施及独立复核，当时进入 review：README 15 行，三份说明合入六份既有规范，618 文件/70 目录可回退归整到 ignored 根 archive；内容、元数据与相关导航核验通过。真实数据、本地配置和开发运行入口保留，视觉 task 状态不变。详细边界见[整理验收](tasks/10-06-repository-cleanup/validation.md)；未提交、推送、部署或 task 归档。
+用户要求“整理当前目录；将多余的各类文件，合并、规整处理一下；建 task”，随后明确参考 `05-kisara/readme.md` 精简 README，其他正文归入 `.trellis`，并回复“开始”授权实施。[目录整理任务](tasks/archive/2026-10/10-06-repository-cleanup/prd.md)第一轮已完成实施及独立复核，当时进入 review：README 15 行，三份说明合入六份既有规范，618 文件/70 目录可回退归整到 ignored 根 archive；内容、元数据与相关导航核验通过。真实数据、本地配置和开发运行入口保留，视觉 task 状态不变。详细边界见[整理验收](tasks/archive/2026-10/10-06-repository-cleanup/validation.md)；未提交、推送、部署或 task 归档。
 
-用户进一步澄清主要整理“各种 dockfile、compose 文件”，并回复“可以”批准[容器布局方案](tasks/10-06-repository-cleanup/research/container-layout.md)。追加整理已完成：根保留主 compose/context ignore，Docker 专属文件集中 docker/，API/bucket-init 合并多 target，当前调用与恢复清单同步。9 份配置等价、五个 target 构建、八项恢复、五项隔离主 Compose、MinIO 双 provider、APK 临时导出及真实 context 回归通过；独立复核自修签名过滤后通过，详见[当前验收](tasks/10-06-repository-cleanup/validation.md)。临时镜像/合成数据清理，原预览、真实配置/data/原 APK 保留。第一轮结果保留，task 再次进入 review，未提交、部署、推送或归档；Compose v1 runtime、Android emulator/实机等本轮未跑项不判通过。
+用户进一步澄清主要整理“各种 dockfile、compose 文件”，并回复“可以”批准[容器布局方案](tasks/archive/2026-10/10-06-repository-cleanup/research/container-layout.md)。追加整理已完成：根保留主 compose/context ignore，Docker 专属文件集中 docker/，API/bucket-init 合并多 target，当前调用与恢复清单同步。9 份配置等价、五个 target 构建、八项恢复、五项隔离主 Compose、MinIO 双 provider、APK 临时导出及真实 context 回归通过；独立复核自修签名过滤后通过，详见[当前验收](tasks/archive/2026-10/10-06-repository-cleanup/validation.md)。临时镜像/合成数据清理，原预览、真实配置/data/原 APK 保留。第一轮结果保留，task 再次进入 review，未提交、部署、推送或归档；Compose v1 runtime、Android emulator/实机等本轮未跑项不判通过。
 
 ## 2026-10-05 视觉与交互精修
 
