@@ -13,9 +13,32 @@ the active fullstack task, not inferred from this document.
 - createApp({database, objectStore?, origins?, sessionTtlSeconds?}) creates a Fastify app without listening.
 - migrate(database) performs the versioned transactional SQLite metadata migration.
 - createApiClient(baseUrl, tokenProvider?, fetcher?) creates an account-scoped generated HTTP client.
-- npm run api:generate exports the route schemas and regenerates the SDK.
-- npm run api:check regenerates in a temporary directory and compares complete contract/SDK output, including otherwise untracked files.
-- npm run server:test uses isolated in-memory/file SQLite databases and an injected object-store fixture.
+
+### 生成与开发命令
+
+从仓库根运行，Node >=22.18；`./hako` 提供 Node 22。`npm run api:generate` 创建
+不监听网络的 Fastify app 和内存 SQLite，导出按键排序的 OpenAPI 3.0.3 route schemas，
+再用固定 Hey API 0.99.0 生成 SDK 与 TanStack Query options。它们是实际运行时消费者。
+`npm run api:check` 在新临时目录生成并比较 contract 和完整 SDK 树，包括未跟踪文件。
+
+```text
+./hako npm run api:generate
+./hako npm run api:check
+./hako npm run test:contracts
+./hako npm run server:typecheck
+./hako npm run server:build
+./hako npm run server:test
+./hako npm run db:migrate
+./hako npm run server:admin -- create-account
+./hako npm run server:admin -- reset-password
+./hako npm run server:admin -- cleanup
+./hako npm run server:start
+```
+
+`db:migrate` 显式初始化/核验所选服务端 SQLite；`server:start` 需要先 build。
+账号创建/重置需要 TTY 隐藏输入，cleanup 包括过期会话、幂等记录、30 日前事件及
+附件孤儿协调。`server:test` 只使用隔离内存/文件 SQLite 和注入的 object-store fixture。
+生产 Compose 的初始化、内部 MinIO 和管理入口见[部署与恢复](deployment-and-recovery.md)。
 
 API prefix /api/v1: meta, auth/sessions, auth/me, auth/session, ledgers,
 ledgers/{id}/object, ledgers/{id}/attachments/{attachmentId} and
@@ -27,6 +50,11 @@ route schemas are its source.
 
 Server configuration uses `LUNA_DATA_DIR`, `LUNA_DATABASE_FILE`, the server-only
 `LUNA_RUNTIME_CONFIG_FILE`, `LUNA_ALLOWED_ORIGINS`, `LUNA_HOST` and `LUNA_PORT`.
+非 Compose 的默认 host/port 是 `127.0.0.1:3000`；origin 列表是精确的逗号分隔值。
+生产入口只记录 request ID、route template、status、duration 和 bytes；app factory
+除非显式注入 logger 否则无日志。账本 envelope 限制 12MiB，preferences 1MiB，
+最多四个并行上传、两个活跃 scrypt 作业/八个排队作业、每账号 100 个活跃会话，
+默认 token 绝对寿命 12 小时。登录限流按 IP 和规范化账号/IP，仍是单实例边界。
 Published production API requires HTTPS; local tests only allow exact loopback
 exceptions by default. An explicit `LUNA_ALLOW_INSECURE_LAN=true` deployment
 flag may additionally allow exact RFC1918 IPv4 HTTP origins for a trusted LAN;
@@ -73,7 +101,29 @@ service-worker cache entry.
 
 Use a flat base64 alphabet/padding schema check followed by the shared canonical decoder. Repeated-group regexes can exhaust the Node/V8 stack on valid maximum-size ciphertext. Keep an actual maximum-size PUT/GET roundtrip and lock-wait expiry regression, in addition to invalid and oversized input tests.
 
-Generated files are not manually edited. Version-specific generator compatibility belongs in deterministic, tested generation steps and api:check. Keep exactOptionalPropertyTypes and strict checking for authored code. The HTTP runtime must preserve ETag/status/AbortSignal and bound actual response bytes before JSON parsing. If a bounded fetch rebuilds a response after consuming/decompressing it, it must replace `Content-Length` with the decoded byte length rather than deleting it; binary adapters use that header to detect truncation or extra bytes.
+### 生成器兼容与客户端运行时
+
+Generated files are not manually edited. Hey 0.99.0 的 bundled fetch runtime 会给可选
+字段显式传 `undefined`，不满足 `exactOptionalPropertyTypes`。生成步骤只把 upstream
+`client/`、`core/` 以该选项关闭的 strict TypeScript 编译为 JS/declarations，删除其
+TS 源并规范化尾随空白。SDK、DTO、Query options 和 application 保留根 strict
+设置。输出属于可重复生成树，不手改，也不要求 Vite 前另行 build 或使用陈旧 SDK。
+版本兼容只在确定性生成步骤与 `api:check` 中处理。
+
+`src/api-client/runtime/client.ts` 为每个 session 建立独立 bearer client，在生成器
+JSON parsing 前限制实际 decoded response bytes。保留完整 ETag/status、条件与
+幂等头及 AbortSignal；需要精确 envelope bytes 时用 `parseAs: 'text'`，transport
+adapter 必须把仍声明 JSON DTO 的运行时值收窄为 string。重建已消费/解压的 response
+时，把 `Content-Length` 改为 decoded bytes 长度，不能删除；binary adapter 据此
+识别截断或多余字节。
+
+Financial envelopes、密码和 token 不进入 Query cache。`accountQueries` 只封装安全
+账号/session/ledger 元数据并按 instance/user/generation 标记；token 通过 client auth
+callback 传递，不放 Query options headers，因为生成的 query key 会包含这些 headers。
+API 使用 shared public crypto decoder 验证外层并保存 raw bytes，从不解密。注入的
+object-store seam 在生产 Compose 是 pinned 内部 MinIO，在单测是内存 adapter，
+不把 S3 凭据给客户端。单实例 writer mutex 的授权/CAS/撤销顺序以上述当前 Contracts
+为准。本规范不自行宣称生产安全审计、实体设备或跨设备 HTTPS 验收；证据在对应 task。
 
 ## 4. Validation & Error Matrix
 

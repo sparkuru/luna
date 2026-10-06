@@ -35,7 +35,8 @@ services:
   bucket-init:
     build:
       context: .
-      dockerfile: Dockerfile.bucket-init
+      dockerfile: docker/Dockerfile.server
+      target: bucket-init
     image: luna-bucket-init:local
     command: [/data]
     user: "${LUNA_UID:-1000}:${LUNA_GID:-1000}"
@@ -57,7 +58,8 @@ services:
     image: luna-api:local
     build:
       context: .
-      dockerfile: Dockerfile.server
+      dockerfile: docker/Dockerfile.server
+      target: api
     environment:
       LUNA_DATA_DIR: /data
       LUNA_RUNTIME_CONFIG_FILE: /data/.luna/runtime.json
@@ -84,7 +86,9 @@ services:
     restart: unless-stopped
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
     image: luna-web:local
     ports:
       - "${LUNA_BIND_HOST:-127.0.0.1}:${LUNA_PORT:-8080}:8080"

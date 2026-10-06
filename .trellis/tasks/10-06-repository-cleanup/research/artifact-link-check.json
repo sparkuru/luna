@@ -1,0 +1,132 @@
+{
+  "html_local_edges": 262,
+  "html_files": 8,
+  "preexisting_missing_html_edges": [
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "Internal",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "Internal",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "Internal",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical public repository",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical repository.",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical public repository.",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical public repository",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical repository",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical public repository",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical public repository",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical public repository",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "Google Internal",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical public repository",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical public repository",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "Google Internal",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical public repository",
+      "baseline_present": false,
+      "after_present": false
+    },
+    {
+      "document": "archive/2026-10-06/out/luna-linux-x64/LICENSES.chromium.html",
+      "reference": "This is the canonical repository",
+      "baseline_present": false,
+      "after_present": false
+    }
+  ],
+  "newly_missing_html_edges": [],
+  "repaired_markdown_links": [
+    {
+      "document": ".trellis/tasks/archive/2026-09/09-26-mobile-ux-audit/review.md",
+      "reference": "../../../../../archive/2026-10-06/captures/mobile-ux-audit-20260926/index.html",
+      "after_present": true
+    },
+    {
+      "document": ".trellis/tasks/archive/2026-09/09-26-mobile-ledger-entry/implementation-validation.md",
+      "reference": "../../../../../archive/2026-10-06/captures/mobile-redesign-browser/zh-CN-ledger.png",
+      "after_present": true
+    },
+    {
+      "document": ".trellis/tasks/archive/2026-09/09-26-mobile-ledger-entry/implementation-validation.md",
+      "reference": "../../../../../archive/2026-10-06/captures/mobile-redesign-browser/en-ledger.png",
+      "after_present": true
+    },
+    {
+      "document": ".trellis/tasks/archive/2026-09/09-26-mobile-ledger-entry/implementation-validation.md",
+      "reference": "../../../../../archive/2026-10-06/captures/mobile-redesign-browser/en-entry.png",
+      "after_present": true
+    }
+  ],
+  "scope": "Static HTML href/src and four migrated Markdown navigation links; embedded JS and historical report authenticity are not revalidated."
+}

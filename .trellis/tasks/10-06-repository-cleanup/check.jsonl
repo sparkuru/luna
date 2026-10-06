@@ -1,0 +1,23 @@
+{"file":".trellis/spec/trellis-plus/index.md","reason":"核对项目归属、受保护文件及复核门禁"}
+{"file":".trellis/spec/trellis-plus/development-principles.md","reason":"核对数据、README 与证据保护"}
+{"file":".trellis/spec/trellis-plus/continuity.md","reason":"核对其它任务状态和授权"}
+{"file":".trellis/spec/trellis-plus/commit-policy.md","reason":"核对无未授权提交、stage、归档"}
+{"file":".trellis/tasks/10-06-repository-cleanup/prd.md","reason":"逐项验收 AC1–AC5"}
+{"file":".trellis/tasks/10-06-repository-cleanup/design.md","reason":"核对迁移与兼容"}
+{"file":".trellis/tasks/10-06-repository-cleanup/implement.md","reason":"核对实际检查和保留项"}
+{"file":".trellis/tasks/10-06-repository-cleanup/research/inventory.md","reason":"对比整理前基线"}
+{"file": ".trellis/spec/backend/deployment-and-recovery.md", "reason": "部署与恢复正文的既有归属及当前 backup 契约"}
+{"file": ".trellis/spec/backend/http-api-guidelines.md", "reason": "API 生成说明迁入与当前事务契约"}
+{"file": ".trellis/spec/backend/ledger-sync-guidelines.md", "reason": "同步和口令职责说明的既有归属"}
+{"file": ".trellis/spec/backend/config-sync-guidelines.md", "reason": "设置同步与账本同步边界"}
+{"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "本地账本存储与备份说明的既有归属"}
+{"file": ".trellis/spec/frontend/android-runtime.md", "reason": "APK 构建与宿主存储规范"}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "开发命令和预览文档归属及 lifecycle"}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "预览说明必须保留的 console 契约"}
+{"file": ".trellis/tasks/10-06-repository-cleanup/research/document-layout.md", "reason": "用户指定参考与精简 README 草案"}
+{"file": ".trellis/tasks/10-06-repository-cleanup/research/document-migration.md", "reason": "实际文档逐节迁移与源码校正依据"}
+{"file": ".trellis/tasks/10-06-repository-cleanup/research/artifact-migration.md", "reason": "实际产物路径、完整性与回退记录"}
+{"file": ".trellis/tasks/10-06-repository-cleanup/research/container-layout.md", "reason": "用户澄清后的容器布局与路径调用证据"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "容器路径相关 helper 与后端构建验证标准"}
+{"file": ".trellis/tasks/10-06-repository-cleanup/research/container-runtime-validation.md", "reason": "实际构建、合并target恢复、隔离Compose/MinIO和APK导出证据"}
+{"file": ".trellis/tasks/10-06-repository-cleanup/research/container-static-validation.md", "reason": "静态门禁、配置等价与真实ignore回归结果"}

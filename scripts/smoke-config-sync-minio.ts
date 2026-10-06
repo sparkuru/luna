@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const COMPOSE_FILE = path.join(ROOT, 'compose.minio.yaml');
+const COMPOSE_FILE = path.join(ROOT, 'docker', 'compose.minio.yaml');
 const PROJECT = 'luna-minio-smoke';
 const ENDPOINT = 'http://127.0.0.1:19000';
 const MINIO_VERSION = 'RELEASE.2025-09-07T16-13-09Z';
@@ -107,7 +107,7 @@ function assertProjectAbsent(): void {
 
 function runCompose(args: string[]): void {
   try {
-    execFileSync('docker', ['compose', '-p', PROJECT, '-f', COMPOSE_FILE, ...args], {
+    execFileSync('docker', ['compose', '--project-directory', ROOT, '-p', PROJECT, '-f', COMPOSE_FILE, ...args], {
       cwd: ROOT,
       env: {
         ...process.env,

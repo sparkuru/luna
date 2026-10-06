@@ -63,6 +63,16 @@ and evidence. README is human-owned and changes only when explicitly requested.
 Reusable rules belong here; task-specific evidence stays in the normal task
 tree when a task exists. Do not invent another audit system or redundant guides.
 
+The root `readme.md` is a concise project entry: retain the tagline, a short
+description, and usage/development/license links, around 15–20 lines without
+long command blocks or configuration tables. Detailed usage and operations
+belong in the existing topic specs: backend deployment/API/ledger-sync,
+frontend Web/Android, and Trellis Plus development. Merge duplicate content
+into its owning topic instead of recreating a root PRD or parallel docs tree.
+Product direction stays in `.trellis/mainline.md`; task-specific evidence stays
+in its task. After documentation moves, check file links and anchors and record
+source-to-section mappings without replacing historical revision citations.
+
 Before completion compare requested behavior, the checks actually run and every
 unverified portion. Follow the index's review gate and archive policy. Reuse
 existing authorization without ceremonial repeat approval. For authorized

@@ -4,7 +4,7 @@ services:
     platform: linux/amd64
     build:
       context: .
-      dockerfile: Dockerfile.android
+      dockerfile: docker/Dockerfile.android
       target: export
       args:
         LUNA_ANDROID_APPLICATION_SUFFIX: "${LUNA_ANDROID_APPLICATION_SUFFIX:-}"
@@ -25,7 +25,7 @@ services:
     platform: linux/amd64
     build:
       context: .
-      dockerfile: Dockerfile.android
+      dockerfile: docker/Dockerfile.android
       target: emulator
     devices:
       - /dev/kvm:/dev/kvm

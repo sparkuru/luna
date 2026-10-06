@@ -104,6 +104,7 @@ _site/
 # JavaScript and TypeScript
 node_modules/
 .devhome/
+/.tmp-tsx/
 bower_components/
 jspm_packages/
 web_modules/
@@ -339,7 +340,6 @@ zig-out/
 # Android and local mobile tooling
 .externalNativeBuild/
 .cxx/
-.gradle/
 local.properties
 captures/
 *.apk
@@ -373,5 +373,4 @@ cdk.out/
 *.db-wal
 
 # Generated archives and installers
-*.egg
 *.whl

@@ -13,13 +13,13 @@ separate assurance boundary; never claim an audit from automated tests.
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [HTTP API and Generated Client](./http-api-guidelines.md) | Fastify/SQLite account and encrypted-object contracts, CAS, SDK generation | Current |
-| [Deployment and Recovery](./deployment-and-recovery.md) | Single Compose, data-folder initialization, MinIO, backup and recovery | Current |
+| [HTTP API and Generated Client](./http-api-guidelines.md) | Generation/development commands, Fastify/SQLite contracts, CAS and SDK runtime | Current |
+| [Deployment and Recovery](./deployment-and-recovery.md) | Startup/configuration, HTTPS, full-data backup/restore and upgrade operations | Current |
 | [Directory Structure](./directory-structure.md) | Main, shared, preload, and persistence boundaries | Current |
 | [Database Guidelines](./database-guidelines.md) | Schema, integer money, migrations, and atomic writes | Current |
 | [Error Handling](./error-handling.md) | Domain, IPC, and safe renderer errors | Current |
 | [Portable Settings and Config Sync](./config-sync-guidelines.md) | Versioned settings, secret isolation, encrypted S3 conditions, merge, and tests | Current |
-| [Ledger Sync](./ledger-sync-guidelines.md) | Causal graph, conflicts, tombstones, encrypted session transport | Current |
+| [Ledger Sync](./ledger-sync-guidelines.md) | Device sync/password/mode boundaries, causal history, conflicts and encrypted transport | Current |
 | [Category Catalog](./category-catalog-guidelines.md) | Stable category IDs, v3 catalog revisions, safe deletion and batch reassignment | Current |
 | [Quality Guidelines](./quality-guidelines.md) | Required checks and forbidden patterns | Current |
 | [Logging Guidelines](./logging-guidelines.md) | Sanitized diagnostics and smoke markers | Current |

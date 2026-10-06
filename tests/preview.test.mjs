@@ -65,9 +65,10 @@ function fixture(t, environment = config) {
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.mkdirSync(path.join(root, 'scripts'));
   fs.mkdirSync(path.join(root, 'bin'));
+  fs.mkdirSync(path.join(root, 'docker'));
   fs.mkdirSync(path.join(root, 'node_modules', '.bin'), { recursive: true });
   fs.writeFileSync(path.join(root, 'node_modules', '.bin', 'vite'), '#!/bin/sh\n', { mode: 0o755 });
-  for (const file of ['preview.sh', 'dev.sh', 'hako', 'Dockerfile', 'scripts/preview-config.sh', 'scripts/preview-console.sh']) {
+  for (const file of ['preview.sh', 'dev.sh', 'hako', 'docker/Dockerfile.web', 'scripts/preview-config.sh', 'scripts/preview-console.sh']) {
     fs.copyFileSync(path.join(repo, file), path.join(root, file));
   }
   if (environment !== null) fs.writeFileSync(path.join(root, '.env'), environment);
@@ -160,6 +161,11 @@ test('explicit build never starts; CLI and environment override root port', (t) 
   const f = fixture(t);
   assert.equal(f.run(['build']).status, 0);
   assert.equal(f.calls().filter(([command]) => command === 'run').length, 0);
+  const build = f.calls().find(([command]) => command === 'build');
+  assert.equal(build[build.indexOf('--file') + 1], path.join(f.root, 'docker/Dockerfile.web'));
+  assert.equal(build[build.indexOf('--target') + 1], 'dev');
+  assert.equal(build.at(-1), f.root);
+  assert.ok(fs.existsSync(build[build.indexOf('--file') + 1]));
   assert.equal(f.run(['start', '--port=45123'], { WEB_HOST_PORT: '45000' }).status, 0);
   assert.match(f.calls().find(([command]) => command === 'run').join(' '), /0.0.0.0:45123:4173/);
 });

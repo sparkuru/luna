@@ -9,6 +9,21 @@ the local-ledger requirements. Electron uses native SQLite; Web uses
 SQLite-WASM/OPFS, while Android prefers that path and has an explicit
 IndexedDB compatibility path for older secure WebViews without OPFS.
 
+### 本地账本选择与备份
+
+启动读取当前设备的本地 catalog，最近使用项排在前面；顶部选择器可切换多个本地
+账本，每个账本独立保存数据、设置、同步状态和冲突历史。账号登录不会自动替换
+当前本地账本；profile 切换必须沿用下面的 catalog/transition 契约。
+
+Web/Android 的 SQLite-WASM/OPFS 或 native-only IndexedDB 数据属于 origin 私有
+存储，不是可直接复制的用户目录。使用“加密备份”导出或保留成功同步后的服务端
+密文仓库；清除站点数据、浏览器回收存储或卸载应用都可能移除本地副本。Electron
+使用应用数据目录里的 native SQLite profile，Linux 默认 `~/.config/luna`。
+设备本地备份与[服务端完整 `data/` 备份](../backend/deployment-and-recovery.md#备份与恢复操作)
+分别保留；服务端不包含手动模式尚未上传的变更。加密导入、workspace 身份和冲突
+保护见[账本同步与备份](../backend/ledger-sync-guidelines.md#scenario-encrypted-ledger-backup-and-session-sync)，
+Android 系统文档选择器与完成条件见[原生存储规范](android-runtime.md)。
+
 ### Project Convention: Web-first delivery order
 
 Every new or changed user-visible workflow must be made accessible through the
@@ -48,11 +63,13 @@ Use `http://127.0.0.1:4173` or `http://localhost:4173` for local access.
 Those loopback origins are treated as secure by browsers. Do not use
 `http://<host-ip>:4173` for the SQLite Web client: a plain-HTTP LAN origin is
 not secure, so the browser does not expose OPFS and startup must fail with an
-actionable HTTPS message. For another device, run `./preview.sh`; it creates a
-temporary self-signed certificate covering the host's discovered LAN IPs and
-starts HTTPS on the same port. Accept that certificate warning on each test
-device. This is an unauthenticated development server and must only be
-exposed on trusted networks; it is not a production host.
+actionable HTTPS message. For another device, follow the
+[HTTPS preview setup and lifecycle](../trellis-plus/development.md#2-signatures-and-initial-setup)
+before running `./preview.sh`. It uses root `.env`, a prepared image/dependencies
+and a temporary self-signed certificate; select the actual HTTPS URL from its
+ready summary rather than assuming port 4173. Accept that certificate warning
+on each test device. This is an unauthenticated development server and must only
+be exposed on trusted networks; it is not a production host.
 
 The reproducible validation commands are:
 

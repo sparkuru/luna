@@ -7,7 +7,7 @@
 
 Read before changing the development wrapper, preview lifecycle, environment
 keys, listener output or preview checks. This preview serves the offline Web
-client using the existing `npm run web` Vite command and `Dockerfile` dev stage.
+client using the existing `npm run web` Vite command and `docker/Dockerfile.web` dev stage.
 Electron, Android and the production `compose.yaml` API/MinIO stack have their
 own validation/deployment commands. Preview success does not accept those paths.
 
@@ -36,11 +36,42 @@ reference. Preserve an existing `.env`. Review all keys below during setup;
 there are no account/password keys for this unauthenticated offline Web preview.
 Remote sync login and production deployment credentials are separate inputs.
 
-`build` explicitly prepares the configured development image from `Dockerfile`
+`build` explicitly prepares the configured development image from `docker/Dockerfile.web`
 target `dev`. Rebuild after dev-stage/browser/toolchain changes or changing the
 image. Dependency changes use `./hako npm install`; ordinary `start` does not
 install, build, or run tests. The dev image provisions Google Chrome on amd64;
 other architectures need a separately prepared compatible image.
+
+### 常用开发与验证命令
+
+项目要求 Node >=22.18，日常命令通过已经准备的 `hako` Node 22 容器执行，避免另设
+宿主工具链。先完成上述 image/dependency setup；以下列表按变更范围选取，不能把
+未执行的门禁记为通过：
+
+```sh
+./hako npm test
+./hako npm run typecheck
+./hako npm run server:typecheck
+./hako npm run server:test
+./hako npm run test:server-sync
+./hako npm run server:build
+./hako npm run api:check
+./hako npm run web:build
+./hako npm run test:web
+```
+
+`npm run web` 是现有 Vite 入口，本机用 `http://localhost:4173`；需要跨设备 LAN
+预览时用上述 `./preview.sh` HTTPS lifecycle，按 ready summary 选择实际 URL 并在每台
+测试设备接受临时自签名证书。普通 `http://<host-ip>:4173` 不提供 OPFS 安全上下文。
+Playwright 需要准备好的 Chrome channel；其配置自管 loopback Vite 测试服务，不先
+启动第二个服务器。生产 Web 的 COOP/COEP、Android SAH/旧 WebView IndexedDB
+边界与完整浏览器门禁见[Web 规范](../frontend/web-host-and-validation.md)，APK 构建
+见[Android 规范](../frontend/android-runtime.md)。本机测试不能替代真实设备、跨设备
+证书或生产备份恢复，具体证据保留在对应 task。
+
+服务端使用单实例 SQLite 元数据与服务端内部 AWS SDK/MinIO，设备只访问认证 HTTP
+API，不新增明文财务 CRUD。生成/运行时细节见[HTTP API](../backend/http-api-guidelines.md#生成与开发命令)，
+生产 `reset-password`/`cleanup` 和恢复步骤见[部署规范](../backend/deployment-and-recovery.md#管理与升级)。
 
 ## 3. Configuration and lifecycle contracts
 

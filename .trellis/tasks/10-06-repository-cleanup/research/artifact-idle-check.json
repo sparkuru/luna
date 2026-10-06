@@ -1,0 +1,15 @@
+{
+  "process_count": 507,
+  "candidate_process_references": [],
+  "relevant_running_container_mounts": [
+    {
+      "Type": "bind",
+      "Source": "/home/wkyuu/cargo/repo/34-luna",
+      "Destination": "/app",
+      "Mode": "",
+      "RW": true,
+      "Propagation": "rprivate"
+    }
+  ],
+  "limitations": "Point-in-time probe, not a writer lock; transient processes may escape observation. Maps/fd access can fail for exiting processes."
+}

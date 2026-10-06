@@ -1,5 +1,15 @@
 # Luna 项目主线
 
+## 2026-10-06 仓库目录整理
+
+用户随后回复“可以提交；包括所有脏文件”，授权将当前全部 Git 脏文件合为一个
+目录与容器配置整理工作提交。task 保持 review；ignored 本地 archive/.env/data/缓存
+保留，不执行推送、部署或 task 归档。下文未提交描述是整理完成时的历史状态。
+
+用户要求“整理当前目录；将多余的各类文件，合并、规整处理一下；建 task”，随后明确参考 `05-kisara/readme.md` 精简 README，其他正文归入 `.trellis`，并回复“开始”授权实施。[目录整理任务](tasks/10-06-repository-cleanup/prd.md)第一轮已完成实施及独立复核，当时进入 review：README 15 行，三份说明合入六份既有规范，618 文件/70 目录可回退归整到 ignored 根 archive；内容、元数据与相关导航核验通过。真实数据、本地配置和开发运行入口保留，视觉 task 状态不变。详细边界见[整理验收](tasks/10-06-repository-cleanup/validation.md)；未提交、推送、部署或 task 归档。
+
+用户进一步澄清主要整理“各种 dockfile、compose 文件”，并回复“可以”批准[容器布局方案](tasks/10-06-repository-cleanup/research/container-layout.md)。追加整理已完成：根保留主 compose/context ignore，Docker 专属文件集中 docker/，API/bucket-init 合并多 target，当前调用与恢复清单同步。9 份配置等价、五个 target 构建、八项恢复、五项隔离主 Compose、MinIO 双 provider、APK 临时导出及真实 context 回归通过；独立复核自修签名过滤后通过，详见[当前验收](tasks/10-06-repository-cleanup/validation.md)。临时镜像/合成数据清理，原预览、真实配置/data/原 APK 保留。第一轮结果保留，task 再次进入 review，未提交、部署、推送或归档；Compose v1 runtime、Android emulator/实机等本轮未跑项不判通过。
+
 ## 2026-10-05 视觉与交互精修
 
 用户新增持续目标：以 Awwwards、Webby Awards、FWA 获奖网站为品质参考，自主检查并优化排版、留白、层级、色彩、动效、微交互、响应式与原创性。已建立 [视觉精修任务](tasks/10-05-visual-refinement/prd.md)，授权本目标内的规划、实施和可观测验收，保留原有记账、离线与隐私契约；不推定提交、归档或远端部署权限。此前“无活动任务”是新增目标前的历史状态。结果以当前验证记录为准。

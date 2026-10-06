@@ -121,3 +121,9 @@ Web scope. Source SHA-256 checks match the validated renderer, SVG, Web shell
 and new craft tests. Task evidence/specs are project-owned; local screenshots,
 logs, raw UUPM output, generated platform files and caches stay outside Git.
 Task archive, push and deployment have no additional authorization.
+
+Local output relocation (2026-10-06): the existing root Playwright report and
+test-results directory were preserved under `archive/2026-10-06/`; see the
+[migration record](../10-06-repository-cleanup/research/artifact-migration.md).
+The `/tmp` and `.devhome` evidence above stays in place. Historical validation
+results and overwritten-trace limitations remain as recorded.

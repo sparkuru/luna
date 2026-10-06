@@ -9,12 +9,12 @@ does not prove WebView networking, file export, or installed APK persistence.
 ## 2. Signatures
 
 ```text
-docker compose -f compose.android.yaml build android-apk
-docker compose -f compose.android.yaml run --rm android-apk
-LUNA_ANDROID_APPLICATION_SUFFIX=.lan docker compose -f compose.android.yaml build android-apk
-LUNA_ANDROID_APPLICATION_SUFFIX=.lan docker compose -f compose.android.yaml run --rm android-apk
-docker compose -f compose.android.yaml --profile smoke up -d --build android-emulator
-docker compose -f compose.android.yaml --profile smoke run --rm android-smoke
+docker compose --project-directory . -f docker/compose.android.yaml build android-apk
+docker compose --project-directory . -f docker/compose.android.yaml run --rm android-apk
+LUNA_ANDROID_APPLICATION_SUFFIX=.lan docker compose --project-directory . -f docker/compose.android.yaml build android-apk
+LUNA_ANDROID_APPLICATION_SUFFIX=.lan docker compose --project-directory . -f docker/compose.android.yaml run --rm android-apk
+docker compose --project-directory . -f docker/compose.android.yaml --profile smoke up -d --build android-emulator
+docker compose --project-directory . -f docker/compose.android.yaml --profile smoke run --rm android-smoke
 ```
 
 App ID `majo.im.luna`; artifact `artifacts/android/luna-debug.apk` plus SHA256
@@ -24,6 +24,18 @@ the existing export API; `LedgerBackup.save({json})` receives ciphertext only.
 For a non-destructive physical-device check when another signature already owns
 the standard package, set `LUNA_ANDROID_APPLICATION_SUFFIX=.lan`; the export is
 `artifacts/android/luna-lan-debug.apk` with package `majo.im.luna.lan`.
+
+以上命令从仓库根执行；`--project-directory .` 保持仓库根的默认项目名、`.env`、
+构建上下文与挂载基目录。不可省略该参数；从其他 cwd 调用时传仓库根绝对路径。
+构建读取 `docker/Dockerfile.android`，旁边的专属 `.dockerignore` 保留原生源码并
+排除生成 assets/build、Gradle 缓存，以及所有允许源码树中的 `.key/.pem/.jks/.keystore`
+签名材料；不能仅过滤 Android 目录而遗漏 `src/`。该工具链继续需要 BuildKit；生产
+Web/API Dockerfile 不引入此要求。前两条命令构建并导出 APK。APK 已内嵌 Web 资源；同步时填写 Android
+能访问且系统信任证书的 HTTPS 服务端地址，设备自己的 `localhost` 不是桌面服务。
+服务端允许的精确 origin 必须包含内置 `https://localhost`，见
+[跨设备部署](../backend/deployment-and-recovery.md#配置与跨设备-https)。原生加密备份
+只有文件实际写入、flush 并关闭后才报告成功，取消与失败保持不同结果。真实 Android、
+跨设备证书及生产恢复不能用本机 loopback fixture 代替。
 
 ## 3. Contracts
 

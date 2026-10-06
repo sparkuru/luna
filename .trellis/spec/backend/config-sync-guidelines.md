@@ -42,7 +42,8 @@ For the repository-local provider run, use the bounded wrapper instead:
 npm run smoke:config-sync:minio
 ```
 
-It starts the pinned loopback-only MinIO service from `compose.minio.yaml`,
+It starts the pinned loopback-only MinIO service from `docker/compose.minio.yaml`,
+with `--project-directory <repository-root>` to retain the original configuration base,
 passes safe test credentials only to the child process, creates a random bucket,
 runs the production conformance command, and removes the exact test object and
 temporary service in `finally`.

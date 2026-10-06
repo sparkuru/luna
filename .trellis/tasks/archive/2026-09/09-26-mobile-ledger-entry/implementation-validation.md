@@ -85,9 +85,9 @@ presentation，**不是 APK 截图或真实 IME 证据**。
 
 截图在 ignored 产物目录，交付记录时三个文件仍存在：
 
-- [中文账单](../../../captures/mobile-redesign-browser/zh-CN-ledger.png)
-- [英文账单](../../../captures/mobile-redesign-browser/en-ledger.png)
-- [英文录入与分类选中态](../../../captures/mobile-redesign-browser/en-entry.png)
+- [中文账单](../../../../../archive/2026-10-06/captures/mobile-redesign-browser/zh-CN-ledger.png)
+- [英文账单](../../../../../archive/2026-10-06/captures/mobile-redesign-browser/en-ledger.png)
+- [英文录入与分类选中态](../../../../../archive/2026-10-06/captures/mobile-redesign-browser/en-entry.png)
 
 这些是测试合成 ledger，英文录入 fixture 默认 USD；月份原生 input 的
 系统显示格式由浏览器 locale 决定。截图用例后来可能由 checker 重跑
@@ -107,3 +107,5 @@ presentation，**不是 APK 截图或真实 IME 证据**。
 smoke、后续规格更新和最终质量门由主会话记录。
 
 第二轮统计／预算、第三轮设置／恢复不属于本轮 agent 的产品交付范围。
+
+2026-10-06 产物位置调整：现存本地材料的旧路径和新位置见[迁移清单](../../../10-06-repository-cleanup/research/artifact-migration.md)。上列三条截图导航原相对路径已失效，现改指保存的文件；这不证明文件仍是实施冻结版本，也不恢复早已被覆盖的首次失败产物。

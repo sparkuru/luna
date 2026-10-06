@@ -1,5 +1,6 @@
 **
-!Dockerfile.android
+!docker/
+!docker/Dockerfile.android
 !package.json
 !package-lock.json
 !tsconfig.json
@@ -25,7 +26,16 @@ android/**/build
 android/local.properties
 android/capacitor-cordova-android-plugins
 android/app/src/main/assets
-android/**/*.jks
-android/**/*.keystore
 android/**/google-services.json
 **/*.test.ts
+**/.env
+**/.env.*
+**/.luna/
+/data/
+**/*.key
+**/*.pem
+**/*.jks
+**/*.keystore
+**/node_modules/
+**/.devhome/
+**/archive/

@@ -18,6 +18,7 @@ const repo = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const initScript = join(repo, "deploy", "instance-init.mjs");
 const fixtureScript = readFileSync(join(repo, "deploy", "restore-fixture.cjs"), "utf8");
 const apiImage = process.env.LUNA_RESTORE_API_IMAGE ?? "luna-api:local";
+const bucketInitImage = process.env.LUNA_RESTORE_BUCKET_INIT_IMAGE ?? "luna-bucket-init:local";
 const minioImage =
   process.env.LUNA_RESTORE_MINIO_IMAGE ??
   "minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e";
@@ -99,7 +100,7 @@ function initBucket(network, directory) {
     "--read-only", "--tmpfs", "/tmp:size=16m,mode=1777",
     "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
     "--mount", `type=bind,source=${directory},target=/data`,
-    "luna-bucket-init:local", "/data",
+    bucketInitImage, "/data",
   ]);
 }
 

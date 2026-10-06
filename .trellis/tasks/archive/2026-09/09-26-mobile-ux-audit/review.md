@@ -13,7 +13,7 @@
 - [15项具体问题与改进顺序](research/findings.md)：6项P1、9项P2。
 - [原生入口/状态源码清单](research/page-inventory.md)：区分可到达状态
   与登录/冲突/附件等需要后续fixture的状态。
-- [实机截图图集](../../../../../captures/mobile-ux-audit-20260926/index.html)：
+- [实机截图图集](../../../../../archive/2026-10-06/captures/mobile-ux-audit-20260926/index.html)：
   27张精选原图，支持实机/浏览器筛选；原始截图/状态/日志保留同目录。
 
 建议下一轮按完整流程分三轮：账单+记账+全局导航；统计+预算；设置及
@@ -32,3 +32,5 @@ tcp9224转发已移除，forward列表为空。没有重跑与只读审查无关
 
 截图图集与完整证据是本地ignored产物，不随普通git提交保存；如要共享
 报告需一并携带captures/mobile-ux-audit-20260926目录。
+
+2026-10-06 产物位置调整：现存本地材料的旧路径和新位置见[迁移清单](../../../10-06-repository-cleanup/research/artifact-migration.md)。历史操作、候选版本和审查结论保持原记录；图集导航已更新。

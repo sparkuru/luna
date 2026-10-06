@@ -1,0 +1,9 @@
+{
+  "markdown_documents": 30,
+  "markdown_local_links": 152,
+  "markdown_failures": [],
+  "html_local_links_including_fragments": 263,
+  "html_preexisting_placeholder_links": 17,
+  "html_unexpected_failures": [],
+  "scope": "Changed and new-task Markdown file/heading navigation; all archived HTML static href/src targets and fragments, no embedded JS."
+}

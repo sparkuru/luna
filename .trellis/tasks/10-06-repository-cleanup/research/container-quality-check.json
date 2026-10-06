@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-06",
+  "role": "independent-trellis-check",
+  "scope": "Approved repository cleanup AC1-AC8; no commit, archive or deployment",
+  "fixedFindings": [
+    {
+      "severity": "P2",
+      "file": "docker/Dockerfile.android.dockerignore",
+      "issue": "Android-only jks/keystore exclusions left signature files under source allowlists in the context",
+      "reproduction": "Real BuildKit synthetic fixture failed: leaked src/shared/private.jks",
+      "fix": "Replace Android-only signing patterns with final global jks/keystore denials; extend context regression and Android spec",
+      "finalSha256": "c451f64bc1517e9a6277cfaa312acb94ebf70c90b5273c370d5694059cc446fb"
+    }
+  ],
+  "unfixedFindings": [],
+  "acceptanceCriteria": {
+    "AC1": "pass",
+    "AC2": "pass",
+    "AC3": "pass",
+    "AC4": "pass",
+    "AC5": "pass",
+    "AC6": "pass",
+    "AC7": "pass",
+    "AC8": "pass-with-explicit-platform-limits"
+  },
+  "directChecks": {
+    "syntaxAndLint": "pass: bash, ShellCheck -x, shfmt, Node syntax, git diff --check",
+    "rootTypecheck": "pass",
+    "serverTypecheck": "pass",
+    "hakoTests": {"passed": 16, "failed": 0, "skipped": 1, "skipReason": "Real context is explicitly opt-in and run separately on host"},
+    "realDockerContext": {"passed": 4, "failed": 0, "skipped": 0, "builders": ["classic-production", "BuildKit-Android"]},
+    "composeEquivalence": {"passed": 9},
+    "artifactVerification": {"mappings": 9, "entries": 688, "files": 618, "directories": 70, "symlinks": 0, "bytes": 397980121},
+    "navigation": "pass: no new Markdown or HTML file/fragment failures",
+    "contextValidation": {"implementEntries": 23, "checkEntries": 23, "result": "pass"},
+    "existingPreview": {"id": "d326904e668a", "status": "running"},
+    "stagedPaths": 0
+  },
+  "mainSessionRuntimeEvidenceReviewed": "container-runtime-validation.md and container-runtime-results.json; raw build, restore, Compose and provider reports/logs verified separately from checker-executed tests",
+  "humanReview": "human-not-needed for this authorized reversible cleanup",
+  "limitations": [
+    "Compose v1 executable unavailable; v1 runtime not tested",
+    "Android emulator/KVM and physical-device install/interactions not run",
+    "No full UI suite, remote deployment, production security audit or long-term environment acceptance"
+  ]
+}

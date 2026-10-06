@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-06",
+  "docker": "26.1.5+dfsg1",
+  "compose": "2.26.1-4",
+  "scratchDirectory": "/tmp/luna-container-runtime.FPTvBy",
+  "restoreReportDirectory": "/tmp/luna-server-restore-VzDJBJ",
+  "restore": {
+    "checks": [
+      "fresh SQLite/MinIO installation creates an account, ledger graph, attachment metadata, ciphertext object, usage and ETags",
+      "the complete data boundary is copied only after API and MinIO stop",
+      "restored data retains instance identity, account session, graph and attachment ciphertext/metadata, exact ETags, usage and idempotency replays",
+      "two authenticated clients reject stale CAS, retain both decoded revision sets and read identical merged ciphertext/ETag",
+      "API restart retains instance identity, both sessions, exact merged ciphertext/ETag and decoded revision graph",
+      "legacy root-backed API runtime upgrades to a limited key without losing ciphertext or instance identity",
+      "interrupted credential publication removes the orphan key before creating a replacement",
+      "missing bucket on an initialized installation fails without creating an empty replacement"
+    ],
+    "apiImage": "sha256:2483ce467999ac00d42521e41458f922acdf5975609efe01fee51629b39dc65b",
+    "minioImage": "sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9",
+    "boundary": "Disposable SQLite/MinIO/API resources and a copied data directory; not production or device evidence."
+  },
+  "composeRuntime": {
+    "project": "luna-cleanup-fptvby",
+    "checks": [
+      "fresh production Compose completes instance-init/bucket-init, API health and Web startup",
+      "Nginx serves app/security headers, proxies API metadata and preserves unauthenticated denial",
+      "all mutable data confined to temporary tree, services read-only and only loopback Web port published",
+      "API restart retains identity through unchanged Nginx service routing",
+      "only newly owned Compose project removed; no project containers/networks remain"
+    ],
+    "boundary": "Disposable synthetic data and loopback port; no production environment or deployment."
+  },
+  "minio": {
+    "config": {
+      "get": 8,
+      "put": 2,
+      "cleanup": "deleted"
+    },
+    "ledger": {
+      "get": 13,
+      "put": 6,
+      "cleanup": "deleted"
+    }
+  },
+  "androidExport": {
+    "checksum": "36897f26298e7adb5c19b6de4d908e96826af178f95cd8d394145de99dd5b090  luna-debug.apk",
+    "sidecarVerified": true,
+    "apksignerVerifiedDuringBuild": true,
+    "finalIgnoreRebuildVerified": true
+  },
+  "existingPreview": {
+    "id": "d326904e668a",
+    "status": "running",
+    "restartOrStopPerformed": false
+  },
+  "protectedArtifactVerification": {
+    "mappings": 9,
+    "entries": 688,
+    "files": 618,
+    "directories": 70,
+    "symlinks": 0,
+    "bytes": 397980121
+  },
+  "limitations": [
+    "Compose v1 executable unavailable",
+    "Android emulator and physical device not exercised",
+    "No complete UI suite or remote deployment"
+  ],
+  "finalContextIgnore": {
+    ".dockerignore": "497d215b28fe59a14324e6ff4f4d415dd7f4819a4efc22e8f61c080dc85bf64e",
+    "docker/Dockerfile.android.dockerignore": "c451f64bc1517e9a6277cfaa312acb94ebf70c90b5273c370d5694059cc446fb"
+  },
+  "cleanup": {
+    "temporaryTagsRemoved": [
+      "luna-cleanup-api:cleanup-fptvby",
+      "luna-cleanup-bucket-init:cleanup-fptvby",
+      "luna-cleanup-web:cleanup-fptvby",
+      "luna-cleanup-dev:cleanup-fptvby",
+      "luna-cleanup-android:cleanup-fptvby"
+    ],
+    "syntheticDataAndTestApkRemoved": true,
+    "composeProjectsAbsent": [
+      "luna-cleanup-fptvby: no containers/networks",
+      "luna-minio-smoke: no containers/networks"
+    ],
+    "originalPreviewStillRunning": true,
+    "evidenceLogsAndReportsRetained": true
+  }
+}

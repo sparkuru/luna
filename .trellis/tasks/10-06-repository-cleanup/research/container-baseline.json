@@ -1,0 +1,1519 @@
+{
+  "scope": "Nonsecret Compose parse baseline only; no daemon or root .env access.",
+  "composeVersion": "2.26.1-4",
+  "root": "/home/wkyuu/cargo/repo/34-luna",
+  "files": [
+    {
+      "file": "Dockerfile",
+      "sha256": "1acd5f49485a0b7fd815fe5379e53f826863df51a41862d3ab7f5bae05d70dd8"
+    },
+    {
+      "file": "Dockerfile.server",
+      "sha256": "30503a7eb4427e2424dfefd9241c9651746336b0a5b54bc5e3a727a194d84529"
+    },
+    {
+      "file": "Dockerfile.bucket-init",
+      "sha256": "dcbeb3736a826c48bbeeb19d89ed9f48ca27d1d73a052309614c11e3f0d22eaf"
+    },
+    {
+      "file": "Dockerfile.android",
+      "sha256": "ba669ffc0b73782ef1333c7a053beb9ab05ba710d6e27e588ac0bb7141efe491"
+    },
+    {
+      "file": ".dockerignore",
+      "sha256": "5a0697eb5e06927bef9f7fcfa433d7397405dbeab5c369d3706f9071639b18de"
+    },
+    {
+      "file": "Dockerfile.server.dockerignore",
+      "sha256": "bab6a45a2aad144a1269ab67e0ef8e5e6e64f23e13bdd28d06f56c2f91ea5288"
+    },
+    {
+      "file": "Dockerfile.android.dockerignore",
+      "sha256": "9728e760a2dcb8ab675eca6c3b89a79bdc2569b9180d1d273b3f9515ef5d272d"
+    },
+    {
+      "file": "compose.yaml",
+      "sha256": "3992509cabb96e3b01f7f7465ff89edfe2d5027cb069bb86bad2754cdd168899"
+    },
+    {
+      "file": "compose.android.yaml",
+      "sha256": "5455ebded15254e0970deedd87d50dda53fa031f394802a977e6bb8c9c76ffe0"
+    },
+    {
+      "file": "compose.minio.yaml",
+      "sha256": "9ec70023216b7c8c90f396ace4a3dc850e14c366fd74f28298daab613d1f0725"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "defaults",
+      "env": {},
+      "files": [
+        {
+          "file": "compose.yaml",
+          "args": [
+            "--env-file",
+            "/tmp/luna-container-config-cmp9o1/empty.env",
+            "--profile",
+            "smoke",
+            "-f",
+            "/tmp/luna-container-config-cmp9o1/compose.yaml",
+            "--project-directory",
+            "/home/wkyuu/cargo/repo/34-luna"
+          ],
+          "config": {
+            "name": "34-luna",
+            "networks": {
+              "default": {
+                "name": "34-luna_default",
+                "ipam": {}
+              }
+            },
+            "services": {
+              "api": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.server"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": null,
+                "depends_on": {
+                  "bucket-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  },
+                  "instance-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_ALLOWED_ORIGINS": "http://127.0.0.1:8080,http://localhost:8080,https://localhost",
+                  "LUNA_ALLOW_INSECURE_LAN": "false",
+                  "LUNA_DATA_DIR": "/data",
+                  "LUNA_HOST": "0.0.0.0",
+                  "LUNA_PORT": "3000",
+                  "LUNA_RUNTIME_CONFIG_FILE": "/data/.luna/runtime.json"
+                },
+                "image": "luna-api:local",
+                "mem_limit": "805306368",
+                "networks": {
+                  "default": null
+                },
+                "read_only": true,
+                "restart": "unless-stopped",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777",
+                  "/data/minio:size=1m,mode=000"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  },
+                  {
+                    "type": "bind",
+                    "source": "/dev/null",
+                    "target": "/data/.luna/minio.env",
+                    "read_only": true,
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "bucket-init": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.bucket-init"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": [
+                  "/data"
+                ],
+                "depends_on": {
+                  "instance-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  },
+                  "minio": {
+                    "condition": "service_started",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "image": "luna-bucket-init:local",
+                "networks": {
+                  "default": null
+                },
+                "read_only": true,
+                "restart": "no",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "instance-init": {
+                "command": [
+                  "node",
+                  "/init/instance-init.mjs",
+                  "/data"
+                ],
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_DATA_GID": "1000",
+                  "LUNA_DATA_UID": "1000"
+                },
+                "image": "node:22.22.0-bookworm-slim",
+                "networks": {
+                  "default": null
+                },
+                "restart": "no",
+                "user": "0:0",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  },
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/deploy/instance-init.mjs",
+                    "target": "/init/instance-init.mjs",
+                    "read_only": true,
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "minio": {
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": [
+                  "until [ -f /data/.luna/initialized ]; do sleep 1; done; export MINIO_CONFIG_ENV_FILE=/data/.luna/minio.env; exec /usr/bin/minio server /data/minio --address :9000 --console-address :9001"
+                ],
+                "depends_on": {
+                  "instance-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  }
+                },
+                "entrypoint": [
+                  "/bin/sh",
+                  "-c"
+                ],
+                "image": "minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
+                "networks": {
+                  "default": null
+                },
+                "read_only": true,
+                "restart": "unless-stopped",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "web": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": null,
+                "depends_on": {
+                  "api": {
+                    "condition": "service_healthy",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "image": "luna-web:local",
+                "networks": {
+                  "default": null
+                },
+                "ports": [
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 8080,
+                    "published": "8080",
+                    "protocol": "tcp"
+                  }
+                ],
+                "read_only": true,
+                "restart": "unless-stopped",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "file": "compose.android.yaml",
+          "args": [
+            "--env-file",
+            "/tmp/luna-container-config-cmp9o1/empty.env",
+            "--profile",
+            "smoke",
+            "-f",
+            "/tmp/luna-container-config-cmp9o1/compose.android.yaml",
+            "--project-directory",
+            "/home/wkyuu/cargo/repo/34-luna"
+          ],
+          "config": {
+            "name": "34-luna",
+            "networks": {
+              "default": {
+                "name": "34-luna_default",
+                "ipam": {}
+              }
+            },
+            "services": {
+              "android-apk": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.android",
+                  "args": {
+                    "LUNA_ANDROID_APPLICATION_SUFFIX": ""
+                  },
+                  "target": "export"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": null,
+                "entrypoint": null,
+                "image": "luna-android-apk:local",
+                "network_mode": "none",
+                "platform": "linux/amd64",
+                "read_only": true,
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/artifacts/android",
+                    "target": "/output",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "android-emulator": {
+                "profiles": [
+                  "smoke"
+                ],
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.android",
+                  "target": "emulator"
+                },
+                "command": null,
+                "devices": [
+                  {
+                    "source": "/dev/kvm",
+                    "target": "/dev/kvm",
+                    "permissions": "rwm"
+                  }
+                ],
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_EMULATOR_ACCEL": "on"
+                },
+                "healthcheck": {
+                  "test": [
+                    "CMD-SHELL",
+                    "test \"$$(adb -s emulator-5554 shell getprop sys.boot_completed)\" = 1"
+                  ],
+                  "timeout": "5s",
+                  "interval": "10s",
+                  "retries": 60,
+                  "start_period": "2m0s"
+                },
+                "image": "luna-android-emulator:local",
+                "init": true,
+                "labels": {
+                  "luna.scope": "android-smoke"
+                },
+                "networks": {
+                  "default": null
+                },
+                "platform": "linux/amd64",
+                "ports": [
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 5037,
+                    "published": "5038",
+                    "protocol": "tcp"
+                  }
+                ],
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "shm_size": "1073741824",
+                "ulimits": {
+                  "nofile": {
+                    "soft": 65536,
+                    "hard": 65536
+                  }
+                }
+              },
+              "android-smoke": {
+                "profiles": [
+                  "smoke"
+                ],
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": [
+                  "node_modules/.bin/tsx",
+                  "scripts/smoke-android.ts"
+                ],
+                "depends_on": {
+                  "android-emulator": {
+                    "condition": "service_healthy",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_ADB_HOST": "android-emulator",
+                  "LUNA_ADB_PORT": "5037",
+                  "LUNA_ANDROID_ARTIFACT_DIR": "/app/artifacts/android"
+                },
+                "image": "node:22.22.0-bookworm-slim",
+                "networks": {
+                  "default": null
+                },
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna",
+                    "target": "/app",
+                    "read_only": true,
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  },
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/artifacts/android",
+                    "target": "/app/artifacts/android",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ],
+                "working_dir": "/app"
+              }
+            }
+          }
+        },
+        {
+          "file": "compose.minio.yaml",
+          "args": [
+            "--env-file",
+            "/tmp/luna-container-config-cmp9o1/empty.env",
+            "--profile",
+            "smoke",
+            "-f",
+            "/tmp/luna-container-config-cmp9o1/compose.minio.yaml",
+            "--project-directory",
+            "/home/wkyuu/cargo/repo/34-luna"
+          ],
+          "config": {
+            "name": "luna-minio-smoke",
+            "networks": {
+              "default": {
+                "name": "luna-minio-smoke_default",
+                "ipam": {}
+              }
+            },
+            "services": {
+              "minio": {
+                "command": [
+                  "server",
+                  "/data",
+                  "--console-address",
+                  ":9001"
+                ],
+                "entrypoint": null,
+                "environment": {
+                  "MINIO_ROOT_PASSWORD": "luna-test-secret-2026",
+                  "MINIO_ROOT_USER": "luna-test-access"
+                },
+                "image": "minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
+                "networks": {
+                  "default": null
+                },
+                "ports": [
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 9000,
+                    "published": "19000",
+                    "protocol": "tcp"
+                  },
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 9001,
+                    "published": "19001",
+                    "protocol": "tcp"
+                  }
+                ],
+                "tmpfs": [
+                  "/data"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom-relative",
+      "env": {
+        "LUNA_DATA_PATH": "./fixture-data",
+        "LUNA_UID": "2100",
+        "LUNA_GID": "2101",
+        "LUNA_BIND_HOST": "127.0.0.2",
+        "LUNA_PORT": "18081",
+        "LUNA_ALLOWED_ORIGINS": "http://127.0.0.2:18081,https://localhost",
+        "LUNA_ALLOW_INSECURE_LAN": "true",
+        "LUNA_ANDROID_APPLICATION_SUFFIX": ".lan",
+        "LUNA_BUILD_UID": "2200",
+        "LUNA_BUILD_GID": "2201",
+        "LUNA_ADB_PORT": "15038",
+        "LUNA_EMULATOR_ACCEL": "off",
+        "LUNA_MINIO_ROOT_USER": "synthetic-fixture-user",
+        "LUNA_MINIO_ROOT_PASSWORD": "synthetic-fixture-password"
+      },
+      "files": [
+        {
+          "file": "compose.yaml",
+          "args": [
+            "--env-file",
+            "/tmp/luna-container-config-cmp9o1/empty.env",
+            "--profile",
+            "smoke",
+            "-f",
+            "/tmp/luna-container-config-cmp9o1/compose.yaml",
+            "--project-directory",
+            "/home/wkyuu/cargo/repo/34-luna"
+          ],
+          "config": {
+            "name": "34-luna",
+            "networks": {
+              "default": {
+                "name": "34-luna_default",
+                "ipam": {}
+              }
+            },
+            "services": {
+              "api": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.server"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": null,
+                "depends_on": {
+                  "bucket-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  },
+                  "instance-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_ALLOWED_ORIGINS": "http://127.0.0.2:18081,https://localhost",
+                  "LUNA_ALLOW_INSECURE_LAN": "true",
+                  "LUNA_DATA_DIR": "/data",
+                  "LUNA_HOST": "0.0.0.0",
+                  "LUNA_PORT": "3000",
+                  "LUNA_RUNTIME_CONFIG_FILE": "/data/.luna/runtime.json"
+                },
+                "image": "luna-api:local",
+                "mem_limit": "805306368",
+                "networks": {
+                  "default": null
+                },
+                "read_only": true,
+                "restart": "unless-stopped",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777",
+                  "/data/minio:size=1m,mode=000"
+                ],
+                "user": "2100:2101",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/fixture-data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  },
+                  {
+                    "type": "bind",
+                    "source": "/dev/null",
+                    "target": "/data/.luna/minio.env",
+                    "read_only": true,
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "bucket-init": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.bucket-init"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": [
+                  "/data"
+                ],
+                "depends_on": {
+                  "instance-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  },
+                  "minio": {
+                    "condition": "service_started",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "image": "luna-bucket-init:local",
+                "networks": {
+                  "default": null
+                },
+                "read_only": true,
+                "restart": "no",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777"
+                ],
+                "user": "2100:2101",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/fixture-data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "instance-init": {
+                "command": [
+                  "node",
+                  "/init/instance-init.mjs",
+                  "/data"
+                ],
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_DATA_GID": "2101",
+                  "LUNA_DATA_UID": "2100"
+                },
+                "image": "node:22.22.0-bookworm-slim",
+                "networks": {
+                  "default": null
+                },
+                "restart": "no",
+                "user": "0:0",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/fixture-data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  },
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/deploy/instance-init.mjs",
+                    "target": "/init/instance-init.mjs",
+                    "read_only": true,
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "minio": {
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": [
+                  "until [ -f /data/.luna/initialized ]; do sleep 1; done; export MINIO_CONFIG_ENV_FILE=/data/.luna/minio.env; exec /usr/bin/minio server /data/minio --address :9000 --console-address :9001"
+                ],
+                "depends_on": {
+                  "instance-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  }
+                },
+                "entrypoint": [
+                  "/bin/sh",
+                  "-c"
+                ],
+                "image": "minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
+                "networks": {
+                  "default": null
+                },
+                "read_only": true,
+                "restart": "unless-stopped",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777"
+                ],
+                "user": "2100:2101",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/fixture-data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "web": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": null,
+                "depends_on": {
+                  "api": {
+                    "condition": "service_healthy",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "image": "luna-web:local",
+                "networks": {
+                  "default": null
+                },
+                "ports": [
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.2",
+                    "target": 8080,
+                    "published": "18081",
+                    "protocol": "tcp"
+                  }
+                ],
+                "read_only": true,
+                "restart": "unless-stopped",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "file": "compose.android.yaml",
+          "args": [
+            "--env-file",
+            "/tmp/luna-container-config-cmp9o1/empty.env",
+            "--profile",
+            "smoke",
+            "-f",
+            "/tmp/luna-container-config-cmp9o1/compose.android.yaml",
+            "--project-directory",
+            "/home/wkyuu/cargo/repo/34-luna"
+          ],
+          "config": {
+            "name": "34-luna",
+            "networks": {
+              "default": {
+                "name": "34-luna_default",
+                "ipam": {}
+              }
+            },
+            "services": {
+              "android-apk": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.android",
+                  "args": {
+                    "LUNA_ANDROID_APPLICATION_SUFFIX": ".lan"
+                  },
+                  "target": "export"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": null,
+                "entrypoint": null,
+                "image": "luna-android-apk:local",
+                "network_mode": "none",
+                "platform": "linux/amd64",
+                "read_only": true,
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "user": "2200:2201",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/artifacts/android",
+                    "target": "/output",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "android-emulator": {
+                "profiles": [
+                  "smoke"
+                ],
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.android",
+                  "target": "emulator"
+                },
+                "command": null,
+                "devices": [
+                  {
+                    "source": "/dev/kvm",
+                    "target": "/dev/kvm",
+                    "permissions": "rwm"
+                  }
+                ],
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_EMULATOR_ACCEL": "off"
+                },
+                "healthcheck": {
+                  "test": [
+                    "CMD-SHELL",
+                    "test \"$$(adb -s emulator-5554 shell getprop sys.boot_completed)\" = 1"
+                  ],
+                  "timeout": "5s",
+                  "interval": "10s",
+                  "retries": 60,
+                  "start_period": "2m0s"
+                },
+                "image": "luna-android-emulator:local",
+                "init": true,
+                "labels": {
+                  "luna.scope": "android-smoke"
+                },
+                "networks": {
+                  "default": null
+                },
+                "platform": "linux/amd64",
+                "ports": [
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 5037,
+                    "published": "15038",
+                    "protocol": "tcp"
+                  }
+                ],
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "shm_size": "1073741824",
+                "ulimits": {
+                  "nofile": {
+                    "soft": 65536,
+                    "hard": 65536
+                  }
+                }
+              },
+              "android-smoke": {
+                "profiles": [
+                  "smoke"
+                ],
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": [
+                  "node_modules/.bin/tsx",
+                  "scripts/smoke-android.ts"
+                ],
+                "depends_on": {
+                  "android-emulator": {
+                    "condition": "service_healthy",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_ADB_HOST": "android-emulator",
+                  "LUNA_ADB_PORT": "5037",
+                  "LUNA_ANDROID_ARTIFACT_DIR": "/app/artifacts/android"
+                },
+                "image": "node:22.22.0-bookworm-slim",
+                "networks": {
+                  "default": null
+                },
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "user": "2200:2201",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna",
+                    "target": "/app",
+                    "read_only": true,
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  },
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/artifacts/android",
+                    "target": "/app/artifacts/android",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ],
+                "working_dir": "/app"
+              }
+            }
+          }
+        },
+        {
+          "file": "compose.minio.yaml",
+          "args": [
+            "--env-file",
+            "/tmp/luna-container-config-cmp9o1/empty.env",
+            "--profile",
+            "smoke",
+            "-f",
+            "/tmp/luna-container-config-cmp9o1/compose.minio.yaml",
+            "--project-directory",
+            "/home/wkyuu/cargo/repo/34-luna"
+          ],
+          "config": {
+            "name": "luna-minio-smoke",
+            "networks": {
+              "default": {
+                "name": "luna-minio-smoke_default",
+                "ipam": {}
+              }
+            },
+            "services": {
+              "minio": {
+                "command": [
+                  "server",
+                  "/data",
+                  "--console-address",
+                  ":9001"
+                ],
+                "entrypoint": null,
+                "environment": {
+                  "MINIO_ROOT_PASSWORD": "synthetic-fixture-password",
+                  "MINIO_ROOT_USER": "synthetic-fixture-user"
+                },
+                "image": "minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
+                "networks": {
+                  "default": null
+                },
+                "ports": [
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 9000,
+                    "published": "19000",
+                    "protocol": "tcp"
+                  },
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 9001,
+                    "published": "19001",
+                    "protocol": "tcp"
+                  }
+                ],
+                "tmpfs": [
+                  "/data"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom-absolute",
+      "env": {
+        "LUNA_DATA_PATH": "/tmp/luna-container-config-M7vkas/synthetic-data"
+      },
+      "files": [
+        {
+          "file": "compose.yaml",
+          "args": [
+            "--env-file",
+            "/tmp/luna-container-config-cmp9o1/empty.env",
+            "--profile",
+            "smoke",
+            "-f",
+            "/tmp/luna-container-config-cmp9o1/compose.yaml",
+            "--project-directory",
+            "/home/wkyuu/cargo/repo/34-luna"
+          ],
+          "config": {
+            "name": "34-luna",
+            "networks": {
+              "default": {
+                "name": "34-luna_default",
+                "ipam": {}
+              }
+            },
+            "services": {
+              "api": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.server"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": null,
+                "depends_on": {
+                  "bucket-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  },
+                  "instance-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_ALLOWED_ORIGINS": "http://127.0.0.1:8080,http://localhost:8080,https://localhost",
+                  "LUNA_ALLOW_INSECURE_LAN": "false",
+                  "LUNA_DATA_DIR": "/data",
+                  "LUNA_HOST": "0.0.0.0",
+                  "LUNA_PORT": "3000",
+                  "LUNA_RUNTIME_CONFIG_FILE": "/data/.luna/runtime.json"
+                },
+                "image": "luna-api:local",
+                "mem_limit": "805306368",
+                "networks": {
+                  "default": null
+                },
+                "read_only": true,
+                "restart": "unless-stopped",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777",
+                  "/data/minio:size=1m,mode=000"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/tmp/luna-container-config-M7vkas/synthetic-data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  },
+                  {
+                    "type": "bind",
+                    "source": "/dev/null",
+                    "target": "/data/.luna/minio.env",
+                    "read_only": true,
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "bucket-init": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.bucket-init"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": [
+                  "/data"
+                ],
+                "depends_on": {
+                  "instance-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  },
+                  "minio": {
+                    "condition": "service_started",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "image": "luna-bucket-init:local",
+                "networks": {
+                  "default": null
+                },
+                "read_only": true,
+                "restart": "no",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/tmp/luna-container-config-M7vkas/synthetic-data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "instance-init": {
+                "command": [
+                  "node",
+                  "/init/instance-init.mjs",
+                  "/data"
+                ],
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_DATA_GID": "1000",
+                  "LUNA_DATA_UID": "1000"
+                },
+                "image": "node:22.22.0-bookworm-slim",
+                "networks": {
+                  "default": null
+                },
+                "restart": "no",
+                "user": "0:0",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/tmp/luna-container-config-M7vkas/synthetic-data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  },
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/deploy/instance-init.mjs",
+                    "target": "/init/instance-init.mjs",
+                    "read_only": true,
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "minio": {
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": [
+                  "until [ -f /data/.luna/initialized ]; do sleep 1; done; export MINIO_CONFIG_ENV_FILE=/data/.luna/minio.env; exec /usr/bin/minio server /data/minio --address :9000 --console-address :9001"
+                ],
+                "depends_on": {
+                  "instance-init": {
+                    "condition": "service_completed_successfully",
+                    "required": true
+                  }
+                },
+                "entrypoint": [
+                  "/bin/sh",
+                  "-c"
+                ],
+                "image": "minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
+                "networks": {
+                  "default": null
+                },
+                "read_only": true,
+                "restart": "unless-stopped",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/tmp/luna-container-config-M7vkas/synthetic-data",
+                    "target": "/data",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "web": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": null,
+                "depends_on": {
+                  "api": {
+                    "condition": "service_healthy",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "image": "luna-web:local",
+                "networks": {
+                  "default": null
+                },
+                "ports": [
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 8080,
+                    "published": "8080",
+                    "protocol": "tcp"
+                  }
+                ],
+                "read_only": true,
+                "restart": "unless-stopped",
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "tmpfs": [
+                  "/tmp:size=16m,mode=1777"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "file": "compose.android.yaml",
+          "args": [
+            "--env-file",
+            "/tmp/luna-container-config-cmp9o1/empty.env",
+            "--profile",
+            "smoke",
+            "-f",
+            "/tmp/luna-container-config-cmp9o1/compose.android.yaml",
+            "--project-directory",
+            "/home/wkyuu/cargo/repo/34-luna"
+          ],
+          "config": {
+            "name": "34-luna",
+            "networks": {
+              "default": {
+                "name": "34-luna_default",
+                "ipam": {}
+              }
+            },
+            "services": {
+              "android-apk": {
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.android",
+                  "args": {
+                    "LUNA_ANDROID_APPLICATION_SUFFIX": ""
+                  },
+                  "target": "export"
+                },
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": null,
+                "entrypoint": null,
+                "image": "luna-android-apk:local",
+                "network_mode": "none",
+                "platform": "linux/amd64",
+                "read_only": true,
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/artifacts/android",
+                    "target": "/output",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ]
+              },
+              "android-emulator": {
+                "profiles": [
+                  "smoke"
+                ],
+                "build": {
+                  "context": "/home/wkyuu/cargo/repo/34-luna",
+                  "dockerfile": "Dockerfile.android",
+                  "target": "emulator"
+                },
+                "command": null,
+                "devices": [
+                  {
+                    "source": "/dev/kvm",
+                    "target": "/dev/kvm",
+                    "permissions": "rwm"
+                  }
+                ],
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_EMULATOR_ACCEL": "on"
+                },
+                "healthcheck": {
+                  "test": [
+                    "CMD-SHELL",
+                    "test \"$$(adb -s emulator-5554 shell getprop sys.boot_completed)\" = 1"
+                  ],
+                  "timeout": "5s",
+                  "interval": "10s",
+                  "retries": 60,
+                  "start_period": "2m0s"
+                },
+                "image": "luna-android-emulator:local",
+                "init": true,
+                "labels": {
+                  "luna.scope": "android-smoke"
+                },
+                "networks": {
+                  "default": null
+                },
+                "platform": "linux/amd64",
+                "ports": [
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 5037,
+                    "published": "5038",
+                    "protocol": "tcp"
+                  }
+                ],
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "shm_size": "1073741824",
+                "ulimits": {
+                  "nofile": {
+                    "soft": 65536,
+                    "hard": 65536
+                  }
+                }
+              },
+              "android-smoke": {
+                "profiles": [
+                  "smoke"
+                ],
+                "cap_drop": [
+                  "ALL"
+                ],
+                "command": [
+                  "node_modules/.bin/tsx",
+                  "scripts/smoke-android.ts"
+                ],
+                "depends_on": {
+                  "android-emulator": {
+                    "condition": "service_healthy",
+                    "required": true
+                  }
+                },
+                "entrypoint": null,
+                "environment": {
+                  "LUNA_ADB_HOST": "android-emulator",
+                  "LUNA_ADB_PORT": "5037",
+                  "LUNA_ANDROID_ARTIFACT_DIR": "/app/artifacts/android"
+                },
+                "image": "node:22.22.0-bookworm-slim",
+                "networks": {
+                  "default": null
+                },
+                "security_opt": [
+                  "no-new-privileges:true"
+                ],
+                "user": "1000:1000",
+                "volumes": [
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna",
+                    "target": "/app",
+                    "read_only": true,
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  },
+                  {
+                    "type": "bind",
+                    "source": "/home/wkyuu/cargo/repo/34-luna/artifacts/android",
+                    "target": "/app/artifacts/android",
+                    "bind": {
+                      "create_host_path": true
+                    }
+                  }
+                ],
+                "working_dir": "/app"
+              }
+            }
+          }
+        },
+        {
+          "file": "compose.minio.yaml",
+          "args": [
+            "--env-file",
+            "/tmp/luna-container-config-cmp9o1/empty.env",
+            "--profile",
+            "smoke",
+            "-f",
+            "/tmp/luna-container-config-cmp9o1/compose.minio.yaml",
+            "--project-directory",
+            "/home/wkyuu/cargo/repo/34-luna"
+          ],
+          "config": {
+            "name": "luna-minio-smoke",
+            "networks": {
+              "default": {
+                "name": "luna-minio-smoke_default",
+                "ipam": {}
+              }
+            },
+            "services": {
+              "minio": {
+                "command": [
+                  "server",
+                  "/data",
+                  "--console-address",
+                  ":9001"
+                ],
+                "entrypoint": null,
+                "environment": {
+                  "MINIO_ROOT_PASSWORD": "luna-test-secret-2026",
+                  "MINIO_ROOT_USER": "luna-test-access"
+                },
+                "image": "minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
+                "networks": {
+                  "default": null
+                },
+                "ports": [
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 9000,
+                    "published": "19000",
+                    "protocol": "tcp"
+                  },
+                  {
+                    "mode": "ingress",
+                    "host_ip": "127.0.0.1",
+                    "target": 9001,
+                    "published": "19001",
+                    "protocol": "tcp"
+                  }
+                ],
+                "tmpfs": [
+                  "/data"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "profileCoverage": "Android smoke profile included; original Compose bytes verified against pre-move hashes."
+}

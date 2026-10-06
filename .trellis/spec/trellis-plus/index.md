@@ -9,8 +9,12 @@ future Trellis Plus runs and before any user-visible UI planning or validation.
 
 ## Repository baseline
 
-- Product evidence: `prd.md` describes an offline-first income/expense recorder;
-  the first usable delivery is an Electron desktop client.
+- Product direction and accepted scope live in [mainline.md](../../mainline.md).
+  The concise [README](../../../readme.md) links to the current deployment and
+  development guides in this spec tree. The former root `prd.md` began as the
+  product baseline and later held usage instructions; its useful contents were
+  consolidated by the [repository cleanup task](../../tasks/10-06-repository-cleanup/prd.md).
+  Historical task references retain their original revision context.
 - Capability audit (2026-08-30): the first usable local slice now has a
   TypeScript/Electron Forge/Vite source tree, strict tests, native SQLite
   adapter, packaged smoke helper, and project-local `hako` wrapper. The current
@@ -96,7 +100,7 @@ assistive technology, native Electron dialogs, or private environments.
 
 - execution mode: `docker-wrapper`; run project-local Playwright through
   `./hako`, using the Node 22/browser image described below.
-- setup/install: `./preview.sh build`, then `./hako npm install`; the Dockerfile
+- setup/install: `./preview.sh build`, then `./hako npm install`; `docker/Dockerfile.web`
   dev stage provides Google Chrome for `channel: chrome` and matching Firefox.
   No global workstation browser or Node installation is required.
 - app readiness: `playwright.config.ts` starts and probes its own Vite Web host
@@ -130,14 +134,24 @@ and `.devhome` cache boundary. The current wrapper uses a Node 22 Bookworm
 image because Electron's native SQLite dependency needs a build toolchain; it
 mounts only the repository and runs as the invoking user. One-shot commands
 use disposable containers; the preview lifecycle below manages its detached
-Web service. Its default image is built from the `dev` stage in the repository-root
-`Dockerfile`, which is the only Dockerfile used by the development and test
-workflow; keep Chrome and Firefox provisioning in that stage instead of adding
-a separate development Dockerfile. Deployment-specific Dockerfiles remain
-owned by their respective Compose/release workflows. Use the `dev-it-in-docker`
+Web service. Its default image is built from the `dev` stage in
+`docker/Dockerfile.web`, which is the only Dockerfile used by the development
+and test workflow; keep Chrome and Firefox provisioning in that stage instead
+of adding a separate development Dockerfile. Container definitions live in
+`docker/`: the server Dockerfile owns API and bucket-init targets, while Android
+retains its separate toolchain. Root `compose.yaml` remains the production
+entry and `.dockerignore` the default build-context boundary; optional Compose
+callers supply the repository root with `--project-directory` to preserve
+project identity and relative paths. Use the `dev-it-in-docker`
 skill when changing that boundary, keep any wrapper allow rule scoped to
 `./hako`, and never broaden permissions for raw Docker, shell, or package-manager
 commands.
+
+Build-context rules must preserve application source directories such as
+`src/renderer/data/`. The persistent deployment boundary is root `data/`;
+do not exclude every directory named data. Keep nested secret/cache exclusions
+after source allowlists and validate changed rules with the real Docker context
+regression in `tests/deploy/container-layout.test.mjs`.
 
 ## Trellis Plus: Preview lifecycle and environment
 

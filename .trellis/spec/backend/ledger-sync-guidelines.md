@@ -6,6 +6,25 @@ are recorded in the active task validation (2026-09-12). Physical-device,
 emulator and independent security review remain separate.
 This is independent of the existing portable-settings-only S3 service.
 
+## 同步使用与边界
+
+每台设备只配置服务端 URL、统一账号/账号密码、账本解锁密码。服务端登录负责身份
+与授权，账本密码只在端侧解密；账号密码重置不能恢复遗忘的账本密码。设备不填写
+内置 MinIO endpoint、bucket、access key 或 secret；它们是[部署内部边界](deployment-and-recovery.md)。
+同步的是加密历史对象，不能复制或覆盖另一台设备的 SQLite 文件，也没有服务端明文
+财务 CRUD。
+
+默认“应用活跃时自动同步”，每个本地账本可切为“仅手动同步”。两种模式均能离线
+记账，远端失败不回滚已提交的本地记录；手动模式直到明确点击同步才上传/拉取记录。
+Android 只在本地写入而未上传时，Web 不能让服务器凭空获取它的 SQLite。Android
+下一次同步会下载已上传版本，合并双方历史，再条件写；冲突不静默覆盖，墓碑与候选
+保留。自动模式是活跃宿主的尽力调度，应用被完全关闭后的后台同步不作为数据承诺。
+
+账本同步与 portable display-settings 同步是两条协议/确认边界。后者仍保留独立、
+可选的用户自有 S3-compatible 设置入口，不改变内置服务器账本仓库；详见
+[设置同步](config-sync-guidelines.md)。设备 storage 与未同步记录备份见
+[本地账本选择与备份](../frontend/web-host-and-validation.md#本地账本选择与备份)。
+
 ## Shared document and causality
 
 `src/shared/ledger-sync.ts` owns a versioned plaintext document which is encrypted

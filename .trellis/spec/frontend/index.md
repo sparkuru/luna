@@ -30,9 +30,9 @@ capabilities must still have an explicit, safe desktop-only state in Web.
 | [State Management](./state-management.md) | Snapshot, view, form, and derived state | Current |
 | [Quality Guidelines](./quality-guidelines.md) | UI states, security, and validation | Current |
 | [Type Safety](./type-safety.md) | Shared contracts and runtime decoders | Current |
-| [Web Host and Validation](./web-host-and-validation.md) | Browser host boundary and Playwright contract | Current |
+| [Web Host and Validation](./web-host-and-validation.md) | Local ledger selection/backup, browser host and Playwright contract | Current |
 | [Web Visual Contract](./web-visual-contract.md) | Local brand asset, Web hierarchy, enlarged text and motion | Current |
-| [Android Runtime](./android-runtime.md) | Bundled origin, permissions, isolated emulator and evidence boundaries | Current |
+| [Android Runtime](./android-runtime.md) | APK build/export, bundled origin, native storage and device evidence boundaries | Current |
 | [Category Catalog](../backend/category-catalog-guidelines.md) | Entry picker, settings CRUD, usage repair and stable label projection | Current |
 
 ## Boundary Summary
