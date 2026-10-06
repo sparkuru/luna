@@ -28,6 +28,15 @@ implementation, regressions, specs and task evidence. Archive, remote push and
 deployment remain outside this authorization. The initial goal's commit boundary
 above records the earlier phase, before this subsequent permission.
 
+## Submission and archive authorization — 2026-10-06
+
+After the resumed checks and test correction, the user replied “确认” to the
+explicit work-submission, task-archive and journal-closeout plan. This authorizes
+those local operations. Original visual work is `edbd4dc`; the current
+test-ordering and evidence commit is `41d8140`. Push and remote deployment remain
+outside scope. Earlier authorization boundaries above retain their historical
+phase context.
+
 ## Boundaries
 
 Preserve existing application capabilities, light indigo/green palette, offline fonts/assets, localized strings, all routes, secure persistence and summary masking. No new business features, marketing site, remote fonts, dependencies, protocol/storage change or deployment. Shared Web flows are mobile-supported; browser emulation is separate from installed Android evidence. Dark mode is not currently supported and is not introduced here.

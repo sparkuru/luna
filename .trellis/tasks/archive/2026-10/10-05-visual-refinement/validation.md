@@ -124,7 +124,7 @@ Task archive, push and deployment have no additional authorization.
 
 Local output relocation (2026-10-06): the existing root Playwright report and
 test-results directory were preserved under `archive/2026-10-06/`; see the
-[migration record](../archive/2026-10/10-06-repository-cleanup/research/artifact-migration.md).
+[migration record](../10-06-repository-cleanup/research/artifact-migration.md).
 The `/tmp` and `.devhome` evidence above stays in place. Historical validation
 results and overwritten-trace limitations remain as recorded.
 
@@ -163,3 +163,11 @@ decision; no new commit, archive, push or deployment was performed.
 Detailed reproduction, commands, preserved failure and successful traces:
 [independent resumption check](research/resumption-check-20261006.md) and
 [test correction](research/revocation-test-fix-20261006.md).
+
+## Authorized closeout — 2026-10-06
+
+The user confirmed the explicit local work-submission, archive and journal plan.
+The resumed test/evidence work commit is `41d8140`; original visual work remains
+`edbd4dc`. This subsequent authorization supersedes the earlier pending-archive
+statements for local closeout only. Validation scope and native/full-suite gaps
+remain unchanged; push and remote deployment were not authorized or performed.

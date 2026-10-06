@@ -7,7 +7,7 @@
 {"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Visual refinement contract"}
 {"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Visual refinement contract"}
 {"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Visual refinement contract"}
-{"file": ".trellis/tasks/10-05-visual-refinement/design.md", "reason": "Visual refinement contract"}
+{"file": ".trellis/tasks/archive/2026-10/10-05-visual-refinement/design.md", "reason": "Visual refinement contract"}
 {"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Shared renderer and asset ownership"}
 {"file": ".trellis/spec/frontend/type-safety.md", "reason": "Typed renderer and browser checks"}
 {"file": ".trellis/spec/frontend/web-visual-contract.md", "reason": "Responsive brand, typography and motion contracts"}
