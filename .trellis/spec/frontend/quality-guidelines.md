@@ -73,6 +73,23 @@ disclosures without changing the host permission or persistence contract.
 
 ## Testing Requirements
 
+Account-route navigation starts `server.sessions()` while a current account is
+present. Any real HTTP 401 for that account causes `ServerHost` to invalidate it;
+the account identity and embedded `ServerSyncPanel` then disappear. A revocation test
+must await the real unauthorized response and signed-out result, not assume
+`#server-sync-now` remains mounted until a manual click. Register response
+observation before navigation and retain identity-cleared, renewed-login and
+local-ledger recovery assertions. Observe worker-owned requests at the real
+fixture server if page network events do not expose them. Do not delay teardown,
+mock successful sign-out, extend timeouts or catch a failed click to mask this
+ordering race.
+
+```typescript
+await account(second);
+await expect(second.locator("#server-account-state")).toContainText("Signed out");
+await expect(second.locator("#server-account-name")).toHaveCount(0);
+```
+
 When a Web host test compares a fixed month with its inherited future budget,
 freeze `Date` within that test using `t.mock.timers.enable({ apis: ['Date'],
 now: ... })`. `createWorkspace` seeds an explicit budget in the actual local

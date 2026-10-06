@@ -21,6 +21,6 @@
   "children": [],
   "parent": null,
   "relatedFiles": [],
-  "notes": "Implementation and delegated observable Web acceptance complete. 226 unit tests and all 344 browser cases passed across disjoint production batches; final metadata/offline gate 10/10. Eight-dimension review and native/parallel-test boundaries recorded in validation.md. User accepted the visuals and authorized local commit on 2026-10-05. Task remains in review and unarchived; no push or deployment authorization inferred.",
+  "notes": "Resumed 2026-10-06; visual work commit edbd4dc and accepted Web appearance retained. Current typecheck, 226 unit tests, build, 16 craft and 6 focus cases pass. Corrected only account-test ordering after real revocation DELETE204 and route sessions401; preserved sign-out, identity, renewed login and recovery assertions and original timeout. Implementer4/4 and independent final account/offline10/10 pass; original8pass2failattempt preserved. V1–V7 satisfied within accepted Web scope; current32 distinct browsercases are not a fresh344-case run. Review-ready, current correction/evidence uncommitted; archive/push/deployment not authorized.",
   "meta": {}
 }

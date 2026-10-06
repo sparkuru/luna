@@ -31,3 +31,14 @@ English overflow and excessive word breaks, while preserving normal layout.
 ## Rollback and risks
 
 Renderer-only reversible diff, no data migration or remote effects. Risks: CSS cascade, CSP-safe SVG, progress styling and modal focus during animation. Inspect computed styles, pixels and existing regressions. Native device rendering remains a separate evidence boundary.
+
+## Resumed account regression — 2026-10-06
+
+Current production verification reproduced an account-test ordering race:
+after session revocation, entering the account route fetches sessions, receives
+401 and clears authentication before the test clicks the now-absent sync
+button. Treat the route's automatic sign-out as the required revocation outcome.
+Verify signed-out state, cleared identity, renewed login and preserved local
+ledger directly. Preserve these assertions and the original timeout; do not
+delay authentication teardown or change application behavior to accommodate
+the test. Add deterministic ordering evidence for this path.

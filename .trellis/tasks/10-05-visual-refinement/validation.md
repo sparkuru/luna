@@ -127,3 +127,39 @@ test-results directory were preserved under `archive/2026-10-06/`; see the
 [migration record](../archive/2026-10/10-06-repository-cleanup/research/artifact-migration.md).
 The `/tmp` and `.devhome` evidence above stays in place. Historical validation
 results and overwritten-trace limitations remain as recorded.
+
+## Resumption and test-order correction — 2026-10-06
+
+The user requested continued task progress after repository cleanup. Source
+comparison against `edbd4dc` and the five retained SHA-256 entries confirmed
+unchanged visual implementation. Current typecheck, 226/226 shared unit tests,
+production build, 16/16 craft cases and 6/6 month focus/loading cases passed.
+
+The original account/offline smoke then reproduced **8 passed / 2 failed**:
+both online account cases timed out after a real sessions-list 401 had already
+signed out the second browser and removed the sync button. The test still
+attempted to click that absent button. Trace and source establish this ordering
+race; no application authentication or visual defect was found. This finding
+does not retroactively establish the cause of earlier parallel-run timeouts.
+
+`server-account.spec.ts` now observes the real revocation DELETE 204 before
+navigating to Account, registers the sessions GET waiter before navigation,
+requires its real 401 response, then asserts signed-out state, cleared identity
+and absent sync controls. Renewed login, preserved transactions/attachments,
+profile recovery and offline assertions remain, with the original 120s deadline.
+The implementer's four production variants passed **4/4**. Independent final
+account/offline checking passed **10/10**, no failures/skips, one worker, 1.8m;
+post-patch typecheck and diff whitespace also passed.
+
+This resumption verifies **32 distinct production browser cases** (16 craft,
+6 focus, 10 account/offline), alongside current unit/build checks. The previous
+344-case coverage remains historical; no fresh full-suite or CI run is claimed.
+Native/device and remote-environment boundaries remain unchanged. V1–V7 are
+satisfied within the accepted Web scope. Human review is `human-not-needed`
+for this observable test-only correction; subjective Web acceptance remains
+the user's prior decision. Task returns to review, awaiting submission/archive
+decision; no new commit, archive, push or deployment was performed.
+
+Detailed reproduction, commands, preserved failure and successful traces:
+[independent resumption check](research/resumption-check-20261006.md) and
+[test correction](research/revocation-test-fix-20261006.md).

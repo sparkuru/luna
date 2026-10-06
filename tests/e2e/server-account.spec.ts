@@ -377,6 +377,10 @@ test(offlineRecovery
     await expect(
       page.locator("#server-sessions-title").locator(".."),
     ).toContainText("Second browser");
+    const revokedSession = page.waitForResponse((response) =>
+      response.url().startsWith(`${apiUrl}/api/v1/auth/sessions/`) &&
+      response.request().method() === "DELETE",
+    );
     await page
       .locator("#server-sessions-title")
       .locator("..")
@@ -384,12 +388,19 @@ test(offlineRecovery
       .filter({ hasText: "Second browser" })
       .getByRole("button")
       .click();
+    expect((await revokedSession).status()).toBe(204);
+    // Entering Account checks sessions and can sign out before Sync is clicked.
+    const rejectedSessions = second.waitForResponse((response) =>
+      response.url() === `${apiUrl}/api/v1/auth/sessions` &&
+      response.request().method() === "GET",
+    );
     await account(second);
-    await second.locator("#server-sync-now").click();
+    expect((await rejectedSessions).status()).toBe(401);
     await expect(second.locator("#server-account-state")).toContainText(
       "Signed out",
     );
     await expect(second.locator("#server-account-name")).toHaveCount(0);
+    await expect(second.locator("#server-sync-now")).toHaveCount(0);
     await login(second, apiUrl, username, "Second browser renewed");
     await second.locator(".brand").click();
     await expect(second.locator("#transaction-list-region")).toContainText(

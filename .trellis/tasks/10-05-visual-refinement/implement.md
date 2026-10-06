@@ -11,4 +11,10 @@
 - [x] Audit all quality dimensions against current rendered evidence; keep full goal active until verified.
 - [x] Record results/native boundaries; update stable frontend specs.
 
+## Resumption — 2026-10-06
+
+- [x] Verify unchanged visual source hashes and current type/unit/build/craft/focus gates after container layout cleanup.
+- [x] Correct the reproduced revocation test race without weakening authentication or recovery assertions; prove the early-401 ordering.
+- [x] Independently recheck the revised account/offline gate on production desktop and narrow projects and record exact results.
+
 Commit/archive/deployment require separate authorization. Browser checks start their own loopback host; preserve existing previews/data.
