@@ -534,3 +534,36 @@ User explicitly authorized committing all remaining dirty and untracked project 
 ### Next Steps
 
 - No active task. Keep the persistent Luna deployment; future renewal and long-term uptime remain operational observations, and new product work waits for user selection. TalkBack stays canceled.
+
+
+## Session 20: Repository cleanup archive and closeout
+
+**Date**: 2026-10-06
+**Task**: Repository cleanup archive and closeout
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+用户授权归档 repository-cleanup；工作提交00b2ac5，归档提交e5870a3。修复归档导航/context，保留原验收与未跑平台限制；视觉task继续review。
+
+### Main Changes
+
+- 仅将repository-cleanup归档为completed，记录工作/归档提交，维持其他任务与真实资源。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `00b2ac5` | (see git log) |
+
+### Testing
+
+- [OK] 归档后context23+23、17份Markdown的96条本地导航与HTML263条导航通过，diff check通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 等待用户选择后续工作，不推送或自动继续其他task。
