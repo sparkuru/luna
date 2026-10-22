@@ -1,0 +1,1459 @@
+{
+  "queriedAt": "2026-10-22T11:34:47.353Z",
+  "results": [
+    {
+      "id": "GHSA-qhr7-859c-m2p7",
+      "status": 200,
+      "cve": "CVE-2026-102278",
+      "published_at": "2026-09-29T23:45:17Z",
+      "updated_at": "2026-09-29T23:45:19Z",
+      "severity": "high",
+      "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 5.0.11",
+          "first_patched_version": "5.0.11",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.0.8",
+          "first_patched_version": "3.0.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": ">= 2.0.0, < 2.1.6",
+          "first_patched_version": "2.1.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": "< 1.1.20",
+          "first_patched_version": "1.1.20",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/juliangruber/brace-expansion/security/advisories/GHSA-qhr7-859c-m2p7",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-102278",
+        "https://github.com/juliangruber/brace-expansion/commit/1efee7c397c191da6287a78ec19512476a966a7b",
+        "https://github.com/juliangruber/brace-expansion/commit/935d78f32f335b2ff76578e5c5e877d31ae9888c",
+        "https://github.com/juliangruber/brace-expansion/commit/de84f144e9816f30e25fc8179e2e1249ab6df0db",
+        "https://github.com/advisories/GHSA-qhr7-859c-m2p7"
+      ]
+    },
+    {
+      "id": "GHSA-q2hr-2g5m-vwhr",
+      "status": 200,
+      "cve": "CVE-2026-102277",
+      "published_at": "2026-09-29T23:45:39Z",
+      "updated_at": "2026-09-29T23:45:39Z",
+      "severity": "medium",
+      "summary": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 5.0.12",
+          "first_patched_version": "5.0.12",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.0.9",
+          "first_patched_version": "3.0.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": ">= 2.0.0, < 2.1.7",
+          "first_patched_version": "2.1.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": "< 1.1.21",
+          "first_patched_version": "1.1.21",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/juliangruber/brace-expansion/security/advisories/GHSA-q2hr-2g5m-vwhr",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-102277",
+        "https://github.com/juliangruber/brace-expansion/commit/33a5ef17b8d800bbfa8c52b14c39043b6aac1a96",
+        "https://github.com/juliangruber/brace-expansion/commit/bdff773f98e5988616b7039cc9b508df5d640b22",
+        "https://github.com/juliangruber/brace-expansion/commit/c55e67d8d8b1c56a2474afff15c2891166b2d364",
+        "https://github.com/juliangruber/brace-expansion/commit/ffdfa3e3806bed17c0874b8f1439b084de354a7e",
+        "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr"
+      ]
+    },
+    {
+      "id": "GHSA-rvm3-566m-v7fv",
+      "status": 200,
+      "cve": "CVE-2026-103922",
+      "published_at": "2026-10-05T22:53:10Z",
+      "updated_at": "2026-10-05T22:53:12Z",
+      "severity": "critical",
+      "summary": "Capacitor Android and iOS: remote content can be loaded at the app origin via the internal HTTP proxy path",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/android"
+          },
+          "vulnerable_version_range": ">= 6.0.0, < 6.2.2",
+          "first_patched_version": "6.2.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/android"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.6.9",
+          "first_patched_version": "7.6.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/ios"
+          },
+          "vulnerable_version_range": ">= 6.0.0, < 6.2.2",
+          "first_patched_version": "6.2.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/ios"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.6.9",
+          "first_patched_version": "7.6.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "swift",
+            "name": "github.com/ionic-team/capacitor-swift-pm"
+          },
+          "vulnerable_version_range": ">= 6.0.0, < 6.2.2",
+          "first_patched_version": "6.2.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "swift",
+            "name": "github.com/ionic-team/capacitor-swift-pm"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.6.9",
+          "first_patched_version": "7.6.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "maven",
+            "name": "com.capacitorjs:core"
+          },
+          "vulnerable_version_range": ">= 6.0.0, < 6.2.2",
+          "first_patched_version": "6.2.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "maven",
+            "name": "com.capacitorjs:core"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.6.9",
+          "first_patched_version": "7.6.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/android"
+          },
+          "vulnerable_version_range": ">= 8.5.0, < 8.5.1",
+          "first_patched_version": "8.5.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/ios"
+          },
+          "vulnerable_version_range": ">= 8.5.0, < 8.5.1",
+          "first_patched_version": "8.5.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "swift",
+            "name": "github.com/ionic-team/capacitor-swift-pm"
+          },
+          "vulnerable_version_range": ">= 8.5.0, < 8.5.1",
+          "first_patched_version": "8.5.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "maven",
+            "name": "com.capacitorjs:core"
+          },
+          "vulnerable_version_range": ">= 8.5.0, < 8.5.1",
+          "first_patched_version": "8.5.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "maven",
+            "name": "com.capacitorjs:core"
+          },
+          "vulnerable_version_range": ">= 8.3.5, < 8.4.3",
+          "first_patched_version": "8.4.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/android"
+          },
+          "vulnerable_version_range": ">= 8.3.5, < 8.4.3",
+          "first_patched_version": "8.4.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/ios"
+          },
+          "vulnerable_version_range": ">= 8.3.5, < 8.4.3",
+          "first_patched_version": "8.4.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "swift",
+            "name": "github.com/ionic-team/capacitor-swift-pm"
+          },
+          "vulnerable_version_range": ">= 8.3.5, < 8.4.3",
+          "first_patched_version": "8.4.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "swift",
+            "name": "github.com/ionic-team/capacitor-swift-pm"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.3.4",
+          "first_patched_version": null,
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "maven",
+            "name": "com.capacitorjs:core"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.3.4",
+          "first_patched_version": null,
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/android"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.3.4",
+          "first_patched_version": null,
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@capacitor/ios"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.3.4",
+          "first_patched_version": null,
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/ionic-team/capacitor/security/advisories/GHSA-rvm3-566m-v7fv",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-103922",
+        "https://github.com/ionic-team/capacitor/commit/430356a91e1419fc66862dc09835081aa501677e",
+        "https://github.com/ionic-team/capacitor/commit/745b5f805bf77bc6463977cc7d718cd9de44ccbc",
+        "https://github.com/ionic-team/capacitor/commit/80b6c5e81d062e1e158914040f49e044d95b7ccb",
+        "https://github.com/ionic-team/capacitor/commit/85ccc44151fdd5ae5e0d806d875766ef4b84ad5d",
+        "https://github.com/ionic-team/capacitor/commit/af9a287fef45f0ac68ce640cb42fed2d06b0f1b4",
+        "https://github.com/ionic-team/capacitor/commit/d5e3170ba0ff155fc542b7e6d16cff5201406540",
+        "https://github.com/ionic-team/capacitor/commit/ee586ae680887ba99d066616f976db149542d922",
+        "https://github.com/ionic-team/capacitor/releases/tag/8.5.1",
+        "https://github.com/advisories/GHSA-rvm3-566m-v7fv"
+      ]
+    },
+    {
+      "id": "GHSA-fw47-9c62-h3vw",
+      "status": 200,
+      "cve": "CVE-2026-113800",
+      "published_at": "2026-10-21T17:21:51Z",
+      "updated_at": "2026-10-21T17:21:53Z",
+      "severity": "medium",
+      "summary": "Electron: HID and USB permission checks can be attributed to the wrong origin",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "electron"
+          },
+          "vulnerable_version_range": ">= 45.0.0-alpha.1, < 45.0.0-alpha.5",
+          "first_patched_version": "45.0.0-alpha.5",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "electron"
+          },
+          "vulnerable_version_range": ">= 44.0.0-alpha.1, < 44.3.0",
+          "first_patched_version": "44.3.0",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "electron"
+          },
+          "vulnerable_version_range": ">= 43.0.0-alpha.1, < 43.7.0",
+          "first_patched_version": "43.7.0",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "electron"
+          },
+          "vulnerable_version_range": "< 42.11.3",
+          "first_patched_version": "42.11.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/electron/electron/security/advisories/GHSA-fw47-9c62-h3vw",
+        "https://github.com/electron/electron/pull/53656",
+        "https://github.com/electron/electron/pull/53679",
+        "https://github.com/electron/electron/pull/53688",
+        "https://github.com/electron/electron/pull/53689",
+        "https://github.com/electron/electron/pull/53736",
+        "https://github.com/electron/electron/commit/22de0a3a06cfd3174fc6c59c3810ab5e1c91bf1a",
+        "https://github.com/electron/electron/commit/36042b2e1b1c60c67b05ba0e95d1a34f608b9742",
+        "https://github.com/electron/electron/commit/56cc43eb677d46b86b0d3f49b5fba71404ab1ff0",
+        "https://github.com/electron/electron/commit/922073f8601479e93071f56f0745041291b206fd",
+        "https://github.com/electron/electron/commit/c965cee73284c4b230a81d51a7db6115e55da8c0",
+        "https://github.com/electron/electron/releases/tag/v42.11.3",
+        "https://github.com/electron/electron/releases/tag/v43.7.0",
+        "https://github.com/electron/electron/releases/tag/v44.3.0",
+        "https://github.com/electron/electron/releases/tag/v45.0.0-alpha.5",
+        "https://github.com/advisories/GHSA-fw47-9c62-h3vw"
+      ]
+    },
+    {
+      "id": "GHSA-vfj7-8cjw-p6xm",
+      "status": 200,
+      "cve": "CVE-2026-93687",
+      "published_at": "2026-09-18T18:31:41Z",
+      "updated_at": "2026-10-02T22:36:34Z",
+      "severity": "high",
+      "summary": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "braces"
+          },
+          "vulnerable_version_range": "<= 3.0.3",
+          "first_patched_version": null,
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-93687",
+        "https://github.com/micromatch/braces/issues/70",
+        "https://github.com/micromatch/braces/blob/3.0.3/lib/compile.js#L49-L53",
+        "https://github.com/micromatch/braces/blob/3.0.3/lib/expand.js#L102-L105",
+        "https://github.com/micromatch/braces/blob/3.0.3/lib/parse.js#L38-L40",
+        "https://www.vulncheck.com/advisories/braces-through-3.0.3-stack-overflow-via-deeply-nested-patterns",
+        "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"
+      ]
+    },
+    {
+      "id": "GHSA-6j4f-fj2g-mc7p",
+      "status": 200,
+      "cve": "CVE-2026-102276",
+      "published_at": "2026-09-29T23:44:58Z",
+      "updated_at": "2026-09-29T23:44:59Z",
+      "severity": "high",
+      "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 5.0.10",
+          "first_patched_version": "5.0.10",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.0.7",
+          "first_patched_version": "3.0.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": ">= 2.0.0, < 2.1.5",
+          "first_patched_version": "2.1.5",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "brace-expansion"
+          },
+          "vulnerable_version_range": "< 1.1.19",
+          "first_patched_version": "1.1.19",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/juliangruber/brace-expansion/security/advisories/GHSA-6j4f-fj2g-mc7p",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-102276",
+        "https://github.com/juliangruber/brace-expansion/commit/0bcbfc0a5928c3073d48f42999d1ce4fc1c42fbc",
+        "https://github.com/juliangruber/brace-expansion/commit/316359e6019c39b3254c8ba8e25dc586a480652c",
+        "https://github.com/juliangruber/brace-expansion/commit/5171e681c0922b7ae8bfaf9a331e309107be6edc",
+        "https://github.com/juliangruber/brace-expansion/commit/6735c94873ca570bcdd6a0690033bdd3126379d3",
+        "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p"
+      ]
+    },
+    {
+      "id": "GHSA-hrr3-gc8f-f4qj",
+      "status": 200,
+      "cve": "CVE-2026-86472",
+      "published_at": "2026-09-29T23:54:25Z",
+      "updated_at": "2026-09-29T23:54:26Z",
+      "severity": "medium",
+      "summary": "fast-uri vulnerable to inconsistent host case normalization via percent-encoded octets",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "< 2.4.7",
+          "first_patched_version": "2.4.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.1.8",
+          "first_patched_version": "3.1.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 4.1.5",
+          "first_patched_version": "4.1.5",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/fastify/fast-uri/security/advisories/GHSA-hrr3-gc8f-f4qj",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-86472",
+        "https://github.com/fastify/fast-uri/commit/5dabb86732aa2a7655e258719970e61e12b6b4d1",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/fastify/fast-uri/releases/tag/v2.4.7",
+        "https://github.com/fastify/fast-uri/releases/tag/v3.1.8",
+        "https://github.com/fastify/fast-uri/releases/tag/v4.1.5",
+        "https://github.com/advisories/GHSA-hrr3-gc8f-f4qj"
+      ]
+    },
+    {
+      "id": "GHSA-qw65-cvwx-89v3",
+      "status": 200,
+      "cve": "CVE-2026-84292",
+      "published_at": "2026-09-28T21:24:39Z",
+      "updated_at": "2026-09-28T21:24:40Z",
+      "severity": "high",
+      "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "< 2.4.6",
+          "first_patched_version": "2.4.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.1.7",
+          "first_patched_version": "3.1.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 4.1.4",
+          "first_patched_version": "4.1.4",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/fastify/fast-uri/security/advisories/GHSA-qw65-cvwx-89v3",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-84292",
+        "https://github.com/fastify/fast-uri/commit/820e8478dd7da3d09f187bfaf35d50b71f67b8b4",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/fastify/fast-uri/releases/tag/v2.4.6",
+        "https://github.com/fastify/fast-uri/releases/tag/v3.1.7",
+        "https://github.com/fastify/fast-uri/releases/tag/v4.1.4",
+        "https://github.com/advisories/GHSA-qw65-cvwx-89v3"
+      ]
+    },
+    {
+      "id": "GHSA-58mr-gqgx-xq4g",
+      "status": 200,
+      "cve": "CVE-2026-84394",
+      "published_at": "2026-09-28T21:23:35Z",
+      "updated_at": "2026-09-28T21:23:36Z",
+      "severity": "high",
+      "summary": "fast-uri vulnerable to host confusion via an unclosed bracket in the URI authority",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "= 2.4.5",
+          "first_patched_version": "2.4.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "= 3.1.6",
+          "first_patched_version": "3.1.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "= 4.1.3",
+          "first_patched_version": "4.1.4",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/fastify/fast-uri/security/advisories/GHSA-58mr-gqgx-xq4g",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-84394",
+        "https://github.com/fastify/fast-uri/pull/214",
+        "https://github.com/fastify/fast-uri/commit/e00815236bc94107e44ef1b2f5318a06bac225c0",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/fastify/fast-uri/releases/tag/v2.4.6",
+        "https://github.com/fastify/fast-uri/releases/tag/v3.1.7",
+        "https://github.com/fastify/fast-uri/releases/tag/v4.1.4",
+        "https://github.com/advisories/GHSA-58mr-gqgx-xq4g"
+      ]
+    },
+    {
+      "id": "GHSA-jvvf-x445-j334",
+      "status": 200,
+      "cve": "CVE-2026-86818",
+      "published_at": "2026-09-29T23:51:16Z",
+      "updated_at": "2026-09-29T23:51:17Z",
+      "severity": "medium",
+      "summary": "fast-uri vulnerable to mailto header injection via percent-encoded field-name desynchronization",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.1.3, < 4.1.5",
+          "first_patched_version": "4.1.5",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/fastify/fast-uri/security/advisories/GHSA-jvvf-x445-j334",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-86818",
+        "https://github.com/fastify/fast-uri/commit/f40a88f33e684a46faec3f5b820bcbb1e85add64",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/fastify/fast-uri/releases/tag/v4.1.5",
+        "https://github.com/advisories/GHSA-jvvf-x445-j334"
+      ]
+    },
+    {
+      "id": "GHSA-4mh8-r7rc-xpvc",
+      "status": 200,
+      "cve": "CVE-2026-92081",
+      "published_at": "2026-09-30T23:53:44Z",
+      "updated_at": "2026-09-30T23:53:45Z",
+      "severity": "medium",
+      "summary": "fastify vulnerable to Denial of Service via unhandled exception on HTTP/2 trailer responses",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fastify"
+          },
+          "vulnerable_version_range": "< 5.12.5",
+          "first_patched_version": "5.12.5",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/fastify/fastify/security/advisories/GHSA-4mh8-r7rc-xpvc",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-92081",
+        "https://github.com/fastify/fastify/issues/6574",
+        "https://github.com/fastify/fastify/commit/ad06a4c3fe8a944a904f38068249b18b8f552e90",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/fastify/fastify/releases/tag/v5.12.5",
+        "https://github.com/advisories/GHSA-4mh8-r7rc-xpvc"
+      ]
+    },
+    {
+      "id": "GHSA-h3mg-xc3c-68pw",
+      "status": 200,
+      "cve": "CVE-2026-101911",
+      "published_at": "2026-09-29T23:46:39Z",
+      "updated_at": "2026-09-29T23:46:40Z",
+      "severity": "medium",
+      "summary": "ip-address: Address6 builds a parse diagnostic proportional to the input with no length bound, allowing a single long string to stall or crash the process",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "ip-address"
+          },
+          "vulnerable_version_range": "<= 10.7.0",
+          "first_patched_version": "10.7.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/beaugunderson/ip-address/security/advisories/GHSA-h3mg-xc3c-68pw",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-101911",
+        "https://github.com/beaugunderson/ip-address/commit/469ead1231b4cc059f2150c626e1e0c2895c0134",
+        "https://github.com/beaugunderson/ip-address/commit/8b34a21e0839b37c094066816fb2c2c48a2adcf5",
+        "https://github.com/beaugunderson/ip-address/releases/tag/v10.7.1",
+        "https://github.com/advisories/GHSA-h3mg-xc3c-68pw"
+      ]
+    },
+    {
+      "id": "GHSA-j6r3-76f7-8jcv",
+      "status": 200,
+      "cve": "CVE-2026-101912",
+      "published_at": "2026-09-29T23:46:52Z",
+      "updated_at": "2026-09-29T23:46:54Z",
+      "severity": "medium",
+      "summary": "ip-address: isInSubnet() and isHostInSubnet() compare addresses of different families as if they shared an address space, allowing an allowlist check to admit an address outside its range",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "ip-address"
+          },
+          "vulnerable_version_range": "<= 10.7.0",
+          "first_patched_version": "10.7.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/beaugunderson/ip-address/security/advisories/GHSA-j6r3-76f7-8jcv",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-101912",
+        "https://github.com/beaugunderson/ip-address/commit/1343629d57fea413644a5c9d41ff1e59619f3f28",
+        "https://github.com/beaugunderson/ip-address/releases/tag/v10.7.1",
+        "https://github.com/advisories/GHSA-j6r3-76f7-8jcv"
+      ]
+    },
+    {
+      "id": "GHSA-ch52-4w7c-c8xp",
+      "status": 200,
+      "cve": "CVE-2026-93748",
+      "published_at": "2026-09-18T18:31:44Z",
+      "updated_at": "2026-10-02T22:36:44Z",
+      "severity": "high",
+      "summary": "http-cache-semantics max-stale handling can disclose cross-user cached responses",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "http-cache-semantics"
+          },
+          "vulnerable_version_range": "<= 4.2.0",
+          "first_patched_version": null,
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-93748",
+        "https://github.com/kornelski/http-cache-semantics/issues/56",
+        "https://github.com/kornelski/http-cache-semantics/blob/f01112e954b83cfa8765b633ba880e5e980aa54c/index.js#L425-L441",
+        "https://github.com/kornelski/http-cache-semantics/blob/f01112e954b83cfa8765b633ba880e5e980aa54c/index.js#L603-L623",
+        "https://www.vulncheck.com/advisories/http-cache-semantics-through-4.2.0-cross-user-cache-disclosure-via-max-stale",
+        "https://github.com/advisories/GHSA-ch52-4w7c-c8xp"
+      ]
+    },
+    {
+      "id": "GHSA-2883-xcg3-v3hh",
+      "status": 200,
+      "cve": "CVE-2026-84375",
+      "published_at": "2026-09-08T21:24:51Z",
+      "updated_at": "2026-09-08T21:24:52Z",
+      "severity": "high",
+      "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "js-yaml"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 4.3.2",
+          "first_patched_version": "4.3.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "js-yaml"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.15.2",
+          "first_patched_version": "3.15.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodeca/js-yaml/security/advisories/GHSA-2883-xcg3-v3hh",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-84375",
+        "https://github.com/nodeca/js-yaml/pull/797",
+        "https://github.com/nodeca/js-yaml/commit/3485bc06ff8a0251505f44a00414d90df2466639",
+        "https://github.com/nodeca/js-yaml/commit/6a8e05f9a485188ed730ac81e81ae221352ef480",
+        "https://github.com/nodeca/js-yaml/commit/d90b6612a5a84385bdcb556c44578eac76dc0f6b",
+        "https://github.com/nodeca/js-yaml/releases/tag/3.15.2",
+        "https://github.com/nodeca/js-yaml/releases/tag/4.3.2",
+        "https://github.com/advisories/GHSA-2883-xcg3-v3hh"
+      ]
+    },
+    {
+      "id": "GHSA-hp3w-g68c-fv3c",
+      "status": 200,
+      "cve": "CVE-2026-97058",
+      "published_at": "2026-09-24T15:31:31Z",
+      "updated_at": "2026-10-05T23:47:35Z",
+      "severity": "medium",
+      "summary": "sprintf-js vulnerable to denial of service through unbounded precision specifiers",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "sprintf-js"
+          },
+          "vulnerable_version_range": "<= 1.1.3",
+          "first_patched_version": null,
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-97058",
+        "https://github.com/alexei/sprintf.js/issues/237",
+        "https://github.com/alexei/sprintf.js/blob/3a0d8c26d291b5bd9f1974877ecc50739921d6f5/src/sprintf.js#L17",
+        "https://github.com/alexei/sprintf.js/blob/3a0d8c26d291b5bd9f1974877ecc50739921d6f5/src/sprintf.js#L84-L90",
+        "https://www.vulncheck.com/advisories/sprintf-js-through-1.1.3-denial-of-service-via-unbounded-precision",
+        "https://github.com/advisories/GHSA-hp3w-g68c-fv3c"
+      ]
+    },
+    {
+      "id": "GHSA-68fv-2mgg-jv7q",
+      "status": 200,
+      "cve": "CVE-2026-93749",
+      "published_at": "2026-09-18T18:31:44Z",
+      "updated_at": "2026-10-05T23:31:22Z",
+      "severity": "high",
+      "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "source-map-js"
+          },
+          "vulnerable_version_range": ">= 1.0.0, < 1.2.2",
+          "first_patched_version": "1.2.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-93749",
+        "https://github.com/7rulnik/source-map-js/issues/76",
+        "https://github.com/7rulnik/source-map-js",
+        "https://github.com/7rulnik/source-map-js/blob/c1cd8904bb7bd0c7fb5879fcda48134d82a27934/lib/source-node.js#L115-L118",
+        "https://www.vulncheck.com/advisories/source-map-js-through-1.2.1-event-loop-denial-of-service",
+        "https://github.com/7rulnik/source-map-js/pull/79",
+        "https://github.com/7rulnik/source-map-js/commit/cf7658058ceeaa8619d5ae0ec90be6905209d016",
+        "https://github.com/7rulnik/source-map-js/releases/tag/v1.2.2",
+        "https://github.com/advisories/GHSA-68fv-2mgg-jv7q"
+      ]
+    },
+    {
+      "id": "GHSA-3wwx-pv8p-q78v",
+      "status": 200,
+      "cve": "CVE-2026-85024",
+      "published_at": "2026-09-28T21:42:37Z",
+      "updated_at": "2026-09-28T21:42:38Z",
+      "severity": "medium",
+      "summary": "undici vulnerable to Denial of Service via unhandled error in WebSocket permessage-deflate decompression",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 6.25.0, < 6.28.1",
+          "first_patched_version": "6.28.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.28.0, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.1.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-3wwx-pv8p-q78v",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-85024",
+        "https://github.com/nodejs/undici/commit/07c60d9c7099a910451244afe42861bbdbdd974c",
+        "https://github.com/nodejs/undici/commit/4411a238a98e8791da5fff10cc9e3578a7668ed6",
+        "https://github.com/nodejs/undici/commit/63cf698b611fecc6ee0a17b185b930051e4b982f",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v6.28.1",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-3wwx-pv8p-q78v"
+      ]
+    },
+    {
+      "id": "GHSA-pmjh-fq2x-6v4x",
+      "status": 200,
+      "cve": "CVE-2026-18149",
+      "published_at": "2026-09-29T18:22:34Z",
+      "updated_at": "2026-09-29T18:22:35Z",
+      "severity": "medium",
+      "summary": "undici vulnerable to Denial of Service via orphaned RetryHandler response body",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.11.0, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-pmjh-fq2x-6v4x",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-18149",
+        "https://github.com/nodejs/undici/commit/3c6726599cea8646384dde846c97d630da472a74",
+        "https://github.com/nodejs/undici/commit/e905b5b87e6953bcc542af90557b2fee5b7b5974",
+        "https://hackerone.com/reports/3892751",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-pmjh-fq2x-6v4x"
+      ]
+    },
+    {
+      "id": "GHSA-r53p-7pc4-xj5r",
+      "status": 200,
+      "cve": "CVE-2026-18540",
+      "published_at": "2026-09-29T18:22:07Z",
+      "updated_at": "2026-09-29T18:22:08Z",
+      "severity": "low",
+      "summary": "undici vulnerable to downstream response splitting via retry interceptor",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": "< 6.28.1",
+          "first_patched_version": "6.28.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-r53p-7pc4-xj5r",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-18540",
+        "https://github.com/nodejs/undici/commit/0160a719063fb0a77f4fdf9500b9166b91e14329",
+        "https://github.com/nodejs/undici/commit/cd8af90b38ae33c2838d54a2d629774122effe95",
+        "https://github.com/nodejs/undici/commit/ce31bc824b578008faae5d3350da66c1b5f71548",
+        "https://hackerone.com/reports/3900104",
+        "https://hackerone.com/reports/3900615",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v6.28.1",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-r53p-7pc4-xj5r"
+      ]
+    },
+    {
+      "id": "GHSA-rfgv-xxqx-mfg5",
+      "status": 200,
+      "cve": "CVE-2026-19534",
+      "published_at": "2026-09-29T18:21:33Z",
+      "updated_at": "2026-09-29T18:21:41Z",
+      "severity": "high",
+      "summary": "undici vulnerable to Denial of Service via unrequested WebSocket subprotocol",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 6.7.0, < 6.28.1",
+          "first_patched_version": "6.28.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-rfgv-xxqx-mfg5",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-19534",
+        "https://github.com/nodejs/undici/commit/2af0faf88b906d3127a360c3ac75164c0f95e5a5",
+        "https://github.com/nodejs/undici/commit/6615e0175e9b635bcd2e3e87a47daa82f6f5b728",
+        "https://github.com/nodejs/undici/commit/66e12816064cf3068f63bd134748b7fc4e779bad",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v6.28.1",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-rfgv-xxqx-mfg5"
+      ]
+    },
+    {
+      "id": "GHSA-3xpg-4rpp-hhhm",
+      "status": 200,
+      "cve": "CVE-2026-84890",
+      "published_at": "2026-09-29T18:20:37Z",
+      "updated_at": "2026-09-29T18:20:38Z",
+      "severity": "medium",
+      "summary": "undici vulnerable to Denial of Service via unbounded decompression of compressed responses",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.15.0, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-3xpg-4rpp-hhhm",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-84890",
+        "https://github.com/nodejs/undici/commit/2c7d7e1227043c644c4c32cfd1e276f4fd4fcb11",
+        "https://github.com/nodejs/undici/commit/7aac7f12f757844763c8b8f1ab6e305e80d55838",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-3xpg-4rpp-hhhm"
+      ]
+    },
+    {
+      "id": "GHSA-2jfj-6hjv-fm6j",
+      "status": 200,
+      "cve": "CVE-2026-84933",
+      "published_at": "2026-09-29T18:19:58Z",
+      "updated_at": "2026-09-29T18:19:59Z",
+      "severity": "medium",
+      "summary": "undici vulnerable to cross-user cookie disclosure via Set-Cookie caching in shared caches",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-2jfj-6hjv-fm6j",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-84933",
+        "https://github.com/nodejs/undici/commit/b6c5a00252c37da9dd2db9bead053bb843e1f988",
+        "https://github.com/nodejs/undici/commit/cb75bbb34224a968b4ad80cab8b7aba5e0b3b28a",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-2jfj-6hjv-fm6j"
+      ]
+    },
+    {
+      "id": "GHSA-2gqq-gqf2-x968",
+      "status": 200,
+      "cve": "CVE-2026-84947",
+      "published_at": "2026-09-29T18:18:51Z",
+      "updated_at": "2026-09-29T18:18:52Z",
+      "severity": "low",
+      "summary": "undici vulnerable to response truncation via oversized chunked responses in the dump interceptor",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.1.0, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-2gqq-gqf2-x968",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-84947",
+        "https://github.com/nodejs/undici/commit/21693f406f0142f3504192e9f9b022dcf84782ae",
+        "https://github.com/nodejs/undici/commit/6d583124e7cf60b640097d64144ed633cc450584",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-2gqq-gqf2-x968"
+      ]
+    },
+    {
+      "id": "GHSA-w293-vg96-wgc3",
+      "status": 200,
+      "cve": "CVE-2026-84961",
+      "published_at": "2026-09-29T18:17:15Z",
+      "updated_at": "2026-09-29T18:17:16Z",
+      "severity": "high",
+      "summary": "undici vulnerable to TLS certificate validation bypass via dropped connect options in BalancedPool",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.24.1, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-w293-vg96-wgc3",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-84961",
+        "https://github.com/nodejs/undici/commit/8f5868fbdbc8f1146dfc1bcd1f2d117790141390",
+        "https://github.com/nodejs/undici/commit/f690157d728508652fef14673630c71515123e96",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-w293-vg96-wgc3"
+      ]
+    },
+    {
+      "id": "GHSA-8436-99hf-9mmv",
+      "status": 200,
+      "cve": "CVE-2026-85008",
+      "published_at": "2026-09-29T18:16:28Z",
+      "updated_at": "2026-09-29T18:16:29Z",
+      "severity": "low",
+      "summary": "undici vulnerable to caching and replay of unsafe HTTP method responses",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-8436-99hf-9mmv",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-85008",
+        "https://github.com/nodejs/undici/commit/2be07bf97b3022e0324142d31f99f6e019d815e3",
+        "https://github.com/nodejs/undici/commit/b61d9432bac7caac51273ad209862e4c0bf935ae",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-8436-99hf-9mmv"
+      ]
+    },
+    {
+      "id": "GHSA-rx4f-c7p8-82vq",
+      "status": 200,
+      "cve": "CVE-2026-85014",
+      "published_at": "2026-09-29T18:10:32Z",
+      "updated_at": "2026-09-29T18:10:33Z",
+      "severity": "medium",
+      "summary": "undici vulnerable to Denial of Service via WebSocketStream unclean close",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.29.1",
+          "first_patched_version": "7.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.10.2",
+          "first_patched_version": "8.10.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/nodejs/undici/security/advisories/GHSA-rx4f-c7p8-82vq",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-85014",
+        "https://github.com/nodejs/undici/commit/1858656ebb1e919311c1f31613dfd581b7214349",
+        "https://github.com/nodejs/undici/commit/662d0ea671fe64139e79533c913fce412765e1d7",
+        "https://cna.openjsf.org/security-advisories.html",
+        "https://github.com/nodejs/undici/releases/tag/v7.29.1",
+        "https://github.com/nodejs/undici/releases/tag/v8.10.2",
+        "https://github.com/advisories/GHSA-rx4f-c7p8-82vq"
+      ]
+    },
+    {
+      "id": "GHSA-587h-7wmj-h5pm",
+      "status": 403,
+      "error": "API rate limit exceeded for 31.59.133.31. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)"
+    },
+    {
+      "id": "GHSA-698v-4r3x-3vcv",
+      "status": 200,
+      "cve": "CVE-2026-112943",
+      "published_at": "2026-10-20T18:30:24Z",
+      "updated_at": "2026-10-20T18:30:25Z",
+      "severity": "medium",
+      "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "launch-editor"
+          },
+          "vulnerable_version_range": "<= 2.14.1",
+          "first_patched_version": "2.14.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.3.0, <= 8.3.2",
+          "first_patched_version": "8.3.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.2.0, <= 8.2.3",
+          "first_patched_version": "8.2.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.1.5",
+          "first_patched_version": "8.1.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 7.0.0, <= 7.3.6",
+          "first_patched_version": "7.3.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": "<= 6.4.3",
+          "first_patched_version": "6.4.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite-plus"
+          },
+          "vulnerable_version_range": "<= 1.0.0",
+          "first_patched_version": "1.1.0",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-112943",
+        "https://github.com/vitejs/launch-editor/pull/155",
+        "https://github.com/vitejs/launch-editor/commit/3c2f9bf2ff8fe63d056a8f9cc52d825b66ca79fc",
+        "https://github.com/vitejs/launch-editor/releases/tag/v2.14.2",
+        "https://github.com/advisories/GHSA-698v-4r3x-3vcv"
+      ]
+    },
+    {
+      "id": "GHSA-r825-w8mm-5pxw",
+      "status": 200,
+      "cve": "CVE-2026-112944",
+      "published_at": "2026-10-20T19:51:52Z",
+      "updated_at": "2026-10-20T19:51:54Z",
+      "severity": "medium",
+      "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "launch-editor"
+          },
+          "vulnerable_version_range": "<= 2.14.1",
+          "first_patched_version": "2.14.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.3.0, <= 8.3.2",
+          "first_patched_version": "8.3.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.2.0, <= 8.2.3",
+          "first_patched_version": "8.2.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.1.5",
+          "first_patched_version": "8.1.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 7.0.0, <= 7.3.6",
+          "first_patched_version": "7.3.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": "<= 6.4.3",
+          "first_patched_version": "6.4.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite-plus"
+          },
+          "vulnerable_version_range": "<= 1.0.0",
+          "first_patched_version": "1.1.0",
+          "vulnerable_functions": []
+        }
+      ],
+      "references": [
+        "https://github.com/vitejs/launch-editor/security/advisories/GHSA-r825-w8mm-5pxw",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-112944",
+        "https://github.com/vitejs/launch-editor/pull/156",
+        "https://github.com/vitejs/launch-editor/commit/f6e6701bb1f16f2dd242b321374f1b6cca6eb6d4",
+        "https://github.com/vitejs/launch-editor/releases/tag/v2.14.2",
+        "https://github.com/advisories/GHSA-r825-w8mm-5pxw"
+      ]
+    },
+    {
+      "id": "GHSA-rq7h-c2jc-7f22",
+      "status": 403,
+      "error": "API rate limit exceeded for 31.59.133.31. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)"
+    },
+    {
+      "id": "GHSA-9jrq-w75r-8gcw",
+      "status": 403,
+      "error": "API rate limit exceeded for 31.59.133.31. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)"
+    }
+  ]
+}

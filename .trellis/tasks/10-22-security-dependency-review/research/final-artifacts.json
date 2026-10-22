@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-22",
+  "dev_image": {
+    "id": "sha256:b4936ec7a835b5c2fbbe188658691332ea77771f7000f317395c21d5fd88a8ee",
+    "node": "22.23.4",
+    "abi": "127",
+    "chrome": "Google Chrome 156.0.8078.47",
+    "zip": "This is Zip 3.0 (July 5th 2008), by Info-ZIP."
+  },
+  "node_addon_after_packaging": {
+    "node": "v22.23.4",
+    "abi": "127",
+    "sqlite": "3.53.4"
+  },
+  "electron": {
+    "artifact": {
+      "path": "out/make/zip/linux/x64/luna-linux-x64-0.1.0.zip",
+      "size": 127563622,
+      "sha256": "2eecb0f57434cfc7c312f427fd519ee1d1c190b72c059214abcb15f5c10c53d2"
+    },
+    "runtime": {
+      "electron": "44.9.3",
+      "node": "24.22.0",
+      "chrome": "152.0.7977.167",
+      "modules": "149"
+    },
+    "zip_integrity": "passed",
+    "make_exit_code": 0,
+    "storage_smoke_exit_code": 0,
+    "file_input_smoke_exit_code": 0,
+    "sandbox": "default enabled; no LUNA_ELECTRON_NO_SANDBOX",
+    "logs": [
+      "/tmp/luna-security-electron-make-final.log",
+      "/tmp/luna-security-made-storage.log",
+      "/tmp/luna-security-made-file-input.log"
+    ]
+  },
+  "android": {
+    "artifact": {
+      "path": "/tmp/luna-security-android-artifacts/luna-debug.apk",
+      "size": 5173309,
+      "sha256": "45114b541c52e0a71bc6b0226b32c78989a3d2da095439b9e273d636c87ec1f4"
+    },
+    "build_signature_checksum": "passed",
+    "runtime": "research/android-runtime-result.json"
+  },
+  "boundaries": [
+    "Synthetic temporary test data only",
+    "No production deployment or real-user data access",
+    "No physical-device or native dialog visual acceptance"
+  ],
+  "focused_browser": {
+    "log": "/tmp/luna-security-browser-final.log",
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "projects": [
+      "chrome",
+      "chrome-narrow"
+    ],
+    "image": "sha256:b4936ec7a835b5c2fbbe188658691332ea77771f7000f317395c21d5fd88a8ee"
+  }
+}

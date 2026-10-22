@@ -40,7 +40,7 @@
     "smoke:server-restore": "node scripts/smoke-server-restore.mjs"
   },
   "devDependencies": {
-    "@capacitor/cli": "8.5.0",
+    "@capacitor/cli": "8.5.3",
     "@electron-forge/cli": "7.11.2",
     "@electron-forge/maker-zip": "7.11.2",
     "@electron-forge/plugin-vite": "7.11.2",
@@ -52,17 +52,17 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "4.7.0",
-    "electron": "44.0.0",
+    "electron": "44.9.3",
     "fake-indexeddb": "6.2.5",
     "tailwindcss": "4.3.3",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3",
-    "vite": "6.4.3"
+    "vite": "6.4.5"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1121.0",
-    "@capacitor/android": "8.5.0",
-    "@capacitor/core": "8.5.0",
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3",
     "@fastify/swagger": "9.8.1",
     "@noble/hashes": "2.4.0",
     "@radix-ui/react-alert-dialog": "1.1.23",
@@ -74,7 +74,7 @@
     "better-sqlite3": "13.0.3",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "fastify": "5.12.3",
+    "fastify": "5.12.7",
     "lucide-react": "1.42.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -91,7 +91,7 @@
     "@electron/packager": {
       "extract-zip": "npm:@electron-internal/extract-zip@1.0.1"
     },
-    "js-yaml": "4.3.1"
+    "js-yaml": "4.3.2"
   },
   "config": {
     "forge": "forge.config.ts"

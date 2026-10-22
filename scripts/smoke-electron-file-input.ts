@@ -33,6 +33,7 @@ async function main(): Promise<void> {
     electronApp = await _electron.launch({
       executablePath: executable,
       args: noSandbox ? ['--no-sandbox'] : [],
+      chromiumSandbox: !noSandbox,
       env: {
         ...process.env,
         HOME: homeDirectory,
@@ -54,7 +55,7 @@ async function main(): Promise<void> {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
   } finally {
-    await electronApp?.evaluate(({ app }) => app.exit(0)).catch(() => undefined);
+    await electronApp?.close();
     rmSync(homeDirectory, { recursive: true, force: true });
   }
 }

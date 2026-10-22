@@ -16,10 +16,13 @@ const expect = playwrightExpect.configure({ timeout: 30_000 });
 /** Exercise Android's actual date dialog, then verify its ISO renderer value. */
 async function verifyEntryDatePicker(page: Page, device: AndroidDevice): Promise<string> {
   const date = page.locator('#transaction-date');
-  await date.fill('2026-09-28');
+  const initialDate = await date.inputValue();
+  assert.match(initialDate, /^\d{4}-\d{2}-\d{2}$/);
+  const month = initialDate.slice(0, 7);
+  const targetDate = `${month}-16`;
+  await date.fill(`${month}-15`);
   await date.click();
 
-  const targetDate = '2026-09-29';
   const targetLabel = new Intl.DateTimeFormat('en-GB', {
     month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC',
   }).format(new Date(`${targetDate}T00:00:00.000Z`));
@@ -61,7 +64,7 @@ async function verifyEntryDatePicker(page: Page, device: AndroidDevice): Promise
   await expect(date).toHaveValue(targetDate);
   const projection = page.locator('.date-picker-mobile-value');
   await expect(projection).toBeVisible();
-  await expect(projection).toHaveText('2026/09/29');
+  await expect(projection).toHaveText(targetDate.replaceAll('-', '/'));
   const projectionGeometry = await projection.evaluate((element) => {
     const input = document.getElementById('transaction-date');
     if (!(input instanceof HTMLInputElement)) throw new Error('Transaction date input is missing.');

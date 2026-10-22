@@ -1,0 +1,186 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@capacitor/android": {
+      "name": "@capacitor/android",
+      "severity": "critical",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1241242,
+          "name": "@capacitor/android",
+          "dependency": "@capacitor/android",
+          "title": "Capacitor Android and iOS: remote content can be loaded at the app origin via the internal HTTP proxy path",
+          "url": "https://github.com/advisories/GHSA-rvm3-566m-v7fv",
+          "severity": "critical",
+          "cwe": [
+            "CWE-346",
+            "CWE-441"
+          ],
+          "cvss": {
+            "score": 9.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:N"
+          },
+          "range": ">=8.5.0 <8.5.1"
+        }
+      ],
+      "effects": [],
+      "range": ">=8.5.0 <8.5.1",
+      "nodes": [
+        "node_modules/@capacitor/android"
+      ],
+      "fixAvailable": {
+        "name": "@capacitor/android",
+        "version": "8.5.3",
+        "isSemVerMajor": false
+      }
+    },
+    "fast-uri": {
+      "name": "fast-uri",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1239943,
+          "name": "fast-uri",
+          "dependency": "fast-uri",
+          "title": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
+          "url": "https://github.com/advisories/GHSA-qw65-cvwx-89v3",
+          "severity": "high",
+          "cwe": [
+            "CWE-116"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+          },
+          "range": ">=3.0.0 <3.1.7"
+        },
+        {
+          "source": 1239946,
+          "name": "fast-uri",
+          "dependency": "fast-uri",
+          "title": "fast-uri vulnerable to host confusion via an unclosed bracket in the URI authority",
+          "url": "https://github.com/advisories/GHSA-58mr-gqgx-xq4g",
+          "severity": "high",
+          "cwe": [
+            "CWE-436"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+          },
+          "range": "=3.1.6"
+        },
+        {
+          "source": 1240090,
+          "name": "fast-uri",
+          "dependency": "fast-uri",
+          "title": "fast-uri vulnerable to inconsistent host case normalization via percent-encoded octets",
+          "url": "https://github.com/advisories/GHSA-hrr3-gc8f-f4qj",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-178"
+          ],
+          "cvss": {
+            "score": 4.8,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N"
+          },
+          "range": ">=4.0.0 <4.1.5"
+        },
+        {
+          "source": 1240091,
+          "name": "fast-uri",
+          "dependency": "fast-uri",
+          "title": "fast-uri vulnerable to inconsistent host case normalization via percent-encoded octets",
+          "url": "https://github.com/advisories/GHSA-hrr3-gc8f-f4qj",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-178"
+          ],
+          "cvss": {
+            "score": 4.8,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N"
+          },
+          "range": ">=3.0.0 <3.1.8"
+        },
+        {
+          "source": 1240093,
+          "name": "fast-uri",
+          "dependency": "fast-uri",
+          "title": "fast-uri vulnerable to mailto header injection via percent-encoded field-name desynchronization",
+          "url": "https://github.com/advisories/GHSA-jvvf-x445-j334",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-172",
+            "CWE-436"
+          ],
+          "cvss": {
+            "score": 4.8,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N"
+          },
+          "range": ">=4.1.3 <4.1.5"
+        }
+      ],
+      "effects": [],
+      "range": "3.0.0 - 3.1.7 || 4.0.0 - 4.1.4",
+      "nodes": [
+        "node_modules/@fastify/ajv-compiler/node_modules/fast-uri",
+        "node_modules/fast-json-stringify/node_modules/fast-uri",
+        "node_modules/fast-uri"
+      ],
+      "fixAvailable": true
+    },
+    "fastify": {
+      "name": "fastify",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1240639,
+          "name": "fastify",
+          "dependency": "fastify",
+          "title": "fastify vulnerable to Denial of Service via unhandled exception on HTTP/2 trailer responses",
+          "url": "https://github.com/advisories/GHSA-4mh8-r7rc-xpvc",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-248"
+          ],
+          "cvss": {
+            "score": 5.9,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": "<5.12.5"
+        }
+      ],
+      "effects": [],
+      "range": "<5.12.5",
+      "nodes": [
+        "node_modules/fastify"
+      ],
+      "fixAvailable": {
+        "name": "fastify",
+        "version": "5.12.7",
+        "isSemVerMajor": false
+      }
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 1,
+      "high": 1,
+      "critical": 1,
+      "total": 3
+    },
+    "dependencies": {
+      "prod": 138,
+      "dev": 727,
+      "optional": 130,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 864
+    }
+  }
+}

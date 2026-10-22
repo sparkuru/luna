@@ -1,0 +1,5414 @@
+{
+  "baseline": "73b4384",
+  "lockfileVersion": 3,
+  "direct": [
+    {
+      "kind": "dependencies",
+      "name": "@aws-sdk/client-s3",
+      "declared": "3.1121.0",
+      "locked": "3.1121.0"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@capacitor/android",
+      "declared": "8.5.0",
+      "locked": "8.5.0"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@capacitor/core",
+      "declared": "8.5.0",
+      "locked": "8.5.0"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@fastify/swagger",
+      "declared": "9.8.1",
+      "locked": "9.8.1"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@noble/hashes",
+      "declared": "2.4.0",
+      "locked": "2.4.0"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@radix-ui/react-alert-dialog",
+      "declared": "1.1.23",
+      "locked": "1.1.23"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@radix-ui/react-dialog",
+      "declared": "1.1.23",
+      "locked": "1.1.23"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@radix-ui/react-slot",
+      "declared": "1.3.3",
+      "locked": "1.3.3"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@sqlite.org/sqlite-wasm",
+      "declared": "3.53.0-build1",
+      "locked": "3.53.0-build1"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@tanstack/react-query",
+      "declared": "5.102.8",
+      "locked": "5.102.8"
+    },
+    {
+      "kind": "dependencies",
+      "name": "@tanstack/react-router",
+      "declared": "1.170.33",
+      "locked": "1.170.33"
+    },
+    {
+      "kind": "dependencies",
+      "name": "better-sqlite3",
+      "declared": "13.0.3",
+      "locked": "13.0.3"
+    },
+    {
+      "kind": "dependencies",
+      "name": "class-variance-authority",
+      "declared": "0.7.1",
+      "locked": "0.7.1"
+    },
+    {
+      "kind": "dependencies",
+      "name": "clsx",
+      "declared": "2.1.1",
+      "locked": "2.1.1"
+    },
+    {
+      "kind": "dependencies",
+      "name": "fastify",
+      "declared": "5.12.3",
+      "locked": "5.12.3"
+    },
+    {
+      "kind": "dependencies",
+      "name": "lucide-react",
+      "declared": "1.42.0",
+      "locked": "1.42.0"
+    },
+    {
+      "kind": "dependencies",
+      "name": "react",
+      "declared": "19.2.4",
+      "locked": "19.2.4"
+    },
+    {
+      "kind": "dependencies",
+      "name": "react-dom",
+      "declared": "19.2.4",
+      "locked": "19.2.4"
+    },
+    {
+      "kind": "dependencies",
+      "name": "tailwind-merge",
+      "declared": "3.5.0",
+      "locked": "3.5.0"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@capacitor/cli",
+      "declared": "8.5.0",
+      "locked": "8.5.0"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@electron-forge/cli",
+      "declared": "7.11.2",
+      "locked": "7.11.2"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@electron-forge/maker-zip",
+      "declared": "7.11.2",
+      "locked": "7.11.2"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@electron-forge/plugin-vite",
+      "declared": "7.11.2",
+      "locked": "7.11.2"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@hey-api/openapi-ts",
+      "declared": "0.99.0",
+      "locked": "0.99.0"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@playwright/test",
+      "declared": "1.63.0",
+      "locked": "1.63.0"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@tailwindcss/vite",
+      "declared": "4.3.3",
+      "locked": "4.3.3"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@types/better-sqlite3",
+      "declared": "^7.6.13",
+      "locked": "7.6.13"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@types/node",
+      "declared": "^22.15.0",
+      "locked": "22.20.1"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@types/react",
+      "declared": "19.2.14",
+      "locked": "19.2.14"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@types/react-dom",
+      "declared": "19.2.3",
+      "locked": "19.2.3"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "@vitejs/plugin-react",
+      "declared": "4.7.0",
+      "locked": "4.7.0"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "electron",
+      "declared": "44.0.0",
+      "locked": "44.0.0"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "fake-indexeddb",
+      "declared": "6.2.5",
+      "locked": "6.2.5"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "tailwindcss",
+      "declared": "4.3.3",
+      "locked": "4.3.3"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "tsx",
+      "declared": "^4.19.3",
+      "locked": "4.23.13"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "typescript",
+      "declared": "^5.8.3",
+      "locked": "5.9.3"
+    },
+    {
+      "kind": "devDependencies",
+      "name": "vite",
+      "declared": "6.4.3",
+      "locked": "6.4.3"
+    }
+  ],
+  "packages": [
+    {
+      "path": "node_modules/@aws-sdk/checksums",
+      "version": "3.1000.29",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/client-s3",
+      "version": "3.1121.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/core",
+      "version": "3.977.9",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/credential-provider-env",
+      "version": "3.972.70",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/credential-provider-http",
+      "version": "3.972.72",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/credential-provider-ini",
+      "version": "3.973.15",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/credential-provider-login",
+      "version": "3.972.77",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/credential-provider-node",
+      "version": "3.972.81",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/credential-provider-process",
+      "version": "3.972.70",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/credential-provider-sso",
+      "version": "3.973.14",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/credential-provider-web-identity",
+      "version": "3.972.76",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/middleware-sdk-s3",
+      "version": "3.972.75",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/nested-clients",
+      "version": "3.997.44",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/signature-v4-multi-region",
+      "version": "3.996.46",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/token-providers",
+      "version": "3.1116.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/types",
+      "version": "3.974.5",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws-sdk/xml-builder",
+      "version": "3.972.40",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@aws/lambda-invoke-store",
+      "version": "0.3.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/code-frame",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/compat-data",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/core",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/core/node_modules/semver",
+      "version": "6.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/generator",
+      "version": "7.29.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-compilation-targets",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-compilation-targets/node_modules/lru-cache",
+      "version": "5.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-compilation-targets/node_modules/semver",
+      "version": "6.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-compilation-targets/node_modules/yallist",
+      "version": "3.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-globals",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-module-imports",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-module-transforms",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-plugin-utils",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-string-parser",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-validator-identifier",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helper-validator-option",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/helpers",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/parser",
+      "version": "7.29.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/plugin-transform-react-jsx-self",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/plugin-transform-react-jsx-source",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/template",
+      "version": "7.29.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/traverse",
+      "version": "7.29.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@babel/types",
+      "version": "7.29.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/android",
+      "version": "8.5.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/cli",
+      "version": "8.5.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/cli/node_modules/balanced-match",
+      "version": "4.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/cli/node_modules/brace-expansion",
+      "version": "5.0.9",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/cli/node_modules/commander",
+      "version": "12.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/cli/node_modules/fs-extra",
+      "version": "11.4.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/cli/node_modules/glob",
+      "version": "13.0.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/cli/node_modules/minimatch",
+      "version": "10.2.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/cli/node_modules/minipass",
+      "version": "7.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/cli/node_modules/rimraf",
+      "version": "6.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@capacitor/core",
+      "version": "8.5.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/cli",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/core",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/core-utils",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/maker-base",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/maker-zip",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/plugin-base",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/plugin-vite",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/publisher-base",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/shared-types",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/template-base",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/template-vite",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/template-vite-typescript",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/template-webpack",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/template-webpack-typescript",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/template-webpack-typescript/node_modules/typescript",
+      "version": "5.4.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-forge/tracer",
+      "version": "7.11.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron-internal/extract-zip",
+      "version": "1.0.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/asar",
+      "version": "3.4.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/asar/node_modules/commander",
+      "version": "5.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/get",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/get/node_modules/fs-extra",
+      "version": "8.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/get/node_modules/jsonfile",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/get/node_modules/semver",
+      "version": "6.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/get/node_modules/universalify",
+      "version": "0.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/node-gyp",
+      "version": "10.2.0-electron.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/node-gyp/node_modules/brace-expansion",
+      "version": "2.1.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/node-gyp/node_modules/glob",
+      "version": "8.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/node-gyp/node_modules/minimatch",
+      "version": "5.1.9",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/notarize",
+      "version": "2.5.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/notarize/node_modules/fs-extra",
+      "version": "9.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/osx-sign",
+      "version": "1.3.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/packager",
+      "version": "18.4.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/packager/node_modules/extract-zip",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/packager/node_modules/fs-extra",
+      "version": "11.4.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/rebuild",
+      "version": "3.7.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/universal",
+      "version": "2.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/universal/node_modules/brace-expansion",
+      "version": "2.1.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/universal/node_modules/fs-extra",
+      "version": "11.4.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/universal/node_modules/minimatch",
+      "version": "9.0.9",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/windows-sign",
+      "version": "1.2.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@electron/windows-sign/node_modules/fs-extra",
+      "version": "11.4.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@esbuild/aix-ppc64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/android-arm",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/android-arm64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/android-x64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/darwin-arm64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/darwin-x64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/freebsd-arm64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/freebsd-x64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/linux-arm",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/linux-arm64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/linux-ia32",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/linux-loong64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/linux-mips64el",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/linux-ppc64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/linux-riscv64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/linux-s390x",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/linux-x64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/netbsd-arm64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/netbsd-x64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/openbsd-arm64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/openbsd-x64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/openharmony-arm64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/sunos-x64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/win32-arm64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/win32-ia32",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@esbuild/win32-x64",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@fastify/ajv-compiler",
+      "version": "4.0.6",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@fastify/ajv-compiler/node_modules/ajv-formats",
+      "version": "3.0.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@fastify/ajv-compiler/node_modules/fast-uri",
+      "version": "4.1.4",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@fastify/error",
+      "version": "4.2.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@fastify/fast-json-stringify-compiler",
+      "version": "5.1.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@fastify/forwarded",
+      "version": "3.0.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@fastify/merge-json-schemas",
+      "version": "0.2.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@fastify/proxy-addr",
+      "version": "5.1.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@fastify/swagger",
+      "version": "9.8.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@gar/promisify",
+      "version": "1.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/codegen-core",
+      "version": "0.9.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/json-schema-ref-parser",
+      "version": "1.4.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/openapi-ts",
+      "version": "0.99.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/openapi-ts/node_modules/commander",
+      "version": "15.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/shared",
+      "version": "0.5.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/shared/node_modules/define-lazy-prop",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/shared/node_modules/open",
+      "version": "11.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/shared/node_modules/semver",
+      "version": "7.8.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/spec-types",
+      "version": "0.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@hey-api/types",
+      "version": "0.1.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/checkbox",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/confirm",
+      "version": "4.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/core",
+      "version": "9.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/editor",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/expand",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/figures",
+      "version": "1.0.15",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/input",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/number",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/password",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/prompts",
+      "version": "6.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/rawlist",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/search",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/select",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@inquirer/type",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/cli-framework-output",
+      "version": "2.2.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-array",
+      "version": "2.1.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-fs",
+      "version": "3.1.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-fs/node_modules/fs-extra",
+      "version": "9.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-object",
+      "version": "2.1.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-process",
+      "version": "2.1.12",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-process/node_modules/signal-exit",
+      "version": "3.0.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-stream",
+      "version": "3.1.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-subprocess",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-terminal",
+      "version": "2.3.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-terminal/node_modules/emoji-regex",
+      "version": "8.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-terminal/node_modules/is-fullwidth-code-point",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-terminal/node_modules/signal-exit",
+      "version": "3.0.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-terminal/node_modules/slice-ansi",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-terminal/node_modules/string-width",
+      "version": "4.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@ionic/utils-terminal/node_modules/wrap-ansi",
+      "version": "7.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@isaacs/fs-minipass",
+      "version": "4.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@isaacs/fs-minipass/node_modules/minipass",
+      "version": "7.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@jridgewell/gen-mapping",
+      "version": "0.3.13",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@jridgewell/remapping",
+      "version": "2.3.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@jridgewell/resolve-uri",
+      "version": "3.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@jridgewell/source-map",
+      "version": "0.3.11",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@jridgewell/trace-mapping",
+      "version": "0.3.31",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@jsdevtools/ono",
+      "version": "7.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@listr2/prompt-adapter-inquirer",
+      "version": "2.0.22",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@listr2/prompt-adapter-inquirer/node_modules/@inquirer/type",
+      "version": "1.5.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@lukeed/ms",
+      "version": "2.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@malept/cross-spawn-promise",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@napi-rs/lzma-linux-x64-gnu",
+      "version": "1.5.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@noble/hashes",
+      "version": "2.4.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@nodelib/fs.scandir",
+      "version": "2.1.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@nodelib/fs.stat",
+      "version": "2.0.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@nodelib/fs.walk",
+      "version": "1.2.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@npmcli/fs",
+      "version": "2.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@npmcli/move-file",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@pinojs/redact",
+      "version": "0.4.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@playwright/test",
+      "version": "1.63.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/primitive",
+      "version": "1.1.7",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-alert-dialog",
+      "version": "1.1.23",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-compose-refs",
+      "version": "1.1.5",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-context",
+      "version": "1.2.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-dialog",
+      "version": "1.1.23",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-dismissable-layer",
+      "version": "1.1.19",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-focus-guards",
+      "version": "1.1.6",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-focus-scope",
+      "version": "1.1.16",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-id",
+      "version": "1.1.4",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-portal",
+      "version": "1.1.17",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-presence",
+      "version": "1.1.10",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-primitive",
+      "version": "2.1.10",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-slot",
+      "version": "1.3.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-use-callback-ref",
+      "version": "1.1.4",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-use-controllable-state",
+      "version": "1.2.6",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-use-effect-event",
+      "version": "0.0.5",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@radix-ui/react-use-layout-effect",
+      "version": "1.1.4",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@rolldown/pluginutils",
+      "version": "1.0.0-beta.27",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@rollup/rollup-android-arm-eabi",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-android-arm64",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-darwin-arm64",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-darwin-x64",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-freebsd-arm64",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-freebsd-x64",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-arm-gnueabihf",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-arm-musleabihf",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-arm64-gnu",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-arm64-musl",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-loong64-gnu",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-loong64-musl",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-ppc64-gnu",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-ppc64-musl",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-riscv64-gnu",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-riscv64-musl",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-s390x-gnu",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-x64-gnu",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-x64-musl",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-openbsd-x64",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-openharmony-arm64",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-win32-arm64-msvc",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-win32-ia32-msvc",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-win32-x64-gnu",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@rollup/rollup-win32-x64-msvc",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@sindresorhus/is",
+      "version": "4.6.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@smithy/core",
+      "version": "3.33.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@smithy/credential-provider-imds",
+      "version": "4.5.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@smithy/fetch-http-handler",
+      "version": "5.7.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@smithy/node-http-handler",
+      "version": "4.11.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@smithy/signature-v4",
+      "version": "5.7.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@smithy/types",
+      "version": "4.17.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@sqlite.org/sqlite-wasm",
+      "version": "3.53.0-build1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@szmarczak/http-timer",
+      "version": "4.0.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tailwindcss/node",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-android-arm64",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-darwin-arm64",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-darwin-x64",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-freebsd-x64",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-linux-arm-gnueabihf",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-linux-arm64-gnu",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-linux-arm64-musl",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-linux-x64-gnu",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-linux-x64-musl",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-wasm32-wasi",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/core",
+      "version": "1.11.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/runtime",
+      "version": "1.11.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/wasi-threads",
+      "version": "1.2.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@napi-rs/wasm-runtime",
+      "version": "1.1.4",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@tybys/wasm-util",
+      "version": "0.10.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/tslib",
+      "version": "2.8.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-win32-arm64-msvc",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-win32-x64-msvc",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/@tailwindcss/vite",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tanstack/history",
+      "version": "1.162.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tanstack/query-core",
+      "version": "5.102.8",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tanstack/react-query",
+      "version": "5.102.8",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tanstack/react-router",
+      "version": "1.170.33",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tanstack/react-store",
+      "version": "0.9.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tanstack/router-core",
+      "version": "1.171.28",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tanstack/store",
+      "version": "0.9.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@tootallnate/once",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/babel__core",
+      "version": "7.20.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/babel__generator",
+      "version": "7.27.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/babel__template",
+      "version": "7.4.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/babel__traverse",
+      "version": "7.28.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/better-sqlite3",
+      "version": "7.6.13",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/cacheable-request",
+      "version": "6.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/estree",
+      "version": "1.0.9",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/fs-extra",
+      "version": "8.1.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/http-cache-semantics",
+      "version": "4.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/json-schema",
+      "version": "7.0.15",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/keyv",
+      "version": "3.1.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/mute-stream",
+      "version": "0.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/node",
+      "version": "22.20.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/react",
+      "version": "19.2.14",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/react-dom",
+      "version": "19.2.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/responselike",
+      "version": "1.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/slice-ansi",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/wrap-ansi",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@vitejs/plugin-react",
+      "version": "4.7.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@vscode/sudo-prompt",
+      "version": "9.3.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/ast",
+      "version": "1.14.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/floating-point-hex-parser",
+      "version": "1.13.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/helper-api-error",
+      "version": "1.13.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/helper-buffer",
+      "version": "1.14.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/helper-numbers",
+      "version": "1.13.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/helper-wasm-bytecode",
+      "version": "1.13.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/helper-wasm-section",
+      "version": "1.14.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/ieee754",
+      "version": "1.13.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/leb128",
+      "version": "1.13.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/utf8",
+      "version": "1.13.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/wasm-edit",
+      "version": "1.14.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/wasm-gen",
+      "version": "1.14.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/wasm-opt",
+      "version": "1.14.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/wasm-parser",
+      "version": "1.14.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@webassemblyjs/wast-printer",
+      "version": "1.14.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@xmldom/xmldom",
+      "version": "0.9.12",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@xtuc/ieee754",
+      "version": "1.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@xtuc/long",
+      "version": "4.2.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/abbrev",
+      "version": "1.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/abstract-logging",
+      "version": "2.0.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/acorn",
+      "version": "8.18.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/agent-base",
+      "version": "6.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/agentkeepalive",
+      "version": "4.6.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/aggregate-error",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ajv",
+      "version": "8.20.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ajv-formats",
+      "version": "2.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ajv-keywords",
+      "version": "5.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ansi-colors",
+      "version": "4.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ansi-escapes",
+      "version": "4.3.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ansi-regex",
+      "version": "5.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ansi-styles",
+      "version": "4.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/argparse",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/aria-hidden",
+      "version": "1.2.6",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/astral-regex",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/at-least-node",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/atomic-sleep",
+      "version": "1.0.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/author-regex",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/avvio",
+      "version": "9.3.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/balanced-match",
+      "version": "1.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/base64-js",
+      "version": "1.5.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/baseline-browser-mapping",
+      "version": "2.11.20",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/better-sqlite3",
+      "version": "13.0.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/big-integer",
+      "version": "1.6.52",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/bl",
+      "version": "4.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/bluebird",
+      "version": "3.7.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/boolean",
+      "version": "3.2.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/bowser",
+      "version": "2.14.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/bplist-creator",
+      "version": "0.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/bplist-parser",
+      "version": "0.3.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/brace-expansion",
+      "version": "1.1.18",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/braces",
+      "version": "3.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/browserslist",
+      "version": "4.28.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/buffer",
+      "version": "5.7.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/buffer-crc32",
+      "version": "0.2.13",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/buffer-from",
+      "version": "1.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/bundle-name",
+      "version": "4.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/c12",
+      "version": "3.3.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cacache",
+      "version": "16.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cacache/node_modules/brace-expansion",
+      "version": "2.1.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cacache/node_modules/glob",
+      "version": "8.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cacache/node_modules/minimatch",
+      "version": "5.1.9",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cacheable-lookup",
+      "version": "5.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cacheable-request",
+      "version": "7.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/caniuse-lite",
+      "version": "1.0.30001810",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/chalk",
+      "version": "4.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/chardet",
+      "version": "0.7.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/chokidar",
+      "version": "5.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/chownr",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/chrome-trace-event",
+      "version": "1.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/class-variance-authority",
+      "version": "0.7.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/clean-stack",
+      "version": "2.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cli-cursor",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cli-spinners",
+      "version": "2.9.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cli-truncate",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cli-width",
+      "version": "4.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cliui",
+      "version": "8.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cliui/node_modules/emoji-regex",
+      "version": "8.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cliui/node_modules/is-fullwidth-code-point",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cliui/node_modules/string-width",
+      "version": "4.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cliui/node_modules/wrap-ansi",
+      "version": "7.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/clone",
+      "version": "1.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/clone-response",
+      "version": "1.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/clsx",
+      "version": "2.1.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/color-convert",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/color-name",
+      "version": "1.1.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/color-support",
+      "version": "1.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/colorette",
+      "version": "2.0.20",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/commander",
+      "version": "11.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/compare-version",
+      "version": "0.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/concat-map",
+      "version": "0.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/confbox",
+      "version": "0.2.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/convert-source-map",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cookie",
+      "version": "1.1.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cookie-es",
+      "version": "3.1.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cross-dirname",
+      "version": "0.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cross-spawn",
+      "version": "7.0.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/cross-zip",
+      "version": "4.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/csstype",
+      "version": "3.2.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/debug",
+      "version": "4.4.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/decompress-response",
+      "version": "6.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/decompress-response/node_modules/mimic-response",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/default-browser",
+      "version": "5.5.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/default-browser-id",
+      "version": "5.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/defaults",
+      "version": "1.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/defer-to-connect",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/define-data-property",
+      "version": "1.1.4",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/define-lazy-prop",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/define-properties",
+      "version": "1.2.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/defu",
+      "version": "6.1.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/dequal",
+      "version": "2.0.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/destr",
+      "version": "2.0.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/detect-libc",
+      "version": "2.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/detect-node",
+      "version": "2.1.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/detect-node-es",
+      "version": "1.1.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/dir-compare",
+      "version": "4.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/dotenv",
+      "version": "17.4.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/eastasianwidth",
+      "version": "0.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/electron",
+      "version": "44.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/electron-to-chromium",
+      "version": "1.5.416",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/electron/node_modules/@electron/get",
+      "version": "5.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/electron/node_modules/@types/node",
+      "version": "24.13.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/electron/node_modules/env-paths",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/electron/node_modules/undici-types",
+      "version": "7.18.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/elementtree",
+      "version": "0.1.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/emoji-regex",
+      "version": "9.2.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/encoding",
+      "version": "0.1.13",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/encoding/node_modules/iconv-lite",
+      "version": "0.6.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/end-of-stream",
+      "version": "1.4.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/enhanced-resolve",
+      "version": "5.24.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/env-paths",
+      "version": "2.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/err-code",
+      "version": "2.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/error-ex",
+      "version": "1.3.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/es-define-property",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/es-errors",
+      "version": "1.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/es-module-lexer",
+      "version": "2.3.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/es6-error",
+      "version": "4.1.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/esbuild",
+      "version": "0.28.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/escalade",
+      "version": "3.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/escape-string-regexp",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/eta",
+      "version": "3.5.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/eventemitter3",
+      "version": "5.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/events",
+      "version": "3.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/execa",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/execa/node_modules/cross-spawn",
+      "version": "6.0.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/execa/node_modules/get-stream",
+      "version": "4.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/execa/node_modules/path-key",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/execa/node_modules/semver",
+      "version": "5.7.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/execa/node_modules/shebang-command",
+      "version": "1.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/execa/node_modules/shebang-regex",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/execa/node_modules/signal-exit",
+      "version": "3.0.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/execa/node_modules/which",
+      "version": "1.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/exponential-backoff",
+      "version": "3.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/exsolve",
+      "version": "1.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/external-editor",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fake-indexeddb",
+      "version": "6.2.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fast-decode-uri-component",
+      "version": "1.0.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fast-deep-equal",
+      "version": "3.1.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fast-glob",
+      "version": "3.3.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fast-json-stringify",
+      "version": "7.0.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fast-json-stringify/node_modules/ajv-formats",
+      "version": "3.0.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fast-json-stringify/node_modules/fast-uri",
+      "version": "4.1.4",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fast-querystring",
+      "version": "1.1.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fast-uri",
+      "version": "3.1.6",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fastify",
+      "version": "5.12.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fastify-plugin",
+      "version": "6.0.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fastq",
+      "version": "1.20.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fd-slicer",
+      "version": "1.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/filename-reserved-regex",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/filenamify",
+      "version": "4.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fill-range",
+      "version": "7.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/find-my-way",
+      "version": "9.9.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/find-up",
+      "version": "5.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/flora-colossus",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fs-extra",
+      "version": "10.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fs-minipass",
+      "version": "2.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fs.realpath",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/fsevents",
+      "version": "2.3.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/function-bind",
+      "version": "1.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/galactus",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/gensync",
+      "version": "1.0.0-beta.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/get-caller-file",
+      "version": "2.0.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/get-nonce",
+      "version": "1.0.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/get-package-info",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/get-package-info/node_modules/debug",
+      "version": "2.6.9",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/get-package-info/node_modules/ms",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/get-stream",
+      "version": "5.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/get-tsconfig",
+      "version": "4.14.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/giget",
+      "version": "3.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/glob",
+      "version": "7.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/glob-parent",
+      "version": "5.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/global-agent",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/global-dirs",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/globalthis",
+      "version": "1.0.4",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/gopd",
+      "version": "1.2.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/got",
+      "version": "11.8.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/graceful-fs",
+      "version": "4.2.11",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/has-flag",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/has-property-descriptors",
+      "version": "1.0.2",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/hasown",
+      "version": "2.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/hosted-git-info",
+      "version": "2.8.9",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/http-cache-semantics",
+      "version": "4.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/http-proxy-agent",
+      "version": "5.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/http2-wrapper",
+      "version": "1.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/https-proxy-agent",
+      "version": "5.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/humanize-ms",
+      "version": "1.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/iconv-lite",
+      "version": "0.4.24",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ieee754",
+      "version": "1.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/imurmurhash",
+      "version": "0.1.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/indent-string",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/infer-owner",
+      "version": "1.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/inflight",
+      "version": "1.0.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/inherits",
+      "version": "2.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ini",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/interpret",
+      "version": "3.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ip-address",
+      "version": "10.7.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ipaddr.js",
+      "version": "2.5.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-arrayish",
+      "version": "0.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-core-module",
+      "version": "2.16.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-docker",
+      "version": "2.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-extglob",
+      "version": "2.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-fullwidth-code-point",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-glob",
+      "version": "4.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-in-ssh",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-inside-container",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-inside-container/node_modules/is-docker",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-interactive",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-lambda",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-number",
+      "version": "7.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-stream",
+      "version": "1.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-unicode-supported",
+      "version": "0.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/is-wsl",
+      "version": "2.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/isbinaryfile",
+      "version": "4.0.10",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/isbot",
+      "version": "5.2.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/isexe",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/jest-worker",
+      "version": "27.5.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/jest-worker/node_modules/supports-color",
+      "version": "8.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/jiti",
+      "version": "2.7.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/js-tokens",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/js-yaml",
+      "version": "4.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/jsesc",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/json-buffer",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/json-schema-ref-resolver",
+      "version": "3.0.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/json-schema-resolver",
+      "version": "3.0.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/json-schema-traverse",
+      "version": "1.0.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/json-stringify-safe",
+      "version": "5.0.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/json5",
+      "version": "2.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/jsonfile",
+      "version": "6.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/junk",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/keyv",
+      "version": "4.5.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/kleur",
+      "version": "4.1.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/light-my-request",
+      "version": "6.6.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/light-my-request/node_modules/process-warning",
+      "version": "4.0.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/lightningcss",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/lightningcss-android-arm64",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-darwin-arm64",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-darwin-x64",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-freebsd-x64",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-linux-arm-gnueabihf",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-linux-arm64-gnu",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-linux-arm64-musl",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-linux-x64-gnu",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-linux-x64-musl",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-win32-arm64-msvc",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/lightningcss-win32-x64-msvc",
+      "version": "1.32.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/listr2",
+      "version": "7.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/listr2/node_modules/ansi-regex",
+      "version": "6.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/listr2/node_modules/ansi-styles",
+      "version": "6.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/listr2/node_modules/strip-ansi",
+      "version": "7.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/listr2/node_modules/wrap-ansi",
+      "version": "8.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/load-json-file",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/locate-path",
+      "version": "6.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/lodash.get",
+      "version": "4.4.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/log-symbols",
+      "version": "4.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/log-update",
+      "version": "5.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/log-update/node_modules/ansi-escapes",
+      "version": "5.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/log-update/node_modules/ansi-regex",
+      "version": "6.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/log-update/node_modules/ansi-styles",
+      "version": "6.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/log-update/node_modules/strip-ansi",
+      "version": "7.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/log-update/node_modules/type-fest",
+      "version": "1.4.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/log-update/node_modules/wrap-ansi",
+      "version": "8.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/lowercase-keys",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/lru-cache",
+      "version": "7.18.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/lucide-react",
+      "version": "1.42.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/magic-string",
+      "version": "0.30.21",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/make-fetch-happen",
+      "version": "10.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/map-age-cleaner",
+      "version": "0.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/matcher",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/mem",
+      "version": "4.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/merge-stream",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/merge2",
+      "version": "1.4.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/micromatch",
+      "version": "4.0.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/mime-db",
+      "version": "1.54.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/mimic-fn",
+      "version": "2.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/mimic-response",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minimatch",
+      "version": "3.1.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minimist",
+      "version": "1.2.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minimizer-webpack-plugin",
+      "version": "5.8.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minipass",
+      "version": "3.3.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minipass-collect",
+      "version": "1.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minipass-fetch",
+      "version": "2.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minipass-flush",
+      "version": "1.0.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minipass-pipeline",
+      "version": "1.2.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minipass-sized",
+      "version": "1.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/minizlib",
+      "version": "2.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/mkdirp",
+      "version": "1.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ms",
+      "version": "2.1.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/mute-stream",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/nanoid",
+      "version": "3.3.18",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/native-run",
+      "version": "2.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/native-run/node_modules/ini",
+      "version": "4.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/negotiator",
+      "version": "0.6.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/neo-async",
+      "version": "2.6.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/nice-try",
+      "version": "1.0.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/node-abi",
+      "version": "3.96.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/node-addon-api",
+      "version": "8.9.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/node-api-version",
+      "version": "0.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/node-fetch",
+      "version": "2.7.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/node-releases",
+      "version": "2.0.54",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/nopt",
+      "version": "6.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/normalize-package-data",
+      "version": "2.5.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/normalize-package-data/node_modules/semver",
+      "version": "5.7.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/normalize-url",
+      "version": "6.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/npm-run-path",
+      "version": "2.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/npm-run-path/node_modules/path-key",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/object-keys",
+      "version": "1.1.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/ohash",
+      "version": "2.0.12",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/on-exit-leak-free",
+      "version": "2.1.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/once",
+      "version": "1.4.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/onetime",
+      "version": "5.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/open",
+      "version": "8.4.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/openapi-types",
+      "version": "12.1.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ora",
+      "version": "5.4.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ora/node_modules/cli-cursor",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ora/node_modules/restore-cursor",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ora/node_modules/signal-exit",
+      "version": "3.0.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/p-cancelable",
+      "version": "2.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/p-defer",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/p-finally",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/p-is-promise",
+      "version": "2.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/p-limit",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/p-locate",
+      "version": "5.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/p-map",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/p-try",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/package-json-from-dist",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/parse-author",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/parse-json",
+      "version": "2.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/path-exists",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/path-is-absolute",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/path-key",
+      "version": "3.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/path-parse",
+      "version": "1.0.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/path-scurry",
+      "version": "2.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/path-scurry/node_modules/lru-cache",
+      "version": "11.5.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/path-scurry/node_modules/minipass",
+      "version": "7.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/path-type",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pathe",
+      "version": "2.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pe-library",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pend",
+      "version": "1.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/perfect-debounce",
+      "version": "2.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/picocolors",
+      "version": "1.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/picomatch",
+      "version": "2.3.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pify",
+      "version": "2.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pino",
+      "version": "10.3.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pino-abstract-transport",
+      "version": "3.0.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pino-std-serializers",
+      "version": "7.1.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pkg-types",
+      "version": "2.3.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pkg-types/node_modules/confbox",
+      "version": "0.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/playwright",
+      "version": "1.63.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/playwright-core",
+      "version": "1.63.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/plist",
+      "version": "3.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/postcss",
+      "version": "8.5.26",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/postject",
+      "version": "1.0.0-alpha.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/postject/node_modules/commander",
+      "version": "9.5.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/powershell-utils",
+      "version": "0.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/prettier",
+      "version": "3.9.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/proc-log",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/process-warning",
+      "version": "5.1.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/progress",
+      "version": "2.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/promise-inflight",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/promise-retry",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/prompts",
+      "version": "2.4.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/prompts/node_modules/kleur",
+      "version": "3.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/pump",
+      "version": "3.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/queue-microtask",
+      "version": "1.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/quick-format-unescaped",
+      "version": "4.0.4",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/quick-lru",
+      "version": "5.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/rc9",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/react",
+      "version": "19.2.4",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/react-dom",
+      "version": "19.2.4",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/react-refresh",
+      "version": "0.17.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/react-remove-scroll",
+      "version": "2.7.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/react-remove-scroll-bar",
+      "version": "2.3.8",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/react-style-singleton",
+      "version": "2.2.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/read-binary-file-arch",
+      "version": "1.0.6",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/read-pkg",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/read-pkg-up",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/read-pkg-up/node_modules/find-up",
+      "version": "2.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/read-pkg-up/node_modules/locate-path",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/read-pkg-up/node_modules/p-limit",
+      "version": "1.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/read-pkg-up/node_modules/p-locate",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/read-pkg-up/node_modules/path-exists",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/readable-stream",
+      "version": "3.6.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/readdirp",
+      "version": "5.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/real-require",
+      "version": "0.2.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/rechoir",
+      "version": "0.8.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/require-directory",
+      "version": "2.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/require-from-string",
+      "version": "2.0.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/resedit",
+      "version": "2.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/resolve",
+      "version": "1.22.12",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/resolve-alpn",
+      "version": "1.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/resolve-pkg-maps",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/responselike",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/restore-cursor",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/restore-cursor/node_modules/signal-exit",
+      "version": "3.0.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/ret",
+      "version": "0.5.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/retry",
+      "version": "0.12.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/reusify",
+      "version": "1.1.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/rfdc",
+      "version": "1.4.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/rimraf",
+      "version": "3.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/roarr",
+      "version": "2.15.4",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/rollup",
+      "version": "4.63.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/run-applescript",
+      "version": "7.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/run-parallel",
+      "version": "1.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/safe-buffer",
+      "version": "5.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/safe-regex2",
+      "version": "5.1.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/safe-stable-stringify",
+      "version": "2.5.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/safer-buffer",
+      "version": "2.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/sax",
+      "version": "1.1.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/scheduler",
+      "version": "0.27.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/schema-utils",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/secure-json-parse",
+      "version": "4.1.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/semver",
+      "version": "7.8.5",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/semver-compare",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/serialize-error",
+      "version": "7.0.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/serialize-error/node_modules/type-fest",
+      "version": "0.13.1",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/seroval",
+      "version": "1.6.6",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/seroval-plugins",
+      "version": "1.6.6",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/set-cookie-parser",
+      "version": "2.7.2",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/shebang-command",
+      "version": "2.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/shebang-regex",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/signal-exit",
+      "version": "4.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/simple-plist",
+      "version": "1.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/simple-plist/node_modules/bplist-parser",
+      "version": "0.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/sisteransi",
+      "version": "1.0.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/slice-ansi",
+      "version": "5.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/slice-ansi/node_modules/ansi-styles",
+      "version": "6.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/smart-buffer",
+      "version": "4.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/socks",
+      "version": "2.8.9",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/socks-proxy-agent",
+      "version": "7.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/sonic-boom",
+      "version": "4.2.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/source-map",
+      "version": "0.6.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/source-map-js",
+      "version": "1.2.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/source-map-support",
+      "version": "0.5.21",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/spdx-correct",
+      "version": "3.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/spdx-exceptions",
+      "version": "2.5.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/spdx-expression-parse",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/spdx-license-ids",
+      "version": "3.0.23",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/split2",
+      "version": "4.2.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/sprintf-js",
+      "version": "1.1.3",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/ssri",
+      "version": "9.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/stream-buffers",
+      "version": "2.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/string_decoder",
+      "version": "1.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/string-width",
+      "version": "5.1.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/string-width/node_modules/ansi-regex",
+      "version": "6.3.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/string-width/node_modules/strip-ansi",
+      "version": "7.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/strip-ansi",
+      "version": "6.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/strip-bom",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/strip-eof",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/strip-outer",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/strip-outer/node_modules/escape-string-regexp",
+      "version": "1.0.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/sumchecker",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/supports-color",
+      "version": "7.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/supports-preserve-symlinks-flag",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tailwind-merge",
+      "version": "3.5.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tailwindcss",
+      "version": "4.3.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tapable",
+      "version": "2.3.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tar",
+      "version": "7.5.22",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tar/node_modules/chownr",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tar/node_modules/minipass",
+      "version": "7.1.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tar/node_modules/minizlib",
+      "version": "3.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tar/node_modules/yallist",
+      "version": "5.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/terser",
+      "version": "5.51.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/terser/node_modules/commander",
+      "version": "2.20.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/thread-stream",
+      "version": "4.2.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/thread-stream/node_modules/real-require",
+      "version": "1.0.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/through2",
+      "version": "4.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tinyglobby",
+      "version": "0.2.17",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tinyglobby/node_modules/fdir",
+      "version": "6.5.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tinyglobby/node_modules/picomatch",
+      "version": "4.0.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tmp",
+      "version": "0.2.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/to-regex-range",
+      "version": "5.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/toad-cache",
+      "version": "3.7.4",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tr46",
+      "version": "0.0.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tree-kill",
+      "version": "1.2.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/trim-repeated",
+      "version": "1.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/trim-repeated/node_modules/escape-string-regexp",
+      "version": "1.0.5",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tslib",
+      "version": "2.8.1",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/tsx",
+      "version": "4.23.13",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/type-fest",
+      "version": "0.21.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/typescript",
+      "version": "5.9.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/undici",
+      "version": "7.29.0",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/undici-types",
+      "version": "6.21.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/unique-filename",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/unique-slug",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/universalify",
+      "version": "2.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/untildify",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/update-browserslist-db",
+      "version": "1.3.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/use-callback-ref",
+      "version": "1.3.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/use-sidecar",
+      "version": "1.1.3",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/use-sync-external-store",
+      "version": "1.6.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/username",
+      "version": "5.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/util-deprecate",
+      "version": "1.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/uuid",
+      "version": "11.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/validate-npm-package-license",
+      "version": "3.0.4",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/vite",
+      "version": "6.4.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/aix-ppc64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/android-arm",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/android-arm64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/android-x64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/darwin-arm64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/darwin-x64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/freebsd-arm64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/freebsd-x64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/linux-arm",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/linux-arm64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/linux-ia32",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/linux-loong64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/linux-mips64el",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/linux-ppc64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/linux-riscv64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/linux-s390x",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/linux-x64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/netbsd-arm64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/netbsd-x64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/openbsd-arm64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/openbsd-x64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/openharmony-arm64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/sunos-x64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/win32-arm64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/win32-ia32",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/@esbuild/win32-x64",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": true
+    },
+    {
+      "path": "node_modules/vite/node_modules/esbuild",
+      "version": "0.25.12",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/vite/node_modules/fdir",
+      "version": "6.5.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/vite/node_modules/picomatch",
+      "version": "4.0.7",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/watchpack",
+      "version": "2.5.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/wcwidth",
+      "version": "1.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/webidl-conversions",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/webpack",
+      "version": "5.110.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/webpack-sources",
+      "version": "3.5.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/whatwg-url",
+      "version": "5.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/which",
+      "version": "2.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/wrap-ansi",
+      "version": "6.2.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/wrap-ansi/node_modules/emoji-regex",
+      "version": "8.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/wrap-ansi/node_modules/is-fullwidth-code-point",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/wrap-ansi/node_modules/string-width",
+      "version": "4.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/wrappy",
+      "version": "1.0.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/wsl-utils",
+      "version": "0.3.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/wsl-utils/node_modules/is-wsl",
+      "version": "3.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/xcode",
+      "version": "3.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/xml2js",
+      "version": "0.6.2",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/xml2js/node_modules/xmlbuilder",
+      "version": "11.0.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/xmlbuilder",
+      "version": "15.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/y18n",
+      "version": "5.0.8",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yallist",
+      "version": "4.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yaml",
+      "version": "2.9.0",
+      "dev": false,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yargs",
+      "version": "17.7.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yargs-parser",
+      "version": "21.1.1",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yargs/node_modules/emoji-regex",
+      "version": "8.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yargs/node_modules/is-fullwidth-code-point",
+      "version": "3.0.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yargs/node_modules/string-width",
+      "version": "4.2.3",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yauzl",
+      "version": "2.10.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yocto-queue",
+      "version": "0.1.0",
+      "dev": true,
+      "optional": false
+    },
+    {
+      "path": "node_modules/yoctocolors-cjs",
+      "version": "2.1.3",
+      "dev": true,
+      "optional": false
+    }
+  ]
+}

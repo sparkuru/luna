@@ -1,0 +1,14 @@
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "项目政策与安全补丁范围"}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "范围、证据和真实数据保护"}
+{"file": ".trellis/spec/trellis-plus/continuity.md", "reason": "调查授权与升级实施授权分离"}
+{"file": ".trellis/spec/trellis-plus/commit-policy.md", "reason": "保留提交归档边界"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "API/Electron 后续验证约束"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "客户端后续验证约束"}
+{"file": ".trellis/tasks/10-22-security-dependency-review/research/security-review.md", "reason": "官方公告、版本与适用性调查"}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Docker 开发镜像重建与预览保留"}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "镜像验证的预览边界"}
+{"file": ".trellis/spec/frontend/android-runtime.md", "reason": "APK 与设备验证边界"}
+{"file": ".trellis/spec/frontend/web-host-and-validation.md", "reason": "Web 生产/窄屏/离线验证"}
+{"file": ".trellis/spec/backend/deployment-and-recovery.md", "reason": "隔离容器和恢复边界"}
+{"file": ".trellis/spec/backend/http-api-guidelines.md", "reason": "API 与生成 SDK 再现性"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "版本固定值全部引用同步"}

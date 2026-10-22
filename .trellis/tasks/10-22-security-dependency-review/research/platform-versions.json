@@ -1,0 +1,301 @@
+{
+  "queriedAt": "2026-10-22T11:35:07.558Z",
+  "results": [
+    {
+      "name": "node",
+      "url": "https://raw.githubusercontent.com/docker-library/official-images/master/library/node",
+      "status": 200,
+      "relevant": [
+        "Tags: 24-alpine3.23, 24.22-alpine3.23, 24.22.1-alpine3.23, krypton-alpine3.23, lts-alpine3.23",
+        "Tags: 24-alpine, 24-alpine3.24, 24.22-alpine, 24.22-alpine3.24, 24.22.1-alpine, 24.22.1-alpine3.24, krypton-alpine, krypton-alpine3.24, lts-alpine, lts-alpine3.24",
+        "Tags: 24, 24-bookworm, 24.22, 24.22-bookworm, 24.22.1, 24.22.1-bookworm, krypton, krypton-bookworm, lts, lts-bookworm, lts-krypton",
+        "Tags: 24-bookworm-slim, 24-slim, 24.22-bookworm-slim, 24.22-slim, 24.22.1-bookworm-slim, 24.22.1-slim, krypton-bookworm-slim, krypton-slim, lts-bookworm-slim, lts-slim",
+        "Tags: 24-trixie, 24.22-trixie, 24.22.1-trixie, krypton-trixie, lts-trixie",
+        "Tags: 24-trixie-slim, 24.22-trixie-slim, 24.22.1-trixie-slim, krypton-trixie-slim, lts-trixie-slim",
+        "Tags: 22-alpine3.23, 22.23-alpine3.23, 22.23.4-alpine3.23, jod-alpine3.23",
+        "Tags: 22-alpine, 22-alpine3.24, 22.23-alpine, 22.23-alpine3.24, 22.23.4-alpine, 22.23.4-alpine3.24, jod-alpine, jod-alpine3.24",
+        "Tags: 22, 22-bookworm, 22.23, 22.23-bookworm, 22.23.4, 22.23.4-bookworm, jod, jod-bookworm",
+        "Tags: 22-bookworm-slim, 22-slim, 22.23-bookworm-slim, 22.23-slim, 22.23.4-bookworm-slim, 22.23.4-slim, jod-bookworm-slim, jod-slim",
+        "Tags: 22-trixie, 22.23-trixie, 22.23.4-trixie, jod-trixie",
+        "Tags: 22-trixie-slim, 22.23-trixie-slim, 22.23.4-trixie-slim, jod-trixie-slim"
+      ]
+    },
+    {
+      "name": "nginx",
+      "url": "https://raw.githubusercontent.com/docker-library/official-images/master/library/nginx",
+      "status": 200,
+      "relevant": [
+        "Tags: 1.31.8, mainline, 1, 1.31, latest, 1.31.8-trixie, mainline-trixie, 1-trixie, 1.31-trixie, trixie",
+        "Tags: 1.31.8-perl, mainline-perl, 1-perl, 1.31-perl, perl, 1.31.8-trixie-perl, mainline-trixie-perl, 1-trixie-perl, 1.31-trixie-perl, trixie-perl",
+        "Tags: 1.31.8-otel, mainline-otel, 1-otel, 1.31-otel, otel, 1.31.8-trixie-otel, mainline-trixie-otel, 1-trixie-otel, 1.31-trixie-otel, trixie-otel",
+        "Tags: 1.31.8-alpine, mainline-alpine, 1-alpine, 1.31-alpine, alpine, 1.31.8-alpine3.24, mainline-alpine3.24, 1-alpine3.24, 1.31-alpine3.24, alpine3.24",
+        "Tags: 1.31.8-alpine-perl, mainline-alpine-perl, 1-alpine-perl, 1.31-alpine-perl, alpine-perl, 1.31.8-alpine3.24-perl, mainline-alpine3.24-perl, 1-alpine3.24-perl, 1.31-alpine3.24-perl, alpine3.24-perl",
+        "Tags: 1.31.8-alpine-slim, mainline-alpine-slim, 1-alpine-slim, 1.31-alpine-slim, alpine-slim, 1.31.8-alpine3.24-slim, mainline-alpine3.24-slim, 1-alpine3.24-slim, 1.31-alpine3.24-slim, alpine3.24-slim",
+        "Tags: 1.31.8-alpine-otel, mainline-alpine-otel, 1-alpine-otel, 1.31-alpine-otel, alpine-otel, 1.31.8-alpine3.24-otel, mainline-alpine3.24-otel, 1-alpine3.24-otel, 1.31-alpine3.24-otel, alpine3.24-otel",
+        "Tags: 1.30.6, stable, 1.30, 1.30.6-trixie, stable-trixie, 1.30-trixie",
+        "Tags: 1.30.6-perl, stable-perl, 1.30-perl, 1.30.6-trixie-perl, stable-trixie-perl, 1.30-trixie-perl",
+        "Tags: 1.30.6-otel, stable-otel, 1.30-otel, 1.30.6-trixie-otel, stable-trixie-otel, 1.30-trixie-otel",
+        "Tags: 1.30.6-alpine, stable-alpine, 1.30-alpine, 1.30.6-alpine3.24, stable-alpine3.24, 1.30-alpine3.24",
+        "Tags: 1.30.6-alpine-perl, stable-alpine-perl, 1.30-alpine-perl, 1.30.6-alpine3.24-perl, stable-alpine3.24-perl, 1.30-alpine3.24-perl",
+        "Tags: 1.30.6-alpine-slim, stable-alpine-slim, 1.30-alpine-slim, 1.30.6-alpine3.24-slim, stable-alpine3.24-slim, 1.30-alpine3.24-slim",
+        "Tags: 1.30.6-alpine-otel, stable-alpine-otel, 1.30-alpine-otel, 1.30.6-alpine3.24-otel, stable-alpine3.24-otel, 1.30-alpine3.24-otel"
+      ]
+    },
+    {
+      "name": "alpine",
+      "url": "https://raw.githubusercontent.com/docker-library/official-images/master/library/alpine",
+      "status": 200,
+      "relevant": [
+        "Tags: 20260805, edge",
+        "Tags: 3.24.3, 3.24, 3, latest",
+        "Tags: 3.23.7, 3.23",
+        "Tags: 3.22.7, 3.22",
+        "Tags: 3.21.9, 3.21"
+      ]
+    },
+    {
+      "name": "temurin",
+      "url": "https://raw.githubusercontent.com/docker-library/official-images/master/library/eclipse-temurin",
+      "status": 200,
+      "relevant": [
+        "Tags: 21.0.12.1_1-jdk-alpine-3.24, 21-jdk-alpine-3.24, 21-alpine-3.24, 21.0.12.1_1-jdk-alpine, 21-jdk-alpine, 21-alpine",
+        "Tags: 21.0.12.1_1-jdk-alpine-3.23, 21-jdk-alpine-3.23, 21-alpine-3.23",
+        "Tags: 21.0.12.1_1-jdk-alpine-3.22, 21-jdk-alpine-3.22, 21-alpine-3.22",
+        "Tags: 21.0.12.1_1-jdk-alpine-3.21, 21-jdk-alpine-3.21, 21-alpine-3.21",
+        "Tags: 21.0.12.1_1-jdk-resolute, 21-jdk-resolute, 21-resolute",
+        "Tags: 21.0.12.1_1-jdk-noble, 21-jdk-noble, 21-noble",
+        "Tags: 21.0.12.1_1-jdk-jammy, 21-jdk-jammy, 21-jammy",
+        "Tags: 21.0.12.1_1-jdk-ubi10-minimal, 21-jdk-ubi10-minimal, 21-ubi10-minimal",
+        "Tags: 21.0.12.1_1-jdk-ubi9-minimal, 21-jdk-ubi9-minimal, 21-ubi9-minimal",
+        "Tags: 21.0.12.1_1-jdk-windowsservercore-ltsc2022, 21-jdk-windowsservercore-ltsc2022, 21-windowsservercore-ltsc2022",
+        "Tags: 21.0.12.1_1-jdk-nanoserver-ltsc2022, 21-jdk-nanoserver-ltsc2022, 21-nanoserver-ltsc2022",
+        "Tags: 21.0.12.1_1-jdk-windowsservercore-ltsc2025, 21-jdk-windowsservercore-ltsc2025, 21-windowsservercore-ltsc2025",
+        "Tags: 21.0.12.1_1-jdk-nanoserver-ltsc2025, 21-jdk-nanoserver-ltsc2025, 21-nanoserver-ltsc2025",
+        "Tags: 21.0.12.1_1-jre-alpine-3.24, 21-jre-alpine-3.24, 21.0.12.1_1-jre-alpine, 21-jre-alpine",
+        "Tags: 21.0.12.1_1-jre-alpine-3.23, 21-jre-alpine-3.23",
+        "Tags: 21.0.12.1_1-jre-alpine-3.22, 21-jre-alpine-3.22",
+        "Tags: 21.0.12.1_1-jre-alpine-3.21, 21-jre-alpine-3.21",
+        "Tags: 21.0.12.1_1-jre-resolute, 21-jre-resolute",
+        "Tags: 21.0.12.1_1-jre-noble, 21-jre-noble",
+        "Tags: 21.0.12.1_1-jre-jammy, 21-jre-jammy",
+        "Tags: 21.0.12.1_1-jre-ubi10-minimal, 21-jre-ubi10-minimal",
+        "Tags: 21.0.12.1_1-jre-ubi9-minimal, 21-jre-ubi9-minimal",
+        "Tags: 21.0.12.1_1-jre-windowsservercore-ltsc2022, 21-jre-windowsservercore-ltsc2022",
+        "Tags: 21.0.12.1_1-jre-nanoserver-ltsc2022, 21-jre-nanoserver-ltsc2022",
+        "Tags: 21.0.12.1_1-jre-windowsservercore-ltsc2025, 21-jre-windowsservercore-ltsc2025",
+        "Tags: 21.0.12.1_1-jre-nanoserver-ltsc2025, 21-jre-nanoserver-ltsc2025"
+      ]
+    },
+    {
+      "name": "gradle",
+      "url": "https://services.gradle.org/versions/all",
+      "status": 200,
+      "relevant": [
+        {
+          "version": "9.8.2",
+          "current": true,
+          "buildTime": "20261019162926+0000"
+        },
+        {
+          "version": "8.14.6",
+          "current": false,
+          "buildTime": "20261008100136+0000"
+        },
+        {
+          "version": "8.14.5",
+          "current": false,
+          "buildTime": "20260507110329+0000"
+        },
+        {
+          "version": "8.14.4",
+          "current": false,
+          "buildTime": "20260123163023+0000"
+        },
+        {
+          "version": "8.14.3",
+          "current": false,
+          "buildTime": "20250704131544+0000"
+        },
+        {
+          "version": "8.14.2",
+          "current": false,
+          "buildTime": "20250605133201+0000"
+        },
+        {
+          "version": "8.14.1",
+          "current": false,
+          "buildTime": "20250522134409+0000"
+        },
+        {
+          "version": "8.14",
+          "current": false,
+          "buildTime": "20250425092908+0000"
+        },
+        {
+          "version": "8.13",
+          "current": false,
+          "buildTime": "20250225092214+0000"
+        },
+        {
+          "version": "8.12.1",
+          "current": false,
+          "buildTime": "20250124125512+0000"
+        },
+        {
+          "version": "8.12",
+          "current": false,
+          "buildTime": "20241220154653+0000"
+        },
+        {
+          "version": "8.11.1",
+          "current": false,
+          "buildTime": "20241120165646+0000"
+        },
+        {
+          "version": "8.11",
+          "current": false,
+          "buildTime": "20241111135801+0000"
+        },
+        {
+          "version": "8.10.2",
+          "current": false,
+          "buildTime": "20240923212839+0000"
+        },
+        {
+          "version": "8.10.1",
+          "current": false,
+          "buildTime": "20240909074256+0000"
+        },
+        {
+          "version": "8.10",
+          "current": false,
+          "buildTime": "20240814110745+0000"
+        },
+        {
+          "version": "8.9",
+          "current": false,
+          "buildTime": "20240711143741+0000"
+        },
+        {
+          "version": "8.8",
+          "current": false,
+          "buildTime": "20240531214656+0000"
+        },
+        {
+          "version": "8.7",
+          "current": false,
+          "buildTime": "20240322155246+0000"
+        },
+        {
+          "version": "8.6",
+          "current": false,
+          "buildTime": "20240202164716+0000"
+        },
+        {
+          "version": "8.5",
+          "current": false,
+          "buildTime": "20231129140857+0000"
+        },
+        {
+          "version": "8.4",
+          "current": false,
+          "buildTime": "20231004205213+0000"
+        },
+        {
+          "version": "8.3",
+          "current": false,
+          "buildTime": "20230817070647+0000"
+        },
+        {
+          "version": "8.2.1",
+          "current": false,
+          "buildTime": "20230710121235+0000"
+        },
+        {
+          "version": "8.2",
+          "current": false,
+          "buildTime": "20230630180230+0000"
+        },
+        {
+          "version": "8.1.1",
+          "current": false,
+          "buildTime": "20230421123126+0000"
+        },
+        {
+          "version": "8.1",
+          "current": false,
+          "buildTime": "20230412120745+0000"
+        },
+        {
+          "version": "8.0.2",
+          "current": false,
+          "buildTime": "20230303164137+0000"
+        },
+        {
+          "version": "8.0.1",
+          "current": false,
+          "buildTime": "20230217200948+0000"
+        },
+        {
+          "version": "8.0",
+          "current": false,
+          "buildTime": "20230213131521+0000"
+        }
+      ]
+    },
+    {
+      "name": "agp",
+      "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/maven-metadata.xml",
+      "status": 200,
+      "relevant": [
+        "<version>8.11.2</version>",
+        "<version>8.12.0</version>",
+        "<version>8.12.1</version>",
+        "<version>8.12.2</version>",
+        "<version>8.12.3</version>",
+        "<version>8.13.0</version>",
+        "<version>8.13.1</version>",
+        "<version>8.13.2</version>",
+        "<version>9.0.0</version>",
+        "<version>9.0.1</version>",
+        "<version>9.1.0</version>",
+        "<version>9.1.1</version>",
+        "<version>9.2.0</version>",
+        "<version>9.2.1</version>",
+        "<version>9.3.0</version>",
+        "<version>9.3.1</version>",
+        "<version>9.3.2</version>",
+        "<version>9.3.3</version>",
+        "<version>9.4.0</version>",
+        "<version>9.4.1</version>"
+      ]
+    },
+    {
+      "name": "webkit",
+      "url": "https://dl.google.com/dl/android/maven2/androidx/webkit/webkit/maven-metadata.xml",
+      "status": 200,
+      "relevant": [
+        "<version>1.2.0</version>",
+        "<version>1.3.0</version>",
+        "<version>1.4.0</version>",
+        "<version>1.5.0</version>",
+        "<version>1.6.0</version>",
+        "<version>1.6.1</version>",
+        "<version>1.7.0</version>",
+        "<version>1.8.0</version>",
+        "<version>1.9.0</version>",
+        "<version>1.10.0</version>",
+        "<version>1.11.0</version>",
+        "<version>1.12.0</version>",
+        "<version>1.12.1</version>",
+        "<version>1.13.0</version>",
+        "<version>1.14.0</version>",
+        "<version>1.15.0</version>",
+        "<version>1.16.0</version>",
+        "<version>1.17.0</version>",
+        "<version>1.17.1</version>",
+        "<version>1.18.0</version>"
+      ]
+    }
+  ]
+}

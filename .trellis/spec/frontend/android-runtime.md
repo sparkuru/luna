@@ -197,7 +197,16 @@ by reading settings/snapshot and starting without a global error. Shared abort
 compatibility is covered by `src/shared/abort.test.ts`. SDK/WebCrypto
 interoperability uses a DevTools-contained HTTPS fixture; label it as protocol
 coverage, not real TLS/provider connectivity. MinIO is a separate real-provider
-gate. Native save tests must cancel then retry, observe completion, read only
+gate.
+
+Native date-picker fixtures derive the month from the actual form ISO input
+and choose valid adjacent days in that month (15 to 16). Assert the native
+dialog selection, projected `YYYY/MM/DD`, stored ISO date and restart readback.
+A fixed historical month can save correctly while the current-month list stays
+empty; do not weaken persistence assertions or change product filtering to
+compensate for that fixture error.
+
+Native save tests must cancel then retry, observe completion, read only
 the exact synthetic saved file and decrypt it in Node. The native image-picker
 smoke must place only a synthetic fixture in the disposable AVD, use the real
 DocumentsUI flow, assert normalized bytes after offline save/relaunch, and

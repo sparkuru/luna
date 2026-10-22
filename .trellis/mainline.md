@@ -1,5 +1,23 @@
 # Luna 项目主线
 
+## 2026-10-22 漏洞与版本核查
+
+用户要求「建 task；看一下近期爆出来的漏洞；本项目相关版本，有没有可以更新的」。
+最初建立[漏洞与依赖核查任务](tasks/10-22-security-dependency-review/prd.md)，调查阶段为 planning。
+第一轮完成仓库锁定版本与公开公告调查，结果、候选升级和验证限制见
+[核查报告](tasks/10-22-security-dependency-review/research/security-review.md)。
+该阶段仅登记调查授权，尚未升级依赖、变更容器、访问线上环境、提交或归档。
+升级优先考虑同主版本安全补丁；MinIO 维护路线与跨主版本迁移另行决策。
+
+用户随后明确「帮我更新；然后验证；最后提交」，授权按上述建议实施安全补丁、
+由 agent 验证并作本地工作提交。MinIO 迁移、Forge 8 和一般跨主版本更新后置；
+不推定线上部署、推送或归档权限。已落实 npm/Node/nginx/JDK/Alpine 安全补丁；
+类型检查、226/26/6/9 项代码测试、344 项生产浏览器及新镜像18项专项、
+最终 ZIP 默认 sandbox 烟测、APK/Android16完整烟测和容器恢复回归均通过。
+全量 npm audit 36→23（3个底层构建树公告），生产集合3→0；MinIO 维护路线和
+Electron 内置 Node 最新回移缺口保留。独立最终复核通过，task 保持 review、准备本地提交，详见
+[本轮验收](tasks/10-22-security-dependency-review/validation.md)。
+
 ## 2026-10-06 恢复视觉 task
 
 用户要求继续推进当前 task；已恢复 `visual-refinement` 并完成复核。

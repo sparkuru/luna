@@ -107,7 +107,7 @@ test('Docker contexts retain renderer data source while excluding persistent dat
     put(ignoreFile, fs.readFileSync(path.join(repo, ignoreFile)));
     const check = `const fs=require('node:fs');const assert=require('node:assert/strict');for(const p of ${JSON.stringify(required)})assert.ok(fs.existsSync('/context/'+p),'missing '+p);for(const p of ${JSON.stringify(excluded)})assert.ok(!fs.existsSync('/context/'+p),'leaked '+p);console.log('CONTEXT_OK ${variant}')`;
     assert.ok(!check.includes('$') && !check.includes('`'));
-    put(dockerfile, `FROM node:22.22.0-bookworm-slim\nCOPY . /context\nRUN node -e ${JSON.stringify(check)}\n`);
+    put(dockerfile, `FROM node:22.23.4-bookworm-slim\nCOPY . /context\nRUN node -e ${JSON.stringify(check)}\n`);
     const runId = randomUUID();
     const image = `luna-cleanup-context-test-${runId}:local`;
     const owner = 'luna.cleanup-context-test';

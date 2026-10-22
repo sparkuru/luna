@@ -22,7 +22,7 @@ const bucketInitImage = process.env.LUNA_RESTORE_BUCKET_INIT_IMAGE ?? "luna-buck
 const minioImage =
   process.env.LUNA_RESTORE_MINIO_IMAGE ??
   "minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e";
-const nodeImage = process.env.LUNA_RESTORE_INIT_IMAGE ?? "node:22.22.0-bookworm-slim";
+const nodeImage = process.env.LUNA_RESTORE_INIT_IMAGE ?? "node:22.23.4-bookworm-slim";
 const runId = `luna-restore-${crypto.randomUUID().slice(0, 8)}`;
 const label = `luna.restore-run=${runId}`;
 const containers = [];

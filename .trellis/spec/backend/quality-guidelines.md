@@ -43,6 +43,29 @@ the packaged smoke before a work commit.
 
 ## Testing Requirements
 
+For dependency security updates, retain both full and production-set evidence:
+`./hako npm audit --package-lock-only --ignore-scripts --json` and the same
+command with `--omit=dev`. Exit 1 with findings is a reported residual, not a
+passing security gate. Classify actual callers and release artifacts separately:
+Electron is declared under devDependencies but ships its own Chromium/Node;
+`--omit=dev` does not audit that runtime, MinIO, OS packages or the complete
+deployed system. A newer registry version without a confirmed fix is not proof
+that an advisory is resolved. Keep unresolved build-tree findings explicit.
+
+Run Node SQLite/API tests and browser fixtures before Electron packaging when
+they share `node_modules`. Electron Forge's native rebuild can replace the
+Node-compatible SQLite addon; never run those consumers concurrently with the
+rebuild. If more Node tests are needed afterward, restore the Node-compatible
+addon and verify an actual SQLite open/query/close before rerunning them.
+Record the tested Node/Electron versions and validate the packaged executable;
+a lockfile version alone does not prove native ABI compatibility.
+
+Playwright's Electron launcher requires explicit `chromiumSandbox: true` for
+the default packaged smoke; omitting `--no-sandbox` from `args` alone does not
+enable it. Preserve any explicit diagnostic opt-out as separate evidence.
+Await `ElectronApplication.close()` before deleting its temporary profile;
+an intermediate success marker followed by a cleanup error is a failed run.
+
 The required local gate is:
 
 ```text
