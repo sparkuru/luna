@@ -2,8 +2,8 @@
   "id": "security-dependency-review",
   "name": "security-dependency-review",
   "title": "近期漏洞核查与依赖升级评估",
-  "description": "核查并更新同主版本安全补丁，验证 Web/API/Electron/Android 与容器兼容后本地提交；不迁移 MinIO、不部署或归档。",
-  "status": "review",
+  "description": "核查并更新同主版本安全补丁，验证 Web/API/Electron/Android 与容器兼容后本地提交；不迁移 MinIO、不部署；用户后续明确允许归档。",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "dev",
   "assignee": "dev",
   "createdAt": "2026-10-22",
-  "completedAt": null,
+  "completedAt": "2026-10-22",
   "branch": null,
   "base_branch": "paycheck-to-paycheck",
   "worktree_path": null,
@@ -21,6 +21,6 @@
   "children": [],
   "parent": null,
   "relatedFiles": [],
-  "notes": "",
+  "notes": "2026-10-22 用户回复「可以归档」，授权归档收尾。工作提交 d9404c0，验收记录 73b254b；原有残留漏洞与平台验证边界保留。",
   "meta": {}
 }

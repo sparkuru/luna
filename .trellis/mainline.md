@@ -3,9 +3,9 @@
 ## 2026-10-22 漏洞与版本核查
 
 用户要求「建 task；看一下近期爆出来的漏洞；本项目相关版本，有没有可以更新的」。
-最初建立[漏洞与依赖核查任务](tasks/10-22-security-dependency-review/prd.md)，调查阶段为 planning。
+最初建立[漏洞与依赖核查任务](tasks/archive/2026-10/10-22-security-dependency-review/prd.md)，调查阶段为 planning。
 第一轮完成仓库锁定版本与公开公告调查，结果、候选升级和验证限制见
-[核查报告](tasks/10-22-security-dependency-review/research/security-review.md)。
+[核查报告](tasks/archive/2026-10/10-22-security-dependency-review/research/security-review.md)。
 该阶段仅登记调查授权，尚未升级依赖、变更容器、访问线上环境、提交或归档。
 升级优先考虑同主版本安全补丁；MinIO 维护路线与跨主版本迁移另行决策。
 
@@ -16,7 +16,12 @@
 最终 ZIP 默认 sandbox 烟测、APK/Android16完整烟测和容器恢复回归均通过。
 全量 npm audit 36→23（3个底层构建树公告），生产集合3→0；MinIO 维护路线和
 Electron 内置 Node 最新回移缺口保留。独立最终复核通过，工作提交为 `d9404c0`，task 保持 review、未归档，详见
-[本轮验收](tasks/10-22-security-dependency-review/validation.md)。
+[本轮验收](tasks/archive/2026-10/10-22-security-dependency-review/validation.md)。
+
+用户随后明确「可以归档」，授权本任务归档收尾。task 已移至
+`tasks/archive/2026-10/10-22-security-dependency-review/`，状态 completed，活动指针清除。
+上文 review/未归档为此前阶段记录；残留漏洞、维护路线与未测范围继续保留，
+不表示全栈漏洞清零。归档提交按政策仅含一次 Codex 署名，未推送或部署。
 
 ## 2026-10-06 恢复视觉 task
 

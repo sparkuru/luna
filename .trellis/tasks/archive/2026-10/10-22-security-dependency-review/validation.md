@@ -2,7 +2,7 @@
 
 ## 当前实施与验证（运行门禁完成）
 
-用户在调查结果后明确要求更新、由 agent 验证、最后本地提交。运行门禁与独立最终复核均通过，已按授权本地提交 `d9404c0`，任务保留 review。
+用户在调查结果后明确要求更新、由 agent 验证、最后本地提交。运行门禁与独立最终复核均通过，已按授权本地提交 `d9404c0`，提交时任务保留 review；后续归档授权与状态见下文。
 版本与残留漏洞见 research/npm-implementation.md、research/container-implementation.md；
 业务源码、生成 SDK、存储格式和 MinIO digest 保持原样。
 
@@ -62,7 +62,7 @@ AC1–AC5 已通过；独立 [Trellis check](research/quality-check.md) 通过�
 sprintf-js、http-cache-semantics 三个底层公告。MinIO 固定版本的已知风险与维护迁移问题保留；
 Electron44.9.3 内置 Node24.22.0，尚不包含 Node24.22.1 最新安全回移，不能称为全栈漏洞清零。
 实体设备、不同系统 WebView、宿主原生对话框视觉与线上 TLS/长期运行没有在本轮重验。
-用户已经委托可观测检查和本地提交，不重复索取同一范围许可；不推送、部署或归档。
+实施验收阶段用户已委托可观测检查和本地提交，当时未授权归档；后续明确允许归档见下文。
 
 ## 第一轮调查交付核验（历史）
 
@@ -93,3 +93,12 @@ Electron44.9.3 内置 Node24.22.0，尚不包含 Node24.22.1 最新安全回移�
 本次文档交付为 human-not-needed；不表示升级、许可、存储迁移或生产安全已验收。
 PRD/design/implement 与研究证据已就绪。调查结论可交付，task 保持 planning；
 后续升级需用户选择范围，再更新规划并按正常 Trellis 流程执行。无提交、部署或归档。
+
+## 归档收尾（2026-10-22）
+
+用户明确「可以归档」。在工作区干净、工作提交及独立复核已核验后，使用
+`task.py archive 10-22-security-dependency-review --no-commit` 归档。
+22 个任务文件完整保留，task 为 completed，completedAt 为 2026-10-22，旧目录消失，
+当前活动指针已清除。两个 context manifest 的本任务引用随新目录修正。
+本轮仅验证归档状态、文档/上下文路径和提交范围，不重复执行已通过的产品测试。
+归档保留上文全部残留风险和未覆盖项，不改变安全结论；未推送或部署。
