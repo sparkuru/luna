@@ -603,3 +603,40 @@ User explicitly authorized committing all remaining dirty and untracked project 
 ### Next Steps
 
 - 当前无活动任务；等待用户选择后续工作，未推送或部署。
+
+
+## Session 22: 安全补丁升级与跨端验证
+
+**Date**: 2026-10-22
+**Task**: 安全补丁升级与跨端验证
+**Branch**: `paycheck-to-paycheck`
+
+### Summary
+
+按用户授权更新同主版本安全补丁并完成独立复核及本地工作提交；task保持review，未推送、部署或归档。
+
+### Main Changes
+
+- 更新Capacitor/Electron/Vite/Fastify及传递补丁，Node/nginx/JDK/Alpine镜像联动；保留MinIO和数据/协议边界。
+- 修正dev镜像缺zip、Electron图片烟测sandbox/退出清理、Android日期夹具；同步项目规范和证据。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d9404c0` | (see git log) |
+
+### Testing
+
+- [OK] Node22.23.4类型检查、单元226/API26/契约6/同步9、SDK可再现与构建全部通过。
+- [OK] 生产浏览器344项；新dev镜像Chrome156桌面/窄屏隐私离线18项全部通过。
+- [OK] 最终Linux ZIP解包后两项默认sandbox烟测通过；APK签名/哈希及Android16完整19组原生烟测通过。
+- [OK] 部署17/preview13/恢复8与新nginx受限运行检查通过，独立Trellis check通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 保留Forge树3个底层公告（全量npm audit23/生产0）、MinIO维护迁移与Electron内置Node安全回移缺口；后续路线另行决策，task未归档。

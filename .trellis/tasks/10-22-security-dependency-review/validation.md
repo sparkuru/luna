@@ -2,7 +2,7 @@
 
 ## 当前实施与验证（运行门禁完成）
 
-用户在调查结果后明确要求更新、由 agent 验证、最后本地提交。运行门禁与独立最终复核均通过，任务为 review，准备按既有授权本地提交。
+用户在调查结果后明确要求更新、由 agent 验证、最后本地提交。运行门禁与独立最终复核均通过，已按授权本地提交 `d9404c0`，任务保留 review。
 版本与残留漏洞见 research/npm-implementation.md、research/container-implementation.md；
 业务源码、生成 SDK、存储格式和 MinIO digest 保持原样。
 
@@ -56,7 +56,8 @@ frontend/android-runtime.md 记录原生日期夹具与当前表单月份一致�
 ## 当前验收边界
 
 AC1–AC5 已通过；独立 [Trellis check](research/quality-check.md) 通过，
-当前提交门禁为 human-not-needed。AC6 的本地提交号由随后收尾记录确认。
+提交门禁为 human-not-needed。AC6 已完成：本地工作提交 `d9404c0`，
+显式暂存37个授权文件，提交前 context/JSON/链接/空白检查通过，提交后路径/内容已核验。
 生产 npm audit 的 0 仅指 omit-dev 集合；全量 23 个命中来自 Forge 树的 braces、
 sprintf-js、http-cache-semantics 三个底层公告。MinIO 固定版本的已知风险与维护迁移问题保留；
 Electron44.9.3 内置 Node24.22.0，尚不包含 Node24.22.1 最新安全回移，不能称为全栈漏洞清零。

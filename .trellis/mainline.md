@@ -15,7 +15,7 @@
 类型检查、226/26/6/9 项代码测试、344 项生产浏览器及新镜像18项专项、
 最终 ZIP 默认 sandbox 烟测、APK/Android16完整烟测和容器恢复回归均通过。
 全量 npm audit 36→23（3个底层构建树公告），生产集合3→0；MinIO 维护路线和
-Electron 内置 Node 最新回移缺口保留。独立最终复核通过，task 保持 review、准备本地提交，详见
+Electron 内置 Node 最新回移缺口保留。独立最终复核通过，工作提交为 `d9404c0`，task 保持 review、未归档，详见
 [本轮验收](tasks/10-22-security-dependency-review/validation.md)。
 
 ## 2026-10-06 恢复视觉 task

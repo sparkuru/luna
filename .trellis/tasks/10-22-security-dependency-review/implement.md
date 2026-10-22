@@ -29,7 +29,9 @@
 - [x] Electron package/make、默认 sandbox 与原生 SQLite 烟测；APK assemble/export/签名核验，记录设备覆盖边界。
 - [x] 全量/生产 audit 对比，记录残留路径与不能由本批次修复的风险。
 - [x] Trellis check 独立复核并修正，必要 spec 同步，更新 validation/主线。
-- [ ] 完整候选路径检查、diff --check、显式 staging，本地提交并核验；不推送/部署/归档。
+- [x] 完整候选路径检查、diff --check、显式 staging，本地提交并核验；不推送/部署/归档。
 
 风险点：安装与 Electron ABI 重建串行；镜像构建使用临时标签/隔离项目；不清理未知产物。
 验证环境不足时先排查可在授权本机完成的替代，保留精确失败，不降低通过标准。
+
+本地工作提交：`d9404c0`。最终复核通过，task 为 review；未推送、部署或归档。
